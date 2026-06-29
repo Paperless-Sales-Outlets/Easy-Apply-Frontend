@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceDetailsStep from './ServiceDetailsStep';
 import AccountSetupStep from './AccountSetupStep';
+import { useTranslation } from 'react-i18next';
 
 export default function InternetServicesWizard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
 
@@ -20,7 +22,7 @@ export default function InternetServicesWizard() {
 
   return (
     <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '1.5rem' }}>Internet Services Application</h2>
+      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.internetServices.title')}</h2>
       
       {/* Progress Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative' }}>
@@ -39,7 +41,7 @@ export default function InternetServicesWizard() {
               {step}
             </div>
             <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? 'Customer Info' : step === 2 ? 'Service Details' : 'Account Setup'}
+              {step === 1 ? t('wizards.internetServices.steps.s1') : step === 2 ? t('wizards.internetServices.steps.s2') : t('wizards.internetServices.steps.s3')}
             </span>
           </div>
         ))}
@@ -55,15 +57,15 @@ export default function InternetServicesWizard() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1}>
-            Previous
+            {t('common.previous')}
           </button>
           {currentStep < totalSteps ? (
             <button type="button" className="btn btn-primary" onClick={nextStep}>
-              Next Step
+              {t('common.nextStep')}
             </button>
           ) : (
             <button type="submit" className="btn btn-success">
-              Submit Application
+              {t('common.submit')}
             </button>
           )}
         </div>

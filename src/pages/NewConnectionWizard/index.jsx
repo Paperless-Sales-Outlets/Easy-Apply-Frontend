@@ -4,9 +4,11 @@ import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
 import ConnectionPackageStep from './ConnectionPackageStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
+import { useTranslation } from 'react-i18next';
 
 export default function NewConnectionWizard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
@@ -21,7 +23,7 @@ export default function NewConnectionWizard() {
 
   return (
     <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '1.5rem' }}>New Services Application</h2>
+      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.newConnection.title')}</h2>
       
       {/* Progress Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative' }}>
@@ -40,7 +42,7 @@ export default function NewConnectionWizard() {
               {step}
             </div>
             <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? 'Customer' : step === 2 ? 'Service' : step === 3 ? 'Connection' : 'Add-ons'}
+              {step === 1 ? t('wizards.newConnection.steps.s1') : step === 2 ? t('wizards.newConnection.steps.s2') : step === 3 ? t('wizards.newConnection.steps.s3') : t('wizards.newConnection.steps.s4')}
             </span>
           </div>
         ))}
@@ -57,15 +59,15 @@ export default function NewConnectionWizard() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1}>
-            Previous
+            {t('common.previous')}
           </button>
           {currentStep < totalSteps ? (
             <button type="button" className="btn btn-primary" onClick={nextStep}>
-              Next Step
+              {t('common.nextStep')}
             </button>
           ) : (
             <button type="submit" className="btn btn-success">
-              Submit Application
+              {t('common.submit')}
             </button>
           )}
         </div>

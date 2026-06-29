@@ -1,19 +1,23 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function ValueAddedServicesStep() {
+  const { t } = useTranslation();
+
   return (
     <div>
-      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>5. Value Added Services & Agreement</h3>
+      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.newConnection.vas.heading')}</h3>
       
       <div className="form-group">
-        <label className="form-label">5.1 Required additional VAS services (Voice customers get free VAS bundle)</label>
+        <label className="form-label">{t('wizards.newConnection.vas.requiredVas')}</label>
         <div className="radio-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
           {[
-            'A. Call back on busy', 'B. Password call barring', 
-            'C. Selective Call Rejection/Acceptance', 'D. Do not disturb service',
-            'E. Secretary Service', 'F. Complete call on no response',
-            'G. Metering pulses/ polarity reversals', 'H. Hunting',
-            'I. Abbreviated Dialling', 'J. Conference', 'K. Detail Bill', 'L. Other'
+            t('wizards.newConnection.vas.vasA'), t('wizards.newConnection.vas.vasB'), 
+            t('wizards.newConnection.vas.vasC'), t('wizards.newConnection.vas.vasD'),
+            t('wizards.newConnection.vas.vasE'), t('wizards.newConnection.vas.vasF'),
+            t('wizards.newConnection.vas.vasG'), t('wizards.newConnection.vas.vasH'),
+            t('wizards.newConnection.vas.vasI'), t('wizards.newConnection.vas.vasJ'), 
+            t('wizards.newConnection.vas.vasK'), t('wizards.newConnection.vas.vasL')
           ].map(vas => (
             <label key={vas} className="checkbox-label">
               <input type="checkbox" className="checkbox-input" /> {vas}
@@ -23,9 +27,13 @@ export default function ValueAddedServicesStep() {
       </div>
 
       <div className="form-group mt-4">
-        <label className="form-label">5.2 Other Value Added Services</label>
+        <label className="form-label">{t('wizards.newConnection.vas.otherVas')}</label>
         <div className="radio-group">
-          {['a) Hitflix', 'b) TeleLife', 'c) Sisu connect', 'd) Metering Pulses', 'e) Other'].map(vas => (
+          {[
+            t('wizards.newConnection.vas.otherA'), t('wizards.newConnection.vas.otherB'), 
+            t('wizards.newConnection.vas.otherC'), t('wizards.newConnection.vas.otherD'), 
+            t('wizards.newConnection.vas.otherE')
+          ].map(vas => (
             <label key={vas} className="checkbox-label">
               <input type="checkbox" className="checkbox-input" /> {vas}
             </label>
@@ -33,13 +41,13 @@ export default function ValueAddedServicesStep() {
         </div>
       </div>
 
-      <h4 style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>Customer Agreement</h4>
+      <h4 style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>{t('wizards.newConnection.vas.agreementHeading')}</h4>
       <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
         <p style={{ marginBottom: '1rem' }}>
-          I/We do hereby declare and confirm that the information above, furnished by me/us are true and correct. I/We confirm that I/We have received, read and understood the 'Terms and Conditions for the Provision of Telecommunication Services by Sri Lanka Telecom PLC (SLT), which are also available on SLTMobitel website www.sltmobitel.lk.
+          {t('wizards.newConnection.vas.agreementText')}
         </p>
         <label className="checkbox-label" style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
-          <input type="checkbox" className="checkbox-input" required /> I agree to the Terms and Conditions
+          <input type="checkbox" className="checkbox-input" required /> {t('wizards.newConnection.vas.agreeLabel')}
         </label>
       </div>
       

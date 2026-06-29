@@ -1,49 +1,52 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function CurrentCustomerStep() {
+  const { t } = useTranslation();
+
   return (
     <div>
-      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>Form A - Current Customer Details</h3>
+      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.ownershipChange.currentCustomer.heading')}</h3>
       
       <div className="form-group">
-        <label className="form-label">1. Telephone number to be transferred</label>
+        <label className="form-label">{t('wizards.ownershipChange.currentCustomer.telephone')}</label>
         <input type="tel" className="form-control" required />
       </div>
 
       <div className="form-group">
-        <label className="form-label">2. Name of the Customer</label>
+        <label className="form-label">{t('wizards.ownershipChange.currentCustomer.customerName')}</label>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-          (as stated under the existing telephone application/agreement)
+          {t('wizards.ownershipChange.currentCustomer.customerNameNote')}
         </p>
-        <input type="text" className="form-control" placeholder="Full name / Company name" required />
+        <input type="text" className="form-control" placeholder={t('wizards.ownershipChange.currentCustomer.customerNamePlaceholder')} required />
       </div>
 
       <div className="form-group">
-        <label className="form-label">Partnership / Sole Proprietorship Info</label>
+        <label className="form-label">{t('wizards.ownershipChange.currentCustomer.partnership')}</label>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-          (If applicable, provide full names of all partners or the sole proprietor)
+          {t('wizards.ownershipChange.currentCustomer.partnershipNote')}
         </p>
-        <textarea className="form-control" rows="3" placeholder="Partner 1&#10;Partner 2..."></textarea>
+        <textarea className="form-control" rows="3" placeholder={t('wizards.ownershipChange.currentCustomer.partnershipPlaceholder')}></textarea>
       </div>
 
       <div className="form-group flex gap-4">
         <div style={{ flex: '1' }}>
-          <label className="form-label">3. N.I.C / B.R.C No</label>
+          <label className="form-label">{t('wizards.ownershipChange.currentCustomer.nicBrc')}</label>
           <input type="text" className="form-control" required />
         </div>
         <div style={{ flex: '1' }}>
-          <label className="form-label">4. Contact No.</label>
+          <label className="form-label">{t('wizards.ownershipChange.currentCustomer.contactNo')}</label>
           <input type="tel" className="form-control" required />
         </div>
       </div>
 
       <div className="form-group mt-4">
-        <label className="form-label">Kindly transfer the above telephone to following person/Company</label>
-        <input type="text" className="form-control" placeholder="Rev. / Mr. / Mrs. / Ms. / Company" required />
+        <label className="form-label">{t('wizards.ownershipChange.currentCustomer.transferTo')}</label>
+        <input type="text" className="form-control" placeholder={t('wizards.ownershipChange.currentCustomer.transferToPlaceholder')} required />
       </div>
 
       <div className="form-group">
-        <label className="form-label">Remarks</label>
+        <label className="form-label">{t('wizards.ownershipChange.currentCustomer.remarks')}</label>
         <textarea className="form-control" rows="2"></textarea>
       </div>
 

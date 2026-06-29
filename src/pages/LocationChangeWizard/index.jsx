@@ -4,9 +4,11 @@ import GeneralInfoStep from './GeneralInfoStep';
 import AddressStep from './AddressStep';
 import PreferencesStep from './PreferencesStep';
 import AgreementStep from './AgreementStep';
+import { useTranslation } from 'react-i18next';
 
 export default function LocationChangeWizard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
@@ -21,8 +23,8 @@ export default function LocationChangeWizard() {
 
   return (
     <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '1.5rem' }}>Application for Location Change</h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Relocate your Megaline, FTTH, or LTE service to a new address.</p>
+      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.locationChange.title')}</h2>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('wizards.locationChange.subtitle')}</p>
       
       {/* Progress Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative' }}>
@@ -41,7 +43,7 @@ export default function LocationChangeWizard() {
               {step}
             </div>
             <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? 'General Info' : step === 2 ? 'Address' : step === 3 ? 'Preferences' : 'Agreement'}
+              {step === 1 ? t('wizards.locationChange.steps.s1') : step === 2 ? t('wizards.locationChange.steps.s2') : step === 3 ? t('wizards.locationChange.steps.s3') : t('wizards.locationChange.steps.s4')}
             </span>
           </div>
         ))}
@@ -58,15 +60,15 @@ export default function LocationChangeWizard() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1}>
-            Previous
+            {t('common.previous')}
           </button>
           {currentStep < totalSteps ? (
             <button type="button" className="btn btn-primary" onClick={nextStep}>
-              Next Step
+              {t('common.nextStep')}
             </button>
           ) : (
             <button type="submit" className="btn btn-success">
-              Submit Application
+              {t('common.submit')}
             </button>
           )}
         </div>

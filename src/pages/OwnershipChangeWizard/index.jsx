@@ -4,9 +4,11 @@ import CurrentCustomerStep from './CurrentCustomerStep';
 import NewApplicantStep from './NewApplicantStep';
 import DocumentsStep from './DocumentsStep';
 import DeclarationStep from './DeclarationStep';
+import { useTranslation } from 'react-i18next';
 
 export default function OwnershipChangeWizard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
@@ -21,7 +23,7 @@ export default function OwnershipChangeWizard() {
 
   return (
     <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '1.5rem' }}>Application for Change of Customer</h2>
+      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.ownershipChange.title')}</h2>
       
       {/* Progress Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative' }}>
@@ -40,7 +42,7 @@ export default function OwnershipChangeWizard() {
               {step}
             </div>
             <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? 'Current Owner' : step === 2 ? 'New Applicant' : step === 3 ? 'Documents' : 'Declaration'}
+              {step === 1 ? t('wizards.ownershipChange.steps.s1') : step === 2 ? t('wizards.ownershipChange.steps.s2') : step === 3 ? t('wizards.ownershipChange.steps.s3') : t('wizards.ownershipChange.steps.s4')}
             </span>
           </div>
         ))}
@@ -57,15 +59,15 @@ export default function OwnershipChangeWizard() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1}>
-            Previous
+            {t('common.previous')}
           </button>
           {currentStep < totalSteps ? (
             <button type="button" className="btn btn-primary" onClick={nextStep}>
-              Next Step
+              {t('common.nextStep')}
             </button>
           ) : (
             <button type="submit" className="btn btn-success">
-              Submit Application
+              {t('common.submit')}
             </button>
           )}
         </div>

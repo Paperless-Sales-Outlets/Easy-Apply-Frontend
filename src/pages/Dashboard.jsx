@@ -1,22 +1,24 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiPlusCircle, FiEdit, FiTrash2, FiSettings, FiRefreshCcw } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const forms = [
-    { id: 'new-connection', title: 'New Connection', description: 'Application for new voice, broadband, or PEO TV services.', icon: <FiPlusCircle size={32} />, active: true, route: '/new-connection' },
-    { id: 'internet-services', title: 'Internet Services', description: 'Application for new or upgrade of internet services.', icon: <FiSettings size={32} />, active: true, route: '/internet-services' },
-    { id: 'ownership-change', title: 'Megaline Ownership Change', description: 'Transfer ownership of an existing Megaline connection.', icon: <FiRefreshCcw size={32} />, active: true, route: '/ownership-change' },
-    { id: 'location-change', title: 'Telephone Location Change', description: 'Request relocation of a telephone connection.', icon: <FiEdit size={32} />, active: true, route: '/location-change' },
-    { id: 'termination', title: 'Termination of Services', description: 'Request termination of existing services.', icon: <FiTrash2 size={32} />, active: true, route: '/termination' },
+    { id: 'new-connection', title: t('dashboard.forms.newConnection.title'), description: t('dashboard.forms.newConnection.description'), icon: <FiPlusCircle size={32} />, active: true, route: '/new-connection' },
+    { id: 'internet-services', title: t('dashboard.forms.internetServices.title'), description: t('dashboard.forms.internetServices.description'), icon: <FiSettings size={32} />, active: true, route: '/internet-services' },
+    { id: 'ownership-change', title: t('dashboard.forms.ownershipChange.title'), description: t('dashboard.forms.ownershipChange.description'), icon: <FiRefreshCcw size={32} />, active: true, route: '/ownership-change' },
+    { id: 'location-change', title: t('dashboard.forms.locationChange.title'), description: t('dashboard.forms.locationChange.description'), icon: <FiEdit size={32} />, active: true, route: '/location-change' },
+    { id: 'termination', title: t('dashboard.forms.termination.title'), description: t('dashboard.forms.termination.description'), icon: <FiTrash2 size={32} />, active: true, route: '/termination' },
   ];
 
   return (
     <div>
-      <h1 style={{ marginBottom: '0.5rem' }}>Dashboard</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Select an application form to digitize.</p>
+      <h1 style={{ marginBottom: '0.5rem' }}>{t('dashboard.title')}</h1>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('dashboard.subtitle')}</p>
       
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'center' }}>
         {forms.map(form => (
