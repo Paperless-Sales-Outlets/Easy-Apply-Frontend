@@ -299,6 +299,60 @@
         "s2": "Address",
         "s3": "Preferences",
         "s4": "Agreement"
+      },
+      "generalInfo": {
+        "heading": "1. General Information (Mandatory)",
+        "telephone": "1.1 Telephone number to be transferred",
+        "legalOwner": "Legal owner name",
+        "contactHeading": "1.7 Contact Information",
+        "contactPerson": "Name of the contact person",
+        "tel": "Telephone",
+        "mobile": "Mobile",
+        "email": "E-mail Address",
+        "fax": "Fax"
+      },
+      "address": {
+        "heading": "1.2 & 1.3 Address Information",
+        "serviceHeading": "1.2 Service Address",
+        "newServiceAddress": "a. New Service Address with postal code",
+        "newServiceAddressNote": "(If service address is different from the below billing address)",
+        "serviceAddressNote1": "Note: 1) Present telephone number may change if the new location is served from a different exchange.",
+        "serviceAddressNote2": "2) Service provisioning will be depended on the service availability.",
+        "routeDiagram": "b. Route Diagram (Optional)",
+        "routeDiagramNote": "Upload an image of a sketched map or Google Maps screenshot indicating the new service address.",
+        "nearestSlt1": "c. Nearest SLT wireline number (i)",
+        "nearestSlt2": "c. Nearest SLT wireline number (ii)",
+        "notReq4g": "Not required for 4G LTE",
+        "billingHeading": "1.3 Billing Address",
+        "newBillingAddress": "a. New billing address with Postal Code",
+        "newBillingAddressNote": "(If billing address is different from service address)",
+        "billingEffective": "b. New billing address should be effective:",
+        "effectiveImmediately": "1. Immediately",
+        "effectiveAfter": "2. After providing service to the new location"
+      },
+      "preferences": {
+        "heading": "Transfer Preferences",
+        "disconnectExisting": "1.4 Disconnect the existing telephone line with effect from",
+        "presentServices": "1.5 Present services",
+        "disconnectAll": "a. Disconnect all existing services immediately",
+        "keepServices": "b. Keep the following services until new telephone line is given",
+        "incoming": "Incoming Only",
+        "outgoing": "Outgoing Only",
+        "broadband": "Broadband",
+        "peoTv": "PeoTV",
+        "callForwarding": "1.6 Required Call Forwarding Facility (charges applicable)",
+        "callForwardingNote": "(transfer calls from existing number to new number)",
+        "yes": "Yes",
+        "no": "No",
+        "durationReq": "If Yes, required time duration:",
+        "months": "Months"
+      },
+      "agreement": {
+        "heading": "2.0 Customer Agreement",
+        "para1": "I / We, being the legal customer/s of the existing SLT service indicated in 1.1 above do hereby declare that the information furnished by me/us are true and correct and agree to abide by the terms and conditions of the telecommunication service agreement entered into in respect of the existing SLT services and the said terms and conditions shall continue to govern this relocation service.",
+        "para2": "I / we have read and understood the further terms and conditions received herewith for the relocation and those which may be enforced in future by Sri Lanka Telecom PLC (SLT) and agree to abide by the same.",
+        "para3": "I hereby absolve SLT of any liability of its failure or inability to transfer all the existing services that I/We have requested to be transferred to the new location due to any technical constrains or otherwise. Further I/We indemnify SLT of any loss or damage caused to me/us due to such difficulty or constraint on the part of SLT in provisioning any of the services at the new location.",
+        "agreeLabel": "I agree to the Declaration and Terms & Conditions"
       }
     },
     "termination": {
