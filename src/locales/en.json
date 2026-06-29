@@ -1,0 +1,85 @@
+{
+  "nav": {
+    "title": "SLTMobitel Paperless"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Select an application form to digitize.",
+    "forms": {
+      "newConnection": {
+        "title": "New Connection",
+        "description": "Application for new voice, broadband, or PEO TV services."
+      },
+      "internetServices": {
+        "title": "Internet Services",
+        "description": "Application for new or upgrade of internet services."
+      },
+      "ownershipChange": {
+        "title": "Megaline Ownership Change",
+        "description": "Transfer ownership of an existing Megaline connection."
+      },
+      "locationChange": {
+        "title": "Telephone Location Change",
+        "description": "Request relocation of a telephone connection."
+      },
+      "termination": {
+        "title": "Termination of Services",
+        "description": "Request termination of existing services."
+      }
+    }
+  },
+  "common": {
+    "previous": "Previous",
+    "nextStep": "Next Step",
+    "submit": "Submit Application",
+    "confirmTermination": "Confirm Termination"
+  },
+  "wizards": {
+    "newConnection": {
+      "title": "Application for New Connection",
+      "steps": {
+        "s1": "Service",
+        "s2": "Customer",
+        "s3": "Billing",
+        "s4": "Declaration"
+      }
+    },
+    "internetServices": {
+      "title": "Application for Internet Services",
+      "steps": {
+        "s1": "Customer Info",
+        "s2": "Service Details",
+        "s3": "Account Setup"
+      }
+    },
+    "ownershipChange": {
+      "title": "Application for Change of Customer",
+      "steps": {
+        "s1": "Current Owner",
+        "s2": "New Applicant",
+        "s3": "Documents",
+        "s4": "Declaration"
+      }
+    },
+    "locationChange": {
+      "title": "Application for Location Change",
+      "subtitle": "Relocate your Megaline, FTTH, or LTE service to a new address.",
+      "steps": {
+        "s1": "General Info",
+        "s2": "Address",
+        "s3": "Preferences",
+        "s4": "Agreement"
+      }
+    },
+    "termination": {
+      "title": "Application for Termination of Services",
+      "subtitle": "Request permanent or temporary disconnection of SLT services and facilities.",
+      "steps": {
+        "s1": "Service Info",
+        "s2": "Contact Info",
+        "s3": "Reason",
+        "s4": "Agreement"
+      }
+    }
+  }
+}
