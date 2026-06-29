@@ -32,7 +32,7 @@ export default function AddressStep() {
           <input type="file" className="form-control" accept="image/*" />
         </div>
 
-        <div className="form-group flex gap-4 mt-4">
+        <div className="form-group flex flex-col-mobile gap-4 mt-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.locationChange.address.nearestSlt1')}</label>
             <input type="tel" className="form-control" placeholder={t('wizards.locationChange.address.notReq4g')} />

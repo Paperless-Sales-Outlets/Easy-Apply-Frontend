@@ -10,30 +10,32 @@ export default function ConnectionPackageStep() {
       
       <div className="form-group">
         <label className="form-label">{t('wizards.newConnection.connPkg.modeOfConnection')}</label>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1rem', textAlign: 'left' }}>
-          <thead>
-            <tr>
-              <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color)' }}></th>
-              <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>{t('wizards.newConnection.connPkg.voice')}</th>
-              <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>{t('wizards.newConnection.connPkg.broadband')}</th>
-              <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>{t('wizards.newConnection.connPkg.peoTv')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              t('wizards.newConnection.connPkg.fibre'), 
-              t('wizards.newConnection.connPkg.home4G'), 
-              t('wizards.newConnection.connPkg.copper')
-            ].map(type => (
-              <tr key={type}>
-                <td style={{ padding: '0.5rem', fontWeight: '500' }}>{type}</td>
-                <td style={{ padding: '0.5rem' }}><input type="checkbox" className="checkbox-input" /></td>
-                <td style={{ padding: '0.5rem' }}><input type="checkbox" className="checkbox-input" /></td>
-                <td style={{ padding: '0.5rem' }}><input type="checkbox" className="checkbox-input" /></td>
+        <div className="table-container">
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1rem', textAlign: 'left' }}>
+            <thead>
+              <tr>
+                <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color)' }}></th>
+                <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>{t('wizards.newConnection.connPkg.voice')}</th>
+                <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>{t('wizards.newConnection.connPkg.broadband')}</th>
+                <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>{t('wizards.newConnection.connPkg.peoTv')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {[
+                t('wizards.newConnection.connPkg.fibre'), 
+                t('wizards.newConnection.connPkg.home4G'), 
+                t('wizards.newConnection.connPkg.copper')
+              ].map(type => (
+                <tr key={type}>
+                  <td style={{ padding: '0.5rem', fontWeight: '500' }}>{type}</td>
+                  <td style={{ padding: '0.5rem' }}><input type="checkbox" className="checkbox-input" /></td>
+                  <td style={{ padding: '0.5rem' }}><input type="checkbox" className="checkbox-input" /></td>
+                  <td style={{ padding: '0.5rem' }}><input type="checkbox" className="checkbox-input" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{t('wizards.newConnection.connPkg.fibreNote')}</p>
       </div>
 
@@ -41,12 +43,12 @@ export default function ConnectionPackageStep() {
       
       <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
         <h5 style={{ color: 'var(--slt-blue)', marginBottom: '1rem' }}>{t('wizards.newConnection.connPkg.voicePackage')}</h5>
-        <div className="form-group flex gap-4">
+        <div className="form-group flex flex-col-mobile gap-4">
           <label className="checkbox-label" style={{ flex: '1' }}>
             <input type="checkbox" className="checkbox-input" /> {t('wizards.newConnection.connPkg.myPhone')}
           </label>
         </div>
-        <div className="form-group flex gap-4">
+        <div className="form-group flex flex-col-mobile gap-4">
           <label className="checkbox-label" style={{ flex: '1' }}>
             <input type="checkbox" className="checkbox-input" /> {t('wizards.newConnection.connPkg.voicePalPremium')}
           </label>
@@ -54,12 +56,12 @@ export default function ConnectionPackageStep() {
             <input type="checkbox" className="checkbox-input" /> {t('wizards.newConnection.connPkg.voicePalBasic')}
           </label>
         </div>
-        <div className="form-group flex gap-4">
+        <div className="form-group flex flex-col-mobile gap-4">
           <label className="checkbox-label" style={{ flex: '1' }}>
             <input type="checkbox" className="checkbox-input" /> {t('wizards.newConnection.connPkg.standardVoice')}
           </label>
         </div>
-        <div className="form-group flex gap-4 items-center">
+        <div className="form-group flex flex-col-mobile gap-4 items-start">
           <label className="form-label" style={{ margin: 0, flex: '2' }}>{t('wizards.newConnection.connPkg.iddDeact')}</label>
           <div className="radio-group" style={{ flex: '1' }}>
             <label className="radio-label"><input type="radio" name="deactIDD" value="yes" className="radio-input" /> {t('wizards.newConnection.connPkg.yes')}</label>
@@ -104,7 +106,7 @@ export default function ConnectionPackageStep() {
       <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
         <h5 style={{ color: 'var(--slt-blue)', marginBottom: '1rem' }}>{t('wizards.newConnection.connPkg.peoTvPackage')}</h5>
         <div className="form-group">
-          <div className="radio-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          <div className="radio-group responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)" }}>
             {['PEO Titanium', 'PEO Platinum', 'PEO Entertainment', 'PEO Gold', 'PEO Silver Plus', 'PEO Silver', 'PEO Family', 'PEO Unnatham', t('wizards.newConnection.connPkg.other')].map(pkg => (
               <label key={pkg} className="checkbox-label">
                 <input type="checkbox" className="checkbox-input" /> {pkg}

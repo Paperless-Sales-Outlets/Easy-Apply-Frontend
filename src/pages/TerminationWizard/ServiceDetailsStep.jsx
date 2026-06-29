@@ -47,7 +47,7 @@ export default function ServiceDetailsStep() {
         <h4 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>{t('wizards.termination.serviceDetails.specificServices')}</h4>
         
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col-mobile items-center gap-4">
             <label className="checkbox-label" style={{ margin: 0, flex: '1' }}>
               <input type="checkbox" className="checkbox-input" /> {t('wizards.termination.serviceDetails.broadband')}
             </label>
@@ -57,7 +57,7 @@ export default function ServiceDetailsStep() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col-mobile items-center gap-4">
             <label className="checkbox-label" style={{ margin: 0, flex: '1' }}>
               <input type="checkbox" className="checkbox-input" /> {t('wizards.termination.serviceDetails.dialUp')}
             </label>
@@ -67,7 +67,7 @@ export default function ServiceDetailsStep() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col-mobile items-center gap-4">
             <label className="checkbox-label" style={{ margin: 0, flex: '1' }}>
               <input type="checkbox" className="checkbox-input" /> {t('wizards.termination.serviceDetails.email')}
             </label>

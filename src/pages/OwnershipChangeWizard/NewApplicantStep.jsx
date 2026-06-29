@@ -13,7 +13,7 @@ export default function NewApplicantStep() {
         <input type="text" className="form-control" required />
       </div>
 
-      <div className="form-group flex gap-4">
+      <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.ownershipChange.newApplicant.nicBrc')}</label>
           <input type="text" className="form-control" required />

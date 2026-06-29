@@ -22,7 +22,7 @@ export default function ServiceDetailsStep() {
 
         {appType === 'existing' && (
           <div className="card" style={{ padding: '1rem', backgroundColor: 'var(--bg-color)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
-            <div className="flex gap-4">
+            <div className="flex flex-col-mobile gap-4">
               <div style={{ flex: '1' }}>
                 <label className="form-label">{t('wizards.internetServices.serviceDetails.existingUser')}</label>
                 <input type="text" className="form-control" />
@@ -50,7 +50,7 @@ export default function ServiceDetailsStep() {
             <input type="checkbox" className="checkbox-input" /> {t('wizards.internetServices.serviceDetails.hostingDns')}
           </label>
           
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-col-mobile gap-4 items-center">
             <label className="checkbox-label" style={{ flex: '1', margin: 0 }}>
               <input type="checkbox" className="checkbox-input" /> {t('wizards.internetServices.serviceDetails.virtualMail')}
             </label>
@@ -64,7 +64,7 @@ export default function ServiceDetailsStep() {
             <input type="checkbox" className="checkbox-input" /> {t('wizards.internetServices.serviceDetails.pop3')}
           </label>
 
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-col-mobile gap-4 items-center">
             <label className="checkbox-label" style={{ flex: '1', margin: 0 }}>
               <input type="checkbox" className="checkbox-input" /> {t('wizards.internetServices.serviceDetails.virtualWeb')}
             </label>

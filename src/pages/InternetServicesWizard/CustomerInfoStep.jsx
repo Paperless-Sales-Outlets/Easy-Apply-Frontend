@@ -8,7 +8,7 @@ export default function CustomerInfoStep() {
     <div>
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.internetServices.customerInfo.heading')}</h3>
       
-      <div className="form-group flex gap-4">
+      <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '2' }}>
           <label className="form-label">{t('wizards.internetServices.customerInfo.nameFull')}</label>
           <input type="text" className="form-control" required />
@@ -24,7 +24,7 @@ export default function CustomerInfoStep() {
         <textarea className="form-control" rows="3" required></textarea>
       </div>
 
-      <div className="form-group flex gap-4">
+      <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.internetServices.customerInfo.phone')}</label>
           <input type="tel" className="form-control" required />

@@ -44,7 +44,7 @@ export default function ReasonStep() {
       </p>
 
       <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+        <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "1rem" }}>
           {reasons.map((reason, idx) => (
             <label key={idx} className="checkbox-label" style={{ margin: 0 }}>
               <input 
@@ -65,7 +65,7 @@ export default function ReasonStep() {
             {t('wizards.termination.reason.compDetailsDesc')}
           </p>
           
-          <div style={{ overflowX: 'auto' }}>
+          <div className="table-container">
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-color)', borderBottom: '2px solid var(--border-color)' }}>

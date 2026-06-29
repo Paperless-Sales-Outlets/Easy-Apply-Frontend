@@ -23,7 +23,7 @@ export default function CustomerInfoStep() {
         </div>
       </div>
 
-      <div className="form-group flex gap-4">
+      <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.title')}</label>
           <select className="form-control" defaultValue="">
@@ -40,7 +40,7 @@ export default function CustomerInfoStep() {
         </div>
       </div>
 
-      <div className="form-group flex gap-4">
+      <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.dob')}</label>
           <input type="date" className="form-control" />
@@ -51,7 +51,7 @@ export default function CustomerInfoStep() {
         </div>
       </div>
 
-      <div className="form-group flex gap-4">
+      <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.vat')}</label>
           <input type="text" className="form-control" />
@@ -69,7 +69,7 @@ export default function CustomerInfoStep() {
 
       <h4 style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>{t('wizards.newConnection.customerInfo.contactDetails')}</h4>
       
-      <div className="form-group flex gap-4">
+      <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.contactName')}</label>
           <input type="text" className="form-control" />
@@ -80,7 +80,7 @@ export default function CustomerInfoStep() {
         </div>
       </div>
 
-      <div className="form-group flex gap-4">
+      <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.fixedNumber')}</label>
           <input type="tel" className="form-control" />
@@ -91,7 +91,7 @@ export default function CustomerInfoStep() {
         </div>
       </div>
 
-      <div className="form-group flex gap-4">
+      <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.faxNumber')}</label>
           <input type="tel" className="form-control" />

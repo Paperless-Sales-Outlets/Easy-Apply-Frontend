@@ -26,7 +26,7 @@ export default function ContactDetailsStep() {
       <div className="card mt-6" style={{ padding: '1.5rem', backgroundColor: 'var(--bg-color)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
         <h4 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>{t('wizards.termination.contact.contactHeading')}</h4>
         
-        <div className="form-group flex gap-4">
+        <div className="form-group flex flex-col-mobile gap-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.termination.contact.mobile')}</label>
             <input type="tel" className="form-control" required />
@@ -37,7 +37,7 @@ export default function ContactDetailsStep() {
           </div>
         </div>
 
-        <div className="form-group flex gap-4 mt-4">
+        <div className="form-group flex flex-col-mobile gap-4 mt-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.termination.contact.email')}</label>
             <input type="email" className="form-control" required />

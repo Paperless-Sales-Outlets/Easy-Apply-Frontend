@@ -10,7 +10,7 @@ export default function ValueAddedServicesStep() {
       
       <div className="form-group">
         <label className="form-label">{t('wizards.newConnection.vas.requiredVas')}</label>
-        <div className="radio-group" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)' }}>
+        <div className="radio-group responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)" }}>
           {[
             t('wizards.newConnection.vas.vasA'), t('wizards.newConnection.vas.vasB'), 
             t('wizards.newConnection.vas.vasC'), t('wizards.newConnection.vas.vasD'),

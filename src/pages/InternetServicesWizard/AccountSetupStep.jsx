@@ -16,7 +16,7 @@ export default function AccountSetupStep() {
         
         <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--bg-color)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
           
-          <div className="flex gap-4" style={{ marginBottom: '1.5rem' }}>
+          <div className="flex flex-col-mobile gap-4" style={{ marginBottom: '1.5rem' }}>
             <div style={{ flex: '1' }}>
               <label className="form-label" style={{ color: 'var(--text-secondary)' }}>{t('wizards.internetServices.accountSetup.userOp1')}</label>
               <input type="text" className="form-control" placeholder={t('wizards.internetServices.accountSetup.userPlaceholder')} maxLength={14} minLength={4} />
@@ -27,7 +27,7 @@ export default function AccountSetupStep() {
             </div>
           </div>
           
-          <div className="flex gap-4">
+          <div className="flex flex-col-mobile gap-4">
             <div style={{ flex: '1' }}>
               <label className="form-label" style={{ color: 'var(--text-secondary)' }}>{t('wizards.internetServices.accountSetup.userOp2')}</label>
               <input type="text" className="form-control" placeholder={t('wizards.internetServices.accountSetup.userPlaceholder')} maxLength={14} minLength={4} />

@@ -29,7 +29,7 @@ export default function CurrentCustomerStep() {
         <textarea className="form-control" rows="3" placeholder={t('wizards.ownershipChange.currentCustomer.partnershipPlaceholder')}></textarea>
       </div>
 
-      <div className="form-group flex gap-4">
+      <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.ownershipChange.currentCustomer.nicBrc')}</label>
           <input type="text" className="form-control" required />

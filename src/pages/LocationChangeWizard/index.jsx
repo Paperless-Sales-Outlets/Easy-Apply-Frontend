@@ -27,12 +27,12 @@ export default function LocationChangeWizard() {
       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('wizards.locationChange.subtitle')}</p>
       
       {/* Progress Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative' }}>
+      <div className="wizard-steps-container" style={{ display: "flex", justifyContent: "space-between", marginBottom: "2rem", position: "relative" }}>
         <div style={{ position: 'absolute', top: '15px', left: 0, right: 0, height: '4px', backgroundColor: 'var(--border-color)', zIndex: 0 }} />
-        <div style={{ position: 'absolute', top: '15px', left: 0, height: '4px', backgroundColor: 'var(--slt-green)', zIndex: 0, width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%`, transition: 'width 0.3s ease' }} />
+        <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: 0, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%`, transition: "width 0.3s ease" }} />
         
         {[1, 2, 3, 4].map(step => (
-          <div key={step} style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+          <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
             <div style={{ 
               width: '34px', height: '34px', borderRadius: '50%', 
               backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)', 
