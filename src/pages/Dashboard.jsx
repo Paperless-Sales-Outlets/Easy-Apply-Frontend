@@ -20,15 +20,17 @@ export default function Dashboard() {
       <h1 style={{ marginBottom: '0.5rem' }}>{t('dashboard.title')}</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('dashboard.subtitle')}</p>
       
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
         {forms.map(form => (
           <div 
             key={form.id} 
             className="card"
             style={{ 
               padding: '1.5rem',
-              flex: '1 1 300px',
-              maxWidth: '400px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1.5rem',
+              width: '100%',
               cursor: form.active ? 'pointer' : 'not-allowed',
               opacity: form.active ? 1 : 0.6,
               transition: 'transform 0.2s',
@@ -37,11 +39,13 @@ export default function Dashboard() {
             onMouseOver={(e) => { if(form.active) e.currentTarget.style.transform = 'translateY(-4px)' }}
             onMouseOut={(e) => { if(form.active) e.currentTarget.style.transform = 'translateY(0)' }}
           >
-            <div style={{ color: form.active ? 'var(--slt-green)' : 'var(--text-secondary)', marginBottom: '1rem' }}>
+            <div style={{ color: form.active ? 'var(--slt-green)' : 'var(--text-secondary)', flexShrink: 0 }}>
               {form.icon}
             </div>
-            <h3 style={{ marginBottom: '0.5rem', color: form.active ? 'var(--slt-blue)' : 'var(--text-secondary)' }}>{form.title}</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{form.description}</p>
+            <div>
+              <h3 style={{ marginBottom: '0.25rem', color: form.active ? 'var(--slt-blue)' : 'var(--text-secondary)' }}>{form.title}</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>{form.description}</p>
+            </div>
           </div>
         ))}
       </div>
