@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function ReasonStep() {
+  const { t } = useTranslation();
   const [showCompetitorDetails, setShowCompetitorDetails] = useState(false);
 
   const reasons = [
@@ -36,9 +38,9 @@ export default function ReasonStep() {
 
   return (
     <div>
-      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>3. Reason for Disconnection</h3>
+      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.termination.reason.heading')}</h3>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-        Please select the reasons for disconnecting the service to help us improve our service excellence.
+        {t('wizards.termination.reason.desc')}
       </p>
 
       <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
@@ -50,7 +52,7 @@ export default function ReasonStep() {
                 className="checkbox-input" 
                 onChange={(e) => handleReasonChange(e, reason)} 
               /> 
-              {reason}
+              {t(`wizards.termination.reason.reasons.${reason}`)}
             </label>
           ))}
         </div>
@@ -58,16 +60,16 @@ export default function ReasonStep() {
 
       {showCompetitorDetails && (
         <div className="card mt-6" style={{ padding: '1.5rem', border: '1px solid var(--slt-green)', backgroundColor: 'rgba(0, 166, 80, 0.02)' }}>
-          <h4 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>* Better Competitor Offer Details</h4>
+          <h4 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>{t('wizards.termination.reason.compDetails')}</h4>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-            Please specify the competitor and package you are switching to.
+            {t('wizards.termination.reason.compDetailsDesc')}
           </p>
           
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-color)', borderBottom: '2px solid var(--border-color)' }}>
-                  <th style={{ padding: '0.8rem' }}>Operator's Name</th>
+                  <th style={{ padding: '0.8rem' }}>{t('wizards.termination.reason.operatorName')}</th>
                   <th style={{ padding: '0.8rem' }}>Airtel</th>
                   <th style={{ padding: '0.8rem' }}>Dialog</th>
                   <th style={{ padding: '0.8rem' }}>Etisalat</th>
@@ -78,7 +80,7 @@ export default function ReasonStep() {
               </thead>
               <tbody>
                 <tr>
-                  <td style={{ padding: '0.8rem', fontWeight: 'bold' }}>Package Name</td>
+                  <td style={{ padding: '0.8rem', fontWeight: 'bold' }}>{t('wizards.termination.reason.pkgName')}</td>
                   <td style={{ padding: '0.4rem' }}><input type="text" className="form-control" style={{ padding: '0.4rem' }} /></td>
                   <td style={{ padding: '0.4rem' }}><input type="text" className="form-control" style={{ padding: '0.4rem' }} /></td>
                   <td style={{ padding: '0.4rem' }}><input type="text" className="form-control" style={{ padding: '0.4rem' }} /></td>
@@ -93,7 +95,7 @@ export default function ReasonStep() {
       )}
 
       <div className="form-group mt-6">
-        <label className="form-label">Additional Comments</label>
+        <label className="form-label">{t('wizards.termination.reason.addComments')}</label>
         <textarea className="form-control" rows="3"></textarea>
       </div>
 
