@@ -20,7 +20,7 @@ export default function NewConnectionWizard() {
   };
 
   return (
-    <div className="card" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+    <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
       <h2 style={{ marginBottom: '1.5rem' }}>New Services Application</h2>
       
       {/* Progress Bar */}
