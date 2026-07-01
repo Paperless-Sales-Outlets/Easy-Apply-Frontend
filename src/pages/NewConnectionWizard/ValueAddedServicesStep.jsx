@@ -31,8 +31,7 @@ export default function ValueAddedServicesStep() {
         <div className="radio-group">
           {[
             t('wizards.newConnection.vas.otherA'), t('wizards.newConnection.vas.otherB'), 
-            t('wizards.newConnection.vas.otherC'), t('wizards.newConnection.vas.otherD'), 
-            t('wizards.newConnection.vas.otherE')
+            t('wizards.newConnection.vas.otherC'), t('wizards.newConnection.vas.otherD')
           ].map(vas => (
             <label key={vas} className="checkbox-label">
               <input type="checkbox" className="checkbox-input" /> {vas}
