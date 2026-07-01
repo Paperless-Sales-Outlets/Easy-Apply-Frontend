@@ -7,24 +7,40 @@
     "subtitle": "Select an application form to digitize.",
     "forms": {
       "newConnection": {
-        "title": "New Connection",
-        "description": "Application for new voice, broadband, or PEO TV services."
+        "title": "New Connection (FTTH/LTE/COPPER)",
+        "description": "Application for new connection of FTTH, LTE, or Copper services."
       },
-      "internetServices": {
-        "title": "Internet Services",
-        "description": "Application for new or upgrade of internet services."
+      "reconnection": {
+        "title": "Re-connection of SLT Service",
+        "description": "Application for re-connection of an existing SLT service."
       },
-      "ownershipChange": {
-        "title": "Megaline Ownership Change",
-        "description": "Transfer ownership of an existing Megaline connection."
-      },
-      "locationChange": {
-        "title": "Telephone Location Change",
-        "description": "Request relocation of a telephone connection."
+      "relocation": {
+        "title": "Relocation (FTTH/LTE/COPPER/PEOTV)",
+        "description": "Request relocation of a connection (FTTH, LTE, Copper, or PEO TV)."
       },
       "termination": {
-        "title": "Termination of Services",
-        "description": "Request termination of existing services."
+        "title": "Termination (Disconnection)",
+        "description": "Request termination or disconnection of services."
+      },
+      "transfer": {
+        "title": "Transfer (Change of Ownership)",
+        "description": "Transfer ownership of an existing connection."
+      },
+      "packageMigration": {
+        "title": "Application for Package Migration",
+        "description": "Apply for migration of your current package."
+      },
+      "serviceVacation": {
+        "title": "Service Vacation",
+        "description": "Apply for temporary service vacation."
+      },
+      "refundRequest": {
+        "title": "Refund Request",
+        "description": "Request a refund for deposits or overpayments."
+      },
+      "customerRequestAcceptance": {
+        "title": "Application for Customer Request Acceptance",
+        "description": "General application for accepting various customer requests."
       }
     }
   },
