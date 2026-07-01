@@ -256,6 +256,68 @@
         "agreeLabel": "I accept the Terms and Conditions"
       }
     },
+    "packageMigration": {
+      "title": "Application for Package Migration",
+      "subtitle": "Change your existing SLT package.",
+      "steps": {
+        "s1": "Customer Info",
+        "s2": "Package Details"
+      },
+      "customerInfo": {
+        "heading": "1. Customer Information",
+        "telephone": "Telephone Number",
+        "fullName": "Full Name / Company Name",
+        "nicBrc": "N.I.C / B.R.C. No",
+        "contactNo": "Contact No."
+      },
+      "packageDetails": {
+        "heading": "2. Required Package Change",
+        "existingPackage": "Existing Package",
+        "requiredPackage": "Required Package",
+        "effectiveDate": "With effect from",
+        "remarks": "Remarks",
+        "declaration": "Please change my existing package as requested above."
+      }
+    },
+    "serviceVacation": {
+      "title": "Service Vacation",
+      "subtitle": "Apply for temporary service deactivation.",
+      "steps": {
+        "s1": "General Info",
+        "s2": "Service Info",
+        "s3": "Agreement"
+      },
+      "generalInfo": {
+        "heading": "1. General Information (Mandatory)",
+        "telephone": "1.1 Customer Telephone Number",
+        "fullName": "1.2 Customer Name / Company Name",
+        "title": "Title",
+        "address": "1.3 Address of the Customer/Company",
+        "nicBrc": "1.4 National Identity Card No / Business Registration No",
+        "mobile": "1.5 Customer contact number (Mobile)",
+        "email": "1.6 Customer email address"
+      },
+      "serviceInfo": {
+        "heading": "2. Service Information",
+        "servicesToVacate": "2.1 Required Services to be vacated",
+        "voice": "Voice",
+        "broadband": "Broadband",
+        "peoTv": "PEO TV",
+        "deactivationPeriod": "2.2 Service Deactivation Period",
+        "deactivationDate": "Deactivation date",
+        "resumeDate": "Resume date",
+        "note1": "1 Service deactivation period shall not exceed 04 months and can be applied once a year only",
+        "note2": "2 Customer shall settle all outstanding amount upto the service deactivation commencement date",
+        "note3": "3 Admin fee of Rs. 500/- (subject to government taxes) is payable, prior to commencement of service deactivation",
+        "note4": "4 Telephone line rental will be charged during the vacation period for Megaline & SLT Fibre services",
+        "note5": "5 Only Broadband and PEO TV rentals will be waived off during the period requested"
+      },
+      "agreement": {
+        "heading": "3. Customer Agreement",
+        "declaration": "I / We do hereby declare that the information furnished by me/us is true and correct and agree to abide by the Terms and Conditions stated herein below, which shall be supplementary to the 'Agreement for the Provision of Telecommunication Service' both of which shall be read together and those which I/we have read and understood regarding the Facility hereunder and those which may be enforced in future by Sri Lanka Telecom PLC (SLT)",
+        "agreeLabel": "I agree to the Terms and Conditions"
+      }
+    },
     "ownershipChange": {
       "title": "Application for Change of Customer",
       "steps": {
