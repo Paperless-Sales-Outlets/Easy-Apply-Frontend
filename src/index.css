@@ -243,3 +243,22 @@ h1, h2, h3, h4 {
     padding-right: 1rem !important;
   }
 }
+
+/* Dashboard Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  flex: 1; /* take remaining height */
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 1rem;
+    height: auto;
+  }
+}

@@ -7,24 +7,40 @@
     "subtitle": "Select an application form to digitize.",
     "forms": {
       "newConnection": {
-        "title": "New Connection",
-        "description": "Application for new voice, broadband, or PEO TV services."
+        "title": "New Connection (FTTH/LTE/COPPER)",
+        "description": "Application for new connection of FTTH, LTE, or Copper services."
       },
-      "internetServices": {
-        "title": "Internet Services",
-        "description": "Application for new or upgrade of internet services."
+      "reconnection": {
+        "title": "Re-connection of SLT Service",
+        "description": "Application for re-connection of an existing SLT service."
       },
-      "ownershipChange": {
-        "title": "Megaline Ownership Change",
-        "description": "Transfer ownership of an existing Megaline connection."
-      },
-      "locationChange": {
-        "title": "Telephone Location Change",
-        "description": "Request relocation of a telephone connection."
+      "relocation": {
+        "title": "Relocation (FTTH/LTE/COPPER/PEOTV)",
+        "description": "Request relocation of a connection (FTTH, LTE, Copper, or PEO TV)."
       },
       "termination": {
-        "title": "Termination of Services",
-        "description": "Request termination of existing services."
+        "title": "Termination (Disconnection)",
+        "description": "Request termination or disconnection of services."
+      },
+      "transfer": {
+        "title": "Transfer (Change of Ownership)",
+        "description": "Transfer ownership of an existing connection."
+      },
+      "packageMigration": {
+        "title": "Application for Package Migration",
+        "description": "Apply for migration of your current package."
+      },
+      "serviceVacation": {
+        "title": "Service Vacation",
+        "description": "Apply for temporary service vacation."
+      },
+      "refundRequest": {
+        "title": "Refund Request",
+        "description": "Request a refund for deposits or overpayments."
+      },
+      "customerRequestAcceptance": {
+        "title": "Application for Customer Request Acceptance",
+        "description": "General application for accepting various customer requests."
       }
     }
   },
@@ -132,11 +148,10 @@
         "vasK": "K. Detail Bill",
         "vasL": "L. Other",
         "otherVas": "5.2 Other Value Added Services",
-        "otherA": "a) Hitflix",
-        "otherB": "b) TeleLife",
-        "otherC": "c) Sisu connect",
-        "otherD": "d) Metering Pulses",
-        "otherE": "e) Other",
+        "otherA": "a) TeleLife",
+        "otherB": "b) Sisu connect",
+        "otherC": "c) Metering Pulses",
+        "otherD": "d) Other",
         "agreementHeading": "Customer Agreement",
         "agreementText": "I/We do hereby declare and confirm that the information above, furnished by me/us are true and correct. I/We confirm that I/We have received, read and understood the 'Terms and Conditions for the Provision of Telecommunication Services by Sri Lanka Telecom PLC (SLT), which are also available on SLTMobitel website www.sltmobitel.lk.",
         "agreeLabel": "I agree to the Terms and Conditions"
@@ -200,6 +215,170 @@
         "declarationHeading": "Customer Declaration",
         "declarationText": "I/We do hereby declare that the information furnished by me/us are true and correct and agree to abide by terms & conditions that are presently enforced and those which will be enforced in future by Sri Lanka Telecom Limited.",
         "agreeLabel": "I agree to the Declaration and Terms"
+      }
+    },
+    "reconnection": {
+      "title": "Application for Re-connection of SLT Service",
+      "steps": {
+        "s1": "Customer Details",
+        "s2": "Facilities",
+        "s3": "Declaration"
+      },
+      "customerInfo": {
+        "heading": "1. Customer & Line Details",
+        "telephone": "Telephone Number",
+        "nearestTp": "Nearest TP No.",
+        "fullName": "Full Name / Company Name",
+        "nicBrc": "N.I.C / B.R.C No",
+        "contactNo": "Contact No."
+      },
+      "reconnectionDetails": {
+        "heading": "2. Request for Service Re-connection",
+        "disconnectedFrom": "My telephone line has been disconnected from",
+        "disconnectedTo": "to",
+        "amountToPay": "I would like to pay Rs. (Amount)",
+        "facilitiesHeading": "Could you kindly reconnect the line and provide the following facilities as well:",
+        "broadband": "SLT Broadband Internet (ADSL/Wi-Max)",
+        "peoTv": "PeoTV",
+        "sltPlus": "SLT Plus",
+        "cli": "CLI",
+        "idd": "IDD",
+        "dialUp": "Dial-up Internet",
+        "email": "Email",
+        "username": "Username:",
+        "other": "Other",
+        "specify": "Specify:",
+        "remarks": "Other remarks:"
+      },
+      "declaration": {
+        "heading": "3. Customer Agreement",
+        "declarationText": "I/We do hereby request to reconnect the above mentioned services and agree to pay the required reconnection charges.",
+        "agreeLabel": "I accept the Terms and Conditions"
+      }
+    },
+    "packageMigration": {
+      "title": "Application for Package Migration",
+      "subtitle": "Change your existing SLT package.",
+      "steps": {
+        "s1": "Customer Info",
+        "s2": "Package Details"
+      },
+      "customerInfo": {
+        "heading": "1. Customer Information",
+        "telephone": "Telephone Number",
+        "fullName": "Full Name / Company Name",
+        "nicBrc": "N.I.C / B.R.C. No",
+        "contactNo": "Contact No."
+      },
+      "packageDetails": {
+        "heading": "2. Required Package Change",
+        "existingPackage": "Existing Package",
+        "requiredPackage": "Required Package",
+        "effectiveDate": "With effect from",
+        "remarks": "Remarks",
+        "declaration": "Please change my existing package as requested above."
+      }
+    },
+    "serviceVacation": {
+      "title": "Service Vacation",
+      "subtitle": "Apply for temporary service deactivation.",
+      "steps": {
+        "s1": "General Info",
+        "s2": "Service Info",
+        "s3": "Agreement"
+      },
+      "generalInfo": {
+        "heading": "1. General Information (Mandatory)",
+        "telephone": "1.1 Customer Telephone Number",
+        "fullName": "1.2 Customer Name / Company Name",
+        "title": "Title",
+        "address": "1.3 Address of the Customer/Company",
+        "nicBrc": "1.4 National Identity Card No / Business Registration No",
+        "mobile": "1.5 Customer contact number (Mobile)",
+        "email": "1.6 Customer email address"
+      },
+      "serviceInfo": {
+        "heading": "2. Service Information",
+        "servicesToVacate": "2.1 Required Services to be vacated",
+        "voice": "Voice",
+        "broadband": "Broadband",
+        "peoTv": "PEO TV",
+        "deactivationPeriod": "2.2 Service Deactivation Period",
+        "deactivationDate": "Deactivation date",
+        "resumeDate": "Resume date",
+        "note1": "1 Service deactivation period shall not exceed 04 months and can be applied once a year only",
+        "note2": "2 Customer shall settle all outstanding amount upto the service deactivation commencement date",
+        "note3": "3 Admin fee of Rs. 500/- (subject to government taxes) is payable, prior to commencement of service deactivation",
+        "note4": "4 Telephone line rental will be charged during the vacation period for Megaline & SLT Fibre services",
+        "note5": "5 Only Broadband and PEO TV rentals will be waived off during the period requested"
+      },
+      "agreement": {
+        "heading": "3. Customer Agreement",
+        "declaration": "I / We do hereby declare that the information furnished by me/us is true and correct and agree to abide by the Terms and Conditions stated herein below, which shall be supplementary to the 'Agreement for the Provision of Telecommunication Service' both of which shall be read together and those which I/we have read and understood regarding the Facility hereunder and those which may be enforced in future by Sri Lanka Telecom PLC (SLT)",
+        "agreeLabel": "I agree to the Terms and Conditions"
+      }
+    },
+    "refundRequest": {
+      "title": "Refund Request",
+      "subtitle": "Application for FTTH/PSTN/LTE Service refund.",
+      "steps": {
+        "s1": "Customer Details",
+        "s2": "Refund Details"
+      },
+      "customerDetails": {
+        "heading": "1. Customer & Bank Details",
+        "fullName": "Full Name / Company Name",
+        "bankName": "Name as appear in Bank Pass Book",
+        "bankBranch": "Bank Name & Branch",
+        "nicBrc": "N.I.C / B.R.C. No",
+        "contactNo": "Contact No.",
+        "telephone": "Telephone Number / ACC No"
+      },
+      "refundDetails": {
+        "heading": "2. Refund Details & Agreement",
+        "paidAmount": "Paid amount (Rs.)",
+        "reason": "Reason for refund",
+        "receiptNote": "(Please attach the Installation charge payment receipt)",
+        "receiptUpload": "Upload Receipt",
+        "declaration": "Please refund My/ Our installation charge for the above telephone number and release the contract with SLT for above service.",
+        "agreeLabel": "I accept the Terms and Conditions"
+      }
+    },
+    "customerRequestAcceptance": {
+      "title": "Application for Customer Request Acceptance",
+      "subtitle": "General application for accepting various customer requests.",
+      "steps": {
+        "s1": "Request Details",
+        "s2": "Declaration"
+      },
+      "requestDetails": {
+        "heading": "1. Customer & Request Information",
+        "fullName": "1.1 Name",
+        "nicBrc": "1.2 NIC/Passport/Business Reg No",
+        "telephone": "1.3 Telephone Number",
+        "requiredService": "1.4 Required Service",
+        "ftth": "SLT Fibre (FTTH)",
+        "peoTv": "PeoTV",
+        "broadband": "Broadband",
+        "voice": "Megaline (Voice)",
+        "lte": "4G LTE",
+        "otherService": "Others",
+        "requestType": "1.5 Request Type",
+        "billing": "Billing",
+        "serviceMod": "Service modification",
+        "hardware": "Hardware changes",
+        "otherRequest": "Others",
+        "contactDetails": "1.6 Customer contact details",
+        "fixed": "Fixed",
+        "mobile": "Mobile",
+        "email": "Email",
+        "descriptionHeading": "2. Description of the request",
+        "description": "Please provide the details of your request here."
+      },
+      "declaration": {
+        "heading": "3. Customer Declaration",
+        "declarationText": "I certify that the above information is true and correct.",
+        "agreeLabel": "I accept the Declaration"
       }
     },
     "ownershipChange": {
