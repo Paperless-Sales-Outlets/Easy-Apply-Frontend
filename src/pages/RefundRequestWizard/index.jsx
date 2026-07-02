@@ -26,7 +26,7 @@ export default function RefundRequestWizard() {
       
       {/* Progress Bar */}
       <div className="wizard-nav-wrapper">
-        <div className="wizard-steps-container" style={{ display: "flex", justifyContent: "space-between", marginBottom: "2rem", position: "relative", maxWidth: '400px', margin: '0 auto 2rem' }}>
+        <div className="wizard-steps-container" style={{ display: "flex", justifyContent: "space-between", marginBottom: "2rem", position: "relative" }}>
         <div style={{ position: "absolute", top: "15px", left: 0, width: "100%", height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
         <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: 0, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%`, transition: "width 0.3s ease" }} />
         
