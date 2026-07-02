@@ -318,6 +318,69 @@
         "agreeLabel": "I agree to the Terms and Conditions"
       }
     },
+    "refundRequest": {
+      "title": "Refund Request",
+      "subtitle": "Application for FTTH/PSTN/LTE Service refund.",
+      "steps": {
+        "s1": "Customer Details",
+        "s2": "Refund Details"
+      },
+      "customerDetails": {
+        "heading": "1. Customer & Bank Details",
+        "fullName": "Full Name / Company Name",
+        "bankName": "Name as appear in Bank Pass Book",
+        "bankBranch": "Bank Name & Branch",
+        "nicBrc": "N.I.C / B.R.C. No",
+        "contactNo": "Contact No.",
+        "telephone": "Telephone Number / ACC No"
+      },
+      "refundDetails": {
+        "heading": "2. Refund Details & Agreement",
+        "paidAmount": "Paid amount (Rs.)",
+        "reason": "Reason for refund",
+        "receiptNote": "(Please attach the Installation charge payment receipt)",
+        "receiptUpload": "Upload Receipt",
+        "declaration": "Please refund My/ Our installation charge for the above telephone number and release the contract with SLT for above service.",
+        "agreeLabel": "I accept the Terms and Conditions"
+      }
+    },
+    "customerRequestAcceptance": {
+      "title": "Application for Customer Request Acceptance",
+      "subtitle": "General application for accepting various customer requests.",
+      "steps": {
+        "s1": "Request Details",
+        "s2": "Declaration"
+      },
+      "requestDetails": {
+        "heading": "1. Customer & Request Information",
+        "fullName": "1.1 Name",
+        "nicBrc": "1.2 NIC/Passport/Business Reg No",
+        "telephone": "1.3 Telephone Number",
+        "requiredService": "1.4 Required Service",
+        "ftth": "SLT Fibre (FTTH)",
+        "peoTv": "PeoTV",
+        "broadband": "Broadband",
+        "voice": "Megaline (Voice)",
+        "lte": "4G LTE",
+        "otherService": "Others",
+        "requestType": "1.5 Request Type",
+        "billing": "Billing",
+        "serviceMod": "Service modification",
+        "hardware": "Hardware changes",
+        "otherRequest": "Others",
+        "contactDetails": "1.6 Customer contact details",
+        "fixed": "Fixed",
+        "mobile": "Mobile",
+        "email": "Email",
+        "descriptionHeading": "2. Description of the request",
+        "description": "Please provide the details of your request here."
+      },
+      "declaration": {
+        "heading": "3. Customer Declaration",
+        "declarationText": "I certify that the above information is true and correct.",
+        "agreeLabel": "I accept the Declaration"
+      }
+    },
     "ownershipChange": {
       "title": "Application for Change of Customer",
       "steps": {
