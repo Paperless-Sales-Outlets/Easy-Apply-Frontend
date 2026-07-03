@@ -25,7 +25,7 @@ export default function Dashboard() {
   return (
     <div className="dashboard-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 150px)' }}>
       <h1 style={{ marginBottom: '0.5rem' }}>{t('dashboard.title')}</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('dashboard.subtitle')}</p>
+
       
       <div className="dashboard-grid">
         {forms.map(form => (
