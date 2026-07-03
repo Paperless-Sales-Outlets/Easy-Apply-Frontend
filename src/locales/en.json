@@ -54,8 +54,8 @@
     "newConnection": {
       "title": "Application for New Connection",
       "steps": {
-        "s1": "Service",
-        "s2": "Customer",
+        "s1": "Customer",
+        "s2": "Service",
         "s3": "Billing",
         "s4": "Declaration"
       },
