@@ -22,8 +22,8 @@ export default function Navbar() {
             style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', fontSize: '0.85rem', color: 'var(--text-primary)', cursor: 'pointer' }}
           >
             <option value="en">English</option>
-            <option value="si">සිංහල (Sinhala)</option>
-            <option value="ta">தமிழ் (Tamil)</option>
+            <option value="si">සිංහල</option>
+            <option value="ta">தமிழ்</option>
           </select>
         </div>
       </div>
