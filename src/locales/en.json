@@ -4,7 +4,6 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Select an application form to digitize.",
     "forms": {
       "newConnection": {
         "title": "New Connection (FTTH/LTE/COPPER)",
