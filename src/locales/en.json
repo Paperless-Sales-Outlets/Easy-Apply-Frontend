@@ -3,7 +3,7 @@
     "title": "SLTMobitel Paperless"
   },
   "dashboard": {
-    "title": "Dashboard",
+    "title": "Application Forms",
     "forms": {
       "newConnection": {
         "title": "New Connection (FTTH/LTE/COPPER)",
