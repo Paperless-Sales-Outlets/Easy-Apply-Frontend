@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSmartphone, FiShield, FiArrowRight } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 export default function OtpProtectedForm({ children }) {
+  const { t } = useTranslation();
   const [isVerified, setIsVerified] = useState(false);
   const [step, setStep] = useState(1); 
   const [mobileNumber, setMobileNumber] = useState('');
@@ -16,7 +18,7 @@ export default function OtpProtectedForm({ children }) {
       setStep(2);
       setError('');
     } else {
-      setError('Please enter a valid mobile number');
+      setError(t('otp.invalidMobile'));
     }
   };
 
@@ -46,7 +48,7 @@ export default function OtpProtectedForm({ children }) {
         setError('');
         setTimeout(() => setIsVerified(true), 400); 
       } else {
-        setError('Invalid OTP. Please try 123456');
+        setError(t('otp.invalidOtp'));
       }
     } else {
       setError('');
@@ -107,13 +109,13 @@ export default function OtpProtectedForm({ children }) {
           </div>
 
           <h2 style={{ marginBottom: '1rem', color: 'var(--text-primary)', fontSize: '1.5rem', fontWeight: 600 }}>
-            {step === 1 ? 'Verify Your Identity' : 'Enter OTP'}
+            {step === 1 ? t('otp.verifyIdentity') : t('otp.enterOtp')}
           </h2>
           
           <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', lineHeight: '1.5', fontSize: '0.95rem' }}>
             {step === 1 
-              ? 'Before you fill your details, verify your mobile number via OTP.'
-              : `We've sent a code to +94 ${mobileNumber}. (Hint: use 123456)`}
+              ? t('otp.verifyInstruction')
+              : t('otp.otpSentTo').replace('{mobileNumber}', mobileNumber)}
           </p>
 
           <AnimatePresence mode="wait">
@@ -162,7 +164,7 @@ export default function OtpProtectedForm({ children }) {
                     gap: '0.5rem',
                   }}
                 >
-                  Send OTP <FiArrowRight />
+                  {t('otp.sendOtp')} <FiArrowRight />
                 </button>
               </motion.form>
             ) : (
@@ -220,7 +222,7 @@ export default function OtpProtectedForm({ children }) {
                 )}
                 
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                  Didn't receive the code? <button onClick={() => { setStep(1); setOtp(['', '', '', '', '', '']); setError(''); }} style={{ background: 'none', border: 'none', color: 'var(--slt-blue)', fontWeight: 600, cursor: 'pointer', padding: 0 }}>Change number</button>
+                  {t('otp.didNotReceive')} <button onClick={() => { setStep(1); setOtp(['', '', '', '', '', '']); setError(''); }} style={{ background: 'none', border: 'none', color: 'var(--slt-blue)', fontWeight: 600, cursor: 'pointer', padding: 0 }}>{t('otp.changeNumber')}</button>
                 </p>
               </motion.div>
             )}
