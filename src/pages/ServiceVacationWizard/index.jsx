@@ -16,8 +16,7 @@ export default function ServiceVacationWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Service Vacation Form submitted!");
-    alert("Service Vacation application submitted successfully!");
-    navigate('/');
+    navigate('/completion', { state: { message: 'Service Vacation application submitted successfully!' } });
   };
 
   return (

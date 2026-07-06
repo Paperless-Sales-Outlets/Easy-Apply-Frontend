@@ -17,8 +17,7 @@ export default function OwnershipChangeWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Ownership Change Form submitted!");
-    alert("Ownership Change application submitted successfully!");
-    navigate('/');
+    navigate('/completion', { state: { message: 'Ownership Change application submitted successfully!' } });
   };
 
   return (

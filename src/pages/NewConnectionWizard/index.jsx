@@ -17,8 +17,7 @@ export default function NewConnectionWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Form submitted!");
-    alert("Application submitted successfully!");
-    navigate('/');
+    navigate('/completion', { state: { message: 'Application submitted successfully!' } });
   };
 
   return (

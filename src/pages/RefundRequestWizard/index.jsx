@@ -15,8 +15,7 @@ export default function RefundRequestWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Refund Request Form submitted!");
-    alert("Refund Request application submitted successfully!");
-    navigate('/');
+    navigate('/completion', { state: { message: 'Refund Request application submitted successfully!' } });
   };
 
   return (

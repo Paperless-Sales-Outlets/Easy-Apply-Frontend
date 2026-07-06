@@ -17,8 +17,7 @@ export default function LocationChangeWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Location Change Form submitted!");
-    alert("Location Change application submitted successfully!");
-    navigate('/');
+    navigate('/completion', { state: { message: 'Location Change application submitted successfully!' } });
   };
 
   return (
