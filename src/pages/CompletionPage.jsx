@@ -22,7 +22,7 @@ export default function CompletionPage() {
     setRefNumber(result);
   }, []);
 
-  const message = location.state?.message || "Application submitted successfully!";
+  const message = location.state?.message || t('completion.defaultMessage');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(refNumber);
@@ -59,7 +59,7 @@ export default function CompletionPage() {
           <FiCheckCircle size={40} />
         </motion.div>
 
-        <h2 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Success!</h2>
+        <h2 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>{t('completion.successTitle')}</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '1.1rem' }}>
           {message}
         </p>
@@ -68,7 +68,7 @@ export default function CompletionPage() {
           background: '#f9fafb', border: '1px dashed #d2d6dc', borderRadius: '8px', padding: '1.5rem', marginBottom: '2rem'
         }}>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Reference Number
+            {t('completion.referenceNumber')}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
             <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--slt-blue)', letterSpacing: '2px' }}>
@@ -82,7 +82,7 @@ export default function CompletionPage() {
               <FiCopy size={20} color={copied ? "var(--slt-green)" : "currentColor"} />
             </button>
           </div>
-          {copied && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: 'var(--slt-green)', fontSize: '0.75rem', marginTop: '0.5rem' }}>Copied to clipboard!</motion.p>}
+          {copied && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: 'var(--slt-green)', fontSize: '0.75rem', marginTop: '0.5rem' }}>{t('completion.copiedToClipboard')}</motion.p>}
         </div>
 
         <button 
@@ -90,7 +90,7 @@ export default function CompletionPage() {
           onClick={() => navigate('/')}
           style={{ width: '100%', padding: '1rem', fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
         >
-          <FiHome /> Back to Dashboard
+          <FiHome /> {t('completion.backToDashboard')}
         </button>
       </motion.div>
     </div>

@@ -631,5 +631,24 @@
     "changeNumber": "Change number",
     "invalidMobile": "Please enter a valid mobile number",
     "invalidOtp": "Invalid OTP. Please try 123456"
+  },
+  "completion": {
+    "successTitle": "Success!",
+    "referenceNumber": "Reference Number",
+    "copiedToClipboard": "Copied to clipboard!",
+    "backToDashboard": "Back to Dashboard",
+    "defaultMessage": "Application submitted successfully!",
+    "successMessages": {
+      "customerRequestAcceptance": "Customer Request Acceptance application submitted successfully!",
+      "internetServices": "Internet Services application submitted successfully!",
+      "locationChange": "Location Change application submitted successfully!",
+      "newConnection": "Application submitted successfully!",
+      "ownershipChange": "Ownership Change application submitted successfully!",
+      "packageMigration": "Package Migration application submitted successfully!",
+      "reconnection": "Application submitted successfully!",
+      "refundRequest": "Refund Request application submitted successfully!",
+      "serviceVacation": "Service Vacation application submitted successfully!",
+      "termination": "Termination application submitted successfully!"
+    }
   }
 }
