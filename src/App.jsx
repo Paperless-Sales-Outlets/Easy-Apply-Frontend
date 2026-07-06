@@ -17,7 +17,7 @@ import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
 
-const PageWrapper = ({ children }) => {
+const PageWrapper = ({ children, fullBleed = false }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -26,7 +26,7 @@ const PageWrapper = ({ children }) => {
       transition={{ duration: 0.2 }}
       style={{ width: '100%' }}
     >
-      {children}
+      {fullBleed ? children : <div className="page-container">{children}</div>}
     </motion.div>
   );
 };
@@ -36,7 +36,7 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageWrapper><Dashboard /></PageWrapper>} />
+        <Route path="/" element={<PageWrapper fullBleed><Dashboard /></PageWrapper>} />
         <Route path="/new-connection" element={<PageWrapper><OtpProtectedForm><NewConnectionWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/reconnection" element={<PageWrapper><OtpProtectedForm><ReconnectionWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/ownership-change" element={<PageWrapper><OtpProtectedForm><OwnershipChangeWizard /></OtpProtectedForm></PageWrapper>} />
@@ -59,7 +59,7 @@ function App() {
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           <div className="brand-topbar" />
           <Navbar />
-          <main className="main-content site-container">
+          <main className="main-content">
             <ErrorBoundary>
               <AnimatedRoutes />
             </ErrorBoundary>

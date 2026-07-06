@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
+import heroImage from '../assets/hero.png';
 
 const FORMS = [
   { id: 'new-connection', key: 'newConnection', icon: 'plus-circle', route: '/new-connection' },
@@ -38,23 +39,25 @@ export default function Dashboard() {
 
   return (
     <div>
-      <section className="hero">
-        <div className="hero-art" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="hero-content">
-          <p className="hero-eyebrow">{t('hero.eyebrow')}</p>
-          <h1>{t('hero.headline')}</h1>
-          <p className="hero-sub">{t('hero.subtitle')}</p>
-          <a className="btn btn-primary btn-lg" href="#forms">
-            {t('hero.cta')} <Icon name="arrow-right" size={18} />
-          </a>
+      <section className="hero-full">
+        <div className="hero-inner">
+          <div className="hero-content">
+            <p className="hero-eyebrow">{t('hero.eyebrow')}</p>
+            <h1>{t('hero.headline')}</h1>
+            <p className="hero-sub">{t('hero.subtitle')}</p>
+          </div>
+          <div className="hero-media" aria-hidden="true">
+            <div className="hero-art">
+              <span />
+              <span />
+              <span />
+            </div>
+            <img src={heroImage} alt="" />
+          </div>
         </div>
       </section>
 
-      <section id="forms" className="scroll-target" aria-labelledby="forms-heading">
+      <section className="page-container" aria-labelledby="forms-heading">
         <h2 id="forms-heading" className="section-title">
           {t('dashboard.title')}
         </h2>

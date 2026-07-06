@@ -160,9 +160,16 @@ a {
 .main-content {
   flex: 1;
   width: 100%;
-  padding: var(--s8) 5%;
   display: flex;
   flex-direction: column;
+}
+
+/* Constrains routed page content. The landing hero opts out (full-bleed). */
+.page-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--s8) 5%;
 }
 
 .scroll-target {
@@ -200,20 +207,20 @@ a {
   color: var(--navy);
 }
 
-/* Hero --------------------------------------------------------------- */
+/* Hero — full-bleed band ---------------------------------------------- */
 
-.hero {
+.hero-full {
   position: relative;
+  width: 100%;
   overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  padding: clamp(2rem, 6vw, 3.5rem) clamp(1.25rem, 5vw, 3.5rem);
-  margin-bottom: var(--s10);
-  box-shadow: var(--shadow);
+  background:
+    radial-gradient(130% 130% at 88% 0%, rgba(15, 87, 168, 0.07), transparent 60%),
+    var(--surface);
+  border-bottom: 1px solid var(--line);
 }
 
-.hero::before {
+/* Dual-tone slash rule spanning the full width */
+.hero-full::before {
   content: '';
   position: absolute;
   top: 0;
@@ -223,36 +230,21 @@ a {
   background: var(--slash-gradient);
 }
 
-/* Decorative skewed bars, echoing the logo slash */
-.hero-art span {
-  position: absolute;
-  top: -30%;
-  height: 160%;
-  transform: skewX(-18deg);
-  pointer-events: none;
-}
-
-.hero-art span:nth-child(1) {
-  right: 6%;
-  width: 96px;
-  background: rgba(15, 87, 168, 0.08);
-}
-
-.hero-art span:nth-child(2) {
-  right: 17%;
-  width: 40px;
-  background: rgba(87, 181, 49, 0.14);
-}
-
-.hero-art span:nth-child(3) {
-  right: 2%;
-  width: 14px;
-  background: rgba(87, 181, 49, 0.28);
+/* Inner content aligns with the constrained page below it */
+.hero-inner {
+  position: relative;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: clamp(2.5rem, 6vw, 4.5rem) 5%;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3rem);
 }
 
 .hero-content {
   position: relative;
-  max-width: 580px;
+  z-index: 1;
 }
 
 .hero-eyebrow {
@@ -262,19 +254,82 @@ a {
   margin-bottom: var(--s3);
 }
 
-.hero h1 {
-  font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+.hero-content h1 {
+  font-size: clamp(1.9rem, 4.5vw, 3rem);
   margin-bottom: var(--s4);
 }
 
 .hero-sub {
   color: var(--muted);
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   max-width: 52ch;
-  margin-bottom: var(--s6);
+  margin: 0;
 }
 
-@media (max-width: 640px) {
+.hero-media {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+}
+
+.hero-media img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+}
+
+/* Skewed accent bars behind the image, echoing the logo slash */
+.hero-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-art span {
+  position: absolute;
+  top: -20%;
+  height: 140%;
+  transform: skewX(-18deg);
+}
+
+.hero-art span:nth-child(1) {
+  right: 34%;
+  width: 90px;
+  background: rgba(15, 87, 168, 0.06);
+}
+
+.hero-art span:nth-child(2) {
+  right: 22%;
+  width: 34px;
+  background: rgba(87, 181, 49, 0.12);
+}
+
+.hero-art span:nth-child(3) {
+  right: 14%;
+  width: 12px;
+  background: rgba(87, 181, 49, 0.22);
+}
+
+@media (max-width: 860px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+    gap: var(--s6);
+  }
+
+  .hero-media {
+    min-height: 0;
+    order: 2;
+  }
+
+  .hero-media img {
+    max-width: 280px;
+  }
+
   .hero-art {
     display: none;
   }
