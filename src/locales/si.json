@@ -2,6 +2,14 @@
   "nav": {
     "title": "SLTMobitel Paperless"
   },
+  "hero": {
+    "welcome": "SLTMobitel Paperless වෙත සාදරයෙන් පිළිගනිමු",
+    "subtitle": "ඔබගේ දුරකථන සේවා ඉල්ලීම් අන්තර්ජාලය හරහා අයදුම් කරන්න, කළමනාකරණය කරන්න සහ නිරීක්ෂණය කරන්න — කඩදාසි අවශ්‍ය නොවේ."
+  },
+  "footer": {
+    "tagline": "The Connection",
+    "rights": "© {{year}} ශ්‍රී ලංකා ටෙලිකොම් පීඑල්සී. සියලුම හිමිකම් ඇවිරිණි."
+  },
   "dashboard": {
     "title": "අයදුම්පත්",
     "forms": {

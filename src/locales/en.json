@@ -2,6 +2,14 @@
   "nav": {
     "title": "SLTMobitel Paperless"
   },
+  "hero": {
+    "welcome": "Welcome to SLTMobitel Paperless",
+    "subtitle": "Apply, manage, and track your telecom service requests online — no paperwork required."
+  },
+  "footer": {
+    "tagline": "The Connection",
+    "rights": "© {{year}} Sri Lanka Telecom PLC. All rights reserved."
+  },
   "dashboard": {
     "title": "Application Forms",
     "forms": {

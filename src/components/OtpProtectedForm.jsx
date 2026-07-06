@@ -174,7 +174,7 @@ export default function OtpProtectedForm({ children }) {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
+                <div className="otp-input-group">
                   {otp.map((digit, index) => (
                     <input
                       key={index}
@@ -185,19 +185,9 @@ export default function OtpProtectedForm({ children }) {
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(index, e)}
+                      className="otp-input"
                       style={{
-                        width: '3rem',
-                        height: '3.5rem',
-                        textAlign: 'center',
-                        fontSize: '1.5rem',
-                        fontWeight: '600',
-                        border: '1px solid #d2d6dc',
-                        borderRadius: 'var(--radius-md)',
-                        background: '#f9fafb',
-                        outline: 'none',
-                        transition: 'var(--transition)',
-                        boxShadow: digit ? '0 0 0 2px rgba(0,91,159,0.1)' : 'none',
-                        color: 'var(--text-primary)'
+                        boxShadow: digit ? '0 0 0 2px rgba(0,91,159,0.1)' : 'none'
                       }}
                       onFocus={(e) => {
                         e.target.style.borderColor = 'var(--slt-blue)';
