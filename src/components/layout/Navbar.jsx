@@ -8,23 +8,25 @@ export default function Navbar() {
   const { t, i18n } = useTranslation();
 
   return (
-    <nav style={{ backgroundColor: '#ffffff', borderBottom: '1px solid var(--border-color)', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'var(--slt-blue)' }}>
-        <img src={sltLogo} alt="SLTMobitel Logo" style={{ height: '32px', width: 'auto', objectFit: 'contain' }} />
-        <span style={{ fontSize: '1.25rem', fontWeight: '700' }}>{t('nav.title')}</span>
-      </Link>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.6rem', backgroundColor: 'var(--bg-color)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-          <FiGlobe size={16} color="var(--slt-blue)" />
-          <select 
-            value={i18n.language} 
-            onChange={(e) => i18n.changeLanguage(e.target.value)}
-            style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', fontSize: '0.85rem', color: 'var(--text-primary)', cursor: 'pointer' }}
-          >
-            <option value="en">English</option>
-            <option value="si">සිංහල</option>
-            <option value="ta">தமிழ்</option>
-          </select>
+    <nav className="navbar">
+      <div className="site-container" style={{ padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', color: 'var(--slt-blue)' }}>
+          <img src={sltLogo} alt="SLTMobitel Logo" style={{ height: '36px', width: 'auto', objectFit: 'contain' }} />
+          <span style={{ fontSize: '1.25rem', fontWeight: '700', lineHeight: 1.1 }}>{t('nav.title')}</span>
+        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.6rem', backgroundColor: 'var(--bg-color)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <FiGlobe size={16} color="var(--slt-blue)" />
+            <select
+              value={i18n.language}
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              style={{ border: 'none', backgroundColor: 'transparent', outline: 'none', fontSize: '0.85rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+            >
+              <option value="en">English</option>
+              <option value="si">සිංහල</option>
+              <option value="ta">தமிழ்</option>
+            </select>
+          </div>
         </div>
       </div>
     </nav>

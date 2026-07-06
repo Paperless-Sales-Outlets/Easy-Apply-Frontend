@@ -13,6 +13,7 @@ import RefundRequestWizard from './pages/RefundRequestWizard';
 import CustomerRequestAcceptanceWizard from './pages/CustomerRequestAcceptanceWizard';
 import CompletionPage from './pages/CompletionPage';
 import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
 
@@ -55,12 +56,14 @@ function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="brand-topbar" />
         <Navbar />
-        <main style={{ flex: 1, padding: '2rem 5%', width: '100%', display: 'flex', flexDirection: 'column' }}>
+        <main className="main-content site-container">
           <ErrorBoundary>
             <AnimatedRoutes />
           </ErrorBoundary>
         </main>
+        <Footer />
       </div>
     </BrowserRouter>
   );

@@ -5,7 +5,8 @@
   --slt-blue-hover: #00467f;
   --slt-green: #00a650;
   --slt-green-hover: #008740;
-  
+  --slt-gradient: linear-gradient(90deg, var(--slt-blue) 0%, var(--slt-green) 100%);
+
   --bg-color: #f4f6f8; /* Dark shade of white to prevent eye strain */
   --surface-color: #ffffff;
   
@@ -245,6 +246,116 @@ h1, h2, h3, h4 {
   }
 }
 
+/* Brand */
+.brand-topbar {
+  height: 4px;
+  width: 100%;
+  background: var(--slt-gradient);
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background-color: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Site-wide width cap so content doesn't stretch edge-to-edge on large monitors */
+.site-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+  padding: 2rem 5%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Footer */
+.footer {
+  background-color: var(--surface-color);
+  border-top: 1px solid var(--border-color);
+  padding: 1.5rem 5%;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.footer strong {
+  color: var(--slt-blue);
+}
+
+/* Hero */
+.hero-banner {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 2rem;
+  background-color: #ffffff;
+}
+
+.hero-banner img {
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-text {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 2rem;
+}
+
+.hero-text h1 {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.hero-text p {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .hero-banner img {
+    max-height: 220px;
+  }
+}
+
+/* OTP inputs */
+.otp-input-group {
+  display: flex;
+  justify-content: center;
+  gap: clamp(0.3rem, 2vw, 0.5rem);
+  margin-bottom: 2rem;
+}
+
+.otp-input {
+  flex: 1 1 3rem;
+  max-width: 3rem;
+  min-width: 0;
+  height: 3.5rem;
+  text-align: center;
+  font-size: clamp(1rem, 5vw, 1.5rem);
+  font-weight: 600;
+  border: 1px solid #d2d6dc;
+  border-radius: var(--radius-md);
+  background: #f9fafb;
+  outline: none;
+  transition: var(--transition);
+  color: var(--text-primary);
+}
+
 /* Dashboard Grid */
 .dashboard-grid {
   display: grid;
@@ -255,11 +366,19 @@ h1, h2, h3, h4 {
   flex: 1; /* take remaining height */
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
     gap: 1rem;
+    height: auto;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
     height: auto;
   }
 }

@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
+import heroSlt from '../assets/HeroSLT.png';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -49,13 +50,30 @@ export default function Dashboard() {
       className="dashboard-wrapper" 
       style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 150px)' }}
     >
-      <motion.h1 
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="hero-banner"
+      >
+        <img src={heroSlt} alt="SLTMobitel" />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="hero-text"
+      >
+        <h1>{t('hero.welcome')}</h1>
+        <p>{t('hero.subtitle')}</p>
+      </motion.div>
+
+      <motion.h2
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         style={{ marginBottom: '1.5rem' }}
       >
         {t('dashboard.title')}
-      </motion.h1>
+      </motion.h2>
 
       <motion.div 
         className="dashboard-grid"
@@ -93,9 +111,9 @@ export default function Dashboard() {
             }}>
               {form.icon}
             </div>
-            <div>
-              <h3 style={{ marginBottom: '0.25rem', color: form.active ? 'var(--slt-blue)' : 'var(--text-secondary)' }}>{form.title}</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>{form.description}</p>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h3 style={{ marginBottom: '0.25rem', color: form.active ? 'var(--slt-blue)' : 'var(--text-secondary)', overflowWrap: 'break-word' }}>{form.title}</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, overflowWrap: 'break-word' }}>{form.description}</p>
             </div>
           </motion.div>
         ))}
