@@ -620,5 +620,16 @@
         "agreeLabel": "I accept the Declaration and agree to the Terms & Conditions"
       }
     }
+  },
+  "otp": {
+    "verifyIdentity": "Verify Your Identity",
+    "verifyInstruction": "Before you fill your details, verify your mobile number via OTP.",
+    "sendOtp": "Send OTP",
+    "enterOtp": "Enter OTP",
+    "otpSentTo": "We've sent a code to +94 {mobileNumber}. (Hint: use 123456)",
+    "didNotReceive": "Didn't receive the code?",
+    "changeNumber": "Change number",
+    "invalidMobile": "Please enter a valid mobile number",
+    "invalidOtp": "Invalid OTP. Please try 123456"
   }
 }
