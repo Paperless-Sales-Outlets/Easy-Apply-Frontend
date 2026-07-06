@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import Dashboard from './pages/Dashboard';
 import NewConnectionWizard from './pages/NewConnectionWizard';
 import ReconnectionWizard from './pages/ReconnectionWizard';
@@ -17,16 +17,16 @@ import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
 
-const PageWrapper = ({ children }) => {
+const PageWrapper = ({ children, fullBleed = false }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -15 }}
-      transition={{ duration: 0.3 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.2 }}
       style={{ width: '100%' }}
     >
-      {children}
+      {fullBleed ? children : <div className="page-container">{children}</div>}
     </motion.div>
   );
 };
@@ -36,7 +36,7 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageWrapper><Dashboard /></PageWrapper>} />
+        <Route path="/" element={<PageWrapper fullBleed><Dashboard /></PageWrapper>} />
         <Route path="/new-connection" element={<PageWrapper><OtpProtectedForm><NewConnectionWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/reconnection" element={<PageWrapper><OtpProtectedForm><ReconnectionWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/ownership-change" element={<PageWrapper><OtpProtectedForm><OwnershipChangeWizard /></OtpProtectedForm></PageWrapper>} />
@@ -55,16 +55,18 @@ const AnimatedRoutes = () => {
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <div className="brand-topbar" />
-        <Navbar />
-        <main className="main-content site-container">
-          <ErrorBoundary>
-            <AnimatedRoutes />
-          </ErrorBoundary>
-        </main>
-        <Footer />
-      </div>
+      <MotionConfig reducedMotion="user">
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <div className="brand-topbar" />
+          <Navbar />
+          <main className="main-content">
+            <ErrorBoundary>
+              <AnimatedRoutes />
+            </ErrorBoundary>
+          </main>
+          <Footer />
+        </div>
+      </MotionConfig>
     </BrowserRouter>
   );
 }
