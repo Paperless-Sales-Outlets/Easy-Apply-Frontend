@@ -15,7 +15,7 @@ export default function PackageMigrationWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Package Migration Form submitted!");
-    navigate('/completion', { state: { message: 'Package Migration application submitted successfully!' } });
+    navigate('/completion', { state: { messageKey: 'completion.successMessages.packageMigration' } });
   };
 
   return (

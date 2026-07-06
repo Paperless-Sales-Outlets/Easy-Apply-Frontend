@@ -17,7 +17,7 @@ export default function TerminationWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Termination Form submitted!");
-    navigate('/completion', { state: { message: 'Termination application submitted successfully!' } });
+    navigate('/completion', { state: { messageKey: 'completion.successMessages.termination' } });
   };
 
   return (

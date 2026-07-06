@@ -22,7 +22,8 @@ export default function CompletionPage() {
     setRefNumber(result);
   }, []);
 
-  const message = location.state?.message || t('completion.defaultMessage');
+  const messageKey = location.state?.messageKey || 'completion.defaultMessage';
+  const message = t(messageKey);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(refNumber);

@@ -16,7 +16,7 @@ export default function ReconnectionWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Form submitted!");
-    navigate('/completion', { state: { message: 'Application submitted successfully!' } });
+    navigate('/completion', { state: { messageKey: 'completion.successMessages.newConnection' } });
   };
 
   return (

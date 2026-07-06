@@ -16,7 +16,7 @@ export default function InternetServicesWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Internet Services Form submitted!");
-    navigate('/completion', { state: { message: 'Internet Services application submitted successfully!' } });
+    navigate('/completion', { state: { messageKey: 'completion.successMessages.internetServices' } });
   };
 
   return (

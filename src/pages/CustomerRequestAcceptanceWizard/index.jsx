@@ -15,7 +15,7 @@ export default function CustomerRequestAcceptanceWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Customer Request Acceptance Form submitted!");
-    navigate('/completion', { state: { message: 'Customer Request Acceptance application submitted successfully!' } });
+    navigate('/completion', { state: { messageKey: 'completion.successMessages.customerRequestAcceptance' } });
   };
 
   return (
