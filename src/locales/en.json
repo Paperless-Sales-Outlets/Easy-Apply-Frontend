@@ -632,15 +632,23 @@
     }
   },
   "otp": {
-    "verifyIdentity": "Verify Your Identity",
-    "verifyInstruction": "Before you fill your details, verify your mobile number via OTP.",
-    "sendOtp": "Send OTP",
-    "enterOtp": "Enter OTP",
-    "otpSentTo": "We've sent a code to +94 {mobileNumber}. (Hint: use 123456)",
-    "didNotReceive": "Didn't receive the code?",
-    "changeNumber": "Change number",
-    "invalidMobile": "Please enter a valid mobile number",
-    "invalidOtp": "Invalid OTP. Please try 123456"
+    "verifyTitle": "Verify your identity",
+    "verifyText": "Enter your mobile number and we'll send you a 6-digit code.",
+    "mobileLabel": "Mobile number",
+    "sendCode": "Send code",
+    "codeTitle": "Enter the code",
+    "codeText": "Enter the 6-digit code we sent to the number below.",
+    "changeNumber": "Change",
+    "codeLegend": "6-digit verification code",
+    "digitLabel": "Digit {{n}}",
+    "hint": "Demo code: 123456",
+    "resendIn": "Resend code in {{seconds}}s",
+    "resend": "Resend code",
+    "resent": "A new code has been sent.",
+    "verifiedTitle": "Verified",
+    "verifiedText": "Taking you to the form…",
+    "invalidMobile": "Enter a valid mobile number with 9 digits.",
+    "invalidOtp": "That code isn't correct. For this demo, enter 123456."
   },
   "completion": {
     "successTitle": "Success!",

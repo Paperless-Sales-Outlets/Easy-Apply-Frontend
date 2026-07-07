@@ -73,6 +73,14 @@ const PATHS = {
       <path d="m12 5 7 7-7 7" />
     </>
   ),
+  smartphone: (
+    <>
+      <rect x="7" y="2" width="10" height="20" rx="2" />
+      <path d="M11 18h2" />
+    </>
+  ),
+  shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+  check: <path d="M20 6 9 17l-5-5" />,
 };
 
 export default function Icon({ name, size = 24, ...props }) {
