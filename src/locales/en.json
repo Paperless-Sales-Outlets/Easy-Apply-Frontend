@@ -1,6 +1,6 @@
 {
   "nav": {
-    "title": "SLTMobitel Paperless"
+    "title": "SLTMobitel EasyApply"
   },
   "hero": {
     "eyebrow": "SLTMobitel online services",
@@ -13,18 +13,22 @@
     "rights": "© {{year}} Sri Lanka Telecom PLC. All rights reserved."
   },
   "dashboard": {
-    "title": "Application forms",
+    "title": "Online Application Forms",
     "forms": {
+      "checkStatus": {
+        "title": "Check Status",
+        "description": "Check the status of a submitted application."
+      },
       "newConnection": {
-        "title": "New Connection (FTTH/LTE/COPPER)",
-        "description": "Application for new connection of FTTH, LTE, or Copper services."
+        "title": "New Connection",
+        "description": "Request for new connection of FTTH, LTE, or Copper services."
       },
       "reconnection": {
-        "title": "Re-connection of SLT Service",
-        "description": "Application for re-connection of an existing SLT service."
+        "title": "Re-connection",
+        "description": "Request for re-connection of an existing SLT service."
       },
       "relocation": {
-        "title": "Relocation (FTTH/LTE/COPPER/PEOTV)",
+        "title": "Relocation",
         "description": "Request relocation of a connection (FTTH, LTE, Copper, or PEO TV)."
       },
       "termination": {
@@ -36,7 +40,7 @@
         "description": "Transfer ownership of an existing connection."
       },
       "packageMigration": {
-        "title": "Application for Package Migration",
+        "title": "Package Migration",
         "description": "Apply for migration of your current package."
       },
       "serviceVacation": {
@@ -48,7 +52,7 @@
         "description": "Request a refund for deposits or overpayments."
       },
       "customerRequestAcceptance": {
-        "title": "Application for Customer Request Acceptance",
+        "title": "General Customer Request",
         "description": "General application for accepting various customer requests."
       }
     }
@@ -698,5 +702,19 @@
       "serviceVacation": "Service Vacation application submitted successfully!",
       "termination": "Termination application submitted successfully!"
     }
+  },
+  "checkStatusPage": {
+    "title": "Check Application Status",
+    "referenceNumber": "Reference Number",
+    "referencePlaceholder": "e.g. REQ-12345678",
+    "nic": "NIC / Passport / BR",
+    "nicPlaceholder": "Enter the identification used in the application",
+    "check": "Check Status",
+    "status": "Application Status",
+    "statusPending": "Pending Review",
+    "statusApproved": "Approved",
+    "statusRejected": "Rejected",
+    "statusDescription": "Your application is currently being processed. You will be notified once there is an update.",
+    "notFound": "No application found with these details. Please check the reference number and NIC."
   }
 }

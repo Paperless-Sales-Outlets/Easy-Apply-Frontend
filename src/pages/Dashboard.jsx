@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
-import heroImage from '../assets/hero.png';
+
 
 const FORMS = [
   { id: 'new-connection', key: 'newConnection', icon: 'plus-circle', route: '/new-connection' },
@@ -39,28 +39,17 @@ export default function Dashboard() {
 
   return (
     <div>
-      <section className="hero-full">
-        <div className="hero-inner">
-          <div className="hero-content">
-            <p className="hero-eyebrow">{t('hero.eyebrow')}</p>
-            <h1>{t('hero.headline')}</h1>
-            <p className="hero-sub">{t('hero.subtitle')}</p>
-          </div>
-          <div className="hero-media" aria-hidden="true">
-            <div className="hero-art">
-              <span />
-              <span />
-              <span />
-            </div>
-            <img src={heroImage} alt="" />
-          </div>
-        </div>
-      </section>
+
 
       <section className="page-container" aria-labelledby="forms-heading">
-        <h2 id="forms-heading" className="section-title">
-          {t('dashboard.title')}
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 id="forms-heading" className="section-title" style={{ marginBottom: 0 }}>
+            {t('dashboard.title')}
+          </h2>
+          <Link to="/check-status" className="btn btn-secondary">
+            {t('dashboard.forms.checkStatus.title')}
+          </Link>
+        </div>
         <motion.ul
           className="dashboard-grid"
           variants={containerVariants}

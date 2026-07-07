@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="src/assets/sltlogoOnly.png" alt="Paperless Logo" width="120" />
-  <h1>[ P A P E R L E S S ]</h1>
+  <img src="src/assets/sltlogoOnly.png" alt="EasyApply Logo" width="120" />
+  <h1>[ E A S Y A P P L Y ]</h1>
   <p><strong>A digital platform for SLTMobitel customer application forms</strong></p>
 </div>
 
 ---
 
 ## ❖ SYSTEM OVERVIEW
-SLTMobitel Paperless is a responsive web application designed to digitize and streamline the process of submitting various customer application forms. It provides a user-friendly wizard interface for customers to easily fill out and submit their requests online, reducing the need for physical paperwork.
+SLTMobitel EasyApply is a responsive web application designed to digitize and streamline the process of submitting various customer application forms. It provides a user-friendly wizard interface for customers to easily fill out and submit their requests online, reducing the need for physical paperwork.
 
 ### Core Capabilities
 * **Multi-Language Support**: Fully localized in English, Sinhala, and Tamil to cater to a diverse customer base.

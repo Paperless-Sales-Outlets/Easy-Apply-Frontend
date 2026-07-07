@@ -11,6 +11,7 @@ import PackageMigrationWizard from './pages/PackageMigrationWizard';
 import ServiceVacationWizard from './pages/ServiceVacationWizard';
 import RefundRequestWizard from './pages/RefundRequestWizard';
 import CustomerRequestAcceptanceWizard from './pages/CustomerRequestAcceptanceWizard';
+import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -46,6 +47,7 @@ const AnimatedRoutes = () => {
         <Route path="/service-vacation" element={<PageWrapper><OtpProtectedForm><ServiceVacationWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/refund-request" element={<PageWrapper><OtpProtectedForm><RefundRequestWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/customer-request-acceptance" element={<PageWrapper><OtpProtectedForm><CustomerRequestAcceptanceWizard /></OtpProtectedForm></PageWrapper>} />
+        <Route path="/check-status" element={<PageWrapper><CheckStatusPage /></PageWrapper>} />
         <Route path="/completion" element={<PageWrapper><CompletionPage /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
