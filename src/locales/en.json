@@ -54,10 +54,30 @@
     }
   },
   "common": {
-    "previous": "Previous",
+    "previous": "Back",
     "nextStep": "Next Step",
     "submit": "Submit Application",
     "confirmTermination": "Confirm Termination"
+  },
+  "wizardFlow": {
+    "verify": "Verify",
+    "details": "Details",
+    "declaration": "Declaration",
+    "state": {
+      "done": "Done",
+      "active": "In progress",
+      "todo": "Up next"
+    },
+    "stepCount": "Step {{current}} of {{total}}",
+    "continueTo": "Continue to {{next}}",
+    "submit": "Submit application"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "email": "Enter a valid email address.",
+    "mobile": "Enter a 9-digit mobile number.",
+    "phone": "Enter a valid phone number.",
+    "nic": "Enter a valid NIC, passport, or BR number."
   },
   "wizards": {
     "newConnection": {
@@ -356,6 +376,12 @@
     "customerRequestAcceptance": {
       "title": "Application for Customer Request Acceptance",
       "subtitle": "General application for accepting various customer requests.",
+      "hintTitle": "Keep these handy",
+      "hintItems": [
+        "Your NIC, passport, or Business Registration number",
+        "The telephone or account number for the service",
+        "A short description of what you need"
+      ],
       "steps": {
         "s1": "Request Details",
         "s2": "Declaration"
@@ -381,7 +407,11 @@
         "fixed": "Fixed",
         "mobile": "Mobile",
         "email": "Email",
+        "nicHelper": "NIC, passport, or Business Registration number",
+        "mobilePrefill": "Taken from your verified number — edit if needed",
         "descriptionHeading": "2. Description of the request",
+        "descriptionLabel": "Describe your request",
+        "descriptionHelper": "Include any account numbers or dates that help us act faster",
         "description": "Please provide the details of your request here."
       },
       "declaration": {

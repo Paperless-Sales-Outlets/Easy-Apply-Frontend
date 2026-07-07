@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
+import { VerificationContext } from './verification';
 
 const RESEND_SECONDS = 30;
 const DEMO_CODE = '123456';
@@ -115,7 +116,9 @@ export default function OtpProtectedForm({ children }) {
     setPhase('mobile');
   };
 
-  if (done) return <>{children}</>;
+  if (done) {
+    return <VerificationContext.Provider value={mobileNumber}>{children}</VerificationContext.Provider>;
+  }
 
   return (
     <div className="otp-screen">

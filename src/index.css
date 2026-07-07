@@ -857,6 +857,432 @@ a {
   }
 }
 
+/* Wizard layout ------------------------------------------------------- */
+
+.wizard {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--s8);
+  align-items: start;
+}
+
+.wizard-rail {
+  position: sticky;
+  top: 88px;
+  align-self: start;
+}
+
+.wizard-rail-title {
+  font-size: 1.4rem;
+  margin-bottom: var(--s2);
+}
+
+.wizard-rail-sub {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: var(--s6);
+}
+
+/* Macro journey: Verify -> Details -> Declaration */
+.wizard-progress {
+  list-style: none;
+  margin: 0 0 var(--s6);
+  padding: 0;
+}
+
+.wizard-progress li {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  padding-bottom: var(--s5);
+}
+
+.wizard-progress li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 24px;
+  bottom: 0;
+  width: 2px;
+  background: var(--line);
+}
+
+.wizard-progress li.is-done:not(:last-child)::after {
+  background: var(--green);
+}
+
+/* Skewed square marker — the logo slash motif */
+.wp-marker {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  transform: skewX(-10deg);
+  border: 2px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  color: #fff;
+  display: grid;
+  place-items: center;
+}
+
+.wizard-progress li.is-active .wp-marker {
+  border-color: var(--blue);
+  background: var(--blue);
+}
+
+.wizard-progress li.is-done .wp-marker {
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.wp-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.wp-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.wp-state {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.wizard-hint {
+  background: rgba(15, 87, 168, 0.05);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--s4);
+}
+
+.wizard-hint h4 {
+  font-size: 0.9rem;
+  margin-bottom: var(--s2);
+}
+
+.wizard-hint ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.wizard-hint li {
+  margin-bottom: var(--s1);
+}
+
+.wizard-panel {
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.wizard-panel-head {
+  margin-bottom: var(--s6);
+}
+
+.wizard-step-count {
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.wizard-step-name {
+  font-size: 1.25rem;
+  margin: var(--s1) 0 0;
+}
+
+.wizard-subhead {
+  font-size: 1.05rem;
+  margin: var(--s8) 0 var(--s4);
+}
+
+.wizard-step-body {
+  margin-bottom: var(--s6);
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s3);
+  border-top: 1px solid var(--line);
+  padding-top: var(--s5);
+}
+
+@media (max-width: 900px) {
+  .wizard {
+    grid-template-columns: 1fr;
+    gap: var(--s6);
+  }
+
+  .wizard-rail {
+    position: static;
+  }
+
+  /* Horizontal journey on narrow screens to save vertical space */
+  .wizard-progress {
+    display: flex;
+    gap: var(--s2);
+  }
+
+  .wizard-progress li {
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 0;
+  }
+
+  .wizard-progress li:not(:last-child)::after {
+    left: auto;
+    right: -50%;
+    top: 10px;
+    bottom: auto;
+    width: 100%;
+    height: 2px;
+  }
+
+  .wp-label {
+    align-items: center;
+  }
+}
+
+/* Form fields --------------------------------------------------------- */
+
+.field {
+  margin-bottom: var(--s5);
+}
+
+.field-label,
+.field-group-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--s2);
+}
+
+.field-req {
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+.field .form-control[data-valid='true'] {
+  border-color: var(--green);
+}
+
+.field .form-control[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.field-helper {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: var(--s2);
+}
+
+.field-error {
+  font-size: 0.8rem;
+  color: var(--danger);
+  margin-top: var(--s2);
+}
+
+.field-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s3);
+  margin-top: var(--s2);
+}
+
+.field-foot .field-helper,
+.field-foot .field-error {
+  margin-top: 0;
+}
+
+.field-counter {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s4);
+}
+
+.field-row > .field {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.input-prefixed {
+  display: flex;
+}
+
+.input-prefixed .prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 0.9rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-right: none;
+  border-radius: var(--radius) 0 0 var(--radius);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.input-prefixed .form-control {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.field-group {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--s5);
+  min-inline-size: 0;
+}
+
+/* Icon tiles */
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--s3);
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.tile input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.tile:has(input:checked) {
+  border-color: var(--green);
+  background: rgba(87, 181, 49, 0.06);
+}
+
+.tile:has(input:focus-visible) {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.tile-ic {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 87, 168, 0.08);
+  color: var(--blue);
+}
+
+.tile:has(input:checked) .tile-ic {
+  background: rgba(87, 181, 49, 0.15);
+  color: var(--green-deep);
+}
+
+.tile-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Green corner slash on a selected tile */
+.tile:has(input:checked)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-width: 0 22px 22px 0;
+  border-style: solid;
+  border-color: transparent var(--green) transparent transparent;
+}
+
+/* Pill chips */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.chip input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.chip:has(input:checked) {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: #fff;
+}
+
+.chip:has(input:focus-visible) {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Declaration block */
+.declaration {
+  background: rgba(15, 87, 168, 0.04);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--s5);
+}
+
+.declaration-text {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: var(--s4);
+}
+
+.agree-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  font-weight: 500;
+  cursor: pointer;
+}
+
 /* Motion safety --------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
