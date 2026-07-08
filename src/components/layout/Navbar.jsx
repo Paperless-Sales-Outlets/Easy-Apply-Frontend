@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Icon from '../Icon';
 import sltLogo from '../../assets/sltlogoOnly.png';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
+  const { user, logout } = useAuth();
 
   return (
     <nav className="navbar">
@@ -50,32 +52,70 @@ export default function Navbar() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.3rem',
-            padding: '0.4rem 0.6rem',
-            backgroundColor: 'var(--paper)',
-            borderRadius: '8px',
-            border: '1px solid var(--line)',
+            gap: '1rem',
           }}
         >
-          <Icon name="globe" size={16} style={{ color: 'var(--blue)' }} />
-          <select
-            value={i18n.language}
-            onChange={(e) => i18n.changeLanguage(e.target.value)}
-            aria-label="Language"
+          {user && (
+            <button
+              onClick={logout}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.4rem 0.8rem',
+                backgroundColor: 'transparent',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                color: 'var(--text-secondary)',
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-body)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.borderColor = 'var(--slt-green)';
+                e.target.style.color = 'var(--slt-green)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.borderColor = 'var(--border-color)';
+                e.target.style.color = 'var(--text-secondary)';
+              }}
+            >
+              <Icon name="log-out" size={14} />
+              {t('nav.logout', 'Sign Out')}
+            </button>
+          )}
+          <div
             style={{
-              border: 'none',
-              backgroundColor: 'transparent',
-              outline: 'none',
-              fontSize: '0.85rem',
-              fontFamily: 'var(--font-body)',
-              color: 'var(--text)',
-              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.3rem',
+              padding: '0.4rem 0.6rem',
+              backgroundColor: 'var(--paper)',
+              borderRadius: '8px',
+              border: '1px solid var(--line)',
             }}
           >
-            <option value="en">English</option>
-            <option value="si">සිංහල</option>
-            <option value="ta">தமிழ்</option>
-          </select>
+            <Icon name="globe" size={16} style={{ color: 'var(--blue)' }} />
+            <select
+              value={i18n.language}
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              aria-label="Language"
+              style={{
+                border: 'none',
+                backgroundColor: 'transparent',
+                outline: 'none',
+                fontSize: '0.85rem',
+                fontFamily: 'var(--font-body)',
+                color: 'var(--text)',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="en">English</option>
+              <option value="si">සිංහල</option>
+              <option value="ta">தமிழ்</option>
+            </select>
+          </div>
         </div>
       </div>
     </nav>
