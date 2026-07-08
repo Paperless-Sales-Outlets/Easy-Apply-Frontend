@@ -47,14 +47,7 @@ export default function CustomerInfoStep() {
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.nic')}</label>
-          <input type="text" className="form-control" />
-        </div>
-      </div>
-
-      <div className="form-group flex flex-col-mobile gap-4">
-        <div style={{ flex: '1' }}>
-          <label className="form-label">{t('wizards.newConnection.customerInfo.vat')}</label>
-          <input type="text" className="form-control" />
+          <input type="text" className="form-control" required />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.taxExemption')}</label>
@@ -64,7 +57,7 @@ export default function CustomerInfoStep() {
 
       <div className="form-group">
         <label className="form-label">{t('wizards.newConnection.customerInfo.address')}</label>
-        <textarea className="form-control" rows="3"></textarea>
+        <textarea className="form-control" rows="3" required></textarea>
       </div>
 
       <h4 style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>{t('wizards.newConnection.customerInfo.contactDetails')}</h4>
@@ -72,11 +65,7 @@ export default function CustomerInfoStep() {
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.contactName')}</label>
-          <input type="text" className="form-control" />
-        </div>
-        <div style={{ flex: '1' }}>
-          <label className="form-label">{t('wizards.newConnection.customerInfo.designation')}</label>
-          <input type="text" className="form-control" />
+          <input type="text" className="form-control" required />
         </div>
       </div>
 

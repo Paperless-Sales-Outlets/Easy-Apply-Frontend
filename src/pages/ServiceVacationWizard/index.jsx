@@ -49,7 +49,7 @@ export default function ServiceVacationWizard() {
       </div>
       </div>
 
-      <form onSubmit={currentStep === totalSteps ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+      <form onSubmit={(e) => { e.preventDefault(); if (currentStep < totalSteps) { nextStep(); } else { handleSubmit(e); } }}>
         
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           {currentStep === 1 && <GeneralInfoStep />}
@@ -62,7 +62,7 @@ export default function ServiceVacationWizard() {
             {t('common.previous')}
           </button>
           {currentStep < totalSteps ? (
-            <button type="button" className="btn btn-primary" onClick={nextStep}>
+            <button type="submit" className="btn btn-primary">
               {t('common.nextStep')}
             </button>
           ) : (
