@@ -1,4 +1,25 @@
 {
+  "login": {
+    "title": "Sign In",
+    "subtitle": "Access your customer application forms",
+    "email": "Email Address",
+    "password": "Password",
+    "button": "Sign In",
+    "noAccount": "Don't have an account?",
+    "registerLink": "Register Now"
+  },
+  "register": {
+    "title": "Create Account",
+    "subtitle": "Register once to manage all portal requests",
+    "name": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "NIC": "NIC / Passport / BR Number",
+    "password": "Password",
+    "button": "Register",
+    "haveAccount": "Already have an account?",
+    "loginLink": "Sign In"
+  },
   "nav": {
     "title": "SLTMobitel EasyApply"
   },
