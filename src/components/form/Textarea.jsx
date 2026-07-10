@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 /* Multi-line field with a live character counter. */
 export default function Textarea({
   label,
+  name,
   helper,
   placeholder,
   rules = {},
@@ -30,6 +31,7 @@ export default function Textarea({
       </label>
       <textarea
         id={id}
+        name={name}
         className="form-control"
         rows={rows}
         maxLength={maxLength}

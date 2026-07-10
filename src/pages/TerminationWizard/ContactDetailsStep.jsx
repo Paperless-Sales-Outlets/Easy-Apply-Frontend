@@ -13,13 +13,13 @@ export default function ContactDetailsStep() {
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
           {t('wizards.termination.contact.nameNote')}
         </p>
-        <input type="text" className="form-control" required />
+        <input name="fullName" type="text" className="form-control" required />
       </div>
 
       <div className="form-group mt-4">
         <label className="form-label">{t('wizards.termination.contact.nicBrc')}</label>
         <div style={{ maxWidth: '400px' }}>
-          <input type="text" className="form-control" required />
+          <input name="nic" type="text" className="form-control" required />
         </div>
       </div>
 
@@ -29,22 +29,22 @@ export default function ContactDetailsStep() {
         <div className="form-group flex flex-col-mobile gap-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.termination.contact.mobile')}</label>
-            <input type="tel" className="form-control" required />
+            <input name="contactNo" type="tel" className="form-control" required />
           </div>
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.termination.contact.fixed')}</label>
-            <input type="tel" className="form-control" />
+            <input name="fixedNo" type="tel" className="form-control" />
           </div>
         </div>
 
         <div className="form-group flex flex-col-mobile gap-4 mt-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.termination.contact.email')}</label>
-            <input type="email" className="form-control" required />
+            <input name="email" type="email" className="form-control" required />
           </div>
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.termination.contact.fax')}</label>
-            <input type="tel" className="form-control" />
+            <input name="faxNo" type="tel" className="form-control" />
           </div>
         </div>
       </div>

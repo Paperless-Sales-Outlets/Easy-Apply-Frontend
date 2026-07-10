@@ -11,11 +11,11 @@ export default function GeneralInfoStep() {
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.locationChange.generalInfo.telephone')}</label>
-          <input type="tel" className="form-control" required />
+          <input name="telephone" type="tel" className="form-control" required />
         </div>
         <div style={{ flex: '2' }}>
           <label className="form-label">{t('wizards.locationChange.generalInfo.legalOwner')}</label>
-          <input type="text" className="form-control" required />
+          <input name="legalOwner" type="text" className="form-control" required />
         </div>
       </div>
 
@@ -24,28 +24,28 @@ export default function GeneralInfoStep() {
         
         <div className="form-group">
           <label className="form-label">{t('wizards.locationChange.generalInfo.contactPerson')}</label>
-          <input type="text" className="form-control" required />
+          <input name="contactPerson" type="text" className="form-control" required />
         </div>
 
         <div className="form-group flex flex-col-mobile gap-4 mt-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.locationChange.generalInfo.tel')}</label>
-            <input type="tel" className="form-control" required />
+            <input name="tel" type="tel" className="form-control" required />
           </div>
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.locationChange.generalInfo.mobile')}</label>
-            <input type="tel" className="form-control" />
+            <input name="mobile" type="tel" className="form-control" />
           </div>
         </div>
 
         <div className="form-group flex flex-col-mobile gap-4 mt-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.locationChange.generalInfo.email')}</label>
-            <input type="email" className="form-control" />
+            <input name="email" type="email" className="form-control" />
           </div>
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.locationChange.generalInfo.fax')}</label>
-            <input type="tel" className="form-control" />
+            <input name="fax" type="tel" className="form-control" />
           </div>
         </div>
 

@@ -15,6 +15,7 @@ const CHECKS = {
    passes declarative `rules` and doesn't wire per-field state. */
 export default function Field({
   label,
+  name,
   rules = {},
   type = 'text',
   helper,
@@ -45,6 +46,7 @@ export default function Field({
   const input = (
     <input
       id={id}
+      name={name}
       type={type}
       className="form-control"
       inputMode={inputMode}

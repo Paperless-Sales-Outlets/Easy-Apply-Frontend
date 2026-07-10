@@ -82,6 +82,8 @@
     "previous": "Back",
     "nextStep": "Next Step",
     "submit": "Submit Application",
+    "submitting": "Submitting...",
+    "submitError": "Submission failed. Please try again.",
     "confirmTermination": "Confirm Termination"
   },
   "wizardFlow": {

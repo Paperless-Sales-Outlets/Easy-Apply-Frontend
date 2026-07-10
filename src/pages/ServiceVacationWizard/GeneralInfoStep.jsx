@@ -10,13 +10,13 @@ export default function GeneralInfoStep() {
       
       <div className="form-group">
         <label className="form-label">{t('wizards.serviceVacation.generalInfo.telephone')}</label>
-        <input type="tel" className="form-control" required />
+        <input name="telephone" type="tel" className="form-control" required />
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1', maxWidth: '150px' }}>
           <label className="form-label">{t('wizards.serviceVacation.generalInfo.title')}</label>
-          <select className="form-control">
+          <select name="title" className="form-control">
             <option>Rev</option>
             <option>Mr</option>
             <option>Ms</option>
@@ -24,30 +24,30 @@ export default function GeneralInfoStep() {
         </div>
         <div style={{ flex: '3' }}>
           <label className="form-label">{t('wizards.serviceVacation.generalInfo.fullName')}</label>
-          <input type="text" className="form-control" required />
+          <input name="fullName" type="text" className="form-control" required />
         </div>
       </div>
 
       <div className="form-group">
         <label className="form-label">{t('wizards.serviceVacation.generalInfo.address')}</label>
-        <textarea className="form-control" rows="3" required></textarea>
+        <textarea name="address" className="form-control" rows="3" required></textarea>
       </div>
 
       <div className="form-group mt-4">
         <label className="form-label">{t('wizards.serviceVacation.generalInfo.nicBrc')}</label>
         <div style={{ maxWidth: '400px' }}>
-          <input type="text" className="form-control" required />
+          <input name="nic" type="text" className="form-control" required />
         </div>
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4 mt-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.serviceVacation.generalInfo.mobile')}</label>
-          <input type="tel" className="form-control" required />
+          <input name="mobile" type="tel" className="form-control" required />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.serviceVacation.generalInfo.email')}</label>
-          <input type="email" className="form-control" required />
+          <input name="email" type="email" className="form-control" required />
         </div>
       </div>
 
