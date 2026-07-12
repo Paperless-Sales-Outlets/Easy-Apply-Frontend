@@ -1,20 +1,90 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useReducer, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
 import ConnectionPackageStep from './ConnectionPackageStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+
+const formReducer = (state, action) => {
+  switch (action.type) {
+    case 'UPDATE_FIELD':
+      return {
+        ...state,
+        [action.payload.name]: action.payload.value,
+      };
+    case 'SET_FIELDS':
+      return {
+        ...state,
+        ...action.payload,
+      };
+    default:
+      return state;
+  }
+};
+
+const initialState = {
+  customerType: 'home',
+  title: '',
+  nameFull: '',
+  dob: '',
+  nic: '',
+  taxExemption: '',
+  address: '',
+  contactName: '',
+  fixedNumber: '',
+  mobileNumber: '',
+  faxNumber: '',
+  email: '',
+  installAddress: '',
+  billingAddress: '',
+  existingNumber: '',
+  separateBill: 'no',
+  billingMode: 'email',
+  deactIDD: 'no',
+  broadbandPackage: '',
+  otherBroadbandPackage: '',
+  staticIP: 'no',
+};
 
 export default function NewConnectionWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const formRef = useRef(null);
+  const [formData, dispatch] = useReducer(formReducer, initialState);
   const totalSteps = 4;
+
+  // Auto-populate customer fields from verified KYC/Auth profile info
+  useEffect(() => {
+    if (user) {
+      dispatch({
+        type: 'SET_FIELDS',
+        payload: {
+          nameFull: user.name || '',
+          nic: user.NIC || '',
+          contactName: user.name || '',
+          mobileNumber: user.phone || '',
+          email: user.email || '',
+        },
+      });
+    }
+  }, [user]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    dispatch({
+      type: 'UPDATE_FIELD',
+      payload: {
+        name,
+        value: type === 'checkbox' ? checked : value,
+      },
+    });
+  };
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -28,10 +98,6 @@ export default function NewConnectionWizard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (currentStep < totalSteps) { nextStep(); return; }
-
-    // Collect all form fields from the DOM
-    const raw = new FormData(formRef.current);
-    const formData = Object.fromEntries(raw.entries());
 
     setSubmitting(true);
     setSubmitError('');
@@ -81,13 +147,21 @@ export default function NewConnectionWizard() {
       </div>
       </div>
 
-      <form ref={formRef} onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
-          <div style={{ display: currentStep === 1 ? 'block' : 'none' }}><CustomerInfoStep /></div>
-          <div style={{ display: currentStep === 2 ? 'block' : 'none' }}><ServiceInfoStep /></div>
-          <div style={{ display: currentStep === 3 ? 'block' : 'none' }}><ConnectionPackageStep /></div>
-          <div style={{ display: currentStep === 4 ? 'block' : 'none' }}><ValueAddedServicesStep /></div>
+          <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
+            <CustomerInfoStep formData={formData} handleChange={handleChange} />
+          </div>
+          <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
+            <ServiceInfoStep formData={formData} handleChange={handleChange} />
+          </div>
+          <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
+            <ConnectionPackageStep formData={formData} handleChange={handleChange} />
+          </div>
+          <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
+            <ValueAddedServicesStep formData={formData} handleChange={handleChange} />
+          </div>
         </div>
 
         {submitError && (

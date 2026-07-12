@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function ValueAddedServicesStep() {
+export default function ValueAddedServicesStep({ formData, handleChange }) {
   const { t } = useTranslation();
 
   return (
@@ -18,11 +18,20 @@ export default function ValueAddedServicesStep() {
             t('wizards.newConnection.vas.vasG'), t('wizards.newConnection.vas.vasH'),
             t('wizards.newConnection.vas.vasI'), t('wizards.newConnection.vas.vasJ'), 
             t('wizards.newConnection.vas.vasK'), t('wizards.newConnection.vas.vasL')
-          ].map(vas => (
-            <label key={vas} className="checkbox-label">
-              <input type="checkbox" className="checkbox-input" /> {vas}
-            </label>
-          ))}
+          ].map((vas, idx) => {
+            const name = `requiredVas_${idx}`;
+            return (
+              <label key={vas} className="checkbox-label">
+                <input 
+                  name={name} 
+                  type="checkbox" 
+                  className="checkbox-input" 
+                  checked={!!formData[name]} 
+                  onChange={handleChange} 
+                /> {vas}
+              </label>
+            );
+          })}
         </div>
       </div>
 
@@ -32,11 +41,20 @@ export default function ValueAddedServicesStep() {
           {[
             t('wizards.newConnection.vas.otherA'), t('wizards.newConnection.vas.otherB'), 
             t('wizards.newConnection.vas.otherC'), t('wizards.newConnection.vas.otherD')
-          ].map(vas => (
-            <label key={vas} className="checkbox-label">
-              <input type="checkbox" className="checkbox-input" /> {vas}
-            </label>
-          ))}
+          ].map((vas, idx) => {
+            const name = `otherVas_${idx}`;
+            return (
+              <label key={vas} className="checkbox-label">
+                <input 
+                  name={name} 
+                  type="checkbox" 
+                  className="checkbox-input" 
+                  checked={!!formData[name]} 
+                  onChange={handleChange} 
+                /> {vas}
+              </label>
+            );
+          })}
         </div>
       </div>
 
@@ -46,7 +64,14 @@ export default function ValueAddedServicesStep() {
           {t('wizards.newConnection.vas.agreementText')}
         </p>
         <label className="checkbox-label" style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
-          <input type="checkbox" className="checkbox-input" required /> {t('wizards.newConnection.vas.agreeLabel')}
+          <input 
+            name="agreement" 
+            type="checkbox" 
+            className="checkbox-input" 
+            checked={!!formData.agreement} 
+            onChange={handleChange} 
+            required 
+          /> {t('wizards.newConnection.vas.agreeLabel')}
         </label>
       </div>
       
