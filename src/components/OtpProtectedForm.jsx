@@ -20,7 +20,7 @@ const swap = {
 export default function OtpProtectedForm({ children }) {
   const { t } = useTranslation();
   const [phase, setPhase] = useState('mobile'); // 'mobile' | 'otp' | 'verified'
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(true);
   const [mobileNumber, setMobileNumber] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
