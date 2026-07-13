@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 import { VerificationContext } from './verification';
+import api from '../utils/api';
 
 const RESEND_SECONDS = 30;
-const DEMO_CODE = '123456';
 
 const formatNumber = (n) =>
   n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : `+94 ${n}`;
@@ -26,6 +26,7 @@ export default function OtpProtectedForm({ children }) {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef([]);
 
   // Focus the first code box and (re)start the resend countdown on entry.
@@ -50,35 +51,65 @@ export default function OtpProtectedForm({ children }) {
     return () => clearTimeout(id);
   }, [phase]);
 
-  const handleMobileSubmit = (e) => {
+  const handleMobileSubmit = async (e) => {
     e.preventDefault();
     if (mobileNumber.length === 9) {
       setError('');
-      setPhase('otp');
+      setIsLoading(true);
+      try {
+        const response = await api.post('/auth/send-otp', { phone: mobileNumber });
+        if (response.data.success) {
+          setPhase('otp');
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || t('otp.invalidMobile'));
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       setError(t('otp.invalidMobile'));
     }
   };
 
-  const submitOtp = (code) => {
-    if (code === DEMO_CODE) {
-      setError('');
-      setPhase('verified');
-    } else {
-      setError(t('otp.invalidOtp'));
+  const submitOtp = async (code) => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const response = await api.post('/auth/verify-otp', {
+        phone: mobileNumber,
+        otp: code,
+      });
+      if (response.data.success) {
+        setPhase('verified');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || t('otp.invalidOtp'));
+      // Clear OTP input digits on failed verification
+      setOtp(['', '', '', '', '', '']);
+      inputRefs.current[0]?.focus();
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleOtpChange = (index, raw) => {
+    if (isLoading) return;
+    
     const value = raw.replace(/\D/g, '');
     const next = [...otp];
     next[index] = value.slice(-1) || '';
     setOtp(next);
-    if (value && index < 5) inputRefs.current[index + 1]?.focus();
+    
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
 
     const joined = next.join('');
-    if (joined.length === 6) submitOtp(joined);
-    else if (error) setError('');
+    if (joined.length === 6) {
+      submitOtp(joined);
+    } else if (error) {
+      setError('');
+    }
   };
 
   const handleKeyDown = (index, e) => {
@@ -88,6 +119,8 @@ export default function OtpProtectedForm({ children }) {
   };
 
   const handlePaste = (e) => {
+    if (isLoading) return;
+    
     const text = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
     if (!text) return;
     e.preventDefault();
@@ -97,16 +130,28 @@ export default function OtpProtectedForm({ children }) {
     });
     setOtp(next);
     inputRefs.current[Math.min(text.length, 5)]?.focus();
-    if (text.length === 6) submitOtp(text);
+    if (text.length === 6) {
+      submitOtp(text);
+    }
   };
 
-  const handleResend = () => {
-    if (resendIn > 0) return;
+  const handleResend = async () => {
+    if (resendIn > 0 || isLoading) return;
     setOtp(['', '', '', '', '', '']);
     setError('');
-    setResendIn(RESEND_SECONDS);
-    setNotice(t('otp.resent'));
-    inputRefs.current[0]?.focus();
+    setIsLoading(true);
+    try {
+      const response = await api.post('/auth/send-otp', { phone: mobileNumber });
+      if (response.data.success) {
+        setResendIn(RESEND_SECONDS);
+        setNotice(t('otp.resent'));
+        inputRefs.current[0]?.focus();
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend code');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const changeNumber = () => {
@@ -151,6 +196,7 @@ export default function OtpProtectedForm({ children }) {
                     className="form-control"
                     placeholder="7X XXX XXXX"
                     value={mobileNumber}
+                    disabled={isLoading}
                     aria-invalid={error ? 'true' : undefined}
                     onChange={(e) =>
                       setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 9))
@@ -161,8 +207,8 @@ export default function OtpProtectedForm({ children }) {
                 <p className="otp-error" role="alert">
                   {error}
                 </p>
-                <button type="submit" className="btn btn-primary btn-block">
-                  {t('otp.sendCode')} <Icon name="arrow-right" size={18} />
+                <button type="submit" className="btn btn-primary btn-block" disabled={isLoading}>
+                  {isLoading ? '...' : <>{t('otp.sendCode')} <Icon name="arrow-right" size={18} /></>}
                 </button>
               </form>
             </motion.div>
@@ -179,7 +225,7 @@ export default function OtpProtectedForm({ children }) {
               </p>
               <p className="otp-number-row">
                 <span className="otp-number">{formatNumber(mobileNumber)}</span>
-                <button type="button" className="otp-change" onClick={changeNumber}>
+                <button type="button" className="otp-change" onClick={changeNumber} disabled={isLoading}>
                   {t('otp.changeNumber')}
                 </button>
               </p>
@@ -199,6 +245,7 @@ export default function OtpProtectedForm({ children }) {
                       autoComplete="one-time-code"
                       maxLength={1}
                       value={digit}
+                      disabled={isLoading}
                       data-filled={digit ? 'true' : 'false'}
                       aria-label={t('otp.digitLabel', { n: index + 1 })}
                       aria-invalid={error ? 'true' : undefined}
@@ -216,12 +263,12 @@ export default function OtpProtectedForm({ children }) {
               {resendIn > 0 ? (
                 <span className="otp-resend">{t('otp.resendIn', { seconds: resendIn })}</span>
               ) : (
-                <button type="button" className="otp-change" onClick={handleResend}>
-                  {t('otp.resend')}
+                <button type="button" className="otp-change" onClick={handleResend} disabled={isLoading}>
+                  {isLoading ? '...' : t('otp.resend')}
                 </button>
               )}
 
-              <p className="otp-hint">{t('otp.hint')}</p>
+              <p className="otp-hint">{t('otp.hint', 'The verification code will be printed in the server terminal console.')}</p>
               <span className="sr-only" role="status" aria-live="polite">
                 {notice}
               </span>

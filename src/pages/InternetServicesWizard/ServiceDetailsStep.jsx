@@ -81,7 +81,7 @@ export default function ServiceDetailsStep() {
         <label className="form-label">{t('wizards.internetServices.serviceDetails.accessType')}</label>
         <div className="radio-group">
           <label className="radio-label">
-            <input type="radio" name="accessType" value="analog" className="radio-input" /> {t('wizards.internetServices.serviceDetails.analog')}
+            <input type="radio" name="accessType" value="analog" className="radio-input" required /> {t('wizards.internetServices.serviceDetails.analog')}
           </label>
           <label className="radio-label">
             <input type="radio" name="accessType" value="isdn" className="radio-input" /> {t('wizards.internetServices.serviceDetails.isdn')}

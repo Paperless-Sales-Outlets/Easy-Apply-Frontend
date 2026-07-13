@@ -10,7 +10,7 @@ export default function ServiceInfoStep() {
       
       <div className="form-group">
         <label className="form-label">{t('wizards.newConnection.serviceInfo.installAddress')}</label>
-        <textarea className="form-control" rows="3"></textarea>
+        <textarea className="form-control" rows="3" required></textarea>
       </div>
 
       <div className="form-group">
@@ -41,7 +41,7 @@ export default function ServiceInfoStep() {
       <h4 style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>{t('wizards.newConnection.serviceInfo.billingMode')}</h4>
       <div className="form-group radio-group">
         <label className="radio-label">
-          <input type="radio" name="billingMode" value="email" className="radio-input" /> {t('wizards.newConnection.serviceInfo.ebillEmail')}
+          <input type="radio" name="billingMode" value="email" className="radio-input" required /> {t('wizards.newConnection.serviceInfo.ebillEmail')}
         </label>
         <label className="radio-label">
           <input type="radio" name="billingMode" value="sms" className="radio-input" /> {t('wizards.newConnection.serviceInfo.ebillSms')}
