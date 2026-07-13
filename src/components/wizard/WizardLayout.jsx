@@ -18,6 +18,7 @@ export default function WizardLayout({
   hintTitle,
   hintItems = [],
   submitLabel,
+  submitting = false,
   onBack,
   onSubmit,
   children,
@@ -80,11 +81,11 @@ export default function WizardLayout({
               type="button"
               className="btn btn-secondary"
               onClick={onBack}
-              disabled={currentStep === 1}
+              disabled={currentStep === 1 || submitting}
             >
               {t('common.previous')}
             </button>
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
               {isLast ? submitLabel || t('wizardFlow.submit') : t('wizardFlow.continueTo', { next: steps[currentStep] })}
             </button>
           </div>

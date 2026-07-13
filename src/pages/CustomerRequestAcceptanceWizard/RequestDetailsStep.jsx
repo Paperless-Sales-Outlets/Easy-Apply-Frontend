@@ -29,15 +29,17 @@ export default function RequestDetailsStep() {
 
   return (
     <div>
-      <Field label={t(`${k}.fullName`)} rules={{ required: true }} autoComplete="name" />
+      <Field name="fullName" label={t(`${k}.fullName`)} rules={{ required: true }} autoComplete="name" />
 
       <div className="field-row">
         <Field
+          name="nic"
           label={t(`${k}.nicBrc`)}
           rules={{ required: true, kind: 'nic' }}
           helper={t(`${k}.nicHelper`)}
         />
         <Field
+          name="telephone"
           label={t(`${k}.telephone`)}
           type="tel"
           inputMode="numeric"
@@ -53,6 +55,7 @@ export default function RequestDetailsStep() {
       <p className="field-group-label">{t(`${k}.contactDetails`)}</p>
       <div className="field-row">
         <Field
+          name="fixedNo"
           label={t(`${k}.fixed`)}
           type="tel"
           inputMode="numeric"
@@ -60,6 +63,7 @@ export default function RequestDetailsStep() {
           rules={{ kind: 'phone' }}
         />
         <Field
+          name="mobileNo"
           label={t(`${k}.mobile`)}
           type="tel"
           inputMode="numeric"
@@ -69,6 +73,7 @@ export default function RequestDetailsStep() {
           helper={t(`${k}.mobilePrefill`)}
         />
         <Field
+          name="email"
           label={t(`${k}.email`)}
           type="email"
           inputMode="email"
@@ -79,6 +84,7 @@ export default function RequestDetailsStep() {
 
       <h3 className="wizard-subhead">{t(`${k}.descriptionHeading`)}</h3>
       <Textarea
+        name="description"
         label={t(`${k}.descriptionLabel`)}
         rules={{ required: true }}
         maxLength={500}

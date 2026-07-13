@@ -10,22 +10,22 @@ export default function CustomerInfoStep() {
       
       <div className="form-group">
         <label className="form-label">{t('wizards.packageMigration.customerInfo.telephone')}</label>
-        <input type="tel" className="form-control" required />
+        <input name="telephone" type="tel" className="form-control" required />
       </div>
 
       <div className="form-group">
         <label className="form-label">{t('wizards.packageMigration.customerInfo.fullName')}</label>
-        <input type="text" className="form-control" required />
+        <input name="fullName" type="text" className="form-control" required />
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.packageMigration.customerInfo.nicBrc')}</label>
-          <input type="text" className="form-control" required />
+          <input name="nic" type="text" className="form-control" required />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.packageMigration.customerInfo.contactNo')}</label>
-          <input type="tel" className="form-control" required />
+          <input name="contactNo" type="tel" className="form-control" required />
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
+import api from '../utils/api';
 
 export default function CheckStatusPage() {
   const { t } = useTranslation();
@@ -10,23 +11,27 @@ export default function CheckStatusPage() {
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCheck = (e) => {
+  const handleCheck = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setResult(null);
     
-    // Simulate API call
-    setTimeout(() => {
-      if (reference && nic) {
-        setResult({
-          status: 'pending', // 'pending', 'approved', 'rejected', 'not-found'
-          message: t('checkStatusPage.statusDescription')
-        });
-      } else {
-        setResult({ status: 'not-found', message: t('checkStatusPage.notFound') });
-      }
+    try {
+      const response = await api.get(
+        `/applications/check-status?ref=${encodeURIComponent(reference)}&nic=${encodeURIComponent(nic)}`
+      );
+      setResult({
+        status: response.data.status, // 'pending', 'approved', 'rejected', 'flagged'
+        message: t('checkStatusPage.statusDescription'),
+      });
+    } catch (error) {
+      setResult({
+        status: 'not-found',
+        message: error.response?.data?.message || t('checkStatusPage.notFound'),
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
