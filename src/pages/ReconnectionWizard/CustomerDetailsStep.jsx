@@ -11,27 +11,27 @@ export default function CustomerDetailsStep() {
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.reconnection.customerInfo.telephone')}</label>
-          <input type="text" className="form-control" required />
+          <input name="telephone" type="text" className="form-control" required />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.reconnection.customerInfo.nearestTp')}</label>
-          <input type="text" className="form-control" />
+          <input name="nearestTp" type="text" className="form-control" />
         </div>
       </div>
 
       <div className="form-group">
         <label className="form-label">{t('wizards.reconnection.customerInfo.fullName')}</label>
-        <input type="text" className="form-control" required />
+        <input name="fullName" type="text" className="form-control" required />
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.reconnection.customerInfo.nicBrc')}</label>
-          <input type="text" className="form-control" required />
+          <input name="nic" type="text" className="form-control" required />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.reconnection.customerInfo.contactNo')}</label>
-          <input type="tel" className="form-control" required />
+          <input name="contactNo" type="tel" className="form-control" required />
         </div>
       </div>
     </div>

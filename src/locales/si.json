@@ -78,6 +78,8 @@
     "previous": "ආපසු",
     "nextStep": "ඊළඟ පියවර",
     "submit": "අයදුම්පත යොමු කරන්න",
+    "submitting": "යොමු කරමින්...",
+    "submitError": "යොමු කිරීම අසාර්ථකයි. නැවත උත්සාහ කරන්න.",
     "confirmTermination": "අත්හිටුවීම තහවුරු කරන්න"
   },
   "wizardFlow": {

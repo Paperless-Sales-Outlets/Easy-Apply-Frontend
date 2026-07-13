@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function CustomerInfoStep() {
+export default function CustomerInfoStep({ formData, handleChange }) {
   const { t } = useTranslation();
 
   return (
@@ -12,13 +12,34 @@ export default function CustomerInfoStep() {
         <label className="form-label">{t('wizards.newConnection.customerInfo.customerType')}</label>
         <div className="radio-group">
           <label className="radio-label">
-            <input type="radio" name="customerType" value="home" className="radio-input" /> {t('wizards.newConnection.customerInfo.home')}
+            <input 
+              type="radio" 
+              name="customerType" 
+              value="home" 
+              className="radio-input" 
+              checked={formData.customerType === 'home'} 
+              onChange={handleChange} 
+            /> {t('wizards.newConnection.customerInfo.home')}
           </label>
           <label className="radio-label">
-            <input type="radio" name="customerType" value="office" className="radio-input" /> {t('wizards.newConnection.customerInfo.office')}
+            <input 
+              type="radio" 
+              name="customerType" 
+              value="office" 
+              className="radio-input" 
+              checked={formData.customerType === 'office'} 
+              onChange={handleChange} 
+            /> {t('wizards.newConnection.customerInfo.office')}
           </label>
           <label className="radio-label">
-            <input type="radio" name="customerType" value="religious" className="radio-input" /> {t('wizards.newConnection.customerInfo.religious')}
+            <input 
+              type="radio" 
+              name="customerType" 
+              value="religious" 
+              className="radio-input" 
+              checked={formData.customerType === 'religious'} 
+              onChange={handleChange} 
+            /> {t('wizards.newConnection.customerInfo.religious')}
           </label>
         </div>
       </div>
@@ -26,7 +47,12 @@ export default function CustomerInfoStep() {
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.title')}</label>
-          <select className="form-control" defaultValue="">
+          <select 
+            name="title" 
+            className="form-control" 
+            value={formData.title || ''} 
+            onChange={handleChange}
+          >
             <option value="" disabled>{t('wizards.newConnection.customerInfo.select')}</option>
             <option value="Rev">{t('wizards.newConnection.customerInfo.rev')}</option>
             <option value="Mr">{t('wizards.newConnection.customerInfo.mr')}</option>
@@ -36,28 +62,63 @@ export default function CustomerInfoStep() {
         </div>
         <div style={{ flex: '3' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.nameFull')}</label>
-          <input type="text" className="form-control" placeholder={t('wizards.newConnection.customerInfo.namePlaceholder')} />
+          <input 
+            name="nameFull" 
+            type="text" 
+            className="form-control" 
+            placeholder={t('wizards.newConnection.customerInfo.namePlaceholder')} 
+            value={formData.nameFull || ''} 
+            onChange={handleChange} 
+            required 
+          />
         </div>
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.dob')}</label>
-          <input type="date" className="form-control" />
+          <input 
+            name="dob" 
+            type="date" 
+            className="form-control" 
+            value={formData.dob || ''} 
+            onChange={handleChange} 
+            required 
+          />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.nic')}</label>
-          <input type="text" className="form-control" required />
+          <input 
+            name="nic" 
+            type="text" 
+            className="form-control" 
+            value={formData.nic || ''} 
+            onChange={handleChange} 
+            required 
+          />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.taxExemption')}</label>
-          <input type="text" className="form-control" />
+          <input 
+            name="taxExemption" 
+            type="text" 
+            className="form-control" 
+            value={formData.taxExemption || ''} 
+            onChange={handleChange} 
+          />
         </div>
       </div>
 
       <div className="form-group">
         <label className="form-label">{t('wizards.newConnection.customerInfo.address')}</label>
-        <textarea className="form-control" rows="3" required></textarea>
+        <textarea 
+          name="address" 
+          className="form-control" 
+          rows="3" 
+          value={formData.address || ''} 
+          onChange={handleChange} 
+          required
+        ></textarea>
       </div>
 
       <h4 style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>{t('wizards.newConnection.customerInfo.contactDetails')}</h4>
@@ -65,29 +126,62 @@ export default function CustomerInfoStep() {
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.contactName')}</label>
-          <input type="text" className="form-control" required />
+          <input 
+            name="contactName" 
+            type="text" 
+            className="form-control" 
+            value={formData.contactName || ''} 
+            onChange={handleChange} 
+            required 
+          />
         </div>
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.fixedNumber')}</label>
-          <input type="tel" className="form-control" />
+          <input 
+            name="fixedNumber" 
+            type="tel" 
+            className="form-control" 
+            value={formData.fixedNumber || ''} 
+            onChange={handleChange} 
+          />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.mobileNumber')}</label>
-          <input type="tel" className="form-control" required />
+          <input 
+            name="mobileNumber" 
+            type="tel" 
+            className="form-control" 
+            value={formData.mobileNumber || ''} 
+            onChange={handleChange} 
+            required 
+          />
         </div>
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.faxNumber')}</label>
-          <input type="tel" className="form-control" />
+          <input 
+            name="faxNumber" 
+            type="tel" 
+            className="form-control" 
+            value={formData.faxNumber || ''} 
+            onChange={handleChange} 
+          />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.email')}</label>
-          <input type="email" className="form-control" required />
+          <input 
+            name="email" 
+            type="email" 
+            className="form-control" 
+            value={formData.email || ''} 
+            onChange={handleChange} 
+            required 
+          />
         </div>
       </div>
       <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>

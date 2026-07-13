@@ -10,23 +10,23 @@ export default function NewApplicantStep() {
       
       <div className="form-group">
         <label className="form-label">{t('wizards.ownershipChange.newApplicant.fullName')}</label>
-        <input type="text" className="form-control" required />
+        <input name="fullName" type="text" className="form-control" required />
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.ownershipChange.newApplicant.nicBrc')}</label>
-          <input type="text" className="form-control" required />
+          <input name="nic" type="text" className="form-control" required />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.ownershipChange.newApplicant.contactNo')}</label>
-          <input type="tel" className="form-control" required />
+          <input name="contactNo" type="tel" className="form-control" required />
         </div>
       </div>
 
       <div className="form-group">
         <label className="form-label">{t('wizards.ownershipChange.newApplicant.email')}</label>
-        <input type="email" className="form-control" required />
+        <input name="email" type="email" className="form-control" required />
       </div>
 
       <div className="form-group">
@@ -34,7 +34,7 @@ export default function NewApplicantStep() {
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
           {t('wizards.ownershipChange.newApplicant.remarksNote')}
         </p>
-        <textarea className="form-control" rows="3"></textarea>
+        <textarea name="newRemarks" className="form-control" rows="3"></textarea>
       </div>
 
     </div>

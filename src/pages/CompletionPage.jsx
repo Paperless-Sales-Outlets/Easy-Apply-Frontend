@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiCheckCircle, FiCopy, FiHome } from 'react-icons/fi';
@@ -8,19 +8,10 @@ export default function CompletionPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  
-  const [refNumber, setRefNumber] = useState('');
-  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    // Generate a random reference number
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = 'REQ-';
-    for (let i = 0; i < 8; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setRefNumber(result);
-  }, []);
+  // Read the real reference number returned by the API (passed via router state)
+  const refNumber = location.state?.referenceNumber || '—';
+  const [copied, setCopied] = useState(false);
 
   const messageKey = location.state?.messageKey || 'completion.defaultMessage';
   const message = t(messageKey);
