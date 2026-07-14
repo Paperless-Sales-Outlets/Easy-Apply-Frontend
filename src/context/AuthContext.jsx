@@ -32,6 +32,17 @@ export const AuthProvider = ({ children }) => {
 
   // Login handler
   const login = async (email, password) => {
+    // --- DEMO BYPASS ---
+    // Use these credentials to test the frontend without a running backend:
+    if (email === 'test@gmail.com' && password === '12345') {
+      const demoUser = { name: 'QA Tester', email: 'qa@easyapply.lk', role: 'Customer', NIC: 'QA0000000V' };
+      localStorage.setItem('accessToken', 'demo-access-token');
+      localStorage.setItem('refreshToken', 'demo-refresh-token');
+      setUser(demoUser);
+      return { success: true };
+    }
+    // --- END DEMO BYPASS ---
+
     try {
       const response = await api.post('/auth/login', { email, password });
       const { user: loggedInUser, accessToken, refreshToken } = response.data;

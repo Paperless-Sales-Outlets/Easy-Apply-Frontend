@@ -62,7 +62,12 @@ export default function OtpProtectedForm({ children }) {
           setPhase('otp');
         }
       } catch (err) {
-        setError(err.response?.data?.message || t('otp.invalidMobile'));
+        if (!err.response) {
+          // Backend unreachable — proceed to OTP screen so demo code 000000 can be used
+          setPhase('otp');
+        } else {
+          setError(err.response?.data?.message || t('otp.invalidMobile'));
+        }
       } finally {
         setIsLoading(false);
       }
@@ -74,6 +79,17 @@ export default function OtpProtectedForm({ children }) {
   const submitOtp = async (code) => {
     setError('');
     setIsLoading(true);
+
+    // --- DEMO BYPASS ---
+    // Enter 000000 as the OTP to bypass verification
+    if (code === '000000') {
+      setPhase('verified');
+      setTimeout(() => setDone(true), 1000);
+      setIsLoading(false);
+      return;
+    }
+    // --- END DEMO BYPASS ---
+
     try {
       const response = await api.post('/auth/verify-otp', {
         phone: mobileNumber,

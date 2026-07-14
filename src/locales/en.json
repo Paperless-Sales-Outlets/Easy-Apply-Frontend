@@ -698,14 +698,14 @@
     "changeNumber": "Change",
     "codeLegend": "6-digit verification code",
     "digitLabel": "Digit {{n}}",
-    "hint": "Demo code: 123456",
+    "hint": "Demo code: 000000",
     "resendIn": "Resend code in {{seconds}}s",
     "resend": "Resend code",
     "resent": "A new code has been sent.",
     "verifiedTitle": "Verified",
     "verifiedText": "Taking you to the form…",
     "invalidMobile": "Enter a valid mobile number with 9 digits.",
-    "invalidOtp": "That code isn't correct. For this demo, enter 123456."
+    "invalidOtp": "That code isn't correct. For this demo, enter 000000."
   },
   "completion": {
     "successTitle": "Success!",
