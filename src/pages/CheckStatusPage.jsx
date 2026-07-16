@@ -7,7 +7,6 @@ import api from '../utils/api';
 export default function CheckStatusPage() {
   const { t } = useTranslation();
   const [reference, setReference] = useState('');
-  const [nic, setNic] = useState('');
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,7 +17,7 @@ export default function CheckStatusPage() {
     
     try {
       const response = await api.get(
-        `/applications/check-status?ref=${encodeURIComponent(reference)}&nic=${encodeURIComponent(nic)}`
+        `/applications/check-status?ref=${encodeURIComponent(reference)}`
       );
       setResult({
         status: response.data.status, // 'pending', 'approved', 'rejected', 'flagged'
@@ -27,7 +26,7 @@ export default function CheckStatusPage() {
     } catch (error) {
       setResult({
         status: 'not-found',
-        message: error.response?.data?.message || t('checkStatusPage.notFound'),
+        message: error.response?.data?.message || 'No application found with this reference number.',
       });
     } finally {
       setIsLoading(false);
@@ -54,21 +53,8 @@ export default function CheckStatusPage() {
               required
             />
           </div>
-          
-          <div className="field">
-            <label className="field-label" htmlFor="nic">{t('checkStatusPage.nic')}</label>
-            <input
-              id="nic"
-              type="text"
-              className="form-control"
-              value={nic}
-              onChange={(e) => setNic(e.target.value)}
-              placeholder={t('checkStatusPage.nicPlaceholder')}
-              required
-            />
-          </div>
 
-          <button type="submit" className="btn btn-primary w-full" disabled={isLoading}>
+          <button type="submit" className="btn btn-primary w-full" style={{ marginTop: '1rem' }} disabled={isLoading}>
             {isLoading ? '...' : t('checkStatusPage.check')}
           </button>
         </form>
