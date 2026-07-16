@@ -15,7 +15,7 @@ export default function CustomerInfoStep({ isActive }) {
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.internetServices.customerInfo.nicBr')}</label>
-          <input type="text" className="form-control" required={isActive} />
+          <input name="nic" type="text" className="form-control" required={isActive} />
         </div>
       </div>
 
