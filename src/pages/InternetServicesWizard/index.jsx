@@ -30,7 +30,7 @@ export default function InternetServicesWizard() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/api/applications', {
+      const res = await api.post('/applications', {
         serviceType: 'internet-services',
         formData,
         phone: verifiedMobile,

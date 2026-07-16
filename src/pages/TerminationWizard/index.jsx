@@ -37,7 +37,7 @@ export default function TerminationWizard() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/api/applications', {
+      const res = await api.post('/applications', {
         serviceType: 'termination',
         formData,
         phone: verifiedMobile,

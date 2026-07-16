@@ -13,10 +13,6 @@ import RefundRequestWizard from './pages/RefundRequestWizard';
 import CustomerRequestAcceptanceWizard from './pages/CustomerRequestAcceptanceWizard';
 import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ProtectedRoute from './components/ProtectedRoute';
-import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -61,24 +57,21 @@ const AnimatedRoutes = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter basename={import.meta.env.BASE_URL}>
-        <MotionConfig reducedMotion="user">
-          <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-            <div className="brand-topbar" />
-            <Navbar />
-            <main className="main-content">
-              <ErrorBoundary>
-                <AnimatedRoutes />
-              </ErrorBoundary>
-            </main>
-            <Footer />
-          </div>
-        </MotionConfig>
-      </BrowserRouter>
-    </AuthProvider>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <MotionConfig reducedMotion="user">
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <div className="brand-topbar" />
+          <Navbar />
+          <main className="main-content">
+            <ErrorBoundary>
+              <AnimatedRoutes />
+            </ErrorBoundary>
+          </main>
+          <Footer />
+        </div>
+      </MotionConfig>
+    </BrowserRouter>
   );
 }
 
 export default App;
-// 

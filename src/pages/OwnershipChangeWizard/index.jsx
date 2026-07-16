@@ -37,7 +37,7 @@ export default function OwnershipChangeWizard() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/api/applications', {
+      const res = await api.post('/applications', {
         serviceType: 'transfer',
         formData,
         phone: verifiedMobile,

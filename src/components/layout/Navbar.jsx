@@ -3,11 +3,9 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Icon from '../Icon';
 import sltLogo from '../../assets/sltlogoOnly.png';
-import { useAuth } from '../../context/AuthContext';
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
-  const { user, logout } = useAuth();
 
   return (
     <nav className="navbar">

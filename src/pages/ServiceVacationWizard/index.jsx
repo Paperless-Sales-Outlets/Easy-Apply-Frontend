@@ -36,7 +36,7 @@ export default function ServiceVacationWizard() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/api/applications', {
+      const res = await api.post('/applications', {
         serviceType: 'service-vacation',
         formData,
         phone: verifiedMobile,

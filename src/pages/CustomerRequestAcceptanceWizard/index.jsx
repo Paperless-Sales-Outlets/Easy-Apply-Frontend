@@ -40,7 +40,7 @@ export default function CustomerRequestAcceptanceWizard() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/api/applications', {
+      const res = await api.post('/applications', {
         serviceType: 'customer-request-acceptance',
         formData,
         phone: verifiedMobile,

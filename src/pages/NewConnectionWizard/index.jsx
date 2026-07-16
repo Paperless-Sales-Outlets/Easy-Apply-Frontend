@@ -5,7 +5,6 @@ import ServiceInfoStep from './ServiceInfoStep';
 import ConnectionPackageStep from './ConnectionPackageStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
 
@@ -53,7 +52,6 @@ const initialState = {
 export default function NewConnectionWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { user } = useAuth();
   const verifiedMobile = useVerifiedMobile();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -61,20 +59,9 @@ export default function NewConnectionWizard() {
   const [formData, dispatch] = useReducer(formReducer, initialState);
   const totalSteps = 4;
 
-  // Auto-populate customer fields from verified KYC/Auth profile info or OTP context
+  // Auto-populate mobile number from OTP context
   useEffect(() => {
-    if (user) {
-      dispatch({
-        type: 'SET_FIELDS',
-        payload: {
-          nameFull: user.name || '',
-          nic: user.NIC || '',
-          contactName: user.name || '',
-          mobileNumber: user.phone || verifiedMobile || '',
-          email: user.email || '',
-        },
-      });
-    } else if (verifiedMobile) {
+    if (verifiedMobile) {
       dispatch({
         type: 'SET_FIELDS',
         payload: {
@@ -82,7 +69,7 @@ export default function NewConnectionWizard() {
         },
       });
     }
-  }, [user, verifiedMobile]);
+  }, [verifiedMobile]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -164,7 +151,7 @@ export default function NewConnectionWizard() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/api/applications', {
+      const res = await api.post('/applications', {
         serviceType: 'new-connection',
         formData,
         phone: verifiedMobile,

@@ -35,7 +35,7 @@ export default function PackageMigrationWizard() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/api/applications', {
+      const res = await api.post('/applications', {
         serviceType: 'package-migration',
         formData,
         phone: verifiedMobile,

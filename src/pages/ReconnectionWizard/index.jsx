@@ -42,7 +42,7 @@ export default function ReconnectionWizard() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/api/applications', {
+      const res = await api.post('/applications', {
         serviceType: 'reconnection',
         formData,
         phone: verifiedMobile,

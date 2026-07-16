@@ -10,6 +10,33 @@ export default function CheckStatusPage() {
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const getServiceTypeLabel = (type) => {
+    switch (type) {
+      case 'new-connection':
+        return t('wizards.newConnection.title');
+      case 'reconnection':
+        return t('wizards.reconnection.title');
+      case 'relocation':
+        return t('wizards.locationChange.title');
+      case 'termination':
+        return t('wizards.termination.title');
+      case 'transfer':
+        return t('wizards.ownershipChange.title');
+      case 'package-migration':
+        return t('wizards.packageMigration.title');
+      case 'service-vacation':
+        return t('wizards.serviceVacation.title');
+      case 'refund-request':
+        return t('wizards.refundRequest.title');
+      case 'customer-request-acceptance':
+        return t('wizards.customerRequestAcceptance.title');
+      case 'internet-services':
+        return t('wizards.internetServices.title');
+      default:
+        return type || 'Service Request';
+    }
+  };
+
   const handleCheck = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -21,6 +48,7 @@ export default function CheckStatusPage() {
       );
       setResult({
         status: response.data.status, // 'pending', 'approved', 'rejected', 'flagged'
+        serviceType: response.data.serviceType,
         message: t('checkStatusPage.statusDescription'),
       });
     } catch (error) {
@@ -68,13 +96,20 @@ export default function CheckStatusPage() {
               result.status === 'approved' ? 'bg-green-50 border-green-200 text-green-800' :
               'bg-blue-50 border-blue-200 text-blue-800'
             }`}
-            style={{ marginTop: '1.5rem', padding: '1rem', borderRadius: '8px', border: '1px solid', backgroundColor: result.status === 'not-found' ? '#fef2f2' : '#eff6ff', borderColor: result.status === 'not-found' ? '#fecaca' : '#bfdbfe', color: result.status === 'not-found' ? '#991b1b' : '#1e3a8a' }}
+            style={{ marginTop: '1.5rem', padding: '1.25rem', borderRadius: '8px', border: '1px solid', backgroundColor: result.status === 'not-found' ? '#fef2f2' : '#eff6ff', borderColor: result.status === 'not-found' ? '#fecaca' : '#bfdbfe', color: result.status === 'not-found' ? '#991b1b' : '#1e3a8a' }}
           >
             <h3 style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Icon name={result.status === 'not-found' ? 'alert-circle' : result.status === 'approved' ? 'check-circle' : 'clock'} size={20} />
               {result.status === 'not-found' ? t('checkStatusPage.status') : t(`checkStatusPage.status${result.status.charAt(0).toUpperCase() + result.status.slice(1)}`)}
             </h3>
-            <p style={{ margin: 0 }}>{result.message}</p>
+            
+            {result.status !== 'not-found' && result.serviceType && (
+              <div style={{ fontSize: '0.95rem', fontWeight: '500', marginBottom: '0.5rem', opacity: 0.9 }}>
+                <strong>Application Type:</strong> {getServiceTypeLabel(result.serviceType)}
+              </div>
+            )}
+
+            <p style={{ margin: 0, fontSize: '0.9rem' }}>{result.message}</p>
           </motion.div>
         )}
       </div>
