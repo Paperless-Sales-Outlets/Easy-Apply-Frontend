@@ -53,17 +53,24 @@ export default function OtpProtectedForm({ children }) {
 
   const handleMobileSubmit = async (e) => {
     e.preventDefault();
-    if (mobileNumber.length === 9 && mobileNumber.startsWith('7')) {
+    let num = mobileNumber;
+    if (num.startsWith('0')) {
+      num = num.substring(1);
+    }
+
+    if (num.length === 9 && num.startsWith('7')) {
       setError('');
       setIsLoading(true);
       try {
-        const response = await api.post('/auth/send-otp', { phone: mobileNumber });
+        const response = await api.post('/otp/send', { phone: num });
         if (response.data.success) {
+          setMobileNumber(num);
           setPhase('otp');
         }
       } catch (err) {
         if (!err.response) {
-          // Backend unreachable — proceed to OTP screen so demo code 000000 can be used
+          // Backend unreachable — proceed anyway so demo code 000000 still works
+          setMobileNumber(num);
           setPhase('otp');
         } else {
           setError(err.response?.data?.message || t('otp.invalidMobile'));
@@ -72,7 +79,7 @@ export default function OtpProtectedForm({ children }) {
         setIsLoading(false);
       }
     } else {
-      setError(t('otp.invalidMobile', 'Enter a valid mobile number starting with 7 (e.g. 7XXXXXXXX).'));
+      setError(t('otp.invalidMobile', 'Enter a valid mobile number.'));
     }
   };
 
@@ -80,18 +87,16 @@ export default function OtpProtectedForm({ children }) {
     setError('');
     setIsLoading(true);
 
-    // --- DEMO BYPASS ---
-    // Enter 000000 as the OTP to bypass verification
+    // Accept 000000 as the demo bypass code
     if (code === '000000') {
       setPhase('verified');
       setTimeout(() => setDone(true), 1000);
       setIsLoading(false);
       return;
     }
-    // --- END DEMO BYPASS ---
 
     try {
-      const response = await api.post('/auth/verify-otp', {
+      const response = await api.post('/otp/verify', {
         phone: mobileNumber,
         otp: code,
       });
@@ -100,9 +105,8 @@ export default function OtpProtectedForm({ children }) {
       }
     } catch (err) {
       setError(err.response?.data?.message || t('otp.invalidOtp'));
-      // Clear OTP input digits on failed verification
       setOtp(['', '', '', '', '', '']);
-      inputRefs.current[0]?.focus();
+      setTimeout(() => inputRefs.current[0]?.focus(), 50);
     } finally {
       setIsLoading(false);
     }
@@ -157,11 +161,11 @@ export default function OtpProtectedForm({ children }) {
     setError('');
     setIsLoading(true);
     try {
-      const response = await api.post('/auth/send-otp', { phone: mobileNumber });
+      const response = await api.post('/otp/send', { phone: mobileNumber });
       if (response.data.success) {
         setResendIn(RESEND_SECONDS);
         setNotice(t('otp.resent'));
-        inputRefs.current[0]?.focus();
+        setTimeout(() => inputRefs.current[0]?.focus(), 50);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to resend code');
@@ -214,9 +218,13 @@ export default function OtpProtectedForm({ children }) {
                     value={mobileNumber}
                     disabled={isLoading}
                     aria-invalid={error ? 'true' : undefined}
-                    onChange={(e) =>
-                      setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 9))
-                    }
+                    onChange={(e) => {
+                      let val = e.target.value.replace(/\D/g, '');
+                      if (val.startsWith('0')) {
+                        val = val.substring(1);
+                      }
+                      setMobileNumber(val.slice(0, 9));
+                    }}
                     autoFocus
                   />
                 </div>
