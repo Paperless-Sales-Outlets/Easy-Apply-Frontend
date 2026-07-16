@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function AccountSetupStep() {
+export default function AccountSetupStep({ isActive }) {
   const { t } = useTranslation();
   const [needInstall, setNeedInstall] = useState('no');
 
@@ -74,7 +74,7 @@ export default function AccountSetupStep() {
           {t('wizards.internetServices.accountSetup.declarationText')}
         </p>
         <label className="checkbox-label" style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
-          <input type="checkbox" className="checkbox-input" required /> {t('wizards.internetServices.accountSetup.agreeLabel')}
+          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.internetServices.accountSetup.agreeLabel')}
         </label>
       </div>
       

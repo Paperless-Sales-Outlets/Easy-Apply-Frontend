@@ -53,7 +53,7 @@ export default function OtpProtectedForm({ children }) {
 
   const handleMobileSubmit = async (e) => {
     e.preventDefault();
-    if (mobileNumber.length === 9) {
+    if (mobileNumber.length === 9 && mobileNumber.startsWith('7')) {
       setError('');
       setIsLoading(true);
       try {
@@ -72,7 +72,7 @@ export default function OtpProtectedForm({ children }) {
         setIsLoading(false);
       }
     } else {
-      setError(t('otp.invalidMobile'));
+      setError(t('otp.invalidMobile', 'Enter a valid mobile number starting with 7 (e.g. 7XXXXXXXX).'));
     }
   };
 

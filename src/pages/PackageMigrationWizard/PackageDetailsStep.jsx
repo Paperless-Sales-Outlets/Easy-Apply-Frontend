@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function PackageDetailsStep() {
+export default function PackageDetailsStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -12,18 +12,18 @@ export default function PackageDetailsStep() {
         <div className="form-group flex flex-col-mobile gap-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.packageMigration.packageDetails.existingPackage')}</label>
-            <input type="text" className="form-control" required />
+            <input type="text" className="form-control" required={isActive} />
           </div>
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.packageMigration.packageDetails.requiredPackage')}</label>
-            <input type="text" className="form-control" required />
+            <input type="text" className="form-control" required={isActive} />
           </div>
         </div>
 
         <div className="form-group mt-4">
           <label className="form-label">{t('wizards.packageMigration.packageDetails.effectiveDate')}</label>
           <div style={{ maxWidth: '200px' }}>
-            <input type="date" className="form-control" required />
+            <input type="date" className="form-control" required={isActive} />
           </div>
         </div>
       </div>
@@ -35,7 +35,7 @@ export default function PackageDetailsStep() {
 
       <div className="card mt-6" style={{ padding: '1.5rem', backgroundColor: 'var(--bg-color)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
         <label className="checkbox-label" style={{ fontWeight: '500', color: 'var(--text-primary)', margin: 0 }}>
-          <input type="checkbox" className="checkbox-input" required /> {t('wizards.packageMigration.packageDetails.declaration')}
+          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.packageMigration.packageDetails.declaration')}
         </label>
       </div>
 

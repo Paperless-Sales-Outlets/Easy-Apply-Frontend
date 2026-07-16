@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function DeclarationStep() {
+export default function DeclarationStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -13,7 +13,7 @@ export default function DeclarationStep() {
           {t('wizards.reconnection.declaration.declarationText')}
         </p>
         <label className="checkbox-label" style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
-          <input type="checkbox" className="checkbox-input" required /> {t('wizards.reconnection.declaration.agreeLabel')}
+          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.reconnection.declaration.agreeLabel')}
         </label>
       </div>
     </div>

@@ -10,13 +10,14 @@ export default function Textarea({
   rules = {},
   maxLength = 500,
   rows = 5,
+  isActive = true,
 }) {
   const { t } = useTranslation();
   const id = useId();
   const [value, setValue] = useState('');
   const [touched, setTouched] = useState(false);
 
-  const error = touched && rules.required && !value.trim() ? t('validation.required') : '';
+  const error = touched && isActive && rules.required && !value.trim() ? t('validation.required') : '';
   const describedBy = error ? `${id}-err` : helper ? `${id}-help` : undefined;
 
   return (
@@ -37,7 +38,7 @@ export default function Textarea({
         maxLength={maxLength}
         placeholder={placeholder}
         value={value}
-        required={rules.required}
+        required={isActive && rules.required}
         data-valid={touched && !error && value.trim() !== '' ? 'true' : 'false'}
         aria-invalid={error ? 'true' : undefined}
         aria-describedby={describedBy}

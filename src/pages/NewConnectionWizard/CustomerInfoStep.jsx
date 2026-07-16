@@ -4,6 +4,13 @@ import { useTranslation } from 'react-i18next';
 export default function CustomerInfoStep({ formData, handleChange }) {
   const { t } = useTranslation();
 
+  // Calculate the maximum allowed date of birth (must be 18+ years old)
+  const maxDob = (() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 18);
+    return d.toISOString().split('T')[0];
+  })();
+
   return (
     <div>
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.newConnection.customerInfo.heading')}</h3>
@@ -19,6 +26,7 @@ export default function CustomerInfoStep({ formData, handleChange }) {
               className="radio-input" 
               checked={formData.customerType === 'home'} 
               onChange={handleChange} 
+              required
             /> {t('wizards.newConnection.customerInfo.home')}
           </label>
           <label className="radio-label">
@@ -83,6 +91,7 @@ export default function CustomerInfoStep({ formData, handleChange }) {
             className="form-control" 
             value={formData.dob || ''} 
             onChange={handleChange} 
+            max={maxDob}
             required 
           />
         </div>
@@ -143,6 +152,10 @@ export default function CustomerInfoStep({ formData, handleChange }) {
           <input 
             name="fixedNumber" 
             type="tel" 
+            inputMode="numeric"
+            pattern="^([1-9][0-9]{8}|0[0-9]{9})$"
+            maxLength={10}
+            title="Enter 9 digits (not starting with 0) or 10 digits starting with 0"
             className="form-control" 
             value={formData.fixedNumber || ''} 
             onChange={handleChange} 
@@ -153,6 +166,10 @@ export default function CustomerInfoStep({ formData, handleChange }) {
           <input 
             name="mobileNumber" 
             type="tel" 
+            inputMode="numeric"
+            pattern="^([1-9][0-9]{8}|0[0-9]{9})$"
+            maxLength={10}
+            title="Enter 9 digits (not starting with 0) or 10 digits starting with 0"
             className="form-control" 
             value={formData.mobileNumber || ''} 
             onChange={handleChange} 
@@ -162,16 +179,6 @@ export default function CustomerInfoStep({ formData, handleChange }) {
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
-        <div style={{ flex: '1' }}>
-          <label className="form-label">{t('wizards.newConnection.customerInfo.faxNumber')}</label>
-          <input 
-            name="faxNumber" 
-            type="tel" 
-            className="form-control" 
-            value={formData.faxNumber || ''} 
-            onChange={handleChange} 
-          />
-        </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.email')}</label>
           <input 

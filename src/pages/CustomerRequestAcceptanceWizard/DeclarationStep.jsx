@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function DeclarationStep() {
+export default function DeclarationStep({ isActive }) {
   const { t } = useTranslation();
   const k = 'wizards.customerRequestAcceptance.declaration';
 
@@ -9,7 +9,7 @@ export default function DeclarationStep() {
     <div className="declaration">
       <p className="declaration-text">{t(`${k}.declarationText`)}</p>
       <label className="agree-check">
-        <input type="checkbox" className="checkbox-input" required />
+        <input type="checkbox" className="checkbox-input" required={isActive} />
         <span>{t(`${k}.agreeLabel`)}</span>
       </label>
     </div>

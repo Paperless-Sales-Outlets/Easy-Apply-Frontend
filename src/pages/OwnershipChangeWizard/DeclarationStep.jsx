@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function DeclarationStep() {
+export default function DeclarationStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -14,7 +14,7 @@ export default function DeclarationStep() {
           {t('wizards.ownershipChange.declaration.currConsentText')}
         </p>
         <label className="checkbox-label" style={{ fontWeight: '500' }}>
-          <input type="checkbox" className="checkbox-input" required /> {t('wizards.ownershipChange.declaration.currConsentLabel')}
+          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.ownershipChange.declaration.currConsentLabel')}
         </label>
       </div>
 
@@ -24,7 +24,7 @@ export default function DeclarationStep() {
           {t('wizards.ownershipChange.declaration.newDeclText')}
         </p>
         <label className="checkbox-label" style={{ fontWeight: '500' }}>
-          <input type="checkbox" className="checkbox-input" required /> {t('wizards.ownershipChange.declaration.newDeclLabel')}
+          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.ownershipChange.declaration.newDeclLabel')}
         </label>
       </div>
 

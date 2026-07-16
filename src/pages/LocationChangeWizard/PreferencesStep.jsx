@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function PreferencesStep() {
+export default function PreferencesStep({ isActive }) {
   const { t } = useTranslation();
   const [disconnectAction, setDisconnectAction] = useState('all');
   const [callForwarding, setCallForwarding] = useState('no');
@@ -13,7 +13,7 @@ export default function PreferencesStep() {
       <div className="form-group">
         <label className="form-label">{t('wizards.locationChange.preferences.disconnectExisting')}</label>
         <div style={{ maxWidth: '200px' }}>
-          <input type="date" className="form-control" required />
+          <input type="date" className="form-control" required={isActive} />
         </div>
       </div>
 
@@ -68,7 +68,7 @@ export default function PreferencesStep() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{t('wizards.locationChange.preferences.durationReq')}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '150px' }}>
-              <input type="number" min="1" max="12" className="form-control" required={callForwarding === 'yes'} />
+              <input type="number" min="1" max="12" className="form-control" required={isActive && callForwarding === 'yes'} />
               <span style={{ color: 'var(--text-secondary)' }}>{t('wizards.locationChange.preferences.months')}</span>
             </div>
           </div>

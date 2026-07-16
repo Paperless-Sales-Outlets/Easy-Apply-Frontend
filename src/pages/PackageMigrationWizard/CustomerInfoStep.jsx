@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function CustomerInfoStep() {
+export default function CustomerInfoStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -10,22 +10,22 @@ export default function CustomerInfoStep() {
       
       <div className="form-group">
         <label className="form-label">{t('wizards.packageMigration.customerInfo.telephone')}</label>
-        <input name="telephone" type="tel" className="form-control" required />
+        <input name="telephone" type="tel" className="form-control" required={isActive} />
       </div>
 
       <div className="form-group">
         <label className="form-label">{t('wizards.packageMigration.customerInfo.fullName')}</label>
-        <input name="fullName" type="text" className="form-control" required />
+        <input name="fullName" type="text" className="form-control" required={isActive} />
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.packageMigration.customerInfo.nicBrc')}</label>
-          <input name="nic" type="text" className="form-control" required />
+          <input name="nic" type="text" className="form-control" required={isActive} />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.packageMigration.customerInfo.contactNo')}</label>
-          <input name="contactNo" type="tel" className="form-control" required />
+          <input name="contactNo" type="tel" className="form-control" required={isActive} />
         </div>
       </div>
 

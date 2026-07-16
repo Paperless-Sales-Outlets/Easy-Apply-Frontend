@@ -43,6 +43,7 @@ export default function ServiceInfoStep({ formData, handleChange }) {
             className="form-control" 
             value={formData.existingNumber || ''} 
             onChange={handleChange} 
+            required
           />
         </div>
         <div style={{ flex: '1' }}>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function CustomerInfoStep() {
+export default function CustomerInfoStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -11,23 +11,23 @@ export default function CustomerInfoStep() {
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '2' }}>
           <label className="form-label">{t('wizards.internetServices.customerInfo.nameFull')}</label>
-          <input type="text" className="form-control" required />
+          <input type="text" className="form-control" required={isActive} />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.internetServices.customerInfo.nicBr')}</label>
-          <input type="text" className="form-control" required />
+          <input type="text" className="form-control" required={isActive} />
         </div>
       </div>
 
       <div className="form-group">
         <label className="form-label">{t('wizards.internetServices.customerInfo.billingAddress')}</label>
-        <textarea className="form-control" rows="3" required></textarea>
+        <textarea className="form-control" rows="3" required={isActive}></textarea>
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.internetServices.customerInfo.phone')}</label>
-          <input type="tel" className="form-control" required />
+          <input type="tel" className="form-control" required={isActive} />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.internetServices.customerInfo.fax')}</label>
@@ -38,7 +38,7 @@ export default function CustomerInfoStep() {
       <div className="form-group">
         <label className="form-label">{t('wizards.internetServices.customerInfo.email')}</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <input type="text" className="form-control" style={{ flex: '1' }} required />
+          <input type="text" className="form-control" style={{ flex: '1' }} required={isActive} />
           <span style={{ fontWeight: '500', color: 'var(--text-secondary)' }}>{t('wizards.internetServices.customerInfo.emailDomainNote')}</span>
         </div>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>

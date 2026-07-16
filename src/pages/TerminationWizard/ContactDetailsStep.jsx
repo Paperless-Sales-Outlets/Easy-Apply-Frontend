@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function ContactDetailsStep() {
+export default function ContactDetailsStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -13,13 +13,13 @@ export default function ContactDetailsStep() {
         <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
           {t('wizards.termination.contact.nameNote')}
         </p>
-        <input name="fullName" type="text" className="form-control" required />
+        <input name="fullName" type="text" className="form-control" required={isActive} />
       </div>
 
       <div className="form-group mt-4">
         <label className="form-label">{t('wizards.termination.contact.nicBrc')}</label>
         <div style={{ maxWidth: '400px' }}>
-          <input name="nic" type="text" className="form-control" required />
+          <input name="nic" type="text" className="form-control" required={isActive} />
         </div>
       </div>
 
@@ -29,7 +29,7 @@ export default function ContactDetailsStep() {
         <div className="form-group flex flex-col-mobile gap-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.termination.contact.mobile')}</label>
-            <input name="contactNo" type="tel" className="form-control" required />
+            <input name="contactNo" type="tel" className="form-control" required={isActive} />
           </div>
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.termination.contact.fixed')}</label>
@@ -40,7 +40,7 @@ export default function ContactDetailsStep() {
         <div className="form-group flex flex-col-mobile gap-4 mt-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.termination.contact.email')}</label>
-            <input name="email" type="email" className="form-control" required />
+            <input name="email" type="email" className="form-control" required={isActive} />
           </div>
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.termination.contact.fax')}</label>

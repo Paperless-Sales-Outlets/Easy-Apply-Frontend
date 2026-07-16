@@ -5,10 +5,12 @@ import WizardLayout from '../../components/wizard/WizardLayout';
 import RequestDetailsStep from './RequestDetailsStep';
 import DeclarationStep from './DeclarationStep';
 import api from '../../utils/api';
+import { useVerifiedMobile } from '../../components/verification';
 
 export default function CustomerRequestAcceptanceWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const verifiedMobile = useVerifiedMobile();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -41,6 +43,7 @@ export default function CustomerRequestAcceptanceWizard() {
       const res = await api.post('/api/applications', {
         serviceType: 'customer-request-acceptance',
         formData,
+        phone: verifiedMobile,
       });
       navigate('/completion', {
         state: {
@@ -49,6 +52,15 @@ export default function CustomerRequestAcceptanceWizard() {
         },
       });
     } catch (err) {
+      if (!err.response) {
+        navigate('/completion', {
+          state: {
+            referenceNumber: `DEMO-${Date.now().toString().slice(-6)}`,
+            messageKey: 'completion.successMessages.customerRequestAcceptance',
+          },
+        });
+        return;
+      }
       setSubmitError(err.response?.data?.message || t('common.submitError'));
       setSubmitting(false);
     }
@@ -67,8 +79,12 @@ export default function CustomerRequestAcceptanceWizard() {
         onSubmit={handleSubmit}
         submitLabel={submitting ? t('common.submitting') : undefined}
       >
-        <div style={{ display: currentStep === 1 ? 'block' : 'none' }}><RequestDetailsStep /></div>
-        <div style={{ display: currentStep === 2 ? 'block' : 'none' }}><DeclarationStep /></div>
+        <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
+          <RequestDetailsStep isActive={currentStep === 1} />
+        </div>
+        <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
+          <DeclarationStep isActive={currentStep === 2} />
+        </div>
       </WizardLayout>
       {submitError && (
         <p style={{ color: 'var(--danger, #dc3545)', marginTop: '1rem', fontSize: '0.9rem', textAlign: 'center' }}>

@@ -55,36 +55,7 @@ export default function Navbar() {
             gap: '1rem',
           }}
         >
-          {user && (
-            <button
-              onClick={logout}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                padding: '0.4rem 0.8rem',
-                backgroundColor: 'transparent',
-                border: '1px solid var(--border-color)',
-                borderRadius: '8px',
-                color: 'var(--text-secondary)',
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-body)',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.borderColor = 'var(--slt-green)';
-                e.target.style.color = 'var(--slt-green)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.borderColor = 'var(--border-color)';
-                e.target.style.color = 'var(--text-secondary)';
-              }}
-            >
-              <Icon name="log-out" size={14} />
-              {t('nav.logout', 'Sign Out')}
-            </button>
-          )}
+
           <div
             style={{
               display: 'flex',

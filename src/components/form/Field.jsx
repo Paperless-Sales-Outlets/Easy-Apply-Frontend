@@ -24,6 +24,7 @@ export default function Field({
   autoComplete,
   placeholder,
   prefix,
+  isActive = true,
 }) {
   const { t } = useTranslation();
   const id = useId();
@@ -53,7 +54,7 @@ export default function Field({
       autoComplete={autoComplete}
       placeholder={placeholder}
       value={value}
-      required={rules.required}
+      required={isActive && rules.required}
       data-valid={valid ? 'true' : 'false'}
       aria-invalid={error ? 'true' : undefined}
       aria-describedby={describedBy}

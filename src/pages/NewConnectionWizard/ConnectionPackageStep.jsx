@@ -205,6 +205,7 @@ export default function ConnectionPackageStep({ formData, handleChange }) {
                 className="radio-input" 
                 checked={formData.deactIDD === 'yes'} 
                 onChange={handleChange} 
+                required
               /> {t('wizards.newConnection.connPkg.yes')}
             </label>
             <label className="radio-label">
@@ -215,6 +216,7 @@ export default function ConnectionPackageStep({ formData, handleChange }) {
                 className="radio-input" 
                 checked={formData.deactIDD === 'no'} 
                 onChange={handleChange} 
+                required
               /> {t('wizards.newConnection.connPkg.no')}
             </label>
           </div>
@@ -230,6 +232,7 @@ export default function ConnectionPackageStep({ formData, handleChange }) {
             className="form-control" 
             value={formData.broadbandPackage || ''} 
             onChange={handleChange}
+            required
           >
             <option value="" disabled>{t('wizards.newConnection.connPkg.selectPlaceholder')}</option>
             <optgroup label="Fibre">
@@ -291,6 +294,7 @@ export default function ConnectionPackageStep({ formData, handleChange }) {
                 className="radio-input" 
                 checked={formData.staticIP === 'yes'} 
                 onChange={handleChange} 
+                required
               /> {t('wizards.newConnection.connPkg.yes')}
             </label>
             <label className="radio-label">
@@ -301,6 +305,7 @@ export default function ConnectionPackageStep({ formData, handleChange }) {
                 className="radio-input" 
                 checked={formData.staticIP === 'no'} 
                 onChange={handleChange} 
+                required
               /> {t('wizards.newConnection.connPkg.no')}
             </label>
           </div>
@@ -313,8 +318,8 @@ export default function ConnectionPackageStep({ formData, handleChange }) {
           <div className="radio-group responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)" }}>
             {[
               'PEO Titanium', 'PEO Platinum', 'PEO Entertainment', 'PEO Gold', 
-              'PEO Silver Plus', 'PEO Silver', 'PEO Family', 'PEO Unnatham', 'Other'
-            ].map((pkg, index) => {
+              'PEO Silver Plus', 'PEO Silver', 'PEO Family', 'Other'
+            ].map((pkg) => {
               const safeName = `peoTvPkg_${pkg.replace(/\s+/g, '')}`;
               return (
                 <label key={pkg} className="checkbox-label">
@@ -329,6 +334,20 @@ export default function ConnectionPackageStep({ formData, handleChange }) {
               );
             })}
           </div>
+          {!!formData.peoTvPkg_Other && (
+            <div style={{ marginTop: '1rem' }}>
+              <label className="form-label">Please specify other PEO TV package</label>
+              <input
+                name="peoTvPkgOtherText"
+                type="text"
+                className="form-control"
+                placeholder="Enter package name"
+                value={formData.peoTvPkgOtherText || ''}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function RefundDetailsStep() {
+export default function RefundDetailsStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -12,13 +12,13 @@ export default function RefundDetailsStep() {
         <div className="form-group">
           <label className="form-label">{t('wizards.refundRequest.refundDetails.paidAmount')}</label>
           <div style={{ maxWidth: '200px' }}>
-            <input type="number" className="form-control" required />
+            <input type="number" className="form-control" required={isActive} />
           </div>
         </div>
 
         <div className="form-group mt-4">
           <label className="form-label">{t('wizards.refundRequest.refundDetails.reason')}</label>
-          <textarea className="form-control" rows="3" required></textarea>
+          <textarea className="form-control" rows="3" required={isActive}></textarea>
         </div>
 
         <div className="form-group mt-4">
@@ -26,7 +26,7 @@ export default function RefundDetailsStep() {
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
             {t('wizards.refundRequest.refundDetails.receiptNote')}
           </p>
-          <input type="file" className="form-control" accept="image/*,.pdf" required />
+          <input type="file" className="form-control" accept="image/*,.pdf" required={isActive} />
         </div>
       </div>
 
@@ -36,7 +36,7 @@ export default function RefundDetailsStep() {
         </p>
 
         <label className="checkbox-label" style={{ fontWeight: '500', color: 'var(--text-primary)', margin: 0 }}>
-          <input type="checkbox" className="checkbox-input" required /> {t('wizards.refundRequest.refundDetails.agreeLabel')}
+          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.refundRequest.refundDetails.agreeLabel')}
         </label>
       </div>
 

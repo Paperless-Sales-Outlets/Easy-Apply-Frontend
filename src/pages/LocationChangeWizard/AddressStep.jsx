@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function AddressStep() {
+export default function AddressStep({ isActive }) {
   const { t } = useTranslation();
   const [billingEffective, setBillingEffective] = useState('immediately');
 
@@ -17,7 +17,7 @@ export default function AddressStep() {
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
             {t('wizards.locationChange.address.newServiceAddressNote')}
           </p>
-          <textarea className="form-control" rows="3" required></textarea>
+          <textarea className="form-control" rows="3" required={isActive}></textarea>
           <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: 'rgba(0, 166, 80, 0.05)', borderLeft: '3px solid var(--slt-green)', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
             <strong>{t('wizards.locationChange.address.serviceAddressNote1').split(':')[0]}:</strong> {t('wizards.locationChange.address.serviceAddressNote1').split(':')[1]}<br />
             {t('wizards.locationChange.address.serviceAddressNote2')}

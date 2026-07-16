@@ -6,7 +6,7 @@ import Textarea from '../../components/form/Textarea';
 import OptionTiles from '../../components/form/OptionTiles';
 import Chips from '../../components/form/Chips';
 
-export default function RequestDetailsStep() {
+export default function RequestDetailsStep({ isActive }) {
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
   const k = 'wizards.customerRequestAcceptance.requestDetails';
@@ -29,7 +29,7 @@ export default function RequestDetailsStep() {
 
   return (
     <div>
-      <Field name="fullName" label={t(`${k}.fullName`)} rules={{ required: true }} autoComplete="name" />
+      <Field name="fullName" label={t(`${k}.fullName`)} rules={{ required: true }} autoComplete="name" isActive={isActive} />
 
       <div className="field-row">
         <Field
@@ -37,6 +37,7 @@ export default function RequestDetailsStep() {
           label={t(`${k}.nicBrc`)}
           rules={{ required: true, kind: 'nic' }}
           helper={t(`${k}.nicHelper`)}
+          isActive={isActive}
         />
         <Field
           name="telephone"
@@ -45,6 +46,7 @@ export default function RequestDetailsStep() {
           inputMode="numeric"
           autoComplete="tel"
           rules={{ required: true, kind: 'phone' }}
+          isActive={isActive}
         />
       </div>
 
@@ -61,6 +63,7 @@ export default function RequestDetailsStep() {
           inputMode="numeric"
           autoComplete="tel"
           rules={{ kind: 'phone' }}
+          isActive={isActive}
         />
         <Field
           name="mobileNo"
@@ -71,6 +74,7 @@ export default function RequestDetailsStep() {
           defaultValue={verifiedMobile}
           rules={{ required: true, kind: 'mobile' }}
           helper={t(`${k}.mobilePrefill`)}
+          isActive={isActive}
         />
         <Field
           name="email"
@@ -79,6 +83,7 @@ export default function RequestDetailsStep() {
           inputMode="email"
           autoComplete="email"
           rules={{ required: true, kind: 'email' }}
+          isActive={isActive}
         />
       </div>
 
@@ -90,6 +95,7 @@ export default function RequestDetailsStep() {
         maxLength={500}
         placeholder={t(`${k}.description`)}
         helper={t(`${k}.descriptionHelper`)}
+        isActive={isActive}
       />
     </div>
   );

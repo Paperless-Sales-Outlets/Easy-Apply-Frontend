@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function ServiceInfoStep() {
+export default function ServiceInfoStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -24,11 +24,11 @@ export default function ServiceInfoStep() {
         <div className="form-group flex flex-col-mobile gap-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.serviceVacation.serviceInfo.deactivationDate')}</label>
-            <input type="date" className="form-control" required />
+            <input type="date" className="form-control" required={isActive} />
           </div>
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.serviceVacation.serviceInfo.resumeDate')}</label>
-            <input type="date" className="form-control" required />
+            <input type="date" className="form-control" required={isActive} />
           </div>
         </div>
       </div>

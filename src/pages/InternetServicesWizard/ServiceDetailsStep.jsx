@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function ServiceDetailsStep() {
+export default function ServiceDetailsStep({ isActive }) {
   const { t } = useTranslation();
   const [appType, setAppType] = useState('new');
 
@@ -81,10 +81,10 @@ export default function ServiceDetailsStep() {
         <label className="form-label">{t('wizards.internetServices.serviceDetails.accessType')}</label>
         <div className="radio-group">
           <label className="radio-label">
-            <input type="radio" name="accessType" value="analog" className="radio-input" required /> {t('wizards.internetServices.serviceDetails.analog')}
+            <input type="radio" name="accessType" value="analog" className="radio-input" required={isActive} /> {t('wizards.internetServices.serviceDetails.analog')}
           </label>
           <label className="radio-label">
-            <input type="radio" name="accessType" value="isdn" className="radio-input" /> {t('wizards.internetServices.serviceDetails.isdn')}
+            <input type="radio" name="accessType" value="isdn" className="radio-input" required={isActive} /> {t('wizards.internetServices.serviceDetails.isdn')}
           </label>
         </div>
       </div>

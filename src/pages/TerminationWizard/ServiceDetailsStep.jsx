@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function ServiceDetailsStep() {
+export default function ServiceDetailsStep({ isActive }) {
   const { t } = useTranslation();
   const [terminationType, setTerminationType] = useState('permanent');
 
@@ -36,7 +36,7 @@ export default function ServiceDetailsStep() {
 
         <div className="form-group mt-4">
           <label className="form-label">{t('wizards.termination.serviceDetails.presentNumber')}</label>
-          <input type="tel" className="form-control" required />
+          <input type="tel" className="form-control" required={isActive} />
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
             {t('wizards.termination.serviceDetails.presentNumberNote')}
           </p>
@@ -96,7 +96,7 @@ export default function ServiceDetailsStep() {
       <div className="form-group mt-4">
         <label className="form-label">{t('wizards.termination.serviceDetails.disconnectDate')}</label>
         <div style={{ maxWidth: '200px' }}>
-          <input type="date" className="form-control" required />
+          <input type="date" className="form-control" required={isActive} />
         </div>
       </div>
 

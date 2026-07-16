@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function GeneralInfoStep() {
+export default function GeneralInfoStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -11,11 +11,20 @@ export default function GeneralInfoStep() {
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.locationChange.generalInfo.telephone')}</label>
-          <input name="telephone" type="tel" className="form-control" required />
+          <input
+            name="telephone"
+            type="tel"
+            className="form-control"
+            inputMode="numeric"
+            maxLength={10}
+            required={isActive}
+            pattern="^([1-9][0-9]{8}|0[0-9]{9})$"
+            title="Enter 9 digits (not starting with 0) or 10 digits starting with 0"
+          />
         </div>
         <div style={{ flex: '2' }}>
           <label className="form-label">{t('wizards.locationChange.generalInfo.legalOwner')}</label>
-          <input name="legalOwner" type="text" className="form-control" required />
+          <input name="legalOwner" type="text" className="form-control" required={isActive} />
         </div>
       </div>
 
@@ -24,29 +33,41 @@ export default function GeneralInfoStep() {
         
         <div className="form-group">
           <label className="form-label">{t('wizards.locationChange.generalInfo.contactPerson')}</label>
-          <input name="contactPerson" type="text" className="form-control" required />
+          <input name="contactPerson" type="text" className="form-control" required={isActive} />
         </div>
 
         <div className="form-group flex flex-col-mobile gap-4 mt-4">
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.locationChange.generalInfo.tel')}</label>
-            <input name="tel" type="tel" className="form-control" required />
+            <input
+              name="tel"
+              type="tel"
+              className="form-control"
+              inputMode="numeric"
+              maxLength={10}
+              required={isActive}
+              pattern="^([1-9][0-9]{8}|0[0-9]{9})$"
+              title="Enter 9 digits (not starting with 0) or 10 digits starting with 0"
+            />
           </div>
           <div style={{ flex: '1' }}>
             <label className="form-label">{t('wizards.locationChange.generalInfo.mobile')}</label>
-            <input name="mobile" type="tel" className="form-control" />
+            <input
+              name="mobile"
+              type="tel"
+              className="form-control"
+              inputMode="numeric"
+              maxLength={10}
+              required={isActive}
+              pattern="^([1-9][0-9]{8}|0[0-9]{9})$"
+              title="Enter 9 digits (not starting with 0) or 10 digits starting with 0"
+            />
           </div>
         </div>
 
-        <div className="form-group flex flex-col-mobile gap-4 mt-4">
-          <div style={{ flex: '1' }}>
-            <label className="form-label">{t('wizards.locationChange.generalInfo.email')}</label>
-            <input name="email" type="email" className="form-control" />
-          </div>
-          <div style={{ flex: '1' }}>
-            <label className="form-label">{t('wizards.locationChange.generalInfo.fax')}</label>
-            <input name="fax" type="tel" className="form-control" />
-          </div>
+        <div className="form-group mt-4">
+          <label className="form-label">{t('wizards.locationChange.generalInfo.email')}</label>
+          <input name="email" type="email" className="form-control" required={isActive} />
         </div>
 
       </div>

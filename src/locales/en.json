@@ -704,7 +704,7 @@
     "resent": "A new code has been sent.",
     "verifiedTitle": "Verified",
     "verifiedText": "Taking you to the form…",
-    "invalidMobile": "Enter a valid mobile number with 9 digits.",
+    "invalidMobile": "Enter a valid mobile number with 9 digits starting with 7 (e.g. 7XXXXXXXX).",
     "invalidOtp": "That code isn't correct. For this demo, enter 000000."
   },
   "completion": {

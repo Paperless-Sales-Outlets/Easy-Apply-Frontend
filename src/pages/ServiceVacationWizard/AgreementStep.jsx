@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function AgreementStep() {
+export default function AgreementStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -14,7 +14,7 @@ export default function AgreementStep() {
         </p>
 
         <label className="checkbox-label" style={{ fontWeight: '500', color: 'var(--text-primary)', margin: 0 }}>
-          <input type="checkbox" className="checkbox-input" required /> {t('wizards.serviceVacation.agreement.agreeLabel')}
+          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.serviceVacation.agreement.agreeLabel')}
         </label>
       </div>
 

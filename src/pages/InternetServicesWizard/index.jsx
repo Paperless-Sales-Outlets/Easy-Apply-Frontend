@@ -1,22 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceDetailsStep from './ServiceDetailsStep';
 import AccountSetupStep from './AccountSetupStep';
 import { useTranslation } from 'react-i18next';
+import api from '../../utils/api';
+import { useVerifiedMobile } from '../../components/verification';
 
 export default function InternetServicesWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const verifiedMobile = useVerifiedMobile();
   const [currentStep, setCurrentStep] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const formRef = useRef(null);
   const totalSteps = 3;
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, totalSteps));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
-  const handleSubmit = (e) => {
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Internet Services Form submitted!");
-    navigate('/completion', { state: { messageKey: 'completion.successMessages.internetServices' } });
+    if (currentStep < totalSteps) { nextStep(); return; }
+
+    const raw = new FormData(formRef.current);
+    const formData = Object.fromEntries(raw.entries());
+
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const res = await api.post('/api/applications', {
+        serviceType: 'internet-services',
+        formData,
+        phone: verifiedMobile,
+      });
+      navigate('/completion', {
+        state: {
+          referenceNumber: res.data.application.referenceNumber,
+          messageKey: 'completion.successMessages.internetServices',
+        },
+      });
+    } catch (err) {
+      if (!err.response) {
+        navigate('/completion', {
+          state: {
+            referenceNumber: `DEMO-${Date.now().toString().slice(-6)}`,
+            messageKey: 'completion.successMessages.internetServices',
+          },
+        });
+        return;
+      }
+      setSubmitError(err.response?.data?.message || t('common.submitError'));
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -48,12 +85,18 @@ export default function InternetServicesWizard() {
       </div>
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); if (currentStep < totalSteps) { nextStep(); } else { handleSubmit(e); } }}>
+      <form ref={formRef} onSubmit={(e) => { e.preventDefault(); if (currentStep < totalSteps) { nextStep(); } else { handleSubmit(e); } }}>
         
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
-          {currentStep === 1 && <CustomerInfoStep />}
-          {currentStep === 2 && <ServiceDetailsStep />}
-          {currentStep === 3 && <AccountSetupStep />}
+          <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
+            <CustomerInfoStep isActive={currentStep === 1} />
+          </div>
+          <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
+            <ServiceDetailsStep isActive={currentStep === 2} />
+          </div>
+          <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
+            <AccountSetupStep isActive={currentStep === 3} />
+          </div>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>

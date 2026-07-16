@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function GeneralInfoStep() {
+export default function GeneralInfoStep({ isActive }) {
   const { t } = useTranslation();
 
   return (
@@ -10,7 +10,7 @@ export default function GeneralInfoStep() {
       
       <div className="form-group">
         <label className="form-label">{t('wizards.serviceVacation.generalInfo.telephone')}</label>
-        <input name="telephone" type="tel" className="form-control" required />
+        <input name="telephone" type="tel" className="form-control" required={isActive} />
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4">
@@ -24,30 +24,30 @@ export default function GeneralInfoStep() {
         </div>
         <div style={{ flex: '3' }}>
           <label className="form-label">{t('wizards.serviceVacation.generalInfo.fullName')}</label>
-          <input name="fullName" type="text" className="form-control" required />
+          <input name="fullName" type="text" className="form-control" required={isActive} />
         </div>
       </div>
 
       <div className="form-group">
         <label className="form-label">{t('wizards.serviceVacation.generalInfo.address')}</label>
-        <textarea name="address" className="form-control" rows="3" required></textarea>
+        <textarea name="address" className="form-control" rows="3" required={isActive}></textarea>
       </div>
 
       <div className="form-group mt-4">
         <label className="form-label">{t('wizards.serviceVacation.generalInfo.nicBrc')}</label>
         <div style={{ maxWidth: '400px' }}>
-          <input name="nic" type="text" className="form-control" required />
+          <input name="nic" type="text" className="form-control" required={isActive} />
         </div>
       </div>
 
       <div className="form-group flex flex-col-mobile gap-4 mt-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.serviceVacation.generalInfo.mobile')}</label>
-          <input name="mobile" type="tel" className="form-control" required />
+          <input name="mobile" type="tel" className="form-control" required={isActive} />
         </div>
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.serviceVacation.generalInfo.email')}</label>
-          <input name="email" type="email" className="form-control" required />
+          <input name="email" type="email" className="form-control" required={isActive} />
         </div>
       </div>
 
