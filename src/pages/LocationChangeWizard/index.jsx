@@ -33,6 +33,9 @@ export default function LocationChangeWizard() {
 
     const raw = new FormData(formRef.current);
     const formData = Object.fromEntries(raw.entries());
+    
+    // Use the telephone number as the identification key (nic) for relocation
+    formData.nic = formData.telephone;
 
     setSubmitting(true);
     setSubmitError('');
