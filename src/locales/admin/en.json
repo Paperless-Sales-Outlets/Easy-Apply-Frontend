@@ -1,0 +1,141 @@
+{
+  "admin": {
+    "login": {
+      "title": "Admin Portal — Sign In",
+      "subtitle": "Sign in with your SLTMobitel staff credentials",
+      "emailLabel": "Email Address",
+      "passwordLabel": "Password",
+      "button": "Sign In",
+      "error": "Invalid email or password. Please try again.",
+      "roles": {
+        "Admin": "Administrator",
+        "Staff": "Staff",
+        "FieldTechnician": "Field Technician"
+      }
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "applications": "Applications",
+      "kyc": "KYC Review",
+      "appointments": "Appointments",
+      "technician": "My Jobs",
+      "analytics": "Analytics",
+      "signOut": "Sign Out",
+      "portalTitle": "Admin Portal"
+    },
+    "dashboard": {
+      "title": "Operations Dashboard",
+      "subtitle": "Overview of all service applications and operations",
+      "cards": {
+        "totalApplications": "Total Applications",
+        "pendingKyc": "Pending KYC",
+        "todaysAppointments": "Today's Appointments",
+        "approvedToday": "Approved Today"
+      },
+      "recentActivity": "Recent Activity",
+      "quickActions": "Quick Actions",
+      "viewAll": "View All"
+    },
+    "applications": {
+      "title": "Applications",
+      "subtitle": "Manage and review all submitted service applications",
+      "searchPlaceholder": "Search by reference or name…",
+      "filterStatus": "Status",
+      "filterService": "Service Type",
+      "allStatuses": "All Statuses",
+      "allServices": "All Services",
+      "noResults": "No applications match the current filters.",
+      "table": {
+        "ref": "Reference",
+        "applicant": "Applicant",
+        "service": "Service Type",
+        "submitted": "Submitted",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "view": "View",
+        "approve": "Approve",
+        "reject": "Reject",
+        "flag": "Flag"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "flagged": "Flagged"
+      }
+    },
+    "kyc": {
+      "title": "KYC Review Panel",
+      "subtitle": "Review identity documents and selfie verification",
+      "document": "Identity Document",
+      "selfie": "Selfie",
+      "applicantInfo": "Applicant Information",
+      "nicLabel": "NIC / Passport",
+      "nameLabel": "Full Name",
+      "phoneLabel": "Phone",
+      "submittedLabel": "Submitted",
+      "noQueue": "No applications pending KYC review.",
+      "nextCase": "Next Case",
+      "prevCase": "Previous Case",
+      "approve": "Approve",
+      "reject": "Reject",
+      "flag": "Flag for Review",
+      "note": "Add a review note (optional)",
+      "notePlaceholder": "Add remarks or notes about this KYC review…",
+      "confirmApprove": "Confirm Approve",
+      "confirmReject": "Confirm Reject"
+    },
+    "appointments": {
+      "title": "Appointments Calendar",
+      "subtitle": "Manage field service appointments and technician assignments",
+      "today": "Today",
+      "prev": "Previous",
+      "next": "Next",
+      "assign": "Assign Technician",
+      "unassigned": "Unassigned",
+      "selectTechnician": "Select Technician",
+      "noAppointments": "No appointments on this day.",
+      "views": {
+        "week": "Week",
+        "day": "Day",
+        "list": "List"
+      },
+      "status": {
+        "scheduled": "Scheduled",
+        "inProgress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "technician": {
+      "title": "My Daily Jobs",
+      "subtitle": "Your assigned appointments for today",
+      "noJobs": "No jobs assigned for today.",
+      "markComplete": "Mark as Complete",
+      "markInProgress": "Start Job",
+      "detail": {
+        "customer": "Customer",
+        "address": "Address",
+        "phone": "Phone",
+        "service": "Service",
+        "reference": "Reference",
+        "notes": "Notes"
+      }
+    },
+    "analytics": {
+      "title": "Adoption Monitoring",
+      "subtitle": "Digital vs walk-in submission ratio and drop-off analysis",
+      "submissionRatio": "Submission Channel Ratio",
+      "digital": "Digital (Online)",
+      "walkIn": "Walk-in (Paper)",
+      "dropOff": "Drop-off Points",
+      "dropOffDesc": "Steps where users abandoned the wizard flow",
+      "byService": "Applications by Service Type",
+      "trend": "Weekly Trend",
+      "conversionRate": "Conversion Rate",
+      "completionRate": "Completion Rate"
+    }
+  }
+}

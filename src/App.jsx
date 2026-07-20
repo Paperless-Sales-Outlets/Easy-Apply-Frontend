@@ -13,6 +13,7 @@ import RefundRequestWizard from './pages/RefundRequestWizard';
 import CustomerRequestAcceptanceWizard from './pages/CustomerRequestAcceptanceWizard';
 import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
+import AdminDashboard from './pages/Admin';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -50,8 +51,41 @@ const AnimatedRoutes = () => {
         <Route path="/customer-request-acceptance" element={<PageWrapper><OtpProtectedForm><CustomerRequestAcceptanceWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/check-status" element={<PageWrapper><CheckStatusPage /></PageWrapper>} />
         <Route path="/completion" element={<PageWrapper><CompletionPage /></PageWrapper>} />
+        
+        {/* Operations Admin Portal */}
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </AnimatePresence>
+  );
+};
+
+const NavigationLayout = ({ children }) => {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
+
+  if (isAdmin) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <main className="main-content" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="brand-topbar" />
+      <Navbar />
+      <main className="main-content" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+      </main>
+      <Footer />
+    </div>
   );
 };
 
@@ -59,16 +93,9 @@ function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <MotionConfig reducedMotion="user">
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-          <div className="brand-topbar" />
-          <Navbar />
-          <main className="main-content">
-            <ErrorBoundary>
-              <AnimatedRoutes />
-            </ErrorBoundary>
-          </main>
-          <Footer />
-        </div>
+        <NavigationLayout>
+          <AnimatedRoutes />
+        </NavigationLayout>
       </MotionConfig>
     </BrowserRouter>
   );
