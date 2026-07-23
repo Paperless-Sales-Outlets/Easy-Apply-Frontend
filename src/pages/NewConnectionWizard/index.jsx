@@ -4,6 +4,7 @@ import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
 import ConnectionPackageStep from './ConnectionPackageStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
+import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
@@ -57,7 +58,7 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   // Auto-populate mobile number from OTP context
   useEffect(() => {
@@ -188,7 +189,7 @@ export default function NewConnectionWizard() {
         <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
         <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
 
-        {[1, 2, 3, 4].map(step => (
+        {[1, 2, 3, 4, 5].map(step => (
           <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
             <div style={{
               width: '34px', height: '34px', borderRadius: '50%',
@@ -200,7 +201,7 @@ export default function NewConnectionWizard() {
               {step}
             </div>
             <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.newConnection.steps.s1') : step === 2 ? t('wizards.newConnection.steps.s2') : step === 3 ? t('wizards.newConnection.steps.s3') : t('wizards.newConnection.steps.s4')}
+              {step === 1 ? t('wizards.newConnection.steps.s1') : step === 2 ? t('wizards.newConnection.steps.s2') : step === 3 ? t('wizards.newConnection.steps.s3') : step === 4 ? t('wizards.newConnection.steps.s4') : 'Payment'}
             </span>
           </div>
         ))}
@@ -222,6 +223,9 @@ export default function NewConnectionWizard() {
           {currentStep === 4 && (
             <ValueAddedServicesStep formData={formData} handleChange={handleChange} />
           )}
+          {currentStep === 5 && (
+            <PaymentStep isActive={currentStep === 5} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
+          )}
         </div>
 
         {submitError && (
@@ -234,15 +238,15 @@ export default function NewConnectionWizard() {
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
             {t('common.previous')}
           </button>
-          {currentStep < totalSteps ? (
+          {currentStep < totalSteps - 1 ? (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               {t('common.nextStep')}
             </button>
-          ) : (
+          ) : currentStep === totalSteps - 1 ? (
             <button type="submit" className="btn btn-success" disabled={submitting}>
               {submitting ? t('common.submitting') : t('common.submit')}
             </button>
-          )}
+          ) : null}
         </div>
       </form>
     </div>

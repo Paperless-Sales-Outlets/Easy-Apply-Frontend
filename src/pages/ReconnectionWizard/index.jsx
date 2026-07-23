@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import CustomerDetailsStep from './CustomerDetailsStep';
 import ReconnectionDetailsStep from './ReconnectionDetailsStep';
 import DeclarationStep from './DeclarationStep';
+import PaymentStep from '../PaymentStep';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
 
@@ -16,7 +17,7 @@ export default function ReconnectionWizard() {
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
   const step2Ref = useRef(null);
-  const totalSteps = 3;
+  const totalSteps = 4;
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -32,6 +33,7 @@ export default function ReconnectionWizard() {
     if (currentStep < totalSteps) {
       // validate step 2 facilities before advancing
       if (currentStep === 2 && step2Ref.current && !step2Ref.current.validate()) return;
+      // Step 4 is payment — handled by PaymentStep component itself, just advance
       nextStep();
       return;
     }
@@ -78,7 +80,7 @@ export default function ReconnectionWizard() {
         <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
         <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
 
-        {[1, 2, 3].map(step => (
+        {[1, 2, 3, 4].map(step => (
           <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
             <div style={{
               width: '34px', height: '34px', borderRadius: '50%',
@@ -90,7 +92,7 @@ export default function ReconnectionWizard() {
               {step}
             </div>
             <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.reconnection.steps.s1') : step === 2 ? t('wizards.reconnection.steps.s2') : t('wizards.reconnection.steps.s3')}
+              {step === 1 ? t('wizards.reconnection.steps.s1') : step === 2 ? t('wizards.reconnection.steps.s2') : step === 3 ? t('wizards.reconnection.steps.s3') : 'Payment'}
             </span>
           </div>
         ))}
@@ -109,6 +111,14 @@ export default function ReconnectionWizard() {
           <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
             <DeclarationStep isActive={currentStep === 3} />
           </div>
+          <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
+            <PaymentStep 
+              isActive={currentStep === 4} 
+              verifiedPhone={verifiedMobile} 
+              amount={formRef.current ? new FormData(formRef.current).get('amountToPay') : null}
+              onSuccess={nextStep} 
+            />
+          </div>
         </div>
 
         {submitError && (
@@ -121,15 +131,15 @@ export default function ReconnectionWizard() {
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
             {t('common.previous')}
           </button>
-          {currentStep < totalSteps ? (
+          {currentStep < totalSteps - 1 ? (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               {t('common.nextStep')}
             </button>
-          ) : (
+          ) : currentStep === totalSteps - 1 ? (
             <button type="submit" className="btn btn-success" disabled={submitting}>
               {submitting ? t('common.submitting') : t('common.submit')}
             </button>
-          )}
+          ) : null}
         </div>
       </form>
     </div>

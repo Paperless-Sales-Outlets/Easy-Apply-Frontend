@@ -48,7 +48,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
         <label className="form-label" style={{ margin: 0 }}>
           {t('wizards.reconnection.reconnectionDetails.amountToPay')}
         </label>
-        <input type="text" className="form-control" style={{ maxWidth: '200px' }} required={isActive} />
+        <input type="text" name="amountToPay" className="form-control" style={{ maxWidth: '200px' }} required={isActive} />
       </div>
 
       {/* Facilities — at least one required */}

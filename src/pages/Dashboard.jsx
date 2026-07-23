@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
 
-
 const FORMS = [
   { id: 'new-connection', key: 'newConnection', icon: 'plus-circle', route: '/new-connection' },
   { id: 'reconnection', key: 'reconnection', icon: 'link', route: '/reconnection' },
@@ -19,19 +18,12 @@ const FORMS = [
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 12 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.2, ease: 'easeOut' },
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: 'easeOut' } },
 };
 
 export default function Dashboard() {
@@ -39,8 +31,6 @@ export default function Dashboard() {
 
   return (
     <div>
-
-
       <section className="page-container" aria-labelledby="forms-heading">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 id="forms-heading" className="section-title" style={{ marginBottom: 0 }}>
@@ -50,6 +40,7 @@ export default function Dashboard() {
             {t('dashboard.forms.checkStatus.title')}
           </Link>
         </div>
+
         <motion.ul
           className="dashboard-grid"
           variants={containerVariants}

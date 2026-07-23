@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CustomerInfoStep from './CustomerInfoStep';
 import PackageDetailsStep from './PackageDetailsStep';
+import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
@@ -14,7 +15,7 @@ export default function PackageMigrationWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
-  const totalSteps = 2;
+  const totalSteps = 3;
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -72,7 +73,7 @@ export default function PackageMigrationWizard() {
         <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
         <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
 
-        {[1, 2].map(step => (
+        {[1, 2, 3].map(step => (
           <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
             <div style={{
               width: '34px', height: '34px', borderRadius: '50%',
@@ -84,7 +85,7 @@ export default function PackageMigrationWizard() {
               {step}
             </div>
             <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.packageMigration.steps.s1') : t('wizards.packageMigration.steps.s2')}
+              {step === 1 ? t('wizards.packageMigration.steps.s1') : step === 2 ? t('wizards.packageMigration.steps.s2') : 'Payment'}
             </span>
           </div>
         ))}
@@ -100,6 +101,9 @@ export default function PackageMigrationWizard() {
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
             <PackageDetailsStep isActive={currentStep === 2} />
           </div>
+          <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
+            <PaymentStep isActive={currentStep === 3} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
+          </div>
         </div>
 
         {submitError && (
@@ -112,15 +116,15 @@ export default function PackageMigrationWizard() {
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
             {t('common.previous')}
           </button>
-          {currentStep < totalSteps ? (
+          {currentStep < totalSteps - 1 ? (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               {t('common.nextStep')}
             </button>
-          ) : (
+          ) : currentStep === totalSteps - 1 ? (
             <button type="submit" className="btn btn-success" disabled={submitting}>
               {submitting ? t('common.submitting') : t('common.submit')}
             </button>
-          )}
+          ) : null}
         </div>
       </form>
     </div>

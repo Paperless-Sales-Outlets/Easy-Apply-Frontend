@@ -45,11 +45,13 @@ export default function OtpProtectedForm({ children }) {
   }, [phase, resendIn]);
 
   // Brief "verified" beat before handing over to the form.
+  // Also persist the verified phone so Dashboard can read it for payments.
   useEffect(() => {
     if (phase !== 'verified') return;
+    sessionStorage.setItem('verifiedPhone', mobileNumber);
     const id = setTimeout(() => setDone(true), 800);
     return () => clearTimeout(id);
-  }, [phase]);
+  }, [phase, mobileNumber]);
 
   const handleMobileSubmit = async (e) => {
     e.preventDefault();
