@@ -1,76 +1,181 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import Icon from '../../components/Icon';
+import PayHereButton from '../../components/PayHereButton';
 
-export default function PaymentStep({ isActive, verifiedPhone, amount, onSuccess }) {
-  const { t } = useTranslation();
-  const [redirecting, setRedirecting] = useState(false);
+export default function PaymentStep({
+  isActive = true,
+  verifiedPhone = '',
+  amount = 1000,
+  serviceName = 'Reconnection Fee',
+  onSuccess,
+}) {
   const [selectedMethod, setSelectedMethod] = useState('card');
+  const [statusState, setStatusState] = useState({ type: null, message: '' });
 
   // Format amount to LKR currency representation
-  const formattedAmount = amount 
+  const formattedAmount = amount
     ? Number(amount).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : '1,000.00';
 
-  const handleProceedPayment = (e) => {
-    e.preventDefault();
-    setRedirecting(true);
+  const handlePaymentSuccess = (orderId) => {
+    setStatusState({
+      type: 'success',
+      message: `Payment successful! Reference Order ID: ${orderId}`,
+    });
+    if (onSuccess) {
+      setTimeout(() => {
+        onSuccess(orderId);
+      }, 1200);
+    }
+  };
 
-    // Simulate redirecting to secure payment gateway (IPG / Payment Gateway Widget)
-    setTimeout(() => {
-      setRedirecting(false);
-      if (onSuccess) onSuccess();
-    }, 1500);
+  const handlePaymentCancel = () => {
+    setStatusState({
+      type: 'warning',
+      message: 'Payment process was cancelled. You can try again whenever you are ready.',
+    });
+  };
+
+  const handlePaymentError = (error) => {
+    const detail = typeof error === 'string' ? error : error?.message || 'Payment processing encountered an error.';
+    setStatusState({
+      type: 'error',
+      message: `Payment error: ${detail}`,
+    });
   };
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto' }}>
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <div style={{
-          width: '60px', height: '60px', borderRadius: '50%',
-          backgroundColor: 'var(--surface-color, #eff6ff)',
-          color: 'var(--slt-blue, #0056b3)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 1rem', border: '1px solid #bfdbfe'
-        }}>
+        <div
+          style={{
+            width: '60px',
+            height: '60px',
+            borderRadius: '50%',
+            backgroundColor: 'var(--surface-color, #eff6ff)',
+            color: 'var(--slt-blue, #0056b3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1rem',
+            border: '1px solid #bfdbfe',
+          }}
+        >
           <Icon name="lock" size={28} />
         </div>
         <h3 style={{ color: 'var(--slt-blue)', marginBottom: '0.5rem', fontSize: '1.4rem' }}>
-          Secure Payment Gateway
+          PayHere Sandbox Gateway
         </h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: '1.5' }}>
-          You will be redirected to SLTMobitel’s encrypted Internet Payment Gateway (IPG) to process your payment securely. No payment or card details are stored on EasyApply servers.
+          You will be redirected to PayHere Sandbox encrypted Payment Gateway to process your payment securely. No credit card or sensitive credentials are stored on EasyApply servers.
         </p>
       </div>
 
+      {/* Payment Status Notifications */}
+      {statusState.type === 'success' && (
+        <div
+          style={{
+            padding: '1rem 1.25rem',
+            marginBottom: '1.5rem',
+            backgroundColor: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            color: '#166534',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            fontWeight: 500,
+          }}
+        >
+          <Icon name="check-circle" size={20} color="#166534" />
+          <div>{statusState.message}</div>
+        </div>
+      )}
+
+      {statusState.type === 'warning' && (
+        <div
+          style={{
+            padding: '1rem 1.25rem',
+            marginBottom: '1.5rem',
+            backgroundColor: '#fffbeb',
+            border: '1px solid #fef08a',
+            color: '#92400e',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            fontWeight: 500,
+          }}
+        >
+          <Icon name="alert-triangle" size={20} color="#92400e" />
+          <div>{statusState.message}</div>
+        </div>
+      )}
+
+      {statusState.type === 'error' && (
+        <div
+          style={{
+            padding: '1rem 1.25rem',
+            marginBottom: '1.5rem',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            fontWeight: 500,
+          }}
+        >
+          <Icon name="alert-circle" size={20} color="#991b1b" />
+          <div>{statusState.message}</div>
+        </div>
+      )}
+
       {/* Summary Card */}
-      <div style={{
-        backgroundColor: '#f8fafc',
-        border: '1px solid #e2e8f0',
-        borderRadius: '12px',
-        padding: '1.25rem 1.5rem',
-        marginBottom: '1.5rem',
-      }}>
+      <div
+        style={{
+          backgroundColor: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: '12px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '1.5rem',
+        }}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem' }}>
           <span style={{ color: 'var(--text-secondary)' }}>Service Type:</span>
-          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Reconnection Fee</span>
+          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{serviceName}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem' }}>
           <span style={{ color: 'var(--text-secondary)' }}>Verified Mobile:</span>
-          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>+94 {verifiedPhone}</span>
+          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+            {verifiedPhone ? `+94 ${verifiedPhone}` : 'N/A'}
+          </span>
         </div>
-        <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>Total Amount Payable:</span>
-          <span style={{ fontWeight: 800, fontSize: '1.3rem', color: 'var(--slt-green, #16a34a)' }}>LKR {formattedAmount}</span>
+        <div
+          style={{
+            borderTop: '1px dashed #cbd5e1',
+            paddingTop: '0.75rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
+            Total Amount Payable:
+          </span>
+          <span style={{ fontWeight: 800, fontSize: '1.3rem', color: 'var(--slt-green, #16a34a)' }}>
+            LKR {formattedAmount}
+          </span>
         </div>
       </div>
 
       {/* Select Payment Method Option */}
       <div style={{ marginBottom: '1.5rem' }}>
         <label className="form-label" style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>
-          Select Payment Method
+          Select Payment Gateway Method
         </label>
-        
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div
             onClick={() => setSelectedMethod('card')}
@@ -83,96 +188,69 @@ export default function PaymentStep({ isActive, verifiedPhone, amount, onSuccess
               display: 'flex',
               alignItems: 'center',
               gap: '0.75rem',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
             }}
           >
             <Icon name="credit-card" size={22} color={selectedMethod === 'card' ? '#0056b3' : '#64748b'} />
             <div>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Credit / Debit Card</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Visa, Mastercard, Amex</div>
+              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>PayHere Card / IPG</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Visa, Mastercard, AMEX</div>
             </div>
           </div>
 
           <div
-            onClick={() => setSelectedMethod('genie')}
+            onClick={() => setSelectedMethod('wallet')}
             style={{
-              border: `2px solid ${selectedMethod === 'genie' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
+              border: `2px solid ${selectedMethod === 'wallet' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
               borderRadius: '10px',
               padding: '1rem',
               cursor: 'pointer',
-              backgroundColor: selectedMethod === 'genie' ? '#f0f7ff' : '#ffffff',
+              backgroundColor: selectedMethod === 'wallet' ? '#f0f7ff' : '#ffffff',
               display: 'flex',
               alignItems: 'center',
               gap: '0.75rem',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
             }}
           >
-            <Icon name="smartphone" size={22} color={selectedMethod === 'genie' ? '#0056b3' : '#64748b'} />
+            <Icon name="smartphone" size={22} color={selectedMethod === 'wallet' ? '#0056b3' : '#64748b'} />
             <div>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Mobile Wallet</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>eChannelling / Genie</div>
+              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>PayHere Wallet / eZ Cash</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>eZ Cash, Genie, Sampath Vishwa</div>
             </div>
           </div>
         </div>
       </div>
 
-      <form onSubmit={handleProceedPayment}>
-        {redirecting ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '1rem',
-            backgroundColor: '#eff6ff',
-            borderRadius: '10px',
-            border: '1px solid #bfdbfe',
-            color: '#1e40af',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.75rem'
-          }}>
-            <span className="spinner" style={{
-              width: '18px', height: '18px', border: '2px solid #1e40af',
-              borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block',
-              animation: 'spin 0.8s linear infinite'
-            }} />
-            Redirecting to Secure Gateway...
-          </div>
-        ) : (
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={!isActive}
-            style={{
-              width: '100%',
-              padding: '0.85rem',
-              fontSize: '1.05rem',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              boxShadow: '0 4px 12px rgba(0, 86, 179, 0.25)'
-            }}
-          >
-            <span>Proceed to Payment</span>
-            <Icon name="arrow-right" size={18} />
-          </button>
-        )}
-      </form>
+      {/* PayHere Sandbox Reusable Component */}
+      <PayHereButton
+        amount={amount || 1000}
+        currency="LKR"
+        itemTitle={serviceName}
+        customerDetails={{
+          phone: verifiedPhone ? `0${verifiedPhone.replace(/^\+?94/, '')}` : '',
+        }}
+        buttonText="Pay Now with PayHere"
+        disabled={!isActive}
+        sandbox={true}
+        onSuccess={handlePaymentSuccess}
+        onCancel={handlePaymentCancel}
+        onError={handlePaymentError}
+      />
 
-      <div style={{
-        marginTop: '1.5rem',
-        textAlign: 'center',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.5rem',
-        fontSize: '0.78rem',
-        color: 'var(--text-secondary)'
-      }}>
+      <div
+        style={{
+          marginTop: '1.5rem',
+          textAlign: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          fontSize: '0.78rem',
+          color: 'var(--text-secondary)',
+        }}
+      >
         <Icon name="shield-check" size={16} color="#16a34a" />
-        <span>256-bit SSL Encrypted &amp; PCI-DSS Compliant Gateway</span>
+        <span>PayHere 256-bit SSL Encrypted &amp; PCI-DSS Compliant Gateway</span>
       </div>
     </div>
   );
