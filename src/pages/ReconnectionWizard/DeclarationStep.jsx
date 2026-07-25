@@ -1,12 +1,65 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function DeclarationStep({ isActive }) {
   const { t } = useTranslation();
+  const [customerType, setCustomerType] = useState('Residential');
 
   return (
     <div>
-      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.reconnection.declaration.heading')}</h3>
+      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>Supporting Documents</h3>
+      
+      <div className="form-group mb-4">
+        <label className="form-label" style={{ marginBottom: '0.5rem' }}>Customer Type</label>
+        <div className="radio-group" style={{ display: 'flex', gap: '1.5rem' }}>
+          <label className="radio-label" style={{ cursor: 'pointer' }}>
+            <input type="radio" name="customerTypeDocs" value="Residential" checked={customerType === 'Residential'} onChange={(e) => setCustomerType(e.target.value)} /> Residential
+          </label>
+          <label className="radio-label" style={{ cursor: 'pointer' }}>
+            <input type="radio" name="customerTypeDocs" value="Foreign" checked={customerType === 'Foreign'} onChange={(e) => setCustomerType(e.target.value)} /> Foreign
+          </label>
+          <label className="radio-label" style={{ cursor: 'pointer' }}>
+            <input type="radio" name="customerTypeDocs" value="Business" checked={customerType === 'Business'} onChange={(e) => setCustomerType(e.target.value)} /> Business
+          </label>
+        </div>
+      </div>
+
+      <div className="form-group flex flex-col-mobile gap-4 mb-4">
+        {customerType === 'Residential' && (
+          <>
+            <div style={{ flex: '1' }}>
+              <label className="form-label">NIC Front Copy (PDF/JPG/PNG) <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
+              <input type="file" name="nicFront" accept=".pdf,.jpg,.jpeg,.png" className="form-control" required={isActive && customerType === 'Residential'} />
+            </div>
+            <div style={{ flex: '1' }}>
+              <label className="form-label">NIC Back Copy (PDF/JPG/PNG) <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
+              <input type="file" name="nicBack" accept=".pdf,.jpg,.jpeg,.png" className="form-control" required={isActive && customerType === 'Residential'} />
+            </div>
+          </>
+        )}
+
+        {customerType === 'Foreign' && (
+          <div style={{ flex: '1' }}>
+            <label className="form-label">Passport Copy (PDF/JPG/PNG) <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
+            <input type="file" name="passportCopy" accept=".pdf,.jpg,.jpeg,.png" className="form-control" required={isActive && customerType === 'Foreign'} />
+          </div>
+        )}
+
+        {customerType === 'Business' && (
+          <div style={{ flex: '1' }}>
+            <label className="form-label">Business Registration Certificate (PDF) <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
+            <input type="file" name="brcCopy" accept=".pdf" className="form-control" required={isActive && customerType === 'Business'} />
+          </div>
+        )}
+      </div>
+
+      <div className="form-group mb-5">
+        <label className="form-label">Payment Receipt (Optional, if dues already settled)</label>
+        <input type="file" name="paymentReceipt" accept=".pdf,.jpg,.jpeg,.png" className="form-control" style={{ maxWidth: '400px' }} />
+      </div>
+
+
+      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem', marginTop: '2.5rem' }}>{t('wizards.reconnection.declaration.heading')}</h3>
       
       <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
         <p style={{ marginBottom: '1rem' }}>

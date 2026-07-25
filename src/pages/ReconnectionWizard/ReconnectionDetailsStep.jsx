@@ -95,15 +95,33 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
             /> {t('wizards.reconnection.reconnectionDetails.idd')}
           </label>
           {/* Email — col 2, row 3 — directly under CLI */}
-          <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input" />
-            {t('wizards.reconnection.reconnectionDetails.email')}
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label className="checkbox-label">
+              <input type="checkbox" className="checkbox-input"
+                checked={!!checkedFacilities['email']}
+                onChange={() => toggleFacility('email')}
+              /> {t('wizards.reconnection.reconnectionDetails.email')}
+            </label>
+            {checkedFacilities['email'] && (
+              <div className="form-group" style={{ marginLeft: '1.5rem' }}>
+                <input type="text" name="emailUsername" className="form-control" placeholder="Email Username *" required={isActive && checkedFacilities['email']} />
+              </div>
+            )}
+          </div>
           {/* Dial-up — col 1, row 4 */}
-          <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input" />
-            {t('wizards.reconnection.reconnectionDetails.dialUp')}
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <label className="checkbox-label">
+              <input type="checkbox" className="checkbox-input"
+                checked={!!checkedFacilities['dialUp']}
+                onChange={() => toggleFacility('dialUp')}
+              /> {t('wizards.reconnection.reconnectionDetails.dialUp')}
+            </label>
+            {checkedFacilities['dialUp'] && (
+              <div className="form-group" style={{ marginLeft: '1.5rem' }}>
+                <input type="text" name="dialUpUsername" className="form-control" placeholder="Dial-up Username *" required={isActive && checkedFacilities['dialUp']} />
+              </div>
+            )}
+          </div>
           {/* col 2, row 4 — empty */}
           <span />
         </div>
