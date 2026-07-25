@@ -41,13 +41,28 @@ export default function ReconnectionWizard() {
     const raw = new FormData(formRef.current);
     const formData = Object.fromEntries(raw.entries());
 
+    // Construct FormData for multipart/form-data submission
+    const submitData = new FormData();
+    submitData.append('serviceType', 'reconnection');
+    submitData.append('phone', verifiedMobile);
+    
+    // We stringify the non-file fields to send them as a single field
+    submitData.append('formData', JSON.stringify(formData));
+
+    // Append all file inputs explicitly
+    for (let [key, value] of raw.entries()) {
+      if (value instanceof File && value.size > 0) {
+        submitData.append('documents', value);
+      }
+    }
+
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/applications', {
-        serviceType: 'reconnection',
-        formData,
-        phone: verifiedMobile,
+      const res = await api.post('/applications', submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
       navigate('/completion', {
         state: {
