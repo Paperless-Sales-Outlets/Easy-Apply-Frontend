@@ -41,6 +41,7 @@ const initialState = {
   email: '',
   installAddress: '',
   billingAddress: '',
+  isExistingCustomer: 'no',
   existingNumber: '',
   separateBill: 'no',
   billingMode: 'email',

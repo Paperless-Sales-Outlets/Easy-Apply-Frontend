@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import AddressInputWithMap from '../../components/form/AddressInputWithMap';
 
 export default function AddressStep({ isActive }) {
   const { t } = useTranslation();
@@ -13,11 +14,10 @@ export default function AddressStep({ isActive }) {
         <h4 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>{t('wizards.locationChange.address.serviceHeading')}</h4>
         
         <div className="form-group">
-          <label className="form-label">{t('wizards.locationChange.address.newServiceAddress')}</label>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-            {t('wizards.locationChange.address.newServiceAddressNote')}
-          </p>
-          <textarea className="form-control" rows="3" required={isActive}></textarea>
+          <AddressInputWithMap
+            label={t('wizards.locationChange.address.newServiceAddress')}
+            required={isActive}
+          />
           <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: 'rgba(0, 166, 80, 0.05)', borderLeft: '3px solid var(--slt-green)', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
             <strong>{t('wizards.locationChange.address.serviceAddressNote1').split(':')[0]}:</strong> {t('wizards.locationChange.address.serviceAddressNote1').split(':')[1]}<br />
             {t('wizards.locationChange.address.serviceAddressNote2')}
@@ -49,11 +49,9 @@ export default function AddressStep({ isActive }) {
         <h4 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>{t('wizards.locationChange.address.billingHeading')}</h4>
         
         <div className="form-group">
-          <label className="form-label">{t('wizards.locationChange.address.newBillingAddress')}</label>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-            {t('wizards.locationChange.address.newBillingAddressNote')}
-          </p>
-          <textarea className="form-control" rows="3"></textarea>
+          <AddressInputWithMap
+            label={t('wizards.locationChange.address.newBillingAddress')}
+          />
         </div>
 
         <div className="form-group mt-4">

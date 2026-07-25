@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import AddressInputWithMap from '../../components/form/AddressInputWithMap';
 
 export default function GeneralInfoStep({ isActive }) {
   const { t } = useTranslation();
@@ -28,10 +29,11 @@ export default function GeneralInfoStep({ isActive }) {
         </div>
       </div>
 
-      <div className="form-group">
-        <label className="form-label">{t('wizards.serviceVacation.generalInfo.address')}</label>
-        <textarea name="address" className="form-control" rows="3" required={isActive}></textarea>
-      </div>
+      <AddressInputWithMap
+        name="address"
+        label={t('wizards.serviceVacation.generalInfo.address')}
+        required={isActive}
+      />
 
       <div className="form-group mt-4">
         <label className="form-label">{t('wizards.serviceVacation.generalInfo.nicBrc')}</label>
