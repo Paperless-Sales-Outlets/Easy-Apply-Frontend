@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import AddressInputWithMap from '../../components/form/AddressInputWithMap';
 
 export default function CustomerInfoStep({ formData, handleChange }) {
   const { t } = useTranslation();
@@ -118,17 +119,13 @@ export default function CustomerInfoStep({ formData, handleChange }) {
         </div>
       </div>
 
-      <div className="form-group">
-        <label className="form-label">{t('wizards.newConnection.customerInfo.address')}</label>
-        <textarea 
-          name="address" 
-          className="form-control" 
-          rows="3" 
-          value={formData.address || ''} 
-          onChange={handleChange} 
-          required
-        ></textarea>
-      </div>
+      <AddressInputWithMap
+        name="address"
+        label={t('wizards.newConnection.customerInfo.address')}
+        value={formData.address || ''}
+        onChange={handleChange}
+        required
+      />
 
       <h4 style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>{t('wizards.newConnection.customerInfo.contactDetails')}</h4>
       
