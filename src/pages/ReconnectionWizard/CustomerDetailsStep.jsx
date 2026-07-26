@@ -16,7 +16,7 @@ let DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-export default function CustomerDetailsStep({ isActive }) {
+export default function CustomerDetailsStep({ isActive, onVerifySuccess }) {
   const { t } = useTranslation();
 
   const [telephone, setTelephone] = useState('');
@@ -49,6 +49,9 @@ export default function CustomerDetailsStep({ isActive }) {
         setAddressLine1(d.addressLine1 || '');
         setAddressLine2(d.addressLine2 || '');
         setLocation(d.location || null);
+        if (onVerifySuccess) {
+          onVerifySuccess(d);
+        }
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Connection not found');

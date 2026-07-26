@@ -1,7 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ isActive }, ref) {
+const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ isActive, reconnectionData }, ref) {
   const { t } = useTranslation();
 
   const [checkedFacilities, setCheckedFacilities] = useState({});
@@ -38,9 +38,9 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
         <label className="form-label" style={{ margin: 0, flexShrink: 0 }}>
           {t('wizards.reconnection.reconnectionDetails.disconnectedFrom')}
         </label>
-        <input type="date" className="form-control" style={{ flex: '1' }} required={isActive} />
+        <input type="date" name="disconnectedFrom" className="form-control" style={{ flex: '1' }} required={isActive} value={reconnectionData?.disconnectedFrom || ''} readOnly />
         <span style={{ padding: '0 0.5rem' }}>{t('wizards.reconnection.reconnectionDetails.disconnectedTo')}</span>
-        <input type="date" className="form-control" style={{ flex: '1' }} required={isActive} />
+        <input type="date" name="disconnectedTo" className="form-control" style={{ flex: '1' }} required={isActive} value={reconnectionData?.disconnectedTo || ''} readOnly />
       </div>
 
       {/* Amount to pay */}
@@ -48,7 +48,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
         <label className="form-label" style={{ margin: 0 }}>
           {t('wizards.reconnection.reconnectionDetails.amountToPay')}
         </label>
-        <input type="text" name="amountToPay" className="form-control" style={{ maxWidth: '200px' }} required={isActive} />
+        <input type="text" name="amountToPay" className="form-control" style={{ maxWidth: '200px' }} required={isActive} value={reconnectionData?.outstandingBalance !== undefined ? reconnectionData.outstandingBalance : ''} readOnly />
       </div>
 
       {/* Facilities — at least one required */}
@@ -61,35 +61,35 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem 1rem' }}>
           {/* Broadband — col 1, row 1 */}
           <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input"
+            <input type="checkbox" name="facility_broadband" className="checkbox-input"
               checked={!!checkedFacilities['broadband']}
               onChange={() => toggleFacility('broadband')}
             /> {t('wizards.reconnection.reconnectionDetails.broadband')}
           </label>
           {/* PeoTV — col 2, row 1 */}
           <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input"
+            <input type="checkbox" name="facility_peoTv" className="checkbox-input"
               checked={!!checkedFacilities['peoTv']}
               onChange={() => toggleFacility('peoTv')}
             /> {t('wizards.reconnection.reconnectionDetails.peoTv')}
           </label>
           {/* SLT+ — col 1, row 2 */}
           <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input"
+            <input type="checkbox" name="facility_sltPlus" className="checkbox-input"
               checked={!!checkedFacilities['sltPlus']}
               onChange={() => toggleFacility('sltPlus')}
             /> {t('wizards.reconnection.reconnectionDetails.sltPlus')}
           </label>
           {/* CLI — col 2, row 2 */}
           <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input"
+            <input type="checkbox" name="facility_cli" className="checkbox-input"
               checked={!!checkedFacilities['cli']}
               onChange={() => toggleFacility('cli')}
             /> {t('wizards.reconnection.reconnectionDetails.cli')}
           </label>
           {/* IDD — col 1, row 3 */}
           <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input"
+            <input type="checkbox" name="facility_idd" className="checkbox-input"
               checked={!!checkedFacilities['idd']}
               onChange={() => toggleFacility('idd')}
             /> {t('wizards.reconnection.reconnectionDetails.idd')}
@@ -97,7 +97,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
           {/* Email — col 2, row 3 — directly under CLI */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <label className="checkbox-label">
-              <input type="checkbox" className="checkbox-input"
+              <input type="checkbox" name="facility_email" className="checkbox-input"
                 checked={!!checkedFacilities['email']}
                 onChange={() => toggleFacility('email')}
               /> {t('wizards.reconnection.reconnectionDetails.email')}
@@ -111,7 +111,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
           {/* Dial-up — col 1, row 4 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <label className="checkbox-label">
-              <input type="checkbox" className="checkbox-input"
+              <input type="checkbox" name="facility_dialUp" className="checkbox-input"
                 checked={!!checkedFacilities['dialUp']}
                 onChange={() => toggleFacility('dialUp')}
               /> {t('wizards.reconnection.reconnectionDetails.dialUp')}
@@ -139,6 +139,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
         <label className="checkbox-label">
           <input
             type="checkbox"
+            name="facility_other"
             className="checkbox-input"
             checked={otherChecked}
             onChange={() => setOtherChecked(v => !v)}
@@ -147,7 +148,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
         {otherChecked && (
           <div className="form-group mt-2" style={{ marginLeft: '1.5rem' }}>
             <label className="form-label">{t('wizards.reconnection.reconnectionDetails.specify')} <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
-            <input type="text" className="form-control" required={isActive && otherChecked} />
+            <input type="text" name="otherService" className="form-control" required={isActive && otherChecked} />
           </div>
         )}
       </div>

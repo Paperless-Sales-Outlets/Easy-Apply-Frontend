@@ -15,8 +15,10 @@ export default function ReconnectionWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [reconnectionData, setReconnectionData] = useState(null);
   const formRef = useRef(null);
   const step2Ref = useRef(null);
+  const step3Ref = useRef(null);
   const totalSteps = 4;
 
   const nextStep = () => {
@@ -33,6 +35,7 @@ export default function ReconnectionWizard() {
     if (currentStep < totalSteps) {
       // validate step 2 facilities before advancing
       if (currentStep === 2 && step2Ref.current && !step2Ref.current.validate()) return;
+      if (currentStep === 3 && step3Ref.current && !step3Ref.current.validate()) return;
       // Step 4 is payment — handled by PaymentStep component itself, just advance
       nextStep();
       return;
@@ -46,6 +49,10 @@ export default function ReconnectionWizard() {
     submitData.append('serviceType', 'reconnection');
     submitData.append('phone', verifiedMobile);
     
+    // Extract digital signature base64 and delete from JSON formData to save space
+    const signatureBase64 = formData.digitalSignatureBase64;
+    delete formData.digitalSignatureBase64;
+
     // We stringify the non-file fields to send them as a single field
     submitData.append('formData', JSON.stringify(formData));
 
@@ -53,6 +60,18 @@ export default function ReconnectionWizard() {
     for (let [key, value] of raw.entries()) {
       if (value instanceof File && value.size > 0) {
         submitData.append('documents', value);
+      }
+    }
+
+    // Convert signature Base64 to Blob and append as a file
+    if (signatureBase64) {
+      try {
+        const res = await fetch(signatureBase64);
+        const blob = await res.blob();
+        const signatureFile = new File([blob], 'signature.png', { type: 'image/png' });
+        submitData.append('documents', signatureFile);
+      } catch (err) {
+        console.error('Failed to convert signature to file:', err);
       }
     }
 
@@ -118,20 +137,20 @@ export default function ReconnectionWizard() {
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <CustomerDetailsStep isActive={currentStep === 1} />
+            <CustomerDetailsStep isActive={currentStep === 1} onVerifySuccess={(data) => setReconnectionData(data)} />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <ReconnectionDetailsStep ref={step2Ref} isActive={currentStep === 2} />
+            <ReconnectionDetailsStep ref={step2Ref} isActive={currentStep === 2} reconnectionData={reconnectionData} />
           </div>
           <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-            <DeclarationStep isActive={currentStep === 3} />
+            <DeclarationStep ref={step3Ref} isActive={currentStep === 3} />
           </div>
           <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
             <PaymentStep 
               isActive={currentStep === 4} 
               verifiedPhone={verifiedMobile} 
               amount={formRef.current ? new FormData(formRef.current).get('amountToPay') : null}
-              onSuccess={nextStep} 
+              onSuccess={() => handleSubmit({ preventDefault: () => {} })} 
             />
           </div>
         </div>
