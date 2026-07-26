@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '../../components/Icon';
 import PayHereButton from '../../components/PayHereButton';
 
@@ -9,6 +10,7 @@ export default function PaymentStep({
   serviceName = 'Reconnection Fee',
   onSuccess,
 }) {
+  const navigate = useNavigate();
   const [selectedMethod, setSelectedMethod] = useState('card');
   const [statusState, setStatusState] = useState({ type: null, message: '' });
 
@@ -22,12 +24,22 @@ export default function PaymentStep({
       type: 'success',
       message: `Payment successful! Reference Order ID: ${orderId}`,
     });
-    if (onSuccess) {
-      setTimeout(() => {
+
+    setTimeout(() => {
+      if (onSuccess) {
         onSuccess(orderId);
-      }, 1200);
-    }
+      }
+      // Navigate seamlessly to Thank You page
+      navigate('/thank-you', {
+        state: {
+          orderId,
+          amount: formattedAmount,
+          serviceName,
+        },
+      });
+    }, 1000);
   };
+
 
   const handlePaymentCancel = () => {
     setStatusState({

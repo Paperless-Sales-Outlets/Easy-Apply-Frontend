@@ -13,6 +13,7 @@ import RefundRequestWizard from './pages/RefundRequestWizard';
 import CustomerRequestAcceptanceWizard from './pages/CustomerRequestAcceptanceWizard';
 import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
+import ThankYouPage from './pages/ThankYouPage';
 import AdminDashboard from './pages/Admin';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -51,6 +52,7 @@ const AnimatedRoutes = () => {
         <Route path="/customer-request-acceptance" element={<PageWrapper><OtpProtectedForm><CustomerRequestAcceptanceWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/check-status" element={<PageWrapper><CheckStatusPage /></PageWrapper>} />
         <Route path="/completion" element={<PageWrapper><CompletionPage /></PageWrapper>} />
+        <Route path="/thank-you" element={<PageWrapper><ThankYouPage /></PageWrapper>} />
         
         {/* Operations Admin Portal */}
         <Route path="/admin" element={<AdminDashboard />} />
@@ -58,6 +60,7 @@ const AnimatedRoutes = () => {
     </AnimatePresence>
   );
 };
+
 
 const NavigationLayout = ({ children }) => {
   const location = useLocation();
