@@ -47,7 +47,13 @@ export default function ReconnectionWizard() {
     // Construct FormData for multipart/form-data submission
     const submitData = new FormData();
     submitData.append('serviceType', 'reconnection');
-    submitData.append('phone', verifiedMobile);
+    
+    // Ensure phone is 10 digits starting with 0
+    let formattedPhone = verifiedMobile;
+    if (formattedPhone && formattedPhone.length === 9) {
+      formattedPhone = '0' + formattedPhone;
+    }
+    submitData.append('phone', formattedPhone);
     
     // Extract digital signature base64 and delete from JSON formData to save space
     const signatureBase64 = formData.digitalSignatureBase64;
@@ -150,6 +156,7 @@ export default function ReconnectionWizard() {
               isActive={currentStep === 4} 
               verifiedPhone={verifiedMobile} 
               amount={formRef.current ? new FormData(formRef.current).get('amountToPay') : null}
+              hasPaymentReceipt={formRef.current ? (new FormData(formRef.current).get('paymentReceipt')?.size > 0) : false}
               onSuccess={() => handleSubmit({ preventDefault: () => {} })} 
             />
           </div>
