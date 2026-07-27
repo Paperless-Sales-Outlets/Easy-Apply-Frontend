@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix Leaflet's default marker icon path issue in bundlers (Webpack/Vite)
+// Fix Leaflet default marker icon path issue
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -19,18 +19,19 @@ const SRI_LANKA_DISTRICTS = [
   "Trincomalee", "Vavuniya"
 ];
 
-// District to Cities Mapping Sample
 const DISTRICT_CITIES = {
   Colombo: ["Colombo 01", "Colombo 02", "Colombo 03", "Dehiwala", "Maharagama", "Nugegoda", "Piliyandala"],
   Gampaha: ["Gampaha", "Negombo", "Kelaniya", "Ja-Ela", "Wattala"],
   Kandy: ["Kandy", "Peradeniya", "Katugastota", "Gampola"],
   Galle: ["Galle", "Karapitiya", "Hikkaduwa", "Ambalangoda"],
+  Vavuniya: ["Vavuniya", "Cheddikulam", "Nedunkeni"],
+  Trincomalee: ["Trincomalee", "Kinniya", "Muttur", "Kadaiparichchan"]
 };
 
 export default function AddressStep({ isActive, onValidationChange, onDataChange }) {
   const { t } = useTranslation();
 
-  // --- Section 1: Current Address (Read-Only) ---
+  // --- Current Address State ---
   const [currentAddress, setCurrentAddress] = useState({
     address1: "",
     address2: "",
@@ -40,7 +41,7 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
   });
   const [loadingCurrent, setLoadingCurrent] = useState(true);
 
-  // --- Section 2: Relocation Address ---
+  // --- Relocation Address State ---
   const [relocationAddress, setRelocationAddress] = useState({
     district: "",
     city: "",
@@ -49,18 +50,21 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
     address2: "",
   });
 
-  // --- Map & Coordinates ---
+  // --- Map & Pinpoint States ---
   const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markerRef = useRef(null);
+  const searchWrapperRef = useRef(null);
 
-  // --- Section 3: Search Location ---
+  // --- Search Location States ---
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [noResultsFound, setNoResultsFound] = useState(false);
 
-  // --- Section 7: Billing Address ---
+  // --- Billing Address State ---
   const [sameAsRelocation, setSameAsRelocation] = useState(true);
   const [billingAddress, setBillingAddress] = useState({
     address1: "",
@@ -70,7 +74,7 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
     postalCode: "",
   });
 
-  // 1. Fetch Current Service Address on mount
+  // Fetch Current Address
   useEffect(() => {
     async function fetchCurrentAddress() {
       try {
@@ -79,7 +83,6 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
           const data = await response.json();
           setCurrentAddress(data);
         } else {
-          // Fallback demo data if API isn't live yet
           setCurrentAddress({
             address1: "45, Galle Road",
             address2: "",
@@ -89,7 +92,6 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
           });
         }
       } catch (err) {
-        console.warn("Using fallback current address data.");
         setCurrentAddress({
           address1: "45, Galle Road",
           address2: "",
@@ -104,38 +106,23 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
     fetchCurrentAddress();
   }, []);
 
-  // 2. Initialize Leaflet Map
+  // Dismiss search dropdown when clicking outside
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
-
-    // Default view: Sri Lanka center
-    const map = L.map(mapContainerRef.current).setView([7.8731, 80.7718], 8);
-    
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(map);
-
-    mapRef.current = map;
-
-    // Handle Click on Map
-    map.on("click", (e) => {
-      const { lat, lng } = e.latlng;
-      updateMarkerPosition(lat, lng, true);
-    });
-
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
+    function handleClickOutside(event) {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(event.target)) {
+        setShowDropdown(false);
       }
-    };
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 3. Reverse Geocoding trigger
-  const reverseGeocode = async (lat, lng) => {
+  // Reverse Geocoding via Nominatim
+  const reverseGeocode = useCallback(async (lat, lng) => {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+        { headers: { "Accept-Language": "en" } }
       );
       if (!response.ok) return;
       const data = await response.json();
@@ -147,7 +134,6 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
         const detectedPostcode = addr.postcode || "";
         const detectedRoad = addr.road || addr.pedestrian || addr.suburb || data.display_name.split(",")[0] || "";
 
-        // Match detected district to SL list if possible
         const matchedDistrict = SRI_LANKA_DISTRICTS.find(
           (d) => d.toLowerCase() === detectedDistrict.replace("District", "").trim().toLowerCase()
         ) || "";
@@ -157,16 +143,16 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
           district: matchedDistrict || prev.district,
           city: detectedCity || prev.city,
           postalCode: detectedPostcode || prev.postalCode,
-          address1: detectedRoad ? `No ${detectedRoad}` : prev.address1,
+          address1: prev.address1 || (detectedRoad ? `No ${detectedRoad}` : ""),
         }));
       }
     } catch (err) {
-      console.error("Reverse geocoding failed:", err);
+      console.error("Reverse geocoding error:", err);
     }
-  };
+  }, []);
 
-  // Move or Create Marker & Center Map
-  const updateMarkerPosition = (lat, lng, triggerReverseGeocode = true) => {
+  // Update Pin Marker Position
+  const updateMarkerPosition = useCallback((lat, lng, doReverseGeocode = true) => {
     setCoordinates({ lat, lng });
 
     if (!mapRef.current) return;
@@ -175,7 +161,7 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
       markerRef.current.setLatLng([lat, lng]);
     } else {
       const marker = L.marker([lat, lng], { draggable: true }).addTo(mapRef.current);
-      
+
       marker.on("dragend", (e) => {
         const newCoords = e.target.getLatLng();
         setCoordinates({ lat: newCoords.lat, lng: newCoords.lng });
@@ -185,38 +171,92 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
       markerRef.current = marker;
     }
 
-    mapRef.current.setView([lat, lng], 15);
+    mapRef.current.flyTo([lat, lng], 15, { animate: true, duration: 1.2 });
 
-    if (triggerReverseGeocode) {
+    if (doReverseGeocode) {
       reverseGeocode(lat, lng);
     }
-  };
+  }, [reverseGeocode]);
 
-  // 4. Handle Nominatim Place Search (Debounced)
+  // Initialize Map
   useEffect(() => {
-    if (!searchQuery || searchQuery.trim().length < 3) {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    const map = L.map(mapContainerRef.current).setView([7.8731, 80.7718], 8);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    mapRef.current = map;
+
+    map.on("click", (e) => {
+      const { lat, lng } = e.latlng;
+      updateMarkerPosition(lat, lng, true);
+    });
+
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [updateMarkerPosition]);
+
+  // Search Location API Call
+  useEffect(() => {
+    const query = searchQuery.trim();
+
+    if (!query || query.length < 2) {
       setSuggestions([]);
+      setShowDropdown(false);
+      setNoResultsFound(false);
       return;
     }
 
     const timer = setTimeout(async () => {
       setIsSearching(true);
+      setNoResultsFound(false);
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            searchQuery + ", Sri Lanka"
-          )}&limit=5&addressdetails=1`
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=6&bbox=79.5,5.8,81.9,9.9`
         );
+
         if (response.ok) {
           const data = await response.json();
-          setSuggestions(data);
+          const places = data.features.map((item) => {
+            const props = item.properties;
+            const name = props.name || "";
+            const city = props.city || props.town || props.district || "";
+            const state = props.state || "";
+            const formatted = [name, city, state, "Sri Lanka"].filter(Boolean).join(", ");
+
+            return {
+              display_name: formatted,
+              lat: item.geometry.coordinates[1],
+              lon: item.geometry.coordinates[0],
+            };
+          });
+
+          setSuggestions(places);
+          setShowDropdown(true);
+          setNoResultsFound(places.length === 0);
+        } else {
+          setSuggestions([]);
+          setNoResultsFound(true);
         }
       } catch (err) {
-        console.error("Search failed:", err);
+        console.error("Location search failed:", err);
+        setSuggestions([]);
+        setNoResultsFound(true);
       } finally {
         setIsSearching(false);
       }
-    }, 400);
+    }, 350);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -224,14 +264,22 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
   const handleSelectSuggestion = (place) => {
     const lat = parseFloat(place.lat);
     const lng = parseFloat(place.lon);
-    
+
     setSearchQuery(place.display_name);
-    setSuggestions([]);
-    
+    setShowDropdown(false);
     updateMarkerPosition(lat, lng, true);
   };
 
-  // 5. Section 6 Validation Check
+  // Keep custom typed name as Address Line 1 if user typed a specific home/shop name
+  const handleQueryChange = (e) => {
+    const text = e.target.value;
+    setSearchQuery(text);
+    if (text) {
+      setRelocationAddress((prev) => ({ ...prev, address1: text }));
+    }
+  };
+
+  // Form Validation
   const isValid = Boolean(
     relocationAddress.district &&
     relocationAddress.city &&
@@ -242,9 +290,7 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
   );
 
   useEffect(() => {
-    if (onValidationChange) {
-      onValidationChange(isValid);
-    }
+    if (onValidationChange) onValidationChange(isValid);
     if (onDataChange) {
       onDataChange({
         district: relocationAddress.district,
@@ -257,30 +303,28 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
         billingAddress: sameAsRelocation ? relocationAddress : billingAddress,
       });
     }
-  }, [relocationAddress, coordinates, sameAsRelocation, billingAddress, isValid]);
+  }, [relocationAddress, coordinates, sameAsRelocation, billingAddress, isValid, onValidationChange, onDataChange]);
 
   return (
-    <div style={{ maxWidth: "850px", margin: "0 auto" }}>
+    <div style={{ maxWidth: "850px", margin: "0 auto", fontFamily: "inherit" }}>
       <h3 style={{ color: "var(--slt-blue, #0056a6)", marginBottom: "1.5rem" }}>
         {t("wizards.locationChange.address.heading", "Step 2 – Address & Relocation")}
       </h3>
 
-      {/* SECTION 1: Current Service Address (Read Only) */}
+      {/* Current Address Card */}
       <div
         className="card"
         style={{
           padding: "1.5rem",
-          border: "1px solid var(--border-color, #e0e0e0)",
+          border: "1px solid #e0e0e0",
           backgroundColor: "#f9fbfd",
           marginBottom: "1.5rem",
           borderRadius: "8px",
         }}
       >
-        <h4 style={{ color: "var(--text-primary, #333)", marginBottom: "0.75rem", fontSize: "1.1rem" }}>
-          {t("wizards.locationChange.address.currentHeading", "Current Service Address")}
-          <span style={{ fontSize: "0.8rem", color: "#666", fontWeight: "normal", marginLeft: "8px" }}>(Read-Only)</span>
+        <h4 style={{ color: "#333", marginBottom: "0.75rem", fontSize: "1.1rem" }}>
+          Current Service Address <span style={{ fontSize: "0.8rem", color: "#666", fontWeight: "normal" }}>(Read-Only)</span>
         </h4>
-
         {loadingCurrent ? (
           <p style={{ color: "#777" }}>Loading current address...</p>
         ) : (
@@ -294,192 +338,226 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
         )}
       </div>
 
-      {/* SECTION 2: Relocation Address */}
+      {/* Relocation Address Form Card */}
       <div
         className="card"
         style={{
           padding: "1.5rem",
-          border: "1px solid var(--border-color, #e0e0e0)",
+          border: "1px solid #e0e0e0",
           marginBottom: "1.5rem",
           borderRadius: "8px",
         }}
       >
-        <h4 style={{ color: "var(--text-primary, #333)", marginBottom: "1rem", fontSize: "1.1rem" }}>
-          {t("wizards.locationChange.address.relocationHeading", "Relocation Address")}
-        </h4>
+        <h4 style={{ color: "#333", marginBottom: "1rem", fontSize: "1.1rem" }}>Relocation Address</h4>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
           <div>
-            <label className="form-label" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+            <label style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
               District <span style={{ color: "red" }}>*</span>
             </label>
             <select
-              className="form-control"
               value={relocationAddress.district}
               onChange={(e) => setRelocationAddress({ ...relocationAddress, district: e.target.value, city: "" })}
               required={isActive}
-              style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
+              style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
             >
               <option value="">Select District</option>
               {SRI_LANKA_DISTRICTS.map((dist) => (
-                <option key={dist} value={dist}>
-                  {dist}
-                </option>
+                <option key={dist} value={dist}>{dist}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="form-label" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+            <label style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
               City / Town <span style={{ color: "red" }}>*</span>
             </label>
             {DISTRICT_CITIES[relocationAddress.district] ? (
               <select
-                className="form-control"
                 value={relocationAddress.city}
                 onChange={(e) => setRelocationAddress({ ...relocationAddress, city: e.target.value })}
                 required={isActive}
-                style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
+                style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
               >
                 <option value="">Select City</option>
                 {DISTRICT_CITIES[relocationAddress.district].map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             ) : (
               <input
                 type="text"
-                className="form-control"
                 placeholder="Enter City"
                 value={relocationAddress.city}
                 onChange={(e) => setRelocationAddress({ ...relocationAddress, city: e.target.value })}
                 required={isActive}
-                style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
+                style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
               />
             )}
           </div>
         </div>
 
         <div style={{ marginBottom: "1rem" }}>
-          <label className="form-label" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+          <label style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
             Postal Code <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="text"
-            className="form-control"
             placeholder="e.g. 10280"
             value={relocationAddress.postalCode}
             onChange={(e) => setRelocationAddress({ ...relocationAddress, postalCode: e.target.value })}
             required={isActive}
-            style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
           />
         </div>
 
         <div style={{ marginBottom: "1rem" }}>
-          <label className="form-label" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-            Address Line 1 <span style={{ color: "red" }}>*</span>
+          <label style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+            Address Line 1 / Building / Shop Name <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="text"
-            className="form-control"
-            placeholder="No 25, Temple Road"
+            placeholder="No 25, Temple Road or Jeevanantham Stores"
             value={relocationAddress.address1}
             onChange={(e) => setRelocationAddress({ ...relocationAddress, address1: e.target.value })}
             required={isActive}
-            style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
           />
         </div>
 
         <div>
-          <label className="form-label" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-            Address Line 2 (Optional)
-          </label>
+          <label style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>Address Line 2 (Optional)</label>
           <input
             type="text"
-            className="form-control"
             placeholder="2nd Floor, Apartment A"
             value={relocationAddress.address2}
             onChange={(e) => setRelocationAddress({ ...relocationAddress, address2: e.target.value })}
-            style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
+            style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
           />
         </div>
       </div>
 
-      {/* SECTION 3: Search Location */}
+      {/* SECTION 3: Search Location Card */}
       <div
         className="card"
+        ref={searchWrapperRef}
         style={{
           padding: "1.5rem",
-          border: "1px solid var(--border-color, #e0e0e0)",
+          border: "1px solid #e0e0e0",
           marginBottom: "1.5rem",
           borderRadius: "8px",
           position: "relative",
+          zIndex: 1000,
+          overflow: "visible",
         }}
       >
-        <h4 style={{ color: "var(--text-primary, #333)", marginBottom: "0.75rem", fontSize: "1.1rem" }}>
+        <h4 style={{ color: "#333", marginBottom: "0.75rem", fontSize: "1.1rem" }}>
           Search Relocation Location
         </h4>
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Search by landmark, street or area (e.g. Temple Road)"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ width: "100%", padding: "0.6rem", borderRadius: "4px", border: "1px solid #ccc" }}
-        />
-        {isSearching && <p style={{ fontSize: "0.8rem", color: "#666", marginTop: "0.25rem" }}>Searching places...</p>}
 
-        {suggestions.length > 0 && (
-          <ul
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: "1.5rem",
-              right: "1.5rem",
-              backgroundColor: "#fff",
-              border: "1px solid #ccc",
-              borderRadius: "0 0 4px 4px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              listStyle: "none",
-              margin: 0,
-              padding: 0,
-              zIndex: 1000,
-              maxHeight: "200px",
-              overflowY: "auto",
+        <div style={{ position: "relative" }}>
+          <input
+            type="text"
+            placeholder="Search city/area (e.g., Trincomalee) or type house/shop name..."
+            value={searchQuery}
+            onChange={handleQueryChange}
+            onFocus={() => {
+              if (suggestions.length > 0) setShowDropdown(true);
             }}
-          >
-            {suggestions.map((item, idx) => (
-              <li
-                key={idx}
-                onClick={() => handleSelectSuggestion(item)}
-                style={{
-                  padding: "0.6rem 1rem",
-                  borderBottom: idx < suggestions.length - 1 ? "1px solid #eee" : "none",
-                  cursor: "pointer",
-                  fontSize: "0.9rem",
-                }}
-                onMouseDown={(e) => e.preventDefault()}
-              >
-                📍 {item.display_name}
-              </li>
-            ))}
-          </ul>
-        )}
+            style={{
+              width: "100%",
+              padding: "0.65rem",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              outline: "none",
+              boxSizing: "border-box"
+            }}
+          />
+
+          {isSearching && (
+            <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem", color: "#666" }}>
+              Searching...
+            </span>
+          )}
+
+          {/* Autocomplete Suggestions Dropdown */}
+          {showDropdown && suggestions.length > 0 && (
+            <ul
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                backgroundColor: "#ffffff",
+                border: "1px solid #cbd5e1",
+                borderRadius: "0 0 6px 6px",
+                boxShadow: "0 8px 20px rgba(0,0,0,0.18)",
+                listStyle: "none",
+                margin: "4px 0 0 0",
+                padding: 0,
+                zIndex: 99999,
+                maxHeight: "220px",
+                overflowY: "auto",
+              }}
+            >
+              {suggestions.map((item, idx) => (
+                <li
+                  key={idx}
+                  onClick={() => handleSelectSuggestion(item)}
+                  style={{
+                    padding: "0.7rem 1rem",
+                    borderBottom: idx < suggestions.length - 1 ? "1px solid #f1f5f9" : "none",
+                    cursor: "pointer",
+                    fontSize: "0.88rem",
+                    color: "#1e293b",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "8px",
+                    backgroundColor: "#ffffff",
+                    transition: "background-color 0.15s ease"
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
+                >
+                  <span style={{ color: "#0056a6" }}>📍</span>
+                  <span>{item.display_name}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Friendly No-Results Message for House/Shop Names */}
+          {noResultsFound && !isSearching && searchQuery.length >= 2 && (
+            <div
+              style={{
+                marginTop: "0.5rem",
+                padding: "0.6rem 0.8rem",
+                backgroundColor: "#fffbe6",
+                border: "1px solid #ffe58f",
+                borderRadius: "4px",
+                fontSize: "0.83rem",
+                color: "#856404",
+              }}
+            >
+              💡 Private home or shop name not found in map search? Search your main area name (e.g., <strong>Trincomalee</strong> or <strong>Kadaiparichchan</strong>), then click directly on the interactive map below to pinpoint your exact spot.
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* SECTION 4: Interactive Map */}
+      {/* SECTION 4: Interactive Map Pinpoint */}
       <div
         className="card"
         style={{
           padding: "1rem",
-          border: "1px solid var(--border-color, #e0e0e0)",
+          border: "1px solid #e0e0e0",
           marginBottom: "1.5rem",
           borderRadius: "8px",
+          position: "relative",
+          zIndex: 1,
         }}
       >
-        <h4 style={{ color: "var(--text-primary, #333)", marginBottom: "0.5rem", fontSize: "1.1rem" }}>
+        <h4 style={{ color: "#333", marginBottom: "0.5rem", fontSize: "1.1rem" }}>
           Interactive Map Pinpoint
         </h4>
         <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.75rem" }}>
@@ -487,103 +565,11 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
         </p>
         <div
           ref={mapContainerRef}
-          style={{ height: "350px", width: "100%", borderRadius: "6px", border: "1px solid #ccc" }}
+          style={{ height: "350px", width: "100%", borderRadius: "6px", border: "1px solid #ccc", zIndex: 1 }}
         />
       </div>
 
-      {/* SECTION 7: Billing Address */}
-      <div
-        className="card"
-        style={{
-          padding: "1.5rem",
-          border: "1px solid var(--border-color, #e0e0e0)",
-          marginBottom: "1.5rem",
-          borderRadius: "8px",
-        }}
-      >
-        <h4 style={{ color: "var(--text-primary, #333)", marginBottom: "1rem", fontSize: "1.1rem" }}>
-          Billing Address
-        </h4>
-
-        <label style={{ display: "flex", alignItems: "center", cursor: "pointer", marginBottom: "1rem" }}>
-          <input
-            type="checkbox"
-            checked={sameAsRelocation}
-            onChange={(e) => setSameAsRelocation(e.target.checked)}
-            style={{ width: "18px", height: "18px", marginRight: "10px" }}
-          />
-          <span style={{ fontWeight: "500" }}>Same as relocation address</span>
-        </label>
-
-        {!sameAsRelocation && (
-          <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #eee" }}>
-            <div style={{ marginBottom: "1rem" }}>
-              <label className="form-label" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-                Billing Address Line 1
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                value={billingAddress.address1}
-                onChange={(e) => setBillingAddress({ ...billingAddress, address1: e.target.value })}
-                style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
-              />
-            </div>
-            <div style={{ marginBottom: "1rem" }}>
-              <label className="form-label" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-                Billing Address Line 2
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                value={billingAddress.address2}
-                onChange={(e) => setBillingAddress({ ...billingAddress, address2: e.target.value })}
-                style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
-              />
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
-              <div>
-                <label className="form-label" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-                  City
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={billingAddress.city}
-                  onChange={(e) => setBillingAddress({ ...billingAddress, city: e.target.value })}
-                  style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
-                />
-              </div>
-              <div>
-                <label className="form-label" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-                  District
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={billingAddress.district}
-                  onChange={(e) => setBillingAddress({ ...billingAddress, district: e.target.value })}
-                  style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
-                />
-              </div>
-              <div>
-                <label className="form-label" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-                  Postal Code
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={billingAddress.postalCode}
-                  onChange={(e) => setBillingAddress({ ...billingAddress, postalCode: e.target.value })}
-                  style={{ width: "100%", padding: "0.5rem", borderRadius: "4px", border: "1px solid #ccc" }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* SECTION 8: Summary Box */}
+      {/* Summary Box */}
       <div
         className="card"
         style={{
