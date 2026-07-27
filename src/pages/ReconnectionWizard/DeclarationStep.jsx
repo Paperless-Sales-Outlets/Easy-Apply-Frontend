@@ -1,9 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
+import DigitalSignatureCanvas from '../../components/DigitalSignatureCanvas';
 
-export default function DeclarationStep({ isActive }) {
+const DeclarationStep = forwardRef(function DeclarationStep({ isActive }, ref) {
   const { t } = useTranslation();
   const [customerType, setCustomerType] = useState('Residential');
+  const [signatureBase64, setSignatureBase64] = useState('');
+  const [signatureError, setSignatureError] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    validate: () => {
+      if (!signatureBase64) {
+        setSignatureError(true);
+        return false;
+      }
+      return true;
+    },
+  }));
 
   return (
     <div>
@@ -69,6 +82,25 @@ export default function DeclarationStep({ isActive }) {
           <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.reconnection.declaration.agreeLabel')}
         </label>
       </div>
+
+      <div className="mt-5">
+        <DigitalSignatureCanvas 
+          isActive={isActive} 
+          required={true} 
+          onChange={(base64) => {
+            setSignatureBase64(base64);
+            if (base64) setSignatureError(false);
+          }} 
+        />
+        <input type="hidden" name="digitalSignatureBase64" value={signatureBase64} />
+        {signatureError && (
+          <p style={{ color: 'var(--danger, #dc3545)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+            Please provide your digital signature to proceed.
+          </p>
+        )}
+      </div>
     </div>
   );
-}
+});
+
+export default DeclarationStep;
