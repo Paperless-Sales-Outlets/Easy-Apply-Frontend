@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '../../components/Icon';
 
-export default function PaymentStep({ isActive, verifiedPhone, amount, onSuccess }) {
+export default function PaymentStep({ isActive, verifiedPhone, amount, hasPaymentReceipt, onSuccess }) {
   const { t } = useTranslation();
   const [redirecting, setRedirecting] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState('card');
@@ -14,6 +14,11 @@ export default function PaymentStep({ isActive, verifiedPhone, amount, onSuccess
 
   const handleProceedPayment = (e) => {
     e.preventDefault();
+    if (hasPaymentReceipt) {
+      if (onSuccess) onSuccess();
+      return;
+    }
+
     setRedirecting(true);
 
     // Simulate redirecting to secure payment gateway (IPG / Payment Gateway Widget)
@@ -65,58 +70,71 @@ export default function PaymentStep({ isActive, verifiedPhone, amount, onSuccess
         </div>
       </div>
 
-      {/* Select Payment Method Option */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label className="form-label" style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>
-          Select Payment Method
-        </label>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <div
-            onClick={() => setSelectedMethod('card')}
-            style={{
-              border: `2px solid ${selectedMethod === 'card' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
-              borderRadius: '10px',
-              padding: '1rem',
-              cursor: 'pointer',
-              backgroundColor: selectedMethod === 'card' ? '#f0f7ff' : '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Icon name="credit-card" size={22} color={selectedMethod === 'card' ? '#0056b3' : '#64748b'} />
-            <div>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Credit / Debit Card</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Visa, Mastercard, Amex</div>
+      {/* Select Payment Method Option OR Receipt Banner */}
+      {hasPaymentReceipt ? (
+        <div style={{
+          textAlign: 'center', marginBottom: '1.5rem', padding: '1.25rem',
+          backgroundColor: '#ecfdf5', border: '1px solid #10b981', borderRadius: '10px', color: '#065f46'
+        }}>
+           <Icon name="check-circle" size={32} color="#10b981" />
+           <div style={{ fontWeight: 600, marginTop: '0.5rem', fontSize: '1.1rem' }}>Payment Receipt Attached</div>
+           <div style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
+             You have uploaded a payment receipt. No further online payment is required at this stage.
+           </div>
+        </div>
+      ) : (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label className="form-label" style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>
+            Select Payment Method
+          </label>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div
+              onClick={() => setSelectedMethod('card')}
+              style={{
+                border: `2px solid ${selectedMethod === 'card' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
+                borderRadius: '10px',
+                padding: '1rem',
+                cursor: 'pointer',
+                backgroundColor: selectedMethod === 'card' ? '#f0f7ff' : '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Icon name="credit-card" size={22} color={selectedMethod === 'card' ? '#0056b3' : '#64748b'} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Credit / Debit Card</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Visa, Mastercard, Amex</div>
+              </div>
             </div>
-          </div>
 
-          <div
-            onClick={() => setSelectedMethod('genie')}
-            style={{
-              border: `2px solid ${selectedMethod === 'genie' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
-              borderRadius: '10px',
-              padding: '1rem',
-              cursor: 'pointer',
-              backgroundColor: selectedMethod === 'genie' ? '#f0f7ff' : '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Icon name="smartphone" size={22} color={selectedMethod === 'genie' ? '#0056b3' : '#64748b'} />
-            <div>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Mobile Wallet</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>eChannelling / Genie</div>
+            <div
+              onClick={() => setSelectedMethod('genie')}
+              style={{
+                border: `2px solid ${selectedMethod === 'genie' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
+                borderRadius: '10px',
+                padding: '1rem',
+                cursor: 'pointer',
+                backgroundColor: selectedMethod === 'genie' ? '#f0f7ff' : '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Icon name="smartphone" size={22} color={selectedMethod === 'genie' ? '#0056b3' : '#64748b'} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>Mobile Wallet</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>eChannelling / Genie</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <form onSubmit={handleProceedPayment}>
+      <div>
         {redirecting ? (
           <div style={{
             textAlign: 'center',
@@ -140,8 +158,9 @@ export default function PaymentStep({ isActive, verifiedPhone, amount, onSuccess
           </div>
         ) : (
           <button
-            type="submit"
-            className="btn btn-primary"
+            type="button"
+            onClick={handleProceedPayment}
+            className={`btn ${hasPaymentReceipt ? 'btn-success' : 'btn-primary'}`}
             disabled={!isActive}
             style={{
               width: '100%',
@@ -152,14 +171,14 @@ export default function PaymentStep({ isActive, verifiedPhone, amount, onSuccess
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem',
-              boxShadow: '0 4px 12px rgba(0, 86, 179, 0.25)'
+              boxShadow: hasPaymentReceipt ? '0 4px 12px rgba(22, 163, 74, 0.25)' : '0 4px 12px rgba(0, 86, 179, 0.25)'
             }}
           >
-            <span>Proceed to Payment</span>
-            <Icon name="arrow-right" size={18} />
+            <span>{hasPaymentReceipt ? 'Submit Application' : 'Proceed to Payment'}</span>
+            <Icon name={hasPaymentReceipt ? 'check' : 'arrow-right'} size={18} />
           </button>
         )}
-      </form>
+      </div>
 
       <div style={{
         marginTop: '1.5rem',
