@@ -8,6 +8,7 @@ export default function PaymentStep({
   verifiedPhone = '',
   amount = 1000,
   serviceName = 'Reconnection Fee',
+  hasPaymentReceipt = false,
   onSuccess,
 }) {
   const navigate = useNavigate();
@@ -20,6 +21,12 @@ export default function PaymentStep({
     : '1,000.00';
 
   const handlePaymentSuccess = (orderId) => {
+    // If a payment receipt was already uploaded, skip PayHere and submit directly
+    if (hasPaymentReceipt) {
+      if (onSuccess) onSuccess();
+      return;
+    }
+
     setStatusState({
       type: 'success',
       message: `Payment successful! Reference Order ID: ${orderId}`,
@@ -39,7 +46,6 @@ export default function PaymentStep({
       });
     }, 1000);
   };
-
 
   const handlePaymentCancel = () => {
     setStatusState({
@@ -79,7 +85,8 @@ export default function PaymentStep({
           PayHere Sandbox Gateway
         </h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: '1.5' }}>
-          You will be redirected to PayHere Sandbox encrypted Payment Gateway to process your payment securely. No credit card or sensitive credentials are stored on EasyApply servers.
+          You will be redirected to PayHere Sandbox encrypted Payment Gateway to process your payment securely. No
+          credit card or sensitive credentials are stored on EasyApply servers.
         </p>
       </div>
 
@@ -182,72 +189,115 @@ export default function PaymentStep({
         </div>
       </div>
 
-      {/* Select Payment Method Option */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <label className="form-label" style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>
-          Select Payment Gateway Method
-        </label>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <div
-            onClick={() => setSelectedMethod('card')}
-            style={{
-              border: `2px solid ${selectedMethod === 'card' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
-              borderRadius: '10px',
-              padding: '1rem',
-              cursor: 'pointer',
-              backgroundColor: selectedMethod === 'card' ? '#f0f7ff' : '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Icon name="credit-card" size={22} color={selectedMethod === 'card' ? '#0056b3' : '#64748b'} />
-            <div>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>PayHere Card / IPG</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Visa, Mastercard, AMEX</div>
-            </div>
+      {/* Payment Receipt Banner OR Payment Method Selector */}
+      {hasPaymentReceipt ? (
+        <div
+          style={{
+            textAlign: 'center',
+            marginBottom: '1.5rem',
+            padding: '1.25rem',
+            backgroundColor: '#ecfdf5',
+            border: '1px solid #10b981',
+            borderRadius: '10px',
+            color: '#065f46',
+          }}
+        >
+          <Icon name="check-circle" size={32} color="#10b981" />
+          <div style={{ fontWeight: 600, marginTop: '0.5rem', fontSize: '1.1rem' }}>Payment Receipt Attached</div>
+          <div style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
+            You have uploaded a payment receipt. No further online payment is required at this stage.
           </div>
+        </div>
+      ) : (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label className="form-label" style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>
+            Select Payment Gateway Method
+          </label>
 
-          <div
-            onClick={() => setSelectedMethod('wallet')}
-            style={{
-              border: `2px solid ${selectedMethod === 'wallet' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
-              borderRadius: '10px',
-              padding: '1rem',
-              cursor: 'pointer',
-              backgroundColor: selectedMethod === 'wallet' ? '#f0f7ff' : '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Icon name="smartphone" size={22} color={selectedMethod === 'wallet' ? '#0056b3' : '#64748b'} />
-            <div>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>PayHere Wallet / eZ Cash</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>eZ Cash, Genie, Sampath Vishwa</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div
+              onClick={() => setSelectedMethod('card')}
+              style={{
+                border: `2px solid ${selectedMethod === 'card' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
+                borderRadius: '10px',
+                padding: '1rem',
+                cursor: 'pointer',
+                backgroundColor: selectedMethod === 'card' ? '#f0f7ff' : '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Icon name="credit-card" size={22} color={selectedMethod === 'card' ? '#0056b3' : '#64748b'} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>PayHere Card / IPG</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Visa, Mastercard, AMEX</div>
+              </div>
+            </div>
+
+            <div
+              onClick={() => setSelectedMethod('wallet')}
+              style={{
+                border: `2px solid ${selectedMethod === 'wallet' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
+                borderRadius: '10px',
+                padding: '1rem',
+                cursor: 'pointer',
+                backgroundColor: selectedMethod === 'wallet' ? '#f0f7ff' : '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Icon name="smartphone" size={22} color={selectedMethod === 'wallet' ? '#0056b3' : '#64748b'} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>PayHere Wallet / eZ Cash</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>eZ Cash, Genie, Sampath Vishwa</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* PayHere Sandbox Reusable Component */}
-      <PayHereButton
-        amount={amount || 1000}
-        currency="LKR"
-        itemTitle={serviceName}
-        customerDetails={{
-          phone: verifiedPhone ? `0${verifiedPhone.replace(/^\+?94/, '')}` : '',
-        }}
-        buttonText="Pay Now with PayHere"
-        disabled={!isActive}
-        sandbox={true}
-        onSuccess={handlePaymentSuccess}
-        onCancel={handlePaymentCancel}
-        onError={handlePaymentError}
-      />
+      {/* PayHere Sandbox Button OR Submit Button (when receipt uploaded) */}
+      {hasPaymentReceipt ? (
+        <button
+          type="button"
+          onClick={() => handlePaymentSuccess(null)}
+          className="btn btn-success"
+          disabled={!isActive}
+          style={{
+            width: '100%',
+            padding: '0.85rem',
+            fontSize: '1.05rem',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+          }}
+        >
+          <span>Submit Application</span>
+          <Icon name="check" size={18} />
+        </button>
+      ) : (
+        <PayHereButton
+          amount={amount || 1000}
+          currency="LKR"
+          itemTitle={serviceName}
+          customerDetails={{
+            phone: verifiedPhone ? `0${verifiedPhone.replace(/^\+?94/, '')}` : '',
+          }}
+          buttonText="Pay Now with PayHere"
+          disabled={!isActive}
+          sandbox={true}
+          onSuccess={handlePaymentSuccess}
+          onCancel={handlePaymentCancel}
+          onError={handlePaymentError}
+        />
+      )}
 
       <div
         style={{
