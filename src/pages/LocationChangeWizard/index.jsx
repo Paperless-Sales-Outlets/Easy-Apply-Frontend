@@ -98,20 +98,23 @@ export default function LocationChangeWizard() {
 
       <form ref={formRef} onSubmit={handleSubmit}>
 
-        <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
-          <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <GeneralInfoStep isActive={currentStep === 1} />
-          </div>
-          <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <AddressStep isActive={currentStep === 2} />
-          </div>
-          <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-            <PreferencesStep isActive={currentStep === 3} />
-          </div>
-          <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
-            <AgreementStep isActive={currentStep === 4} />
-          </div>
-        </div>
+        <div style={{ minHeight: "300px", marginBottom: "2rem" }}>
+  {currentStep === 1 && (
+    <GeneralInfoStep isActive />
+  )}
+
+  {currentStep === 2 && (
+    <AddressStep isActive />
+  )}
+
+  {currentStep === 3 && (
+    <PreferencesStep isActive />
+  )}
+
+  {currentStep === 4 && (
+    <AgreementStep isActive />
+  )}
+</div>
 
         {submitError && (
           <p style={{ color: 'var(--danger, #dc3545)', marginBottom: '1rem', fontSize: '0.9rem' }}>
