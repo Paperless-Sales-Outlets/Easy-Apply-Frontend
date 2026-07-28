@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix Leaflet default marker icon path issue
+// Fix default Leaflet marker icon paths in React environments
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -28,10 +28,25 @@ const DISTRICT_CITIES = {
   Trincomalee: ["Trincomalee", "Kinniya", "Muttur", "Kadaiparichchan"]
 };
 
-export default function AddressStep({ isActive, onValidationChange, onDataChange }) {
+const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+const MAX_FILE_SIZE_MB = 5;
+
+export default function AddressStep({ 
+  isActive = true, 
+  onValidationChange, 
+  onDataChange, 
+  showValidationErrors = false 
+}) {
   const { t } = useTranslation();
 
-  // --- Current Address State ---
+  const onValidationChangeRef = useRef(onValidationChange);
+  const onDataChangeRef = useRef(onDataChange);
+
+  useEffect(() => {
+    onValidationChangeRef.current = onValidationChange;
+    onDataChangeRef.current = onDataChange;
+  }, [onValidationChange, onDataChange]);
+
   const [currentAddress, setCurrentAddress] = useState({
     address1: "",
     address2: "",
@@ -41,48 +56,49 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
   });
   const [loadingCurrent, setLoadingCurrent] = useState(true);
 
-  // --- Relocation Address State ---
   const [relocationAddress, setRelocationAddress] = useState({
     district: "",
     city: "",
     postalCode: "",
     address1: "",
     address2: "",
+    landmark: "",
   });
 
-  // --- Map & Pinpoint States ---
+  const [touched, setTouched] = useState({
+    district: false,
+    city: false,
+    postalCode: false,
+    address1: false,
+  });
+
+  const [proofFile, setProofFile] = useState(null);
+  const [proofError, setProofError] = useState("");
+  const [sketchFile, setSketchFile] = useState(null);
+  const [sketchError, setSketchError] = useState("");
+
   const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markerRef = useRef(null);
   const searchWrapperRef = useRef(null);
 
-  // --- Search Location States ---
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [noResultsFound, setNoResultsFound] = useState(false);
 
-  // --- Billing Address State ---
-  const [sameAsRelocation, setSameAsRelocation] = useState(true);
-  const [billingAddress, setBillingAddress] = useState({
-    address1: "",
-    address2: "",
-    city: "",
-    district: "",
-    postalCode: "",
-  });
-
   // Fetch Current Address
   useEffect(() => {
+    let isSubscribed = true;
     async function fetchCurrentAddress() {
       try {
         const response = await fetch("/api/customer/current-address");
         if (response.ok) {
           const data = await response.json();
-          setCurrentAddress(data);
-        } else {
+          if (isSubscribed) setCurrentAddress(data);
+        } else if (isSubscribed) {
           setCurrentAddress({
             address1: "45, Galle Road",
             address2: "",
@@ -92,21 +108,24 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
           });
         }
       } catch (err) {
-        setCurrentAddress({
-          address1: "45, Galle Road",
-          address2: "",
-          city: "Colombo 03",
-          district: "Colombo",
-          postalCode: "00300",
-        });
+        if (isSubscribed) {
+          setCurrentAddress({
+            address1: "45, Galle Road",
+            address2: "",
+            city: "Colombo 03",
+            district: "Colombo",
+            postalCode: "00300",
+          });
+        }
       } finally {
-        setLoadingCurrent(false);
+        if (isSubscribed) setLoadingCurrent(false);
       }
     }
     fetchCurrentAddress();
+    return () => { isSubscribed = false; };
   }, []);
 
-  // Dismiss search dropdown when clicking outside
+  // Handle outside click for search suggestions dropdown
   useEffect(() => {
     function handleClickOutside(event) {
       if (searchWrapperRef.current && !searchWrapperRef.current.contains(event.target)) {
@@ -117,7 +136,7 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Reverse Geocoding via Nominatim
+  // Reverse Geocoding via OpenStreetMap
   const reverseGeocode = useCallback(async (lat, lng) => {
     try {
       const response = await fetch(
@@ -142,7 +161,7 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
           ...prev,
           district: matchedDistrict || prev.district,
           city: detectedCity || prev.city,
-          postalCode: detectedPostcode || prev.postalCode,
+          postalCode: /^\d{5}$/.test(detectedPostcode) ? detectedPostcode : prev.postalCode,
           address1: prev.address1 || (detectedRoad ? `No ${detectedRoad}` : ""),
         }));
       }
@@ -151,16 +170,21 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
     }
   }, []);
 
-  // Update Pin Marker Position
-  const updateMarkerPosition = useCallback((lat, lng, doReverseGeocode = true) => {
+  // Marker and Viewport Update
+  const updateMarkerPosition = useCallback((lat, lng, doReverseGeocode = true, popupText = "") => {
     setCoordinates({ lat, lng });
 
     if (!mapRef.current) return;
+    mapRef.current.invalidateSize();
+
+    const displayAddress = popupText || "Selected Location";
 
     if (markerRef.current) {
       markerRef.current.setLatLng([lat, lng]);
+      markerRef.current.getPopup().setContent(`<b>Selected Relocation Point</b><br/>${displayAddress}`);
     } else {
       const marker = L.marker([lat, lng], { draggable: true }).addTo(mapRef.current);
+      marker.bindPopup(`<b>Selected Relocation Point</b><br/>${displayAddress}`);
 
       marker.on("dragend", (e) => {
         const newCoords = e.target.getLatLng();
@@ -171,18 +195,19 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
       markerRef.current = marker;
     }
 
-    mapRef.current.flyTo([lat, lng], 15, { animate: true, duration: 1.2 });
+    mapRef.current.setView([lat, lng], 13);
+    markerRef.current.openPopup();
 
     if (doReverseGeocode) {
       reverseGeocode(lat, lng);
     }
   }, [reverseGeocode]);
 
-  // Initialize Map
+  // Leaflet Map Initialization
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    const map = L.map(mapContainerRef.current).setView([7.8731, 80.7718], 8);
+    const map = L.map(mapContainerRef.current).setView([7.8731, 80.7718], 7);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -195,19 +220,30 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
       updateMarkerPosition(lat, lng, true);
     });
 
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 250);
+    const resizeTimer = setTimeout(() => {
+      if (mapRef.current) mapRef.current.invalidateSize();
+    }, 300);
 
     return () => {
+      clearTimeout(resizeTimer);
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+        markerRef.current = null;
       }
     };
   }, [updateMarkerPosition]);
 
-  // Search Location API Call
+  // Recalculate map dimensions on tab/active step transition
+  useEffect(() => {
+    if (isActive && mapRef.current) {
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 200);
+    }
+  }, [isActive]);
+
+  // Location Search Handling
   useEffect(() => {
     const query = searchQuery.trim();
 
@@ -250,7 +286,7 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
           setNoResultsFound(true);
         }
       } catch (err) {
-        console.error("Location search failed:", err);
+        console.error("Location search error:", err);
         setSuggestions([]);
         setNoResultsFound(true);
       } finally {
@@ -267,51 +303,140 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
 
     setSearchQuery(place.display_name);
     setShowDropdown(false);
-    updateMarkerPosition(lat, lng, true);
+    updateMarkerPosition(lat, lng, true, place.display_name);
   };
 
-  // Keep custom typed name as Address Line 1 if user typed a specific home/shop name
-  const handleQueryChange = (e) => {
-    const text = e.target.value;
-    setSearchQuery(text);
-    if (text) {
-      setRelocationAddress((prev) => ({ ...prev, address1: text }));
+  const executeDirectSearch = async (queryText) => {
+    if (!queryText.trim()) return;
+    setIsSearching(true);
+    setShowDropdown(false);
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          queryText + ", Sri Lanka"
+        )}&limit=1`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
+          updateMarkerPosition(lat, lng, true, data[0].display_name);
+          setNoResultsFound(false);
+        } else {
+          setNoResultsFound(true);
+        }
+      }
+    } catch (err) {
+      console.error("Direct search error:", err);
+    } finally {
+      setIsSearching(false);
     }
   };
 
-  // Form Validation
-  const isValid = Boolean(
-    relocationAddress.district &&
-    relocationAddress.city &&
-    relocationAddress.postalCode &&
-    relocationAddress.address1 &&
-    coordinates.lat !== null &&
-    coordinates.lng !== null
-  );
+  const handleKeyDownSearch = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (suggestions.length > 0) {
+        handleSelectSuggestion(suggestions[0]);
+      } else if (searchQuery.trim().length >= 2) {
+        executeDirectSearch(searchQuery);
+      }
+    } else if (e.key === "Escape") {
+      setShowDropdown(false);
+    }
+  };
 
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSuggestions([]);
+    setShowDropdown(false);
+    setNoResultsFound(false);
+  };
+
+  const validateAndSetFile = (file, setFile, setError, isRequired = false) => {
+    if (!file) {
+      if (isRequired) setError("Proof of address document is required.");
+      setFile(null);
+      return;
+    }
+
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      setError("Invalid file type. Supported formats: PDF, JPG, PNG, JPEG.");
+      setFile(null);
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setError(`File size exceeds ${MAX_FILE_SIZE_MB}MB maximum limit.`);
+      setFile(null);
+      return;
+    }
+
+    setError("");
+    setFile(file);
+  };
+
+  const handleBlur = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  // Validation Rules
+  const isDistrictValid = Boolean(relocationAddress.district && relocationAddress.district.trim() !== "");
+  const isCityValid = Boolean(relocationAddress.city && relocationAddress.city.trim() !== "");
+  const isPostalCodeValid = /^\d{5}$/.test((relocationAddress.postalCode || "").trim());
+  const isAddress1Valid = Boolean(relocationAddress.address1 && relocationAddress.address1.trim() !== "");
+  const isMapPinned = coordinates.lat !== null && coordinates.lng !== null;
+  const isProofUploaded = proofFile !== null && proofError === "";
+
+  const isFormValid =
+    isDistrictValid &&
+    isCityValid &&
+    isPostalCodeValid &&
+    isAddress1Valid &&
+    isMapPinned &&
+    isProofUploaded;
+
+  const shouldShowError = (field, isValid) => {
+    return (touched[field] || showValidationErrors) && !isValid;
+  };
+
+  // Sync Form State with Parent Component
   useEffect(() => {
-    if (onValidationChange) onValidationChange(isValid);
-    if (onDataChange) {
-      onDataChange({
+    if (onValidationChangeRef.current) {
+      onValidationChangeRef.current(isFormValid);
+    }
+
+    if (onDataChangeRef.current) {
+      onDataChangeRef.current({
         district: relocationAddress.district,
         city: relocationAddress.city,
         postalCode: relocationAddress.postalCode,
         address1: relocationAddress.address1,
         address2: relocationAddress.address2,
+        landmark: relocationAddress.landmark,
         latitude: coordinates.lat,
         longitude: coordinates.lng,
-        billingAddress: sameAsRelocation ? relocationAddress : billingAddress,
+        proofFile: proofFile,
+        sketchFile: sketchFile,
       });
     }
-  }, [relocationAddress, coordinates, sameAsRelocation, billingAddress, isValid, onValidationChange, onDataChange]);
+  }, [
+    relocationAddress,
+    coordinates,
+    proofFile,
+    sketchFile,
+    isFormValid,
+  ]);
 
   return (
     <div style={{ maxWidth: "850px", margin: "0 auto", fontFamily: "inherit" }}>
-      <h3 style={{ color: "var(--slt-blue, #0056a6)", marginBottom: "1.5rem" }}>
+      <h3 style={{ color: "#0056a6", marginBottom: "1.5rem" }}>
         {t("wizards.locationChange.address.heading", "Step 2 – Address & Relocation")}
       </h3>
 
-      {/* Current Address Card */}
+      {/* Current Address Read-Only Section */}
       <div
         className="card"
         style={{
@@ -338,263 +463,417 @@ export default function AddressStep({ isActive, onValidationChange, onDataChange
         )}
       </div>
 
-      {/* Relocation Address Form Card */}
-      <div
-        className="card"
-        style={{
-          padding: "1.5rem",
-          border: "1px solid #e0e0e0",
-          marginBottom: "1.5rem",
-          borderRadius: "8px",
-        }}
-      >
-        <h4 style={{ color: "#333", marginBottom: "1rem", fontSize: "1.1rem" }}>Relocation Address</h4>
+      <form onSubmit={(e) => e.preventDefault()}>
+        {/* Relocation Address Fields */}
+        <div
+          className="card"
+          style={{
+            padding: "1.5rem",
+            border: "1px solid #e0e0e0",
+            marginBottom: "1.5rem",
+            borderRadius: "8px",
+            backgroundColor: "#fff"
+          }}
+        >
+          <h4 style={{ color: "#333", marginBottom: "1rem", fontSize: "1.1rem" }}>Relocation Address</h4>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
-          <div>
-            <label style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              District <span style={{ color: "red" }}>*</span>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+            <div>
+              <label htmlFor="district-select" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+                District <span style={{ color: "red" }}>*</span>
+              </label>
+              <select
+                id="district-select"
+                value={relocationAddress.district}
+                onChange={(e) => setRelocationAddress({ ...relocationAddress, district: e.target.value, city: "" })}
+                onBlur={() => handleBlur("district")}
+                style={{
+                  width: "100%",
+                  padding: "0.55rem",
+                  borderRadius: "4px",
+                  border: shouldShowError("district", isDistrictValid) ? "1px solid #dc3545" : "1px solid #ccc",
+                  backgroundColor: shouldShowError("district", isDistrictValid) ? "#fff8f8" : "#fff"
+                }}
+              >
+                <option value="">Select District</option>
+                {SRI_LANKA_DISTRICTS.map((dist) => (
+                  <option key={dist} value={dist}>{dist}</option>
+                ))}
+              </select>
+              {shouldShowError("district", isDistrictValid) && (
+                <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
+                  District is required.
+                </span>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="city-input" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+                City / Town <span style={{ color: "red" }}>*</span>
+              </label>
+              {DISTRICT_CITIES[relocationAddress.district] ? (
+                <select
+                  id="city-input"
+                  value={relocationAddress.city}
+                  onChange={(e) => setRelocationAddress({ ...relocationAddress, city: e.target.value })}
+                  onBlur={() => handleBlur("city")}
+                  style={{
+                    width: "100%",
+                    padding: "0.55rem",
+                    borderRadius: "4px",
+                    border: shouldShowError("city", isCityValid) ? "1px solid #dc3545" : "1px solid #ccc",
+                    backgroundColor: shouldShowError("city", isCityValid) ? "#fff8f8" : "#fff"
+                  }}
+                >
+                  <option value="">Select City</option>
+                  {DISTRICT_CITIES[relocationAddress.district].map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  id="city-input"
+                  type="text"
+                  placeholder="Enter City"
+                  value={relocationAddress.city}
+                  onChange={(e) => setRelocationAddress({ ...relocationAddress, city: e.target.value })}
+                  onBlur={() => handleBlur("city")}
+                  style={{
+                    width: "100%",
+                    padding: "0.55rem",
+                    borderRadius: "4px",
+                    border: shouldShowError("city", isCityValid) ? "1px solid #dc3545" : "1px solid #ccc",
+                    backgroundColor: shouldShowError("city", isCityValid) ? "#fff8f8" : "#fff"
+                  }}
+                />
+              )}
+              {shouldShowError("city", isCityValid) && (
+                <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
+                  City / Town is required.
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label htmlFor="postal-code" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+              Postal Code (5 digits) <span style={{ color: "red" }}>*</span>
             </label>
-            <select
-              value={relocationAddress.district}
-              onChange={(e) => setRelocationAddress({ ...relocationAddress, district: e.target.value, city: "" })}
-              required={isActive}
-              style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
-            >
-              <option value="">Select District</option>
-              {SRI_LANKA_DISTRICTS.map((dist) => (
-                <option key={dist} value={dist}>{dist}</option>
-              ))}
-            </select>
+            <input
+              id="postal-code"
+              type="text"
+              placeholder="e.g. 10280"
+              maxLength={5}
+              value={relocationAddress.postalCode}
+              onChange={(e) => setRelocationAddress({ ...relocationAddress, postalCode: e.target.value.replace(/\D/g, "") })}
+              onBlur={() => handleBlur("postalCode")}
+              style={{
+                width: "100%",
+                padding: "0.55rem",
+                borderRadius: "4px",
+                border: shouldShowError("postalCode", isPostalCodeValid) ? "1px solid #dc3545" : "1px solid #ccc",
+                backgroundColor: shouldShowError("postalCode", isPostalCodeValid) ? "#fff8f8" : "#fff"
+              }}
+            />
+            {shouldShowError("postalCode", isPostalCodeValid) && (
+              <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
+                {!relocationAddress.postalCode ? "Postal Code is required." : "Postal Code must be exactly 5 numeric digits."}
+              </span>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label htmlFor="address-1" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+              Address Line 1 / Building / Shop Name <span style={{ color: "red" }}>*</span>
+            </label>
+            <input
+              id="address-1"
+              type="text"
+              placeholder="No 25, Temple Road or Jeevanantham Stores"
+              value={relocationAddress.address1}
+              onChange={(e) => setRelocationAddress({ ...relocationAddress, address1: e.target.value })}
+              onBlur={() => handleBlur("address1")}
+              style={{
+                width: "100%",
+                padding: "0.55rem",
+                borderRadius: "4px",
+                border: shouldShowError("address1", isAddress1Valid) ? "1px solid #dc3545" : "1px solid #ccc",
+                backgroundColor: shouldShowError("address1", isAddress1Valid) ? "#fff8f8" : "#fff"
+              }}
+            />
+            {shouldShowError("address1", isAddress1Valid) && (
+              <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
+                Address Line 1 is required.
+              </span>
+            )}
           </div>
 
           <div>
-            <label style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              City / Town <span style={{ color: "red" }}>*</span>
+            <label htmlFor="address-2" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+              Address Line 2 (Optional)
             </label>
-            {DISTRICT_CITIES[relocationAddress.district] ? (
-              <select
-                value={relocationAddress.city}
-                onChange={(e) => setRelocationAddress({ ...relocationAddress, city: e.target.value })}
-                required={isActive}
-                style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
+            <input
+              id="address-2"
+              type="text"
+              placeholder="2nd Floor, Apartment A"
+              value={relocationAddress.address2}
+              onChange={(e) => setRelocationAddress({ ...relocationAddress, address2: e.target.value })}
+              style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
+            />
+          </div>
+        </div>
+
+        {/* Location Search Bar */}
+        <div
+          className="card"
+          ref={searchWrapperRef}
+          style={{
+            padding: "1.5rem",
+            border: "1px solid #e0e0e0",
+            marginBottom: "1.5rem",
+            borderRadius: "8px",
+            position: "relative",
+            zIndex: 1000,
+            backgroundColor: "#fff",
+            overflow: "visible",
+          }}
+        >
+          <h4 style={{ color: "#333", marginBottom: "0.75rem", fontSize: "1.1rem" }}>
+            Search Relocation Location
+          </h4>
+
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              placeholder="Search city/area (e.g., Trincomalee) - Press Enter to search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDownSearch}
+              onFocus={() => {
+                if (suggestions.length > 0) setShowDropdown(true);
+              }}
+              style={{
+                width: "100%",
+                padding: "0.65rem 2.2rem 0.65rem 0.65rem",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                outline: "none",
+                boxSizing: "border-box"
+              }}
+            />
+
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={clearSearch}
+                style={{
+                  position: "absolute",
+                  right: isSearching ? "85px" : "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  color: "#888",
+                  fontSize: "1.1rem",
+                  cursor: "pointer",
+                  padding: "2px 6px"
+                }}
+                title="Clear Search"
               >
-                <option value="">Select City</option>
-                {DISTRICT_CITIES[relocationAddress.district].map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                ✕
+              </button>
+            )}
+
+            {isSearching && (
+              <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem", color: "#666" }}>
+                Searching...
+              </span>
+            )}
+
+            {/* Suggestions Dropdown */}
+            {showDropdown && suggestions.length > 0 && (
+              <ul
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "0 0 6px 6px",
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.18)",
+                  listStyle: "none",
+                  margin: "4px 0 0 0",
+                  padding: 0,
+                  zIndex: 99999,
+                  maxHeight: "220px",
+                  overflowY: "auto",
+                }}
+              >
+                {suggestions.map((item, idx) => (
+                  <li
+                    key={idx}
+                    onClick={() => handleSelectSuggestion(item)}
+                    style={{
+                      padding: "0.7rem 1rem",
+                      borderBottom: idx < suggestions.length - 1 ? "1px solid #f1f5f9" : "none",
+                      cursor: "pointer",
+                      fontSize: "0.88rem",
+                      color: "#1e293b",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "8px",
+                      backgroundColor: "#ffffff",
+                      transition: "background-color 0.15s ease"
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
+                  >
+                    <span style={{ color: "#0056a6" }}>📍</span>
+                    <span>{item.display_name}</span>
+                  </li>
                 ))}
-              </select>
-            ) : (
-              <input
-                type="text"
-                placeholder="Enter City"
-                value={relocationAddress.city}
-                onChange={(e) => setRelocationAddress({ ...relocationAddress, city: e.target.value })}
-                required={isActive}
-                style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
-              />
+              </ul>
+            )}
+
+            {noResultsFound && !isSearching && searchQuery.length >= 2 && (
+              <div
+                style={{
+                  marginTop: "0.5rem",
+                  padding: "0.6rem 0.8rem",
+                  backgroundColor: "#fffbe6",
+                  border: "1px solid #ffe58f",
+                  borderRadius: "4px",
+                  fontSize: "0.83rem",
+                  color: "#856404",
+                }}
+              >
+                💡 Area name not found in map search? Try entering the district/city name directly or click on the map below to drop the pin.
+              </div>
             )}
           </div>
         </div>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-            Postal Code <span style={{ color: "red" }}>*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. 10280"
-            value={relocationAddress.postalCode}
-            onChange={(e) => setRelocationAddress({ ...relocationAddress, postalCode: e.target.value })}
-            required={isActive}
-            style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
+        {/* Map Container */}
+        <div
+          className="card"
+          style={{
+            padding: "1rem",
+            border: shouldShowError("map", isMapPinned) ? "1px solid #dc3545" : "1px solid #e0e0e0",
+            backgroundColor: shouldShowError("map", isMapPinned) ? "#fff8f8" : "#fff",
+            marginBottom: "1.5rem",
+            borderRadius: "8px",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
+          <h4 style={{ color: "#333", marginBottom: "0.5rem", fontSize: "1.1rem" }}>
+            Interactive Map Pinpoint <span style={{ color: "red" }}>*</span>
+          </h4>
+          <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.75rem" }}>
+            Click anywhere on the map or drag the pin to set the exact installation point.
+          </p>
+          <div
+            ref={mapContainerRef}
+            style={{ height: "350px", width: "100%", borderRadius: "6px", border: "1px solid #ccc", zIndex: 1 }}
           />
-        </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-            Address Line 1 / Building / Shop Name <span style={{ color: "red" }}>*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="No 25, Temple Road or Jeevanantham Stores"
-            value={relocationAddress.address1}
-            onChange={(e) => setRelocationAddress({ ...relocationAddress, address1: e.target.value })}
-            required={isActive}
-            style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
-          />
-        </div>
-
-        <div>
-          <label style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>Address Line 2 (Optional)</label>
-          <input
-            type="text"
-            placeholder="2nd Floor, Apartment A"
-            value={relocationAddress.address2}
-            onChange={(e) => setRelocationAddress({ ...relocationAddress, address2: e.target.value })}
-            style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
-          />
-        </div>
-      </div>
-
-      {/* SECTION 3: Search Location Card */}
-      <div
-        className="card"
-        ref={searchWrapperRef}
-        style={{
-          padding: "1.5rem",
-          border: "1px solid #e0e0e0",
-          marginBottom: "1.5rem",
-          borderRadius: "8px",
-          position: "relative",
-          zIndex: 1000,
-          overflow: "visible",
-        }}
-      >
-        <h4 style={{ color: "#333", marginBottom: "0.75rem", fontSize: "1.1rem" }}>
-          Search Relocation Location
-        </h4>
-
-        <div style={{ position: "relative" }}>
-          <input
-            type="text"
-            placeholder="Search city/area (e.g., Trincomalee) or type house/shop name..."
-            value={searchQuery}
-            onChange={handleQueryChange}
-            onFocus={() => {
-              if (suggestions.length > 0) setShowDropdown(true);
-            }}
-            style={{
-              width: "100%",
-              padding: "0.65rem",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              outline: "none",
-              boxSizing: "border-box"
-            }}
-          />
-
-          {isSearching && (
-            <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem", color: "#666" }}>
-              Searching...
+          {shouldShowError("map", isMapPinned) && (
+            <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "6px", display: "block", fontWeight: "500" }}>
+              Please click or drop a pin on the map to set the exact installation location.
             </span>
           )}
-
-          {/* Autocomplete Suggestions Dropdown */}
-          {showDropdown && suggestions.length > 0 && (
-            <ul
-              style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                right: 0,
-                backgroundColor: "#ffffff",
-                border: "1px solid #cbd5e1",
-                borderRadius: "0 0 6px 6px",
-                boxShadow: "0 8px 20px rgba(0,0,0,0.18)",
-                listStyle: "none",
-                margin: "4px 0 0 0",
-                padding: 0,
-                zIndex: 99999,
-                maxHeight: "220px",
-                overflowY: "auto",
-              }}
-            >
-              {suggestions.map((item, idx) => (
-                <li
-                  key={idx}
-                  onClick={() => handleSelectSuggestion(item)}
-                  style={{
-                    padding: "0.7rem 1rem",
-                    borderBottom: idx < suggestions.length - 1 ? "1px solid #f1f5f9" : "none",
-                    cursor: "pointer",
-                    fontSize: "0.88rem",
-                    color: "#1e293b",
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: "8px",
-                    backgroundColor: "#ffffff",
-                    transition: "background-color 0.15s ease"
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
-                >
-                  <span style={{ color: "#0056a6" }}>📍</span>
-                  <span>{item.display_name}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* Friendly No-Results Message for House/Shop Names */}
-          {noResultsFound && !isSearching && searchQuery.length >= 2 && (
-            <div
-              style={{
-                marginTop: "0.5rem",
-                padding: "0.6rem 0.8rem",
-                backgroundColor: "#fffbe6",
-                border: "1px solid #ffe58f",
-                borderRadius: "4px",
-                fontSize: "0.83rem",
-                color: "#856404",
-              }}
-            >
-              💡 Private home or shop name not found in map search? Search your main area name (e.g., <strong>Trincomalee</strong> or <strong>Kadaiparichchan</strong>), then click directly on the interactive map below to pinpoint your exact spot.
-            </div>
-          )}
         </div>
-      </div>
 
-      {/* SECTION 4: Interactive Map Pinpoint */}
-      <div
-        className="card"
-        style={{
-          padding: "1rem",
-          border: "1px solid #e0e0e0",
-          marginBottom: "1.5rem",
-          borderRadius: "8px",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        <h4 style={{ color: "#333", marginBottom: "0.5rem", fontSize: "1.1rem" }}>
-          Interactive Map Pinpoint
-        </h4>
-        <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.75rem" }}>
-          Click anywhere on the map or drag the pin to set the exact installation point.
-        </p>
+        {/* Document Upload Section */}
         <div
-          ref={mapContainerRef}
-          style={{ height: "350px", width: "100%", borderRadius: "6px", border: "1px solid #ccc", zIndex: 1 }}
-        />
-      </div>
+          className="card"
+          style={{
+            padding: "1.5rem",
+            border: shouldShowError("proof", isProofUploaded) ? "1px solid #dc3545" : "1px solid #e0e0e0",
+            backgroundColor: shouldShowError("proof", isProofUploaded) ? "#fff8f8" : "#fff",
+            marginBottom: "1.5rem",
+            borderRadius: "8px",
+          }}
+        >
+          <h4 style={{ color: "#333", marginBottom: "1rem", fontSize: "1.1rem" }}>Additional Installation Details</h4>
 
-      {/* Summary Box */}
-      <div
-        className="card"
-        style={{
-          padding: "1.25rem",
-          backgroundColor: "#f4f8fb",
-          border: "1px solid #bce0fd",
-          borderRadius: "8px",
-        }}
-      >
-        <h5 style={{ margin: "0 0 0.5rem 0", color: "#0056a6" }}>Selected Relocation Summary</h5>
-        <div style={{ fontSize: "0.9rem", color: "#333", lineHeight: "1.5" }}>
-          <p style={{ margin: 0 }}>
-            <strong>Address:</strong>{" "}
-            {[relocationAddress.address1, relocationAddress.city, relocationAddress.district, relocationAddress.postalCode]
-              .filter(Boolean)
-              .join(", ") || "Not selected yet"}
-          </p>
-          <p style={{ margin: "0.25rem 0 0 0" }}>
-            <strong>Latitude:</strong> {coordinates.lat !== null ? coordinates.lat.toFixed(6) : "Not pinned"}
-          </p>
-          <p style={{ margin: "0.25rem 0 0 0" }}>
-            <strong>Longitude:</strong> {coordinates.lng !== null ? coordinates.lng.toFixed(6) : "Not pinned"}
-          </p>
+          <div style={{ marginBottom: "1.25rem" }}>
+            <label htmlFor="landmark" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+              Nearest Landmark
+            </label>
+            <input
+              id="landmark"
+              type="text"
+              placeholder="e.g. Near Clock Tower / Opposite People's Bank"
+              value={relocationAddress.landmark}
+              onChange={(e) => setRelocationAddress({ ...relocationAddress, landmark: e.target.value })}
+              style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "1.25rem" }}>
+            <label htmlFor="proof-file" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+              Proof of New Address <span style={{ color: "red" }}>*</span>
+            </label>
+            <input
+              id="proof-file"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => validateAndSetFile(e.target.files[0], setProofFile, setProofError, true)}
+              style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
+            />
+            <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
+            
+            {shouldShowError("proof", isProofUploaded) && !proofError && (
+              <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px", fontWeight: "500" }}>
+                Proof of address document is required.
+              </div>
+            )}
+            
+            {proofError && <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>{proofError}</div>}
+            
+            {proofFile && (
+              <div style={{ color: "#0056a6", fontSize: "0.85rem", marginTop: "6px", fontWeight: "500", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>✓ Uploaded: {proofFile.name} ({(proofFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
+                <button
+                  type="button"
+                  onClick={() => { setProofFile(null); setProofError(""); }}
+                  style={{ background: "none", border: "none", color: "#dc3545", cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline" }}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="sketch-file" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+              Route Sketch <span style={{ fontSize: "0.85rem", color: "#666", fontWeight: "normal" }}>(Optional)</span>
+            </label>
+            <input
+              id="sketch-file"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => validateAndSetFile(e.target.files[0], setSketchFile, setSketchError, false)}
+              style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
+            />
+            <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
+            {sketchError && <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>{sketchError}</div>}
+            {sketchFile && (
+              <div style={{ color: "#0056a6", fontSize: "0.85rem", marginTop: "6px", fontWeight: "500", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>✓ Uploaded: {sketchFile.name} ({(sketchFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
+                <button
+                  type="button"
+                  onClick={() => { setSketchFile(null); setSketchError(""); }}
+                  style={{ background: "none", border: "none", color: "#dc3545", cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline" }}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
