@@ -58,6 +58,7 @@ export default function ReconnectionWizard() {
     // Extract digital signature base64 and delete from JSON formData to save space
     const signatureBase64 = formData.digitalSignatureBase64;
     delete formData.digitalSignatureBase64;
+    delete formData.signatureUpload;
 
     // We stringify the non-file fields to send them as a single field
     submitData.append('formData', JSON.stringify(formData));
