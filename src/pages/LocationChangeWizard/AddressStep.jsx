@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import api from "../../utils/api";
 
 // Fix default Leaflet marker icon paths in React environments
 delete L.Icon.Default.prototype._getIconUrl;
@@ -31,11 +32,12 @@ const DISTRICT_CITIES = {
 const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
 const MAX_FILE_SIZE_MB = 5;
 
-export default function AddressStep({ 
-  isActive = true, 
-  onValidationChange, 
-  onDataChange, 
-  showValidationErrors = false 
+export default function AddressStep({
+  isActive = true,
+  formData,
+  onValidationChange,
+  onDataChange,
+  showValidationErrors = false
 }) {
   const { t } = useTranslation();
 
@@ -79,6 +81,10 @@ export default function AddressStep({
   const [proofError, setProofError] = useState("");
   const [sketchFile, setSketchFile] = useState(null);
   const [sketchError, setSketchError] = useState("");
+  const [authorizationLetterFile, setAuthorizationLetterFile] = useState(null);
+  const [authorizationLetterError, setAuthorizationLetterError] = useState("");
+  const [brcFile, setBrcFile] = useState(null);
+  const [brcError, setBrcError] = useState("");
 
   const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
   const mapRef = useRef(null);
@@ -92,41 +98,82 @@ export default function AddressStep({
   const [showDropdown, setShowDropdown] = useState(false);
   const [noResultsFound, setNoResultsFound] = useState(false);
 
-  // Fetch Current Address
+  // Fetch Current Address from backend API using verified telephone number
   useEffect(() => {
     let isSubscribed = true;
+
     async function fetchCurrentAddress() {
+      const telephone = formData?.telephone || formData?.tel;
+
+      if (!telephone) {
+        if (isSubscribed) {
+          setCurrentAddress({
+            address1: "No customer telephone provided",
+            address2: "",
+            city: "",
+            district: "",
+            postalCode: "",
+          });
+          setLoadingCurrent(false);
+        }
+        return;
+      }
+
       try {
-        const response = await fetch("/api/customer/current-address");
-        if (response.ok) {
-          const data = await response.json();
-          if (isSubscribed) setCurrentAddress(data);
+        setLoadingCurrent(true);
+        const response = await api.get(`/customers/${telephone}`);
+        if (response.data && response.data.success && response.data.data) {
+          const cust = response.data.data;
+          const addr = cust.currentAddress || {
+            address1: cust.address1 || "",
+            address2: cust.address2 || "",
+            city: cust.city || "",
+            district: cust.district || "",
+            postalCode: cust.postal_code || cust.postalCode || "",
+          };
+
+          if (isSubscribed) {
+            setCurrentAddress({
+              address1: addr.address1 || addr.addressLine1 || "",
+              address2: addr.address2 || addr.addressLine2 || "",
+              city: addr.city || "",
+              district: addr.district || "",
+              postalCode: addr.postalCode || addr.postal_code || "",
+            });
+          }
         } else if (isSubscribed) {
           setCurrentAddress({
-            address1: "45, Galle Road",
+            address1: "Address details not found",
             address2: "",
-            city: "Colombo 03",
-            district: "Colombo",
-            postalCode: "00300",
+            city: "",
+            district: "",
+            postalCode: "",
           });
         }
       } catch (err) {
+        console.error("Failed to load customer current address:", err);
         if (isSubscribed) {
           setCurrentAddress({
-            address1: "45, Galle Road",
+            address1: "Address details unavailable",
             address2: "",
-            city: "Colombo 03",
-            district: "Colombo",
-            postalCode: "00300",
+            city: "",
+            district: "",
+            postalCode: "",
           });
         }
       } finally {
-        if (isSubscribed) setLoadingCurrent(false);
+        if (isSubscribed) {
+          setLoadingCurrent(false);
+        }
       }
     }
+
     fetchCurrentAddress();
-    return () => { isSubscribed = false; };
-  }, []);
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [formData?.telephone, formData?.tel]);
 
   // Handle outside click for search suggestions dropdown
   useEffect(() => {
@@ -392,7 +439,7 @@ export default function AddressStep({
   const isAddress1Valid = Boolean(relocationAddress.address1 && relocationAddress.address1.trim() !== "");
   const isAddress2Valid = Boolean(relocationAddress.address2 && relocationAddress.address2.trim() !== "");
   const isLandmarkValid = Boolean(relocationAddress.landmark && relocationAddress.landmark.trim() !== "");
-  
+
   const isMapPinned = coordinates.lat !== null && coordinates.lng !== null;
   const isProofUploaded = proofFile !== null && proofError === "";
   const isSketchUploaded = sketchFile !== null && sketchError === "";
@@ -419,7 +466,32 @@ export default function AddressStep({
     }
 
     if (onDataChangeRef.current) {
+      // Build a human-readable current address string for the summary
+      const currentAddressParts = [
+        currentAddress.address1,
+        currentAddress.address2,
+        currentAddress.city,
+        currentAddress.district,
+        currentAddress.postalCode,
+      ].filter(Boolean);
+      const currentAddressStr = currentAddressParts.length > 0
+        ? currentAddressParts.join(', ')
+        : '';
+
+      // Build a human-readable new/relocation address string for the summary
+      const newAddressParts = [
+        relocationAddress.address1,
+        relocationAddress.address2,
+        relocationAddress.city,
+        relocationAddress.district,
+        relocationAddress.postalCode,
+      ].filter(Boolean);
+      const newAddressStr = newAddressParts.length > 0
+        ? newAddressParts.join(', ')
+        : '';
+
       onDataChangeRef.current({
+        // Relocation address individual fields
         district: relocationAddress.district,
         city: relocationAddress.city,
         postalCode: relocationAddress.postalCode,
@@ -428,7 +500,13 @@ export default function AddressStep({
         landmark: relocationAddress.landmark,
         latitude: coordinates.lat,
         longitude: coordinates.lng,
-        proofFile: proofFile,
+        // Formatted address strings for the Agreement summary
+        currentAddress: currentAddressStr,
+        newAddress: newAddressStr,
+        // Files with the keys AgreementStep expects
+        proofOfAddress: proofFile || null,
+        authorizationLetter: authorizationLetterFile || null,
+        brc: brcFile || null,
         sketchFile: sketchFile,
       });
     }
@@ -437,6 +515,9 @@ export default function AddressStep({
     coordinates,
     proofFile,
     sketchFile,
+    authorizationLetterFile,
+    brcFile,
+    currentAddress,
     isFormValid,
   ]);
 
@@ -629,10 +710,10 @@ export default function AddressStep({
               value={relocationAddress.address2}
               onChange={(e) => setRelocationAddress({ ...relocationAddress, address2: e.target.value })}
               onBlur={() => handleBlur("address2")}
-              style={{ 
-                width: "100%", 
-                padding: "0.55rem", 
-                borderRadius: "4px", 
+              style={{
+                width: "100%",
+                padding: "0.55rem",
+                borderRadius: "4px",
                 border: shouldShowError("address2", isAddress2Valid) ? "1px solid #dc3545" : "1px solid #ccc",
                 backgroundColor: shouldShowError("address2", isAddress2Valid) ? "#fff8f8" : "#fff"
               }}
@@ -830,10 +911,10 @@ export default function AddressStep({
               value={relocationAddress.landmark}
               onChange={(e) => setRelocationAddress({ ...relocationAddress, landmark: e.target.value })}
               onBlur={() => handleBlur("landmark")}
-              style={{ 
-                width: "100%", 
-                padding: "0.55rem", 
-                borderRadius: "4px", 
+              style={{
+                width: "100%",
+                padding: "0.55rem",
+                borderRadius: "4px",
                 border: shouldShowError("landmark", isLandmarkValid) ? "1px solid #dc3545" : "1px solid #ccc",
                 backgroundColor: shouldShowError("landmark", isLandmarkValid) ? "#fff8f8" : "#fff"
               }}
@@ -857,15 +938,15 @@ export default function AddressStep({
               style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
             />
             <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
-            
+
             {shouldShowError("proof", isProofUploaded) && !proofError && (
               <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px", fontWeight: "500" }}>
                 Proof of address document is required.
               </div>
             )}
-            
+
             {proofError && <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>{proofError}</div>}
-            
+
             {proofFile && (
               <div style={{ color: "#0056a6", fontSize: "0.85rem", marginTop: "6px", fontWeight: "500", display: "flex", alignItems: "center", gap: "8px" }}>
                 <span>✓ Uploaded: {proofFile.name} ({(proofFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
@@ -880,7 +961,7 @@ export default function AddressStep({
             )}
           </div>
 
-          <div>
+          <div style={{ marginBottom: "1.25rem" }}>
             <label htmlFor="sketch-file" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
               Route Sketch <span style={{ color: "red" }}>*</span>
             </label>
@@ -914,6 +995,36 @@ export default function AddressStep({
               </div>
             )}
           </div>
+
+          {/* Authorization Letter (Optional) */}
+          <div style={{ marginBottom: "1.25rem" }}>
+            <label htmlFor="auth-letter-file" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
+              Authorization Letter <span style={{ color: "#888", fontWeight: "400", fontSize: "0.85rem" }}>(Optional)</span>
+            </label>
+            <input
+              id="auth-letter-file"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => validateAndSetFile(e.target.files[0], setAuthorizationLetterFile, setAuthorizationLetterError, "Authorization letter")}
+              style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
+            />
+            <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
+            {authorizationLetterError && <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>{authorizationLetterError}</div>}
+            {authorizationLetterFile && (
+              <div style={{ color: "#0056a6", fontSize: "0.85rem", marginTop: "6px", fontWeight: "500", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>✓ Uploaded: {authorizationLetterFile.name} ({(authorizationLetterFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
+                <button
+                  type="button"
+                  onClick={() => { setAuthorizationLetterFile(null); setAuthorizationLetterError(""); }}
+                  style={{ background: "none", border: "none", color: "#dc3545", cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline" }}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
+
+
         </div>
       </form>
     </div>

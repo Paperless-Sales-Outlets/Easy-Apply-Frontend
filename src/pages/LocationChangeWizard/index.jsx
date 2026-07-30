@@ -33,11 +33,16 @@ export default function LocationChangeWizard() {
   };
 
   const nextStep = () => {
-    // Collect form fields from current step DOM before advancing
+    // Collect serializable form fields from current step DOM before advancing.
+    // Non-serializable values (files, formatted address strings) are already
+    // stored in formData via onDataChange callbacks, so we only add DOM entries
+    // that are not already present in formData.
     if (formRef.current) {
       const raw = new FormData(formRef.current);
-      const currentData = Object.fromEntries(raw.entries());
-      updateFormData(currentData);
+      const domData = Object.fromEntries(raw.entries());
+      // Merge: React-state values take priority over DOM values for keys that
+      // are already set (e.g. currentAddress, newAddress, proofOfAddress)
+      setFormData(prev => ({ ...domData, ...prev }));
     }
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);

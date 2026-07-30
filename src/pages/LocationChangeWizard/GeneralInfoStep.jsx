@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import api from '../../utils/api';
 
-export default function GeneralInfoStep({ isActive }) {
+export default function GeneralInfoStep({ isActive, formData, onChange }) {
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(false);
   const [verificationState, setVerificationState] = useState('idle'); // 'idle' | 'verifying' | 'verified' | 'failed'
 
   const [customer, setCustomer] = useState({
-    telephone: '',
-    legalOwner: '',
-    serviceType: '',
-    contactPerson: '',
-    tel: '',
-    mobile: '',
-    email: '',
+    telephone: formData?.telephone || '',
+    legalOwner: formData?.legalOwner || '',
+    serviceType: formData?.serviceType || '',
+    contactPerson: formData?.contactPerson || '',
+    tel: formData?.tel || formData?.telephone || '',
+    mobile: formData?.mobile || '',
+    email: formData?.email || '',
   });
 
   const [errors, setErrors] = useState({});
@@ -77,28 +78,48 @@ export default function GeneralInfoStep({ isActive }) {
     setLoading(true);
     setVerificationState('verifying');
 
-    // Temporary mock API
-    setTimeout(() => {
-      // Set success or fail mock condition
-      const isSuccess = true;
+    try {
+      const response = await api.get(`/customers/${customer.telephone}`);
 
-      if (isSuccess) {
-        setCustomer({
-          telephone: customer.telephone,
-          legalOwner: 'Nimal Perera',
-          serviceType: 'FTTH',
-          contactPerson: 'Nimal Perera',
-          tel: customer.telephone,
-          mobile: '0771234567',
-          email: 'nimal@gmail.com',
-        });
+      if (response.data && response.data.success && response.data.data) {
+        const customerData = response.data.data;
+        const updatedCustomer = {
+          telephone: customerData.telephone || customer.telephone,
+          legalOwner: customerData.legalOwner || '',
+          serviceType: customerData.serviceType || '',
+          contactPerson: customerData.contactPerson || '',
+          tel: customerData.telephone || customer.telephone,
+          mobile: customerData.mobile || '',
+          email: customerData.email || '',
+        };
 
+        setCustomer(updatedCustomer);
         setVerificationState('verified');
+
+        if (typeof onChange === 'function') {
+          onChange(updatedCustomer);
+        }
       } else {
         setVerificationState('failed');
+        setErrors((prev) => ({
+          ...prev,
+          telephone: 'Customer details not found.',
+        }));
       }
+    } catch (err) {
+      setVerificationState('failed');
+      const apiErrorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.msg ||
+        'Customer not found or network error.';
+
+      setErrors((prev) => ({
+        ...prev,
+        telephone: apiErrorMessage,
+      }));
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   const renderStatusBadge = () => {
@@ -315,4 +336,4 @@ export default function GeneralInfoStep({ isActive }) {
       </div>
     </div>
   );
-}
+}
