@@ -43,13 +43,17 @@ export default function GeneralInfoStep({ isActive }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setCustomer((prev) => ({
-      ...prev,
+    const nextCustomer = {
+      ...customer,
       [name]: value,
-    }));
+    };
 
+    setCustomer(nextCustomer);
     handleFieldValidation(name, value);
+
+    if (typeof onChange === 'function') {
+      onChange(nextCustomer);
+    }
   };
 
   const handleVerify = async () => {

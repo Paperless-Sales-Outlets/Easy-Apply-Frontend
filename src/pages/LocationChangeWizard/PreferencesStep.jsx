@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function PreferencesStep({ 
   isActive, 
   selectedServiceType = 'FTTH', // Accepts 'FTTH', 'Megaline', 'LTE', etc.
-  customerType = 'business'     // Accepts 'individual' or 'business'
+  customerType = 'business',    // Accepts 'individual' or 'business'
+  onValidationChange,
+  onDataChange,
+  showValidationErrors = false,
 }) {
   const { t } = useTranslation();
 
@@ -65,6 +68,32 @@ export default function PreferencesStep({
   };
 
   const isFTTHOrMegaline = ['FTTH', 'Megaline'].includes(selectedServiceType);
+  const isAuthLetterValid = isRepresentative !== 'yes' || Boolean(authLetter);
+  const isBrcValid = customerType !== 'business' || Boolean(brcFile);
+  const isSltNumbersValid = !isFTTHOrMegaline || (validatePhoneNumber(sltNumber1) && validatePhoneNumber(sltNumber2));
+  const isRelocationDateValid = Boolean(relocationDate);
+  const isDisconnectDateValid = Boolean(disconnectDate);
+
+  const isStepValid = isRelocationDateValid && isDisconnectDateValid && isSltNumbersValid && isAuthLetterValid && isBrcValid;
+
+  useEffect(() => {
+    if (onValidationChange) {
+      onValidationChange(isStepValid);
+    }
+  }, [isStepValid, onValidationChange]);
+
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange({
+        relocationDate,
+        sltNumber1,
+        sltNumber2,
+        isRepresentative,
+        authLetter,
+        brcFile,
+      });
+    }
+  }, [onDataChange, relocationDate, sltNumber1, sltNumber2, isRepresentative, authLetter, brcFile]);
 
   return (
     <div className="preferences-step-container">
@@ -93,14 +122,21 @@ export default function PreferencesStep({
 
         <div className="form-group">
           <label className="form-label" style={{ fontWeight: '600' }}>
-            {t('wizards.locationChange.preferences.disconnectDate', 'Disconnect Date')}
+            {t('wizards.locationChange.preferences.disconnectDate', 'Disconnect Date')}{' '}
+            <span style={{ color: 'red' }}>*</span>
           </label>
           <input
             type="date"
             className="form-control"
             value={disconnectDate}
             onChange={(e) => setDisconnectDate(e.target.value)}
+            required={isActive}
           />
+          {showValidationErrors && !disconnectDate && (
+            <span style={{ color: 'red', fontSize: '0.85rem', display: 'block', marginTop: '0.5rem' }}>
+              Disconnect date is required.
+            </span>
+          )}
         </div>
       </div>
 
@@ -343,13 +379,20 @@ export default function PreferencesStep({
           </label>
           <input
             type="file"
+            name="brcFile"
             accept=".pdf,.png,.jpg,.jpeg"
             className="form-control"
             onChange={(e) => setBrcFile(e.target.files[0])}
+            required={isActive && customerType === 'business'}
           />
           <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.3rem' }}>
             Upload a valid Business Registration Certificate (.pdf, .jpg, .png).
           </small>
+          {showValidationErrors && customerType === 'business' && !brcFile && (
+            <span style={{ color: 'red', fontSize: '0.85rem', display: 'block', marginTop: '0.5rem' }}>
+              Business Registration Certificate is required.
+            </span>
+          )}
         </div>
       )}
     </div>

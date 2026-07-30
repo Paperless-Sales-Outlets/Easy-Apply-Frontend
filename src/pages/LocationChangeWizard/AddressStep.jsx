@@ -65,11 +65,14 @@ export default function AddressStep({
     landmark: "",
   });
 
+  // Updated: Track touched state for all fields
   const [touched, setTouched] = useState({
     district: false,
     city: false,
     postalCode: false,
     address1: false,
+    address2: false,
+    landmark: false,
   });
 
   const [proofFile, setProofFile] = useState(null);
@@ -355,9 +358,9 @@ export default function AddressStep({
     setNoResultsFound(false);
   };
 
-  const validateAndSetFile = (file, setFile, setError, isRequired = false) => {
+  const validateAndSetFile = (file, setFile, setError, fieldName) => {
     if (!file) {
-      if (isRequired) setError("Proof of address document is required.");
+      setError(`${fieldName} is required.`);
       setFile(null);
       return;
     }
@@ -382,21 +385,28 @@ export default function AddressStep({
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
-  // Validation Rules
+  // Validation Rules (All fields are now mandatory)
   const isDistrictValid = Boolean(relocationAddress.district && relocationAddress.district.trim() !== "");
   const isCityValid = Boolean(relocationAddress.city && relocationAddress.city.trim() !== "");
   const isPostalCodeValid = /^\d{5}$/.test((relocationAddress.postalCode || "").trim());
   const isAddress1Valid = Boolean(relocationAddress.address1 && relocationAddress.address1.trim() !== "");
+  const isAddress2Valid = Boolean(relocationAddress.address2 && relocationAddress.address2.trim() !== "");
+  const isLandmarkValid = Boolean(relocationAddress.landmark && relocationAddress.landmark.trim() !== "");
+  
   const isMapPinned = coordinates.lat !== null && coordinates.lng !== null;
   const isProofUploaded = proofFile !== null && proofError === "";
+  const isSketchUploaded = sketchFile !== null && sketchError === "";
 
   const isFormValid =
     isDistrictValid &&
     isCityValid &&
     isPostalCodeValid &&
     isAddress1Valid &&
+    isAddress2Valid &&
+    isLandmarkValid &&
     isMapPinned &&
-    isProofUploaded;
+    isProofUploaded &&
+    isSketchUploaded;
 
   const shouldShowError = (field, isValid) => {
     return (touched[field] || showValidationErrors) && !isValid;
@@ -610,7 +620,7 @@ export default function AddressStep({
 
           <div>
             <label htmlFor="address-2" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Address Line 2 (Optional)
+              Address Line 2 <span style={{ color: "red" }}>*</span>
             </label>
             <input
               id="address-2"
@@ -618,8 +628,20 @@ export default function AddressStep({
               placeholder="2nd Floor, Apartment A"
               value={relocationAddress.address2}
               onChange={(e) => setRelocationAddress({ ...relocationAddress, address2: e.target.value })}
-              style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
+              onBlur={() => handleBlur("address2")}
+              style={{ 
+                width: "100%", 
+                padding: "0.55rem", 
+                borderRadius: "4px", 
+                border: shouldShowError("address2", isAddress2Valid) ? "1px solid #dc3545" : "1px solid #ccc",
+                backgroundColor: shouldShowError("address2", isAddress2Valid) ? "#fff8f8" : "#fff"
+              }}
             />
+            {shouldShowError("address2", isAddress2Valid) && (
+              <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
+                Address Line 2 is required.
+              </span>
+            )}
           </div>
         </div>
 
@@ -789,8 +811,8 @@ export default function AddressStep({
           className="card"
           style={{
             padding: "1.5rem",
-            border: shouldShowError("proof", isProofUploaded) ? "1px solid #dc3545" : "1px solid #e0e0e0",
-            backgroundColor: shouldShowError("proof", isProofUploaded) ? "#fff8f8" : "#fff",
+            border: (shouldShowError("proof", isProofUploaded) || shouldShowError("sketch", isSketchUploaded)) ? "1px solid #dc3545" : "1px solid #e0e0e0",
+            backgroundColor: (shouldShowError("proof", isProofUploaded) || shouldShowError("sketch", isSketchUploaded)) ? "#fff8f8" : "#fff",
             marginBottom: "1.5rem",
             borderRadius: "8px",
           }}
@@ -799,7 +821,7 @@ export default function AddressStep({
 
           <div style={{ marginBottom: "1.25rem" }}>
             <label htmlFor="landmark" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Nearest Landmark
+              Nearest Landmark <span style={{ color: "red" }}>*</span>
             </label>
             <input
               id="landmark"
@@ -807,8 +829,20 @@ export default function AddressStep({
               placeholder="e.g. Near Clock Tower / Opposite People's Bank"
               value={relocationAddress.landmark}
               onChange={(e) => setRelocationAddress({ ...relocationAddress, landmark: e.target.value })}
-              style={{ width: "100%", padding: "0.55rem", borderRadius: "4px", border: "1px solid #ccc" }}
+              onBlur={() => handleBlur("landmark")}
+              style={{ 
+                width: "100%", 
+                padding: "0.55rem", 
+                borderRadius: "4px", 
+                border: shouldShowError("landmark", isLandmarkValid) ? "1px solid #dc3545" : "1px solid #ccc",
+                backgroundColor: shouldShowError("landmark", isLandmarkValid) ? "#fff8f8" : "#fff"
+              }}
             />
+            {shouldShowError("landmark", isLandmarkValid) && (
+              <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
+                Nearest Landmark is required.
+              </span>
+            )}
           </div>
 
           <div style={{ marginBottom: "1.25rem" }}>
@@ -819,7 +853,7 @@ export default function AddressStep({
               id="proof-file"
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => validateAndSetFile(e.target.files[0], setProofFile, setProofError, true)}
+              onChange={(e) => validateAndSetFile(e.target.files[0], setProofFile, setProofError, "Proof of address document")}
               style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
             />
             <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
@@ -848,17 +882,25 @@ export default function AddressStep({
 
           <div>
             <label htmlFor="sketch-file" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Route Sketch <span style={{ fontSize: "0.85rem", color: "#666", fontWeight: "normal" }}>(Optional)</span>
+              Route Sketch <span style={{ color: "red" }}>*</span>
             </label>
             <input
               id="sketch-file"
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => validateAndSetFile(e.target.files[0], setSketchFile, setSketchError, false)}
+              onChange={(e) => validateAndSetFile(e.target.files[0], setSketchFile, setSketchError, "Route sketch document")}
               style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
             />
             <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
+
+            {shouldShowError("sketch", isSketchUploaded) && !sketchError && (
+              <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px", fontWeight: "500" }}>
+                Route sketch document is required.
+              </div>
+            )}
+
             {sketchError && <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>{sketchError}</div>}
+
             {sketchFile && (
               <div style={{ color: "#0056a6", fontSize: "0.85rem", marginTop: "6px", fontWeight: "500", display: "flex", alignItems: "center", gap: "8px" }}>
                 <span>✓ Uploaded: {sketchFile.name} ({(sketchFile.size / (1024 * 1024)).toFixed(2)} MB)</span>

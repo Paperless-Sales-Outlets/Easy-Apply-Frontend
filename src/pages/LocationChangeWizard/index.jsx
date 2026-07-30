@@ -12,16 +12,52 @@ export default function LocationChangeWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  
+  // Consolidated form data state across wizard steps
+  const [formData, setFormData] = useState({});
+  const [agreed, setAgreed] = useState(false);
+  const [signature, setSignature] = useState(null);
+  const [isAddressStepValid, setIsAddressStepValid] = useState(false);
+  const [isPreferencesStepValid, setIsPreferencesStepValid] = useState(false);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+
   const formRef = useRef(null);
   const totalSteps = 4;
 
+  const updateFormData = (stepData) => {
+    setFormData(prev => ({ ...prev, ...stepData }));
+  };
+
   const nextStep = () => {
+    // Collect form fields from current step DOM before advancing
+    if (formRef.current) {
+      const raw = new FormData(formRef.current);
+      const currentData = Object.fromEntries(raw.entries());
+      updateFormData(currentData);
+    }
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);
   };
+
+  const handleNext = () => {
+    if (currentStep === 2 && !isAddressStepValid) {
+      setShowValidationErrors(true);
+      return;
+    }
+
+    if (currentStep === 3 && !isPreferencesStepValid) {
+      setShowValidationErrors(true);
+      return;
+    }
+
+    setShowValidationErrors(false);
+    nextStep();
+  };
+
   const prevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
@@ -29,25 +65,42 @@ export default function LocationChangeWizard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (currentStep < totalSteps) { nextStep(); return; }
 
-    const raw = new FormData(formRef.current);
-    const formData = Object.fromEntries(raw.entries());
-    
-    // Use the telephone number as the identification key (nic) for relocation
-    formData.nic = formData.telephone;
+    if (currentStep < totalSteps) {
+      handleNext();
+      return;
+    }
+
+    // Step 4 final submission validation
+    if (!agreed || !signature) {
+      setSubmitError('Please accept the agreement and provide a digital signature.');
+      return;
+    }
+
+    // Combine current form DOM state with overall accumulated data
+    const raw = formRef.current ? new FormData(formRef.current) : new FormData();
+    const finalStepData = Object.fromEntries(raw.entries());
+    const completePayload = {
+      ...formData,
+      ...finalStepData,
+      agreed,
+      signature,
+      nic: formData.telephone || finalStepData.telephone
+    };
 
     setSubmitting(true);
     setSubmitError('');
+
     try {
       const res = await api.post('/applications', {
         serviceType: 'relocation',
-        formData,
+        formData: completePayload,
         phone: verifiedMobile,
       });
+
       navigate('/completion', {
         state: {
-          referenceNumber: res.data.application.referenceNumber,
+          referenceNumber: res.data?.application?.referenceNumber || `REF-${Date.now().toString().slice(-6)}`,
           messageKey: 'completion.successMessages.locationChange',
         },
       });
@@ -66,77 +119,137 @@ export default function LocationChangeWizard() {
     }
   };
 
+  const isStep4Valid = agreed && !!signature;
+
   return (
     <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.locationChange.title')}</h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('wizards.locationChange.subtitle')}</p>
+      <h2 style={{ marginBottom: '0.5rem', color: '#1e3a8a', fontWeight: '700' }}>
+        {t('wizards.locationChange.title', 'Application for Location Change')}
+      </h2>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+        {t('wizards.locationChange.subtitle', 'Relocate your Megaline, FTTH, or LTE service to a new address.')}
+      </p>
 
-      {/* Progress Bar */}
+      {/* Wizard Step Navigation */}
       <div className="wizard-nav-wrapper">
-        <div className="wizard-steps-container" style={{ display: "flex", marginBottom: "2rem", position: "relative" }}>
-        <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
-        <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
+        <div className="wizard-steps-container" style={{ display: "flex", marginBottom: "2.5rem", position: "relative" }}>
+          <div style={{ position: "absolute", top: "17px", left: `calc(100% / ${totalSteps * 2})`, right: `calc(100% / ${totalSteps * 2})`, height: "3px", backgroundColor: "#e2e8f0", zIndex: 0 }} />
+          <div className="wizard-progress-bar" style={{ position: "absolute", top: "17px", left: `calc(100% / ${totalSteps * 2})`, height: "3px", backgroundColor: "#22c55e", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
 
-        {[1, 2, 3, 4].map(step => (
-          <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '50%',
-              backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
-              border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
-              color: step <= currentStep ? 'white' : 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
-            }}>
-              {step}
+          {[1, 2, 3, 4].map(step => (
+            <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
+              <div style={{
+                width: '36px', height: '36px', borderRadius: '50%',
+                backgroundColor: step <= currentStep ? '#22c55e' : '#ffffff',
+                border: `2px solid ${step <= currentStep ? '#22c55e' : '#cbd5e1'}`,
+                color: step <= currentStep ? '#ffffff' : '#64748b',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.9rem'
+              }}>
+                {step}
+              </div>
+              <span style={{ fontSize: '0.8rem', fontWeight: step === currentStep ? '600' : '400', color: step <= currentStep ? '#1e293b' : '#64748b' }}>
+                {step === 1 ? t('wizards.locationChange.steps.s1', 'General Info') : step === 2 ? t('wizards.locationChange.steps.s2', 'Address') : step === 3 ? t('wizards.locationChange.steps.s3', 'Preferences') : t('wizards.locationChange.steps.s4', 'Agreement')}
+              </span>
             </div>
-            <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.locationChange.steps.s1') : step === 2 ? t('wizards.locationChange.steps.s2') : step === 3 ? t('wizards.locationChange.steps.s3') : t('wizards.locationChange.steps.s4')}
-            </span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       </div>
 
       <form ref={formRef} onSubmit={handleSubmit}>
-
         <div style={{ minHeight: "300px", marginBottom: "2rem" }}>
-  {currentStep === 1 && (
-    <GeneralInfoStep isActive />
-  )}
-
-  {currentStep === 2 && (
-    <AddressStep isActive />
-  )}
-
-  {currentStep === 3 && (
-    <PreferencesStep isActive />
-  )}
-
-  {currentStep === 4 && (
-    <AgreementStep isActive />
-  )}
-</div>
+          {currentStep === 1 && <GeneralInfoStep isActive formData={formData} onChange={updateFormData} />}
+          {currentStep === 2 && (
+            <AddressStep
+              isActive
+              formData={formData}
+              onDataChange={updateFormData}
+              onValidationChange={setIsAddressStepValid}
+              showValidationErrors={showValidationErrors}
+            />
+          )}
+          {currentStep === 3 && (
+            <PreferencesStep
+              isActive
+              formData={formData}
+              onDataChange={updateFormData}
+              onValidationChange={setIsPreferencesStepValid}
+              showValidationErrors={showValidationErrors}
+            />
+          )}
+          {currentStep === 4 && (
+            <AgreementStep
+              isActive
+              formData={formData}
+              agreed={agreed}
+              setAgreed={setAgreed}
+              signature={signature}
+              setSignature={setSignature}
+            />
+          )}
+        </div>
 
         {submitError && (
-          <p style={{ color: 'var(--danger, #dc3545)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+          <p style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.9rem', fontWeight: '500' }}>
             {submitError}
           </p>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-          <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
-            {t('common.previous')}
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color, #e2e8f0)', paddingTop: '1.5rem' }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={prevStep}
+            disabled={currentStep === 1 || submitting}
+            style={{ padding: '0.6rem 1.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#334155', cursor: currentStep === 1 ? 'not-allowed' : 'pointer' }}
+          >
+            {t('common.previous', 'Back')}
           </button>
+
           {currentStep < totalSteps ? (
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
-              {t('common.nextStep')}
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={submitting}
+              style={{ padding: '0.6rem 1.75rem', borderRadius: '6px', backgroundColor: '#0056b3', color: '#fff', border: 'none', fontWeight: '600', cursor: 'pointer' }}
+            >
+              {t('common.nextStep', 'Next Step')}
             </button>
           ) : (
-            <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting ? t('common.submitting') : t('common.submit')}
+            <button
+              type="submit"
+              className="btn btn-success"
+              disabled={submitting || !isStep4Valid}
+              style={{
+                padding: '0.6rem 1.75rem',
+                borderRadius: '6px',
+                backgroundColor: (isStep4Valid && !submitting) ? '#0056b3' : '#94a3b8',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: '600',
+                cursor: (isStep4Valid && !submitting) ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              {submitting ? (
+                <>
+                  <span style={{ display: 'inline-block', width: '14px', height: '14px', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                  {t('common.submitting', 'Submitting... Please wait...')}
+                </>
+              ) : (
+                t('common.submit', 'Submit Application')
+              )}
             </button>
           )}
         </div>
       </form>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
