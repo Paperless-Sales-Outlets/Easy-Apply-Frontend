@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import DigitalSignatureCanvas from '../../components/DigitalSignatureCanvas';
 
@@ -8,9 +8,16 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive }, ref) {
   const [signatureBase64, setSignatureBase64] = useState('');
   const [signatureError, setSignatureError] = useState(false);
 
+  const [signatureMethod, setSignatureMethod] = useState('draw'); // 'draw' or 'upload'
+  const signatureFileRef = useRef(null);
+
   useImperativeHandle(ref, () => ({
     validate: () => {
-      if (!signatureBase64) {
+      if (signatureMethod === 'draw' && !signatureBase64) {
+        setSignatureError(true);
+        return false;
+      }
+      if (signatureMethod === 'upload' && (!signatureFileRef.current || !signatureFileRef.current.files || signatureFileRef.current.files.length === 0)) {
         setSignatureError(true);
         return false;
       }
@@ -84,18 +91,38 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive }, ref) {
       </div>
 
       <div className="mt-5">
-        <DigitalSignatureCanvas 
-          isActive={isActive} 
-          required={true} 
-          onChange={(base64) => {
-            setSignatureBase64(base64);
-            if (base64) setSignatureError(false);
-          }} 
-        />
-        <input type="hidden" name="digitalSignatureBase64" value={signatureBase64} />
+        <label className="form-label" style={{ marginBottom: '1rem', display: 'block' }}>Signature Method <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
+        <div className="radio-group" style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <label className="radio-label" style={{ cursor: 'pointer' }}>
+            <input type="radio" name="signatureMethod" value="draw" checked={signatureMethod === 'draw'} onChange={(e) => { setSignatureMethod('draw'); setSignatureError(false); }} /> Draw Signature
+          </label>
+          <label className="radio-label" style={{ cursor: 'pointer' }}>
+            <input type="radio" name="signatureMethod" value="upload" checked={signatureMethod === 'upload'} onChange={(e) => { setSignatureMethod('upload'); setSignatureError(false); }} /> Upload Signature
+          </label>
+        </div>
+
+        {signatureMethod === 'draw' ? (
+          <div>
+            <DigitalSignatureCanvas 
+              isActive={isActive} 
+              required={true} 
+              onChange={(base64) => {
+                setSignatureBase64(base64);
+                if (base64) setSignatureError(false);
+              }} 
+            />
+            <input type="hidden" name="digitalSignatureBase64" value={signatureBase64} />
+          </div>
+        ) : (
+          <div style={{ maxWidth: '400px' }}>
+            <label className="form-label">Upload Signature (PDF/JPG/PNG) <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
+            <input type="file" name="signatureUpload" accept=".pdf,.jpg,.jpeg,.png" className="form-control" ref={signatureFileRef} onChange={(e) => { if(e.target.files.length > 0) setSignatureError(false); }} />
+          </div>
+        )}
+
         {signatureError && (
           <p style={{ color: 'var(--danger, #dc3545)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-            Please provide your digital signature to proceed.
+            {signatureMethod === 'draw' ? 'Please provide your digital signature to proceed.' : 'Please upload your signature document to proceed.'}
           </p>
         )}
       </div>
