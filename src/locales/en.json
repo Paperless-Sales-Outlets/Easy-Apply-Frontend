@@ -304,7 +304,8 @@
         "username": "Username:",
         "other": "Other",
         "specify": "Specify:",
-        "remarks": "Other remarks:"
+        "remarks": "Other remarks:",
+        "facilitiesRequired": "Please select at least one facility."
       },
       "declaration": {
         "heading": "3. Customer Agreement",
