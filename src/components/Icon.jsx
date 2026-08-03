@@ -99,6 +99,13 @@ const PATHS = {
   ),
   shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
   check: <path d="M20 6 9 17l-5-5" />,
+  'shopping-cart': (
+    <>
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </>
+  ),
 };
 
 export default function Icon({ name, size = 24, ...props }) {

@@ -5,6 +5,7 @@ import ServiceInfoStep from './ServiceInfoStep';
 import ConnectionPackageStep from './ConnectionPackageStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
 import PaymentStep from '../PaymentStep';
+import BillingSection from '../../components/BillingSection';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
@@ -59,6 +60,8 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
+  const [showBilling, setShowBilling] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(null);
   const totalSteps = 5;
 
   // Auto-populate mobile number from OTP context
@@ -94,6 +97,18 @@ export default function NewConnectionWizard() {
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);
+    
+    // Show billing section after package selection (step 3)
+    if (currentStep === 3) {
+      setShowBilling(true);
+      // Set mock selected package
+      setSelectedPackage({
+        name: 'Fibre Broadband 50Mbps',
+        price: 2500,
+        duration: 'Monthly',
+        features: ['50 Mbps Speed', 'Unlimited Data', 'Free Installation'],
+      });
+    }
   };
   const prevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
@@ -222,7 +237,10 @@ export default function NewConnectionWizard() {
             <ConnectionPackageStep formData={formData} handleChange={handleChange} />
           )}
           {currentStep === 4 && (
-            <ValueAddedServicesStep formData={formData} handleChange={handleChange} />
+            <>
+              <ValueAddedServicesStep formData={formData} handleChange={handleChange} />
+              {showBilling && <BillingSection selectedPackage={selectedPackage} />}
+            </>
           )}
           {currentStep === 5 && (
             <PaymentStep isActive={currentStep === 5} verifiedPhone={verifiedMobile} onSuccess={nextStep} />

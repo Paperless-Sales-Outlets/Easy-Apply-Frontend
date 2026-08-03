@@ -15,10 +15,12 @@ import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
 import ThankYouPage from './pages/ThankYouPage';
 import AdminDashboard from './pages/Admin';
+import AddToCartPage from './pages/AddToCartPage';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
+import { CartProvider } from './context/CartContext';
 
 const PageWrapper = ({ children, fullBleed = false }) => {
   return (
@@ -53,6 +55,7 @@ const AnimatedRoutes = () => {
         <Route path="/check-status" element={<PageWrapper><CheckStatusPage /></PageWrapper>} />
         <Route path="/completion" element={<PageWrapper><CompletionPage /></PageWrapper>} />
         <Route path="/thank-you" element={<PageWrapper><ThankYouPage /></PageWrapper>} />
+        <Route path="/add-to-cart" element={<PageWrapper fullBleed><AddToCartPage /></PageWrapper>} />
         
         {/* Operations Admin Portal */}
         <Route path="/admin" element={<AdminDashboard />} />
@@ -96,9 +99,11 @@ function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <MotionConfig reducedMotion="user">
-        <NavigationLayout>
-          <AnimatedRoutes />
-        </NavigationLayout>
+        <CartProvider>
+          <NavigationLayout>
+            <AnimatedRoutes />
+          </NavigationLayout>
+        </CartProvider>
       </MotionConfig>
     </BrowserRouter>
   );
