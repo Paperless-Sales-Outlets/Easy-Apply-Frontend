@@ -19,6 +19,7 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
+import { Toaster } from 'react-hot-toast';
 
 const PageWrapper = ({ children, fullBleed = false }) => {
   return (
@@ -95,6 +96,31 @@ const NavigationLayout = ({ children }) => {
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <Toaster 
+        position="top-center" 
+        toastOptions={{
+          style: {
+            borderRadius: '12px',
+            background: '#fff',
+            color: 'var(--text-primary)',
+            fontWeight: 600,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            padding: '16px',
+          },
+          success: {
+            iconTheme: {
+              primary: 'var(--slt-green)',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: 'var(--danger, #dc3545)',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <MotionConfig reducedMotion="user">
         <NavigationLayout>
           <AnimatedRoutes />

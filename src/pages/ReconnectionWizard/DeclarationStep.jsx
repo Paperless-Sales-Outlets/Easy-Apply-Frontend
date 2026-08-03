@@ -1,10 +1,137 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import DigitalSignatureCanvas from '../../components/DigitalSignatureCanvas';
 
-const DeclarationStep = forwardRef(function DeclarationStep({ isActive }, ref) {
+// A reusable file input wrapper that adds a clear (✕) button and Drag-and-Drop zone
+const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange }, ref) => {
+  const internalRef = useRef(null);
+  const inputRef = ref || internalRef;
+  const [hasFile, setHasFile] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleClear = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (inputRef.current) {
+      inputRef.current.value = ''; 
+    }
+    setHasFile(false);
+    setFileName('');
+    if (onChange) onChange({ target: { files: [] } }); 
+  };
+
+  const handleChange = (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      setHasFile(true);
+      setFileName(files[0].name);
+    } else {
+      setHasFile(false);
+      setFileName('');
+    }
+    if (onChange) onChange(e);
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      if (inputRef.current) {
+        inputRef.current.files = e.dataTransfer.files;
+        handleChange({ target: inputRef.current });
+      }
+    }
+  };
+
+  return (
+    <div style={{ width: '100%', marginBottom: '1rem' }}>
+      <label className="form-label">{label} {required && <span style={{ color: 'var(--danger, #dc3545)' }}>*</span>}</label>
+      
+      <div 
+        onDragEnter={handleDragEnter}
+        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => inputRef.current && inputRef.current.click()}
+        style={{
+          border: isDragging ? '2px dashed var(--blue)' : '2px dashed var(--line)',
+          backgroundColor: isDragging ? 'rgba(15, 87, 168, 0.05)' : 'var(--surface)',
+          borderRadius: '12px',
+          padding: '2rem 1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          textAlign: 'center',
+          position: 'relative',
+          minHeight: '120px'
+        }}
+      >
+        <input
+          type="file"
+          name={name}
+          accept={accept}
+          required={required && !hasFile}
+          ref={inputRef}
+          onChange={handleChange}
+          style={{ display: 'none' }}
+        />
+        
+        {hasFile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(40, 167, 69, 0.1)', color: 'var(--slt-green)', display: 'grid', placeItems: 'center' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{fileName}</span>
+            <button
+              type="button"
+              onClick={handleClear}
+              style={{
+                marginTop: '0.5rem',
+                background: 'rgba(220, 53, 69, 0.1)', border: 'none', borderRadius: '20px',
+                color: 'var(--danger, #dc3545)', cursor: 'pointer', padding: '0.3rem 1rem',
+                fontSize: '0.85rem', fontWeight: 600
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', pointerEvents: 'none' }}>
+            <div style={{ color: isDragging ? 'var(--blue)' : 'var(--muted)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            </div>
+            <div>
+              <span style={{ fontWeight: 600, color: 'var(--blue)' }}>Click to upload</span> <span style={{ color: 'var(--muted)' }}>or drag and drop</span>
+            </div>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>SVG, PNG, JPG or PDF</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
+
+const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customerType = 'Residential' }, ref) {
   const { t } = useTranslation();
-  const [customerType, setCustomerType] = useState('Residential');
   const [signatureBase64, setSignatureBase64] = useState('');
   const [signatureError, setSignatureError] = useState(false);
 
@@ -15,10 +142,12 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive }, ref) {
     validate: () => {
       if (signatureMethod === 'draw' && !signatureBase64) {
         setSignatureError(true);
+        toast.error('Please provide your digital signature to proceed');
         return false;
       }
       if (signatureMethod === 'upload' && (!signatureFileRef.current || !signatureFileRef.current.files || signatureFileRef.current.files.length === 0)) {
         setSignatureError(true);
+        toast.error('Please upload your signature document to proceed');
         return false;
       }
       return true;
@@ -28,59 +157,63 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive }, ref) {
   return (
     <div>
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>Supporting Documents</h3>
-      
-      <div className="form-group mb-4">
-        <label className="form-label" style={{ marginBottom: '0.5rem' }}>Customer Type</label>
-        <div className="radio-group" style={{ display: 'flex', gap: '1.5rem' }}>
-          <label className="radio-label" style={{ cursor: 'pointer' }}>
-            <input type="radio" name="customerTypeDocs" value="Residential" checked={customerType === 'Residential'} onChange={(e) => setCustomerType(e.target.value)} /> Residential
-          </label>
-          <label className="radio-label" style={{ cursor: 'pointer' }}>
-            <input type="radio" name="customerTypeDocs" value="Foreign" checked={customerType === 'Foreign'} onChange={(e) => setCustomerType(e.target.value)} /> Foreign
-          </label>
-          <label className="radio-label" style={{ cursor: 'pointer' }}>
-            <input type="radio" name="customerTypeDocs" value="Business" checked={customerType === 'Business'} onChange={(e) => setCustomerType(e.target.value)} /> Business
-          </label>
-        </div>
-      </div>
 
       <div className="form-group flex flex-col-mobile gap-4 mb-4">
         {customerType === 'Residential' && (
           <>
             <div style={{ flex: '1' }}>
-              <label className="form-label">NIC Front Copy (PDF/JPG/PNG) <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
-              <input type="file" name="nicFront" accept=".pdf,.jpg,.jpeg,.png" className="form-control" required={isActive && customerType === 'Residential'} />
+              <FileInputWithClear
+                label="NIC Front Copy (PDF/JPG/PNG)"
+                name="nicFront"
+                accept=".pdf,.jpg,.jpeg,.png"
+                required={isActive && customerType === 'Residential'}
+              />
             </div>
             <div style={{ flex: '1' }}>
-              <label className="form-label">NIC Back Copy (PDF/JPG/PNG) <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
-              <input type="file" name="nicBack" accept=".pdf,.jpg,.jpeg,.png" className="form-control" required={isActive && customerType === 'Residential'} />
+              <FileInputWithClear
+                label="NIC Back Copy (PDF/JPG/PNG)"
+                name="nicBack"
+                accept=".pdf,.jpg,.jpeg,.png"
+                required={isActive && customerType === 'Residential'}
+              />
             </div>
           </>
         )}
 
         {customerType === 'Foreign' && (
           <div style={{ flex: '1' }}>
-            <label className="form-label">Passport Copy (PDF/JPG/PNG) <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
-            <input type="file" name="passportCopy" accept=".pdf,.jpg,.jpeg,.png" className="form-control" required={isActive && customerType === 'Foreign'} />
+            <FileInputWithClear
+              label="Passport Copy (PDF/JPG/PNG)"
+              name="passportCopy"
+              accept=".pdf,.jpg,.jpeg,.png"
+              required={isActive && customerType === 'Foreign'}
+            />
           </div>
         )}
 
         {customerType === 'Business' && (
           <div style={{ flex: '1' }}>
-            <label className="form-label">Business Registration Certificate (PDF) <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
-            <input type="file" name="brcCopy" accept=".pdf" className="form-control" required={isActive && customerType === 'Business'} />
+            <FileInputWithClear
+              label="Business Registration Certificate (PDF)"
+              name="brcCopy"
+              accept=".pdf"
+              required={isActive && customerType === 'Business'}
+            />
           </div>
         )}
       </div>
 
-      <div className="form-group mb-5">
-        <label className="form-label">Payment Receipt (Optional, if dues already settled)</label>
-        <input type="file" name="paymentReceipt" accept=".pdf,.jpg,.jpeg,.png" className="form-control" style={{ maxWidth: '400px' }} />
+      <div className="form-group mb-5" style={{ maxWidth: '400px' }}>
+        <FileInputWithClear
+          label="Payment Receipt (Optional, if dues already settled)"
+          name="paymentReceipt"
+          accept=".pdf,.jpg,.jpeg,.png"
+        />
       </div>
 
 
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem', marginTop: '2.5rem' }}>{t('wizards.reconnection.declaration.heading')}</h3>
-      
+
       <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
         <p style={{ marginBottom: '1rem' }}>
           {t('wizards.reconnection.declaration.declarationText')}
@@ -103,20 +236,25 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive }, ref) {
 
         {signatureMethod === 'draw' ? (
           <div>
-            <DigitalSignatureCanvas 
-              isActive={isActive} 
-              required={true} 
+            <DigitalSignatureCanvas
+              isActive={isActive}
+              required={true}
               onChange={(base64) => {
                 setSignatureBase64(base64);
                 if (base64) setSignatureError(false);
-              }} 
+              }}
             />
             <input type="hidden" name="digitalSignatureBase64" value={signatureBase64} />
           </div>
         ) : (
           <div style={{ maxWidth: '400px' }}>
-            <label className="form-label">Upload Signature (PDF/JPG/PNG) <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
-            <input type="file" name="signatureUpload" accept=".pdf,.jpg,.jpeg,.png" className="form-control" ref={signatureFileRef} onChange={(e) => { if(e.target.files.length > 0) setSignatureError(false); }} />
+            <FileInputWithClear
+              label="Upload Signature (PDF/JPG/PNG)"
+              name="signatureUpload"
+              accept=".pdf,.jpg,.jpeg,.png"
+              ref={signatureFileRef}
+              onChange={(e) => { if (e.target.files.length > 0) setSignatureError(false); }}
+            />
           </div>
         )}
 
