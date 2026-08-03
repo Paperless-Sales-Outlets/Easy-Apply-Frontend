@@ -45,8 +45,8 @@
         "description": "Request for new connection of FTTH, LTE, or Copper services."
       },
       "reconnection": {
-        "title": "Re-connection",
-        "description": "Request for re-connection of an existing SLT service."
+        "title": "Reactivate Account",
+        "description": "Quickly restore your disconnected SLT services."
       },
       "relocation": {
         "title": "Relocation",
@@ -274,11 +274,11 @@
       }
     },
     "reconnection": {
-      "title": "Application for Re-connection of SLT Service",
+      "title": "Reactivate Account",
       "steps": {
-        "s1": "Customer Details",
-        "s2": "Facilities",
-        "s3": "Declaration"
+        "s1": "Let's find your account",
+        "s2": "Service Preferences",
+        "s3": "Verify and sign in"
       },
       "customerInfo": {
         "heading": "1. Customer & Line Details",
