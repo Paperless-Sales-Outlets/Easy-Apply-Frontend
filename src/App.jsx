@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
+
 import Dashboard from './pages/Dashboard';
 import NewConnectionWizard from './pages/NewConnectionWizard';
 import ReconnectionWizard from './pages/ReconnectionWizard';
@@ -16,11 +18,14 @@ import CompletionPage from './pages/CompletionPage';
 import ThankYouPage from './pages/ThankYouPage';
 import AdminDashboard from './pages/Admin';
 import AddToCartPage from './pages/AddToCartPage';
+
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
+
 import { CartProvider } from './context/CartContext';
+
 
 const PageWrapper = ({ children, fullBleed = false }) => {
   return (
@@ -36,43 +41,202 @@ const PageWrapper = ({ children, fullBleed = false }) => {
   );
 };
 
+
 const AnimatedRoutes = () => {
   const location = useLocation();
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Main Dashboard & Wizard Routes */}
-        <Route path="/" element={<PageWrapper fullBleed><Dashboard /></PageWrapper>} />
-        <Route path="/new-connection" element={<PageWrapper><OtpProtectedForm><NewConnectionWizard /></OtpProtectedForm></PageWrapper>} />
-        <Route path="/reconnection" element={<PageWrapper><OtpProtectedForm><ReconnectionWizard /></OtpProtectedForm></PageWrapper>} />
-        <Route path="/ownership-change" element={<PageWrapper><OtpProtectedForm><OwnershipChangeWizard /></OtpProtectedForm></PageWrapper>} />
-        <Route path="/location-change" element={<PageWrapper><OtpProtectedForm><LocationChangeWizard /></OtpProtectedForm></PageWrapper>} />
-        <Route path="/termination" element={<PageWrapper><OtpProtectedForm><TerminationWizard /></OtpProtectedForm></PageWrapper>} />
-        <Route path="/package-migration" element={<PageWrapper><OtpProtectedForm><PackageMigrationWizard /></OtpProtectedForm></PageWrapper>} />
-        <Route path="/service-vacation" element={<PageWrapper><OtpProtectedForm><ServiceVacationWizard /></OtpProtectedForm></PageWrapper>} />
-        <Route path="/refund-request" element={<PageWrapper><OtpProtectedForm><RefundRequestWizard /></OtpProtectedForm></PageWrapper>} />
-        <Route path="/customer-request-acceptance" element={<PageWrapper><OtpProtectedForm><CustomerRequestAcceptanceWizard /></OtpProtectedForm></PageWrapper>} />
-        <Route path="/check-status" element={<PageWrapper><CheckStatusPage /></PageWrapper>} />
-        <Route path="/completion" element={<PageWrapper><CompletionPage /></PageWrapper>} />
-        <Route path="/thank-you" element={<PageWrapper><ThankYouPage /></PageWrapper>} />
-        <Route path="/add-to-cart" element={<PageWrapper fullBleed><AddToCartPage /></PageWrapper>} />
-        
-        {/* Operations Admin Portal */}
-        <Route path="/admin" element={<AdminDashboard />} />
+
+        {/* Main Dashboard */}
+        <Route
+          path="/"
+          element={
+            <PageWrapper fullBleed>
+              <Dashboard />
+            </PageWrapper>
+          }
+        />
+
+
+        {/* Customer Request Wizards */}
+        <Route
+          path="/new-connection"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <NewConnectionWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/reconnection"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <ReconnectionWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/ownership-change"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <OwnershipChangeWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/location-change"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <LocationChangeWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/termination"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <TerminationWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/package-migration"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <PackageMigrationWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/service-vacation"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <ServiceVacationWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/refund-request"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <RefundRequestWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/customer-request-acceptance"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <CustomerRequestAcceptanceWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+
+        {/* General Pages */}
+        <Route
+          path="/check-status"
+          element={
+            <PageWrapper>
+              <CheckStatusPage />
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/completion"
+          element={
+            <PageWrapper>
+              <CompletionPage />
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/thank-you"
+          element={
+            <PageWrapper>
+              <ThankYouPage />
+            </PageWrapper>
+          }
+        />
+
+
+        {/* Payment Gateway Cart */}
+        <Route
+          path="/add-to-cart"
+          element={
+            <PageWrapper fullBleed>
+              <AddToCartPage />
+            </PageWrapper>
+          }
+        />
+
+
+        {/* Admin Portal */}
+        <Route
+          path="/admin"
+          element={<AdminDashboard />}
+        />
+
       </Routes>
     </AnimatePresence>
   );
 };
 
 
+
 const NavigationLayout = ({ children }) => {
   const location = useLocation();
+
   const isAdmin = location.pathname.startsWith('/admin');
+
 
   if (isAdmin) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <main className="main-content" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <main
+          className="main-content"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+          }}
+        >
           <ErrorBoundary>
             {children}
           </ErrorBoundary>
@@ -81,32 +245,89 @@ const NavigationLayout = ({ children }) => {
     );
   }
 
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <div className="brand-topbar" />
+
       <Navbar />
-      <main className="main-content" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+
+      <main
+        className="main-content"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+        }}
+      >
         <ErrorBoundary>
           {children}
         </ErrorBoundary>
       </main>
+
       <Footer />
     </div>
   );
 };
 
+
+
 function App() {
+
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
+
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            borderRadius: '12px',
+            background: '#fff',
+            color: 'var(--text-primary)',
+            fontWeight: 600,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            padding: '16px',
+          },
+
+          success: {
+            iconTheme: {
+              primary: 'var(--slt-green)',
+              secondary: '#fff',
+            },
+          },
+
+          error: {
+            iconTheme: {
+              primary: 'var(--danger, #dc3545)',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+
+
       <MotionConfig reducedMotion="user">
+
         <CartProvider>
+
           <NavigationLayout>
             <AnimatedRoutes />
           </NavigationLayout>
+
         </CartProvider>
+
       </MotionConfig>
+
+
     </BrowserRouter>
   );
 }
+
 
 export default App;

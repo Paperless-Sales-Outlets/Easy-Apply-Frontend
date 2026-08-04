@@ -5,8 +5,24 @@
 export const DUMMY_USER = {
   name: 'Saman Perera',
   email: 'saman.perera@slt.lk',
-  role: 'Admin', // 'Admin' | 'Staff' | 'FieldTechnician'
+  role: 'Admin', // 'Admin' | 'Manager' | 'SalesOfficer'
 };
+
+// ── User Privileges ────────────────────────────────────────────────────────────
+export const SYSTEM_ROLES = [
+  'Admin',
+  'Manager',
+  'SalesOfficer',
+];
+
+export const MODULE_ACCESS = [
+  { key: 'dashboard',    label: 'Dashboard',    roles: ['Admin', 'Manager', 'SalesOfficer'] },
+  { key: 'kyc',          label: 'KYC Review',   roles: ['Admin', 'Manager'] },
+  { key: 'appointments', label: 'Appointments', roles: ['Admin', 'Manager'] },
+  { key: 'technician',   label: 'My Jobs',      roles: ['Admin', 'SalesOfficer'] },
+  { key: 'forms',        label: 'Forms',        roles: ['Admin', 'Manager'] },
+  { key: 'analytics',    label: 'Analytics',    roles: ['Admin', 'Manager'] },
+];
 
 // ── Applications ─────────────────────────────────────────────────────────────
 export const DUMMY_APPLICATIONS = [
@@ -66,6 +82,104 @@ export const DUMMY_APPLICATIONS = [
     submittedAt: '2026-07-20T07:30:00Z', kycStatus: 'pending',
     address: '5, Marine Drive, Galle',
   },
+  {
+    id: 'app-009', referenceNumber: 'REQ-91120834', name: 'Sunil Dissanayake',
+    nic: '900123456V', phone: '0774561230', email: 'sunil@example.com',
+    serviceType: 'new-connection', status: 'pending',
+    submittedAt: '2026-07-28T10:15:00Z', kycStatus: 'pending',
+    address: '212, Duplication Road, Colombo 03',
+  },
+  {
+    id: 'app-010', referenceNumber: 'REQ-82039471', name: 'Madhavi Perera',
+    nic: '930234567V', phone: '0712349887', email: 'madhavi@example.com',
+    serviceType: 'reconnection', status: 'pending',
+    submittedAt: '2026-07-26T16:45:00Z', kycStatus: 'pending',
+    address: '61, High Level Road, Nugegoda',
+  },
+  {
+    id: 'app-011', referenceNumber: 'REQ-73910284', name: 'Lasantha Weerasinghe',
+    nic: '870345678V', phone: '0755678901', email: 'lasantha@example.com',
+    serviceType: 'location-change', status: 'approved',
+    submittedAt: '2026-07-25T09:30:00Z', kycStatus: 'approved',
+    address: '9, Hospital Road, Kalutara',
+  },
+  {
+    id: 'app-012', referenceNumber: 'REQ-61403928', name: 'Tharindu Jayasuriya',
+    nic: '950456789V', phone: '0766789012', email: 'tharindu@example.com',
+    serviceType: 'termination', status: 'pending',
+    submittedAt: '2026-07-24T13:20:00Z', kycStatus: 'pending',
+    address: '114, Main Street, Batticaloa',
+  },
+  {
+    id: 'app-013', referenceNumber: 'REQ-57203918', name: 'Kumari Senanayake',
+    nic: '780567890V', phone: '0707890123', email: 'kumari@example.com',
+    serviceType: 'ownership-change', status: 'rejected',
+    submittedAt: '2026-07-23T11:05:00Z', kycStatus: 'rejected',
+    address: '28, Church Road, Ratnapura',
+  },
+  {
+    id: 'app-014', referenceNumber: 'REQ-40827391', name: 'Nuwan Rathnayake',
+    nic: '910678901V', phone: '0778901234', email: 'nuwan@example.com',
+    serviceType: 'package-migration', status: 'approved',
+    submittedAt: '2026-07-22T08:40:00Z', kycStatus: 'approved',
+    address: '77, Lake View Road, Badulla',
+  },
+  {
+    id: 'app-015', referenceNumber: 'REQ-31029847', name: 'Ishara Karunaratne',
+    nic: '960789012V', phone: '0769012345', email: 'ishara@example.com',
+    serviceType: 'service-vacation', status: 'pending',
+    submittedAt: '2026-07-30T14:10:00Z', kycStatus: 'pending',
+    address: '19, Flower Road, Anuradhapura',
+  },
+  {
+    id: 'app-016', referenceNumber: 'REQ-29847103', name: 'Pradeep Gunawardena',
+    nic: '820890123V', phone: '0710123456', email: 'pradeep@example.com',
+    serviceType: 'service-vacation', status: 'approved',
+    submittedAt: '2026-07-21T10:55:00Z', kycStatus: 'approved',
+    address: '4, Harbour Road, Trincomalee',
+  },
+  {
+    id: 'app-017', referenceNumber: 'REQ-19472038', name: 'Sanduni Alwis',
+    nic: '970901234V', phone: '0751234567', email: 'sanduni@example.com',
+    serviceType: 'refund-request', status: 'rejected',
+    submittedAt: '2026-07-19T15:35:00Z', kycStatus: 'rejected',
+    address: '52, Galle Face Terrace, Colombo 03',
+  },
+  {
+    id: 'app-018', referenceNumber: 'REQ-08392741', name: 'Rukshan Fernando',
+    nic: '880123456V', phone: '0762345678', email: 'rukshan@example.com',
+    serviceType: 'customer-request-acceptance', status: 'pending',
+    submittedAt: '2026-07-31T09:05:00Z', kycStatus: 'pending',
+    address: '33, Temple Lane, Kurunegala',
+  },
+  {
+    id: 'app-019', referenceNumber: 'REQ-91028473', name: 'Anusha Bandaranayake',
+    nic: '940234567V', phone: '0773456789', email: 'anusha@example.com',
+    serviceType: 'customer-request-acceptance', status: 'approved',
+    submittedAt: '2026-07-27T17:25:00Z', kycStatus: 'approved',
+    address: '6, Beach Road, Mount Lavinia',
+  },
+  {
+    id: 'app-020', referenceNumber: 'REQ-83741029', name: 'Chamari Liyanage',
+    nic: '980345678V', phone: '0714567890', email: 'chamari@example.com',
+    serviceType: 'new-connection', status: 'flagged',
+    submittedAt: '2026-08-01T08:50:00Z', kycStatus: 'flagged',
+    address: '101, Peradeniya Road, Kandy',
+  },
+  {
+    id: 'app-021', referenceNumber: 'REQ-72910483', name: 'Dinesh Wijesinghe',
+    nic: '990456789V', phone: '0755678901', email: 'dinesh@example.com',
+    serviceType: 'package-migration', status: 'pending',
+    submittedAt: '2026-07-29T12:30:00Z', kycStatus: 'pending',
+    address: '15, Negombo Road, Ja-Ela',
+  },
+  {
+    id: 'app-022', referenceNumber: 'REQ-61829374', name: 'Sampath Herath',
+    nic: '860567890V', phone: '0706789012', email: 'sampath@example.com',
+    serviceType: 'reconnection', status: 'approved',
+    submittedAt: '2026-07-18T09:40:00Z', kycStatus: 'approved',
+    address: '2, Station Road, Kegalle',
+  },
 ];
 
 // ── KYC Documents (dummy image URLs using placeholder service) ────────────────
@@ -74,28 +188,28 @@ export const DUMMY_KYC_QUEUE = [
     id: 'kyc-001', appId: 'app-001', name: 'Kamal Bandara', nic: '980123456V',
     phone: '0771234567', submittedAt: '2026-07-18T09:12:00Z',
     docUrl: 'https://placehold.co/400x260/d9e2ef/0b2d5b?text=NIC+Front',
-    selfieUrl: 'https://placehold.co/260x320/d9e2ef/0b2d5b?text=Selfie',
+    selfieUrl: 'https://placehold.co/260x320/d9e2ef/0b2d5b?text=Face Validation',
     status: 'pending',
   },
   {
     id: 'kyc-002', appId: 'app-004', name: 'Dilani Wickramasinghe', nic: '920456789V',
     phone: '0769871234', submittedAt: '2026-07-16T08:50:00Z',
     docUrl: 'https://placehold.co/400x260/d9e2ef/0b2d5b?text=NIC+Front',
-    selfieUrl: 'https://placehold.co/260x320/d9e2ef/0b2d5b?text=Selfie',
+    selfieUrl: 'https://placehold.co/260x320/d9e2ef/0b2d5b?text=Face Validation',
     status: 'pending',
   },
   {
     id: 'kyc-003', appId: 'app-006', name: 'Priyanka Fernando', nic: '940123456V',
     phone: '0779870001', submittedAt: '2026-07-15T09:00:00Z',
     docUrl: 'https://placehold.co/400x260/d9e2ef/0b2d5b?text=Passport',
-    selfieUrl: 'https://placehold.co/260x320/d9e2ef/0b2d5b?text=Selfie',
+    selfieUrl: 'https://placehold.co/260x320/d9e2ef/0b2d5b?text=Face Validation',
     status: 'pending',
   },
   {
     id: 'kyc-004', appId: 'app-008', name: 'Amali Perera', nic: '960234501V',
     phone: '0778901234', submittedAt: '2026-07-20T07:30:00Z',
     docUrl: 'https://placehold.co/400x260/d9e2ef/0b2d5b?text=NIC+Front',
-    selfieUrl: 'https://placehold.co/260x320/d9e2ef/0b2d5b?text=Selfie',
+    selfieUrl: 'https://placehold.co/260x320/d9e2ef/0b2d5b?text=Face Validation',
     status: 'pending',
   },
 ];
@@ -164,15 +278,13 @@ export const DUMMY_APPOINTMENTS = [
 
 // ── Dashboard Summary Cards ───────────────────────────────────────────────────
 export const DUMMY_SUMMARY = {
-  totalApplications: 248,
-  pendingKyc: 17,
-  todaysAppointments: 6,
-  approvedToday: 11,
+  totalForms: 248,
+  completedForms: 180,
+  pendingForms: 48,
   trends: {
-    totalApplications: '+12%',
-    pendingKyc: '-3',
-    todaysAppointments: 'same',
-    approvedToday: '+4',
+    totalForms: '+12%',
+    completedForms: '+8%',
+    pendingForms: '-5',
   },
 };
 
@@ -184,6 +296,50 @@ export const DUMMY_RECENT_ACTIVITY = [
   { id: 'ra-4', type: 'assigned', message: 'Appointment APT-004 assigned to Prasad Herath', time: '2 hr ago' },
   { id: 'ra-5', type: 'completed',message: 'Appointment APT-006 marked complete by Nimal Rathnayake', time: '3 hr ago' },
   { id: 'ra-6', type: 'rejected', message: 'REQ-50234109 rejected — ownership documents invalid', time: '5 hr ago' },
+];
+
+// ── Two-Week Form Submission Data ─────────────────────────────────────────────
+function generateDailyData() {
+  const days = [];
+  const start = new Date('2026-07-17');
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(start);
+    d.setDate(start.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    days.push({
+      date: dateStr,
+      day,
+      submitted: Math.floor(Math.random() * 6) + 1,
+      completed: Math.floor(Math.random() * 4),
+    });
+  }
+  return days;
+}
+
+export const DUMMY_FORM_WEEKLY = [
+  { id: 'new-connection', label: 'New Connection', daily: generateDailyData() },
+  { id: 'reconnection', label: 'Reconnection', daily: generateDailyData() },
+  { id: 'relocation', label: 'Relocation', daily: generateDailyData() },
+  { id: 'termination', label: 'Termination', daily: generateDailyData() },
+  { id: 'transfer', label: 'Transfer', daily: generateDailyData() },
+  { id: 'package-migration', label: 'Package Migration', daily: generateDailyData() },
+  { id: 'service-vacation', label: 'Service Vacation', daily: generateDailyData() },
+  { id: 'refund-request', label: 'Refund Request', daily: generateDailyData() },
+  { id: 'customer-request-acceptance', label: 'Customer Request Acceptance', daily: generateDailyData() },
+];
+
+// ── Form Stats (for dashboard bar charts) ──────────────────────────────────────
+export const DUMMY_FORM_STATS = [
+  { id: 'new-connection', label: 'New Connection', total: 98, completed: 72 },
+  { id: 'reconnection', label: 'Reconnection', total: 42, completed: 35 },
+  { id: 'relocation', label: 'Relocation', total: 27, completed: 20 },
+  { id: 'termination', label: 'Termination', total: 19, completed: 15 },
+  { id: 'transfer', label: 'Transfer', total: 14, completed: 10 },
+  { id: 'package-migration', label: 'Package Migration', total: 36, completed: 28 },
+  { id: 'service-vacation', label: 'Service Vacation', total: 11, completed: 8 },
+  { id: 'refund-request', label: 'Refund Request', total: 8, completed: 5 },
+  { id: 'customer-request-acceptance', label: 'Customer Request Acceptance', total: 6, completed: 4 },
 ];
 
 // ── Analytics ────────────────────────────────────────────────────────────────
@@ -219,3 +375,5 @@ export const DUMMY_ANALYTICS = {
     { day: 'Sun', digital: 14, walkIn: 3 },
   ],
 };
+
+

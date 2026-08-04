@@ -12,25 +12,55 @@ export default function PaymentStep({
   onSuccess,
 }) {
   const navigate = useNavigate();
-  const [selectedMethod, setSelectedMethod] = useState('card');
-  const [statusState, setStatusState] = useState({ type: null, message: '' });
 
-  // Format amount to LKR currency representation
+  const [selectedMethod, setSelectedMethod] = useState('card');
+  const [statusState, setStatusState] = useState({
+    type: null,
+    message: '',
+  });
+
+
   const formattedAmount = amount
-    ? Number(amount).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    ? Number(amount).toLocaleString('en-LK', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
     : '1,000.00';
 
+
+
   const handlePaymentSuccess = (orderId) => {
+
+    // If receipt already uploaded, skip online payment
+    if (hasPaymentReceipt) {
+      if (onSuccess) {
+        onSuccess();
+      }
+
+      navigate('/thank-you', {
+        state: {
+          amount: formattedAmount,
+          serviceName,
+        },
+      });
+
+      return;
+    }
+
+
     setStatusState({
       type: 'success',
       message: `Payment successful! Reference Order ID: ${orderId}`,
     });
 
+
     setTimeout(() => {
+
       if (onSuccess) {
         onSuccess(orderId);
       }
-      // Navigate seamlessly to Thank You page
+
+
       navigate('/thank-you', {
         state: {
           orderId,
@@ -38,27 +68,45 @@ export default function PaymentStep({
           serviceName,
         },
       });
+
     }, 1000);
   };
+
+
 
   const handlePaymentCancel = () => {
     setStatusState({
       type: 'warning',
-      message: 'Payment process was cancelled. You can try again whenever you are ready.',
+      message:
+        'Payment process was cancelled. You can try again whenever you are ready.',
     });
   };
 
+
+
   const handlePaymentError = (error) => {
-    const detail = typeof error === 'string' ? error : error?.message || 'Payment processing encountered an error.';
+
+    const detail =
+      typeof error === 'string'
+        ? error
+        : error?.message ||
+          'Payment processing encountered an error.';
+
+
     setStatusState({
       type: 'error',
       message: `Payment error: ${detail}`,
     });
   };
 
+
+
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+
+
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+
         <div
           style={{
             width: '60px',
@@ -75,76 +123,89 @@ export default function PaymentStep({
         >
           <Icon name="lock" size={28} />
         </div>
-        <h3 style={{ color: 'var(--slt-blue)', marginBottom: '0.5rem', fontSize: '1.4rem' }}>
+
+
+        <h3
+          style={{
+            color: 'var(--slt-blue)',
+            marginBottom: '0.5rem',
+            fontSize: '1.4rem',
+          }}
+        >
           PayHere Sandbox Gateway
         </h3>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: '1.5' }}>
-          You will be redirected to PayHere Sandbox encrypted Payment Gateway to process your payment securely. No credit card or sensitive credentials are stored on EasyApply servers.
+
+
+        <p
+          style={{
+            color: 'var(--text-secondary)',
+            fontSize: '0.92rem',
+            lineHeight: '1.5',
+          }}
+        >
+          You will be redirected to PayHere Sandbox encrypted Payment Gateway
+          to process your payment securely. No credit card or sensitive
+          credentials are stored on EasyApply servers.
         </p>
+
       </div>
 
-      {/* Payment Status Notifications */}
-      {statusState.type === 'success' && (
+
+
+      {statusState.type && (
+
         <div
           style={{
             padding: '1rem 1.25rem',
             marginBottom: '1.5rem',
-            backgroundColor: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            color: '#166534',
             borderRadius: '10px',
             display: 'flex',
             alignItems: 'center',
             gap: '0.75rem',
             fontWeight: 500,
+
+            backgroundColor:
+              statusState.type === 'success'
+                ? '#f0fdf4'
+                : statusState.type === 'warning'
+                ? '#fffbeb'
+                : '#fef2f2',
+
+            border:
+              statusState.type === 'success'
+                ? '1px solid #bbf7d0'
+                : statusState.type === 'warning'
+                ? '1px solid #fef08a'
+                : '1px solid #fecaca',
+
+            color:
+              statusState.type === 'success'
+                ? '#166534'
+                : statusState.type === 'warning'
+                ? '#92400e'
+                : '#991b1b',
           }}
         >
-          <Icon name="check-circle" size={20} color="#166534" />
+
+          <Icon
+            name={
+              statusState.type === 'success'
+                ? 'check-circle'
+                : statusState.type === 'warning'
+                ? 'alert-triangle'
+                : 'alert-circle'
+            }
+            size={20}
+          />
+
           <div>{statusState.message}</div>
+
         </div>
+
       )}
 
-      {statusState.type === 'warning' && (
-        <div
-          style={{
-            padding: '1rem 1.25rem',
-            marginBottom: '1.5rem',
-            backgroundColor: '#fffbeb',
-            border: '1px solid #fef08a',
-            color: '#92400e',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            fontWeight: 500,
-          }}
-        >
-          <Icon name="alert-triangle" size={20} color="#92400e" />
-          <div>{statusState.message}</div>
-        </div>
-      )}
 
-      {statusState.type === 'error' && (
-        <div
-          style={{
-            padding: '1rem 1.25rem',
-            marginBottom: '1.5rem',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            color: '#991b1b',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            fontWeight: 500,
-          }}
-        >
-          <Icon name="alert-circle" size={20} color="#991b1b" />
-          <div>{statusState.message}</div>
-        </div>
-      )}
 
-      {/* Summary Card */}
       <div
         style={{
           backgroundColor: '#f8fafc',
@@ -154,158 +215,193 @@ export default function PaymentStep({
           marginBottom: '1.5rem',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Service Type:</span>
-          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{serviceName}</span>
+
+        <div style={{ display:'flex', justifyContent:'space-between' }}>
+          <span>Service Type:</span>
+          <strong>{serviceName}</strong>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Verified Mobile:</span>
-          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+
+
+        <div style={{ display:'flex', justifyContent:'space-between', marginTop:'10px' }}>
+          <span>Verified Mobile:</span>
+          <strong>
             {verifiedPhone ? `+94 ${verifiedPhone}` : 'N/A'}
-          </span>
+          </strong>
         </div>
+
+
         <div
           style={{
-            borderTop: '1px dashed #cbd5e1',
-            paddingTop: '0.75rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            borderTop:'1px dashed #cbd5e1',
+            marginTop:'12px',
+            paddingTop:'12px',
+            display:'flex',
+            justifyContent:'space-between',
           }}
         >
-          <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
-            Total Amount Payable:
-          </span>
-          <span style={{ fontWeight: 800, fontSize: '1.3rem', color: 'var(--slt-green, #16a34a)' }}>
+
+          <strong>Total Amount Payable:</strong>
+
+          <strong style={{color:'var(--slt-green, #16a34a)'}}>
             LKR {formattedAmount}
-          </span>
+          </strong>
+
         </div>
+
       </div>
 
-      {/* Select Payment Method Option OR Receipt Banner */}
+
+
+
       {hasPaymentReceipt ? (
+
         <div
           style={{
-            textAlign: 'center',
-            marginBottom: '1.5rem',
-            padding: '1.25rem',
-            backgroundColor: '#ecfdf5',
-            border: '1px solid #10b981',
-            borderRadius: '10px',
-            color: '#065f46',
+            textAlign:'center',
+            padding:'1.25rem',
+            marginBottom:'1.5rem',
+            backgroundColor:'#ecfdf5',
+            border:'1px solid #10b981',
+            borderRadius:'10px',
+            color:'#065f46',
           }}
         >
-          <Icon name="check-circle" size={32} color="#10b981" />
-          <div style={{ fontWeight: 600, marginTop: '0.5rem', fontSize: '1.1rem' }}>Payment Receipt Attached</div>
-          <div style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
-            You have uploaded a payment receipt. No further online payment is required at this stage.
+
+          <Icon name="check-circle" size={32}/>
+
+          <div style={{fontWeight:600}}>
+            Payment Receipt Attached
           </div>
+
+          <div>
+            No further online payment is required.
+          </div>
+
         </div>
+
       ) : (
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label className="form-label" style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>
+
+        <div>
+          <label className="form-label">
             Select Payment Gateway Method
           </label>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div
+
+          <div
+            style={{
+              display:'grid',
+              gridTemplateColumns:'1fr 1fr',
+              gap:'1rem',
+            }}
+          >
+
+            <button
               onClick={() => setSelectedMethod('card')}
               style={{
-                border: `2px solid ${selectedMethod === 'card' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
-                borderRadius: '10px',
-                padding: '1rem',
-                cursor: 'pointer',
-                backgroundColor: selectedMethod === 'card' ? '#f0f7ff' : '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                transition: 'all 0.2s ease',
+                padding:'1rem',
+                borderRadius:'10px',
+                border:
+                  selectedMethod === 'card'
+                    ? '2px solid #0056b3'
+                    : '2px solid #e2e8f0',
               }}
             >
-              <Icon name="credit-card" size={22} color={selectedMethod === 'card' ? '#0056b3' : '#64748b'} />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>PayHere Card / IPG</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Visa, Mastercard, AMEX</div>
-              </div>
-            </div>
+              <Icon name="credit-card"/>
+              PayHere Card / IPG
+            </button>
 
-            <div
+
+
+            <button
               onClick={() => setSelectedMethod('wallet')}
               style={{
-                border: `2px solid ${selectedMethod === 'wallet' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
-                borderRadius: '10px',
-                padding: '1rem',
-                cursor: 'pointer',
-                backgroundColor: selectedMethod === 'wallet' ? '#f0f7ff' : '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                transition: 'all 0.2s ease',
+                padding:'1rem',
+                borderRadius:'10px',
+                border:
+                  selectedMethod === 'wallet'
+                    ? '2px solid #0056b3'
+                    : '2px solid #e2e8f0',
               }}
             >
-              <Icon name="smartphone" size={22} color={selectedMethod === 'wallet' ? '#0056b3' : '#64748b'} />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>PayHere Wallet / eZ Cash</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>eZ Cash, Genie, Sampath Vishwa</div>
-              </div>
-            </div>
+              <Icon name="smartphone"/>
+              PayHere Wallet
+            </button>
+
           </div>
+
         </div>
+
       )}
 
+
+
+
+
       {hasPaymentReceipt ? (
+
         <button
           type="button"
-          onClick={() => onSuccess && onSuccess()}
+          onClick={() => handlePaymentSuccess(null)}
           className="btn btn-success"
           disabled={!isActive}
           style={{
-            width: '100%',
-            padding: '0.85rem',
-            fontSize: '1.05rem',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+            width:'100%',
+            padding:'0.85rem',
           }}
         >
-          <span>Submit Application</span>
-          <Icon name="check" size={18} />
+          Submit Application
+          <Icon name="check" size={18}/>
         </button>
+
+
       ) : (
+
+
         <PayHereButton
+
           amount={amount || 1000}
           currency="LKR"
           itemTitle={serviceName}
+
           customerDetails={{
-            phone: verifiedPhone ? `0${verifiedPhone.replace(/^\+?94/, '')}` : '',
+            phone: verifiedPhone
+              ? `0${verifiedPhone.replace(/^\+?94/, '')}`
+              : '',
           }}
+
           buttonText="Pay Now with PayHere"
+
           disabled={!isActive}
+
           sandbox={true}
+
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}
           onError={handlePaymentError}
+
         />
+
       )}
+
+
+
 
       <div
         style={{
-          marginTop: '1.5rem',
-          textAlign: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.5rem',
-          fontSize: '0.78rem',
-          color: 'var(--text-secondary)',
+          marginTop:'1.5rem',
+          textAlign:'center',
+          fontSize:'0.78rem',
+          color:'var(--text-secondary)',
         }}
       >
-        <Icon name="shield-check" size={16} color="#16a34a" />
-        <span>PayHere 256-bit SSL Encrypted &amp; PCI-DSS Compliant Gateway</span>
+
+        <Icon name="shield-check" size={16}/>
+
+        PayHere 256-bit SSL Encrypted & PCI-DSS Compliant Gateway
+
       </div>
+
+
     </div>
   );
 }

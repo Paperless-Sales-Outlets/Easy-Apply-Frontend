@@ -592,34 +592,46 @@ a {
 /* OTP verification --------------------------------------------------- */
 
 .otp-screen {
-  min-height: 60vh;
+  min-height: 70vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--s6) var(--s2);
-}
-
-.otp-card {
-  position: relative;
-  width: 100%;
-  max-width: 440px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
-  padding: clamp(1.5rem, 5vw, 2.5rem);
   overflow: hidden;
-  text-align: center;
+  margin: var(--s4) auto;
+  max-width: 1100px;
 }
 
-.otp-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--slash-gradient);
+.otp-hero-section {
+  display: none;
+  flex: 1;
+  background-size: cover;
+  background-position: bottom center;
+  background-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+  .otp-hero-section {
+    display: block;
+  }
+}
+
+.otp-form-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 5vw, 4rem);
+}
+
+.otp-card {
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .otp-icon {

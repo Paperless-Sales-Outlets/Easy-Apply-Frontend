@@ -89,9 +89,7 @@ export default function AdminLoginPage({ onLogin }) {
           </button>
         </form>
 
-        <p style={{ marginTop: '1.5rem', fontSize: '0.78rem', color: 'var(--muted)', textAlign: 'center' }}>
-          Demo: enter any email + password to sign in
-        </p>
+
       </div>
     </div>
   );

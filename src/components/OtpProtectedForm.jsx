@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 import { VerificationContext } from './verification';
 import api from '../utils/api';
+import heroImg from '../assets/slt fiber.png';
 
 const RESEND_SECONDS = 30;
 
@@ -189,13 +190,15 @@ export default function OtpProtectedForm({ children }) {
 
   return (
     <div className="otp-screen">
-      <motion.div
-        className="otp-card"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-      >
-        <AnimatePresence mode="wait">
+      <div className="otp-hero-section" style={{ backgroundImage: `url("${heroImg}")` }}></div>
+      <div className="otp-form-section">
+        <motion.div
+          className="otp-card"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <AnimatePresence mode="wait">
           {phase === 'mobile' && (
             <motion.div key="mobile" {...swap}>
               <div className="otp-icon">
@@ -313,7 +316,8 @@ export default function OtpProtectedForm({ children }) {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }
