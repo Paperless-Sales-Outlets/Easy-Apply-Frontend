@@ -12,12 +12,32 @@ export default function KycReviewPage() {
   const [index, setIndex]     = useState(0);
   const [note, setNote]       = useState('');
   const [toast, setToast]     = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const current = queue[index];
 
   const showToast = (msg, type) => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const searchResults = searchQuery.trim()
+    ? queue.filter(k => {
+        const q = searchQuery.trim().toLowerCase();
+        return (
+          k.name.toLowerCase().includes(q) ||
+          k.nic.toLowerCase().includes(q) ||
+          k.phone.toLowerCase().includes(q) ||
+          k.status.toLowerCase().includes(q)
+        );
+      })
+    : [];
+
+  const jumpToResult = (item) => {
+    setIndex(queue.indexOf(item));
+    setSearchQuery('');
+    setNote('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const updateStatus = (status) => {
@@ -86,7 +106,7 @@ export default function KycReviewPage() {
             </span>
           </div>
 
-          {/* ── Document + Selfie Side-by-Side ── */}
+          {/* ── Document + Face Validation Side-by-Side ── */}
           <div className="kyc-panel">
             <div className="kyc-doc-frame">
               <div className="kyc-doc-header">Identity Document</div>
@@ -97,7 +117,7 @@ export default function KycReviewPage() {
               />
             </div>
             <div className="kyc-doc-frame">
-              <div className="kyc-doc-header">Selfie</div>
+              <div className="kyc-doc-header">Face Validation</div>
               <img
                 src={current.selfieUrl}
                 alt="Applicant selfie"
@@ -171,6 +191,49 @@ export default function KycReviewPage() {
           </div>
         </>
       )}
+
+      {/* ── Search KYC Queue ── */}
+      <div className="kyc-search">
+        <h3 className="kyc-search-title">Search KYC Queue</h3>
+        <p className="kyc-search-sub">
+          Find an application by name, NIC / passport, phone, or status to jump straight to it.
+        </p>
+        <div className="admin-search" style={{ minWidth: 0 }}>
+          <svg className="admin-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search the review queue…"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            aria-label="Search KYC queue"
+          />
+        </div>
+        {searchResults.length > 0 && (
+          <div className="kyc-search-results">
+            {searchResults.map(item => (
+              <button
+                key={item.id}
+                className="kyc-search-result"
+                onClick={() => jumpToResult(item)}
+              >
+                <span className="kyc-search-result-name">
+                  {item.name}
+                  <span className="kyc-search-result-nic">{item.nic}</span>
+                </span>
+                <span className={`admin-badge ${item.status}`}>
+                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                </span>
+                <span className="kyc-search-result-phone">{item.phone}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {searchQuery.trim() && searchResults.length === 0 && (
+          <div className="kyc-search-no-results">No applications match “{searchQuery.trim()}”.</div>
+        )}
+      </div>
     </>
   );
 }

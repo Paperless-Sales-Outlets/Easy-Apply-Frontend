@@ -1,22 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { MODULE_ACCESS, DUMMY_FORM_WEEKLY } from '../data/dummyData';
 import sltLogo from '../../../assets/sltlogoOnly.png';
 
+const NAV_ICONS = {
+  dashboard:    '⊞',
+  kyc:          '🪪',
+  appointments: '📅',
+  technician:   '🔧',
+  forms:        '📄',
+  analytics:    '📊',
+  privileges:   '🔐',
+};
+
 const NAV_ITEMS = [
-  { key: 'dashboard',    label: 'Dashboard',        icon: '⊞', roles: ['Admin','Staff','FieldTechnician'] },
-  { key: 'applications', label: 'Applications',     icon: '📋', roles: ['Admin','Staff'] },
-  { key: 'kyc',          label: 'KYC Review',       icon: '🪪', roles: ['Admin','Staff'] },
-  { key: 'appointments', label: 'Appointments',     icon: '📅', roles: ['Admin','Staff'] },
-  { key: 'technician',   label: 'My Jobs',          icon: '🔧', roles: ['Admin','FieldTechnician'] },
-  { key: 'analytics',   label: 'Analytics',        icon: '📊', roles: ['Admin','Staff'] },
+  ...MODULE_ACCESS.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
+  { key: 'privileges', label: 'User Privileges', icon: '🔐', roles: ['Admin'] },
 ];
 
-export default function AdminLayout({ activePage, setActivePage, children }) {
+const SHORT_FORM_LABELS = {
+  'Customer Request Acceptance': 'Cust. Request',
+};
+
+function shortFormLabel(label) {
+  return SHORT_FORM_LABELS[label] || label;
+}
+
+export default function AdminLayout({ activePage, setActivePage, children, onSelectForm, activeFormId }) {
   const { admin, logout } = useAdminAuth();
+  const [openForms, setOpenForms] = useState(activePage === 'forms');
 
   const visibleNav = NAV_ITEMS.filter(item =>
     item.roles.includes(admin?.role || 'Admin')
   );
+
+  const handleNavClick = (item) => {
+    if (item.key === 'forms') {
+      setOpenForms(open => !open);
+      return;
+    }
+    setActivePage(item.key);
+    setOpenForms(false);
+  };
 
   const initials = admin?.name
     ? admin.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
@@ -42,14 +67,31 @@ export default function AdminLayout({ activePage, setActivePage, children }) {
 
         <nav className="admin-nav">
           {visibleNav.map(item => (
-            <button
-              key={item.key}
-              className={`admin-nav-item${activePage === item.key ? ' active' : ''}`}
-              onClick={() => setActivePage(item.key)}
-            >
-              <span style={{ fontSize: '1rem' }}>{item.icon}</span>
-              {item.label}
-            </button>
+            <div className="admin-nav-group" key={item.key}>
+              <button
+                className={`admin-nav-item${activePage === item.key ? ' active' : ''}`}
+                onClick={() => handleNavClick(item)}
+              >
+                <span style={{ fontSize: '1rem' }}>{item.icon}</span>
+                {item.label}
+                {item.key === 'forms' && (
+                  <span className={`admin-nav-caret${openForms ? ' open' : ''}`}>▾</span>
+                )}
+              </button>
+              {item.key === 'forms' && openForms && (
+                <div className="admin-nav-submenu">
+                  {DUMMY_FORM_WEEKLY.map(form => (
+                    <button
+                      key={form.id}
+                      className={`admin-nav-submenu-item${activeFormId === form.id ? ' active' : ''}`}
+                      onClick={() => onSelectForm?.(form.id)}
+                    >
+                      {shortFormLabel(form.label)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </nav>
 
@@ -70,7 +112,7 @@ export default function AdminLayout({ activePage, setActivePage, children }) {
       {/* ── Main Content ── */}
       <div className="admin-main">
         <div className="admin-topbar" />
-        <div className="admin-page">
+        <div className={`admin-page${activePage === 'forms' || activePage === 'dashboard' ? ' admin-page-wide' : ''}`}>
           {children}
         </div>
       </div>
