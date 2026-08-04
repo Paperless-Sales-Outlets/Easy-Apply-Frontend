@@ -36,9 +36,15 @@ export default function Dashboard() {
           <h2 id="forms-heading" className="section-title" style={{ marginBottom: 0 }}>
             {t('dashboard.title')}
           </h2>
-          <Link to="/check-status" className="btn btn-secondary">
-            {t('dashboard.forms.checkStatus.title')}
-          </Link>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <Link to="/add-to-cart" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Icon name="shopping-cart" size={18} />
+              Add to Cart
+            </Link>
+            <Link to="/check-status" className="btn btn-secondary">
+              {t('dashboard.forms.checkStatus.title')}
+            </Link>
+          </div>
         </div>
 
         <motion.ul
