@@ -1,0 +1,53 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches:
+      - main
+      - main-backup
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Determine Environment Variables & Folders
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "API_URL=/Paperless/api" >> $GITHUB_ENV
+            echo "DEST_DIR=/var/www/paperless" >> $GITHUB_ENV
+          else
+            echo "API_URL=/Paperlessbackup/api" >> $GITHUB_ENV
+            echo "DEST_DIR=/var/www/paperlessbackup" >> $GITHUB_ENV
+          fi
+
+      - name: Create Production .env file
+        run: |
+          echo "VITE_API_BASE_URL=${{ env.API_URL }}" > .env
+          echo "VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}" >> .env
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Application
+        run: npm run build
+
+      - name: Deploy to Server via SSH/SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "dist/*"
+          target: ${{ env.DEST_DIR }}
+          strip_components: 1
