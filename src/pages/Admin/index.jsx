@@ -3,29 +3,36 @@ import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 import AdminLayout from './components/AdminLayout';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
-import ApplicationsListPage from './pages/ApplicationsListPage';
+import FormsPage from './pages/FormsPage';
 import KycReviewPage from './pages/KycReviewPage';
 import AppointmentsCalendarPage from './pages/AppointmentsCalendarPage';
 import FieldTechnicianPage from './pages/FieldTechnicianPage';
 import AdoptionMonitoringPage from './pages/AdoptionMonitoringPage';
+import UserPrivilegesPage from './pages/UserPrivilegesPage';
 import './admin.css';
 
 function AdminDashboardContent() {
   const { admin, login } = useAdminAuth();
   const [activePage, setActivePage] = useState('dashboard');
+  const [selectedFormId, setSelectedFormId] = useState(null);
 
   // If not logged in, render the login page
   if (!admin) {
     return <AdminLoginPage onLogin={login} />;
   }
 
+  const handleSelectForm = (formId) => {
+    setSelectedFormId(formId);
+    setActivePage('forms');
+  };
+
   // Render correct page view
   const renderActivePage = () => {
     switch (activePage) {
       case 'dashboard':
-        return <AdminDashboardPage setActivePage={setActivePage} />;
-      case 'applications':
-        return <ApplicationsListPage />;
+        return <AdminDashboardPage />;
+      case 'forms':
+        return <FormsPage initialFormId={selectedFormId} />;
       case 'kyc':
         return <KycReviewPage />;
       case 'appointments':
@@ -34,13 +41,20 @@ function AdminDashboardContent() {
         return <FieldTechnicianPage />;
       case 'analytics':
         return <AdoptionMonitoringPage />;
+      case 'privileges':
+        return <UserPrivilegesPage />;
       default:
-        return <AdminDashboardPage setActivePage={setActivePage} />;
+        return <AdminDashboardPage />;
     }
   };
 
   return (
-    <AdminLayout activePage={activePage} setActivePage={setActivePage}>
+    <AdminLayout
+      activePage={activePage}
+      setActivePage={setActivePage}
+      onSelectForm={handleSelectForm}
+      activeFormId={selectedFormId}
+    >
       {renderActivePage()}
     </AdminLayout>
   );

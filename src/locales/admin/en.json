@@ -20,6 +20,7 @@
       "appointments": "Appointments",
       "technician": "My Jobs",
       "analytics": "Analytics",
+      "forms": "Forms",
       "signOut": "Sign Out",
       "portalTitle": "Admin Portal"
     },
@@ -68,9 +69,9 @@
     },
     "kyc": {
       "title": "KYC Review Panel",
-      "subtitle": "Review identity documents and selfie verification",
+      "subtitle": "Review identity documents and face validation",
       "document": "Identity Document",
-      "selfie": "Selfie",
+      "selfie": "Face Validation",
       "applicantInfo": "Applicant Information",
       "nicLabel": "NIC / Passport",
       "nameLabel": "Full Name",
