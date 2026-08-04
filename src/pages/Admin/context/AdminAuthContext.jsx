@@ -8,9 +8,10 @@ export function AdminAuthProvider({ children }) {
   const [admin, setAdmin] = useState(null);
 
   const login = (email, password) => {
-    // Dummy login — accept any credentials in demo mode
-    // Production: POST /api/auth/login → verify JWT role claim
-    if (email && password) {
+    // Fixed credentials — only accept the specified admin account
+    const ADMIN_EMAIL = 'admin@slt.lk';
+    const ADMIN_PASSWORD = 'admin123';
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       setAdmin({ ...DUMMY_USER, email });
       return true;
     }

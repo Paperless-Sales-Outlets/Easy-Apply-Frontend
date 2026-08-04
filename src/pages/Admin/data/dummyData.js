@@ -5,23 +5,23 @@
 export const DUMMY_USER = {
   name: 'Saman Perera',
   email: 'saman.perera@slt.lk',
-  role: 'Admin', // 'Admin' | 'Staff' | 'FieldTechnician'
+  role: 'Admin', // 'Admin' | 'Manager' | 'SalesOfficer'
 };
 
 // ── User Privileges ────────────────────────────────────────────────────────────
 export const SYSTEM_ROLES = [
   'Admin',
-  'Staff',
-  'FieldTechnician',
+  'Manager',
+  'SalesOfficer',
 ];
 
 export const MODULE_ACCESS = [
-  { key: 'dashboard',    label: 'Dashboard',    roles: ['Admin', 'Staff', 'FieldTechnician'] },
-  { key: 'kyc',          label: 'KYC Review',   roles: ['Admin', 'Staff'] },
-  { key: 'appointments', label: 'Appointments', roles: ['Admin', 'Staff'] },
-  { key: 'technician',   label: 'My Jobs',      roles: ['Admin', 'FieldTechnician'] },
-  { key: 'forms',        label: 'Forms',        roles: ['Admin', 'Staff'] },
-  { key: 'analytics',    label: 'Analytics',    roles: ['Admin', 'Staff'] },
+  { key: 'dashboard',    label: 'Dashboard',    roles: ['Admin', 'Manager', 'SalesOfficer'] },
+  { key: 'kyc',          label: 'KYC Review',   roles: ['Admin', 'Manager'] },
+  { key: 'appointments', label: 'Appointments', roles: ['Admin', 'Manager'] },
+  { key: 'technician',   label: 'My Jobs',      roles: ['Admin', 'SalesOfficer'] },
+  { key: 'forms',        label: 'Forms',        roles: ['Admin', 'Manager'] },
+  { key: 'analytics',    label: 'Analytics',    roles: ['Admin', 'Manager'] },
 ];
 
 // ── Applications ─────────────────────────────────────────────────────────────

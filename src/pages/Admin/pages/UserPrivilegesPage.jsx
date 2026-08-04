@@ -3,8 +3,8 @@ import { SYSTEM_ROLES, MODULE_ACCESS } from '../data/dummyData';
 
 const ROLE_LABELS = {
   Admin: 'Administrator',
-  Staff: 'Staff Member',
-  FieldTechnician: 'Field Technician',
+  Manager: 'Manager',
+  SalesOfficer: 'Sales Officer',
 };
 
 export default function UserPrivilegesPage() {
