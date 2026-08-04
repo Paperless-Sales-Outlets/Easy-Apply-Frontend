@@ -19,7 +19,13 @@ export default function UserPrivilegesPage() {
       label: 'Roles Available',
       value: SYSTEM_ROLES.length,
       hint: 'System user roles',
-      icon: '👥',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      ),
       colorClass: 'blue',
     },
     {
@@ -27,7 +33,12 @@ export default function UserPrivilegesPage() {
       label: 'System Modules',
       value: MODULE_ACCESS.length,
       hint: 'Accessible admin modules',
-      icon: '🧩',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+        </svg>
+      ),
       colorClass: 'green',
     },
     {
@@ -35,7 +46,12 @@ export default function UserPrivilegesPage() {
       label: 'Total Privileges',
       value: totalPrivileges,
       hint: 'Role → module grants',
-      icon: '🔐',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      ),
       colorClass: 'amber',
     },
   ];
@@ -54,7 +70,7 @@ export default function UserPrivilegesPage() {
         {summaryCards.map(card => (
           <div className="admin-stat-card" key={card.key}>
             <div className={`admin-stat-icon ${card.colorClass}`}>
-              <span style={{ fontSize: '1.2rem' }}>{card.icon}</span>
+              {card.icon}
             </div>
             <div>
               <div className="admin-stat-label">{card.label}</div>

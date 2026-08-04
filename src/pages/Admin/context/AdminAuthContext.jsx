@@ -3,22 +3,48 @@ import { DUMMY_USER } from '../data/dummyData';
 
 const AdminAuthContext = createContext(null);
 
+const SESSION_KEY = 'admin_session';
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(data) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  } catch { /* ignore */ }
+}
+
+function clearSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch { /* ignore */ }
+}
+
 export function AdminAuthProvider({ children }) {
-  // In production: replace with real JWT login flow
-  const [admin, setAdmin] = useState(null);
+  const [admin, setAdmin] = useState(() => loadSession());
 
   const login = (email, password) => {
-    // Fixed credentials — only accept the specified admin account
     const ADMIN_EMAIL = 'admin@slt.lk';
     const ADMIN_PASSWORD = 'admin123';
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      setAdmin({ ...DUMMY_USER, email });
+      const session = { ...DUMMY_USER, email };
+      setAdmin(session);
+      saveSession(session);
       return true;
     }
     return false;
   };
 
-  const logout = () => setAdmin(null);
+  const logout = () => {
+    setAdmin(null);
+    clearSession();
+  };
 
   return (
     <AdminAuthContext.Provider value={{ admin, login, logout }}>
