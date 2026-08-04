@@ -70,7 +70,9 @@ export default function PreferencesStep({
   const isFTTHOrMegaline = ['FTTH', 'Megaline'].includes(selectedServiceType);
   const isAuthLetterValid = isRepresentative !== 'yes' || Boolean(authLetter);
   const isBrcValid = customerType !== 'business' || Boolean(brcFile);
-  const isSltNumbersValid = !isFTTHOrMegaline || (validatePhoneNumber(sltNumber1) && validatePhoneNumber(sltNumber2));
+  const isSltNumber1Valid = !isFTTHOrMegaline || validatePhoneNumber(sltNumber1);
+  const isSltNumber2Valid = !sltNumber2 || validatePhoneNumber(sltNumber2);
+  const isSltNumbersValid = isSltNumber1Valid && isSltNumber2Valid;
   const isRelocationDateValid = Boolean(relocationDate);
   const isDisconnectDateValid = Boolean(disconnectDate);
 
@@ -290,7 +292,7 @@ export default function PreferencesStep({
               <div>
                 <label className="form-label">
                   {t('wizards.locationChange.preferences.nearestNumber2', 'Nearest SLT Telephone Number 2')}{' '}
-                  <span style={{ color: 'red' }}>*</span>
+                  <span style={{ color: '#888', fontWeight: '400', fontSize: '0.85rem' }}>(Optional)</span>
                 </label>
                 <input
                   type="text"
@@ -298,7 +300,6 @@ export default function PreferencesStep({
                   placeholder="e.g., 0112345679"
                   value={sltNumber2}
                   onChange={handlePhone2Change}
-                  required={isActive && isFTTHOrMegaline}
                 />
                 {errors.sltNumber2 && (
                   <span style={{ color: 'red', fontSize: '0.8rem', marginTop: '0.2rem', display: 'block' }}>

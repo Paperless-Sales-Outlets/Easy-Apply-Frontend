@@ -21,6 +21,7 @@ export default function LocationChangeWizard() {
   const [formData, setFormData] = useState({});
   const [agreed, setAgreed] = useState(false);
   const [signature, setSignature] = useState(null);
+  const [isGeneralInfoStepValid, setIsGeneralInfoStepValid] = useState(false);
   const [isAddressStepValid, setIsAddressStepValid] = useState(false);
   const [isPreferencesStepValid, setIsPreferencesStepValid] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
@@ -49,6 +50,11 @@ export default function LocationChangeWizard() {
   };
 
   const handleNext = () => {
+    if (currentStep === 1 && !isGeneralInfoStepValid) {
+      setShowValidationErrors(true);
+      return;
+    }
+
     if (currentStep === 2 && !isAddressStepValid) {
       setShowValidationErrors(true);
       return;
@@ -97,10 +103,26 @@ export default function LocationChangeWizard() {
     setSubmitError('');
 
     try {
-      const res = await api.post('/applications', {
-        serviceType: 'relocation',
-        formData: completePayload,
-        phone: verifiedMobile,
+      const fd = new FormData();
+      fd.append('serviceType', 'relocation');
+      fd.append('phone', verifiedMobile || '');
+      fd.append('formData', JSON.stringify(completePayload));
+
+      const maybeFiles = [
+        ['proofOfAddress', completePayload.proofOfAddress],
+        ['sketchFile', completePayload.sketchFile],
+        ['authorizationLetter', completePayload.authorizationLetter],
+        ['brcFile', completePayload.brcFile],
+        ['nicFront', completePayload.nicFront],
+        ['nicBack', completePayload.nicBack],
+      ];
+
+      maybeFiles.forEach(([key, file]) => {
+        if (file instanceof File) fd.append(key, file);
+      });
+
+      const res = await api.post('/applications', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       navigate('/completion', {
@@ -162,7 +184,13 @@ export default function LocationChangeWizard() {
 
       <form ref={formRef} onSubmit={handleSubmit}>
         <div style={{ minHeight: "300px", marginBottom: "2rem" }}>
-          {currentStep === 1 && <GeneralInfoStep isActive formData={formData} onChange={updateFormData} />}
+          {currentStep === 1 && <GeneralInfoStep
+            isActive
+            formData={formData}
+            onChange={updateFormData}
+            onValidationChange={setIsGeneralInfoStepValid}
+            showValidationErrors={showValidationErrors}
+          />}
           {currentStep === 2 && (
             <AddressStep
               isActive
@@ -176,6 +204,8 @@ export default function LocationChangeWizard() {
             <PreferencesStep
               isActive
               formData={formData}
+              selectedServiceType={formData?.serviceType || 'FTTH'}
+              customerType={formData?.customerType || 'individual'}
               onDataChange={updateFormData}
               onValidationChange={setIsPreferencesStepValid}
               showValidationErrors={showValidationErrors}
@@ -192,12 +222,6 @@ export default function LocationChangeWizard() {
             />
           )}
         </div>
-
-        {submitError && (
-          <p style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.9rem', fontWeight: '500' }}>
-            {submitError}
-          </p>
-        )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color, #e2e8f0)', paddingTop: '1.5rem' }}>
           <button

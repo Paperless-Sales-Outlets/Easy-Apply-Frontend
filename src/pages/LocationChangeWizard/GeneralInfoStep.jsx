@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 
-export default function GeneralInfoStep({ isActive, formData, onChange }) {
+export default function GeneralInfoStep({ isActive, formData, onChange, onValidationChange, showValidationErrors = false }) {
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(false);
@@ -17,6 +17,10 @@ export default function GeneralInfoStep({ isActive, formData, onChange }) {
     mobile: formData?.mobile || '',
     email: formData?.email || '',
   });
+
+  // Identification files (NIC front/back)
+  const [nicFrontFile, setNicFrontFile] = useState(null);
+  const [nicBackFile, setNicBackFile] = useState(null);
 
   const [errors, setErrors] = useState({});
 
@@ -56,6 +60,19 @@ export default function GeneralInfoStep({ isActive, formData, onChange }) {
       onChange(nextCustomer);
     }
   };
+
+  const isVerified = verificationState === 'verified';
+  const isTelephoneValid = validateTelephone(customer.telephone);
+  const isServiceTypeValid = Boolean(customer.serviceType);
+  const isNicFrontValid = Boolean(nicFrontFile);
+  const isNicBackValid = Boolean(nicBackFile);
+  const isStepValid = isVerified && isTelephoneValid && isServiceTypeValid && isNicFrontValid && isNicBackValid;
+
+  useEffect(() => {
+    if (typeof onValidationChange === 'function') {
+      onValidationChange(isStepValid);
+    }
+  }, [isStepValid, onValidationChange]);
 
   const handleVerify = async () => {
     if (!customer.telephone) {
@@ -97,7 +114,10 @@ export default function GeneralInfoStep({ isActive, formData, onChange }) {
         setVerificationState('verified');
 
         if (typeof onChange === 'function') {
-          onChange(updatedCustomer);
+          onChange({ ...updatedCustomer, nicFront: nicFrontFile, nicBack: nicBackFile });
+        }
+        if (typeof onValidationChange === 'function') {
+          onValidationChange(isStepValid);
         }
       } else {
         setVerificationState('failed');
@@ -134,8 +154,6 @@ export default function GeneralInfoStep({ isActive, formData, onChange }) {
         return <small style={{ color: '#6b7280' }}>Not Verified</small>;
     }
   };
-
-  const isVerified = verificationState === 'verified';
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -333,7 +351,57 @@ export default function GeneralInfoStep({ isActive, formData, onChange }) {
             <small style={{ color: '#dc2626', display: 'block', marginTop: '4px' }}>{errors.email}</small>
           )}
         </div>
+
+        {/* Identification Uploads */}
+        <div style={{ marginTop: '1rem' }}>
+          <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--text-primary)' }}>Identification Documents</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <label className="form-label" style={{ fontWeight: 500 }}>NIC Front (or Passport ID)</label>
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="form-control"
+                onChange={(e) => {
+                  const f = e.target.files[0] || null;
+                  setNicFrontFile(f);
+                  const next = { ...customer, nicFront: f };
+                  setCustomer(next);
+                  if (typeof onChange === 'function') onChange(next);
+                }}
+                disabled={!isVerified}
+              />
+              {showValidationErrors && !isNicFrontValid && (
+                <small style={{ color: '#dc2626', display: 'block', marginTop: '0.4rem' }}>
+                  NIC front is required.
+                </small>
+              )}
+            </div>
+
+            <div>
+              <label className="form-label" style={{ fontWeight: 500 }}>NIC Back (if any)</label>
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="form-control"
+                onChange={(e) => {
+                  const f = e.target.files[0] || null;
+                  setNicBackFile(f);
+                  const next = { ...customer, nicBack: f };
+                  setCustomer(next);
+                  if (typeof onChange === 'function') onChange(next);
+                }}
+                disabled={!isVerified}
+              />
+              {showValidationErrors && !isNicBackValid && (
+                <small style={{ color: '#dc2626', display: 'block', marginTop: '0.4rem' }}>
+                  NIC back is required.
+                </small>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
+}
