@@ -126,7 +126,7 @@ export default function ProductCatalogPage() {
 
   const handleBuyNow = async (prod, qty = 1) => {
     await handleAddToCart(prod, qty);
-    navigate('/cart');
+    navigate('/new-connection');
   };
 
   const filteredProducts = useMemo(() => {
@@ -224,12 +224,13 @@ export default function ProductCatalogPage() {
                 }}
               />
             </div>
-            <Link
-              to="/cart"
+            <button
+              type="button"
+              onClick={() => navigate(cartCount > 0 ? '/new-connection' : '/cart')}
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.4rem',
                 backgroundColor: '#0056b3', padding: '0.48rem 1.1rem',
-                borderRadius: '9999px', color: '#fff', textDecoration: 'none',
+                borderRadius: '9999px', color: '#fff', border: 'none', cursor: 'pointer',
                 fontWeight: 600, fontSize: '0.84rem',
                 boxShadow: '0 3px 10px rgba(0,86,179,0.28)',
               }}
@@ -243,7 +244,7 @@ export default function ProductCatalogPage() {
                   borderRadius: '9999px', padding: '0.08rem 0.4rem', marginLeft: '0.1rem',
                 }}>{cartCount}</span>
               )}
-            </Link>
+            </button>
           </div>
         </div>
 
