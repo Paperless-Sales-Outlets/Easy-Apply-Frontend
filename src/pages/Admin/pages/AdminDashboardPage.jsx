@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   DUMMY_SUMMARY,
-  DUMMY_RECENT_ACTIVITY,
-  DUMMY_APPLICATIONS,
+  DUMMY_FORM_STATS,
 } from '../data/dummyData';
+
+const SHORT_FORM_LABELS = {
+  'Customer Request Acceptance': 'Cust. Request',
+};
+
+function shortFormLabel(label) {
+  return SHORT_FORM_LABELS[label] || label;
+}
 
 const STAT_CARDS = [
   {
-    key: 'totalApplications',
-    label: 'Total Applications',
+    key: 'totalForms',
+    label: 'Total Forms',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -16,11 +23,22 @@ const STAT_CARDS = [
       </svg>
     ),
     colorClass: 'blue',
-    trendKey: 'totalApplications',
+    trendKey: 'totalForms',
   },
   {
-    key: 'pendingKyc',
-    label: 'Pending KYC',
+    key: 'completedForms',
+    label: 'Completed Forms',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" />
+      </svg>
+    ),
+    colorClass: 'green',
+    trendKey: 'completedForms',
+  },
+  {
+    key: 'pendingForms',
+    label: 'Pending Forms',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="4" width="20" height="16" rx="2" /><circle cx="8.5" cy="10" r="2" />
@@ -28,57 +46,128 @@ const STAT_CARDS = [
       </svg>
     ),
     colorClass: 'amber',
-    trendKey: 'pendingKyc',
-  },
-  {
-    key: 'todaysAppointments',
-    label: "Today's Appointments",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
-      </svg>
-    ),
-    colorClass: 'green',
-    trendKey: 'todaysAppointments',
-  },
-  {
-    key: 'approvedToday',
-    label: 'Approved Today',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" />
-      </svg>
-    ),
-    colorClass: 'green',
-    trendKey: 'approvedToday',
+    trendKey: 'pendingForms',
   },
 ];
 
-const SERVICE_LABELS = {
-  'new-connection':   'New Connection',
-  'reconnection':     'Reconnection',
-  'termination':      'Termination',
-  'package-migration':'Package Migration',
-  'ownership-change': 'Ownership Change',
-  'location-change':  'Location Change',
-  'refund-request':   'Refund Request',
-};
+const SERVICE_PALETTE = [
+  '#0b2d5b',
+  '#0a3f7e',
+  '#0f57a8',
+  '#1a6fc4',
+  '#2c8f92',
+  '#149b6e',
+  '#3e8f1f',
+  '#57b531',
+  '#86c95e',
+];
 
-const STATUS_COLORS = {
-  pending:  'pending',
-  approved: 'approved',
-  rejected: 'rejected',
-  flagged:  'flagged',
-};
-
-function formatDate(iso) {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  });
+function generateServiceTypeLegend(serviceTypes) {
+  return serviceTypes.map((item, index) => ({
+    label: item.service,
+    count: item.count,
+    color: SERVICE_PALETTE[index % SERVICE_PALETTE.length],
+  }));
 }
 
-export default function AdminDashboardPage({ setActivePage }) {
-  const recentApps = DUMMY_APPLICATIONS.slice(0, 5);
+function FormsDonutChart({ data }) {
+  const [selected, setSelected] = useState(null);
+  const [popup, setPopup] = useState(null);
+  const figureRef = useRef(null);
+  const total = data.reduce((sum, item) => sum + item.count, 0) || 1;
+  const size = 300;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = 100;
+  const strokeWidth = 52;
+  const circumference = 2 * Math.PI * radius;
+  let cumulative = 0;
+
+  const slices = data.map((item, index) => {
+    const fraction = item.count / total;
+    const start = cumulative;
+    cumulative += fraction;
+    const midAngleDeg = ((start + cumulative) / 2) * 360 - 90;
+    return {
+      ...item,
+      color: SERVICE_PALETTE[index % SERVICE_PALETTE.length],
+      dashLength: fraction * circumference,
+      dashOffset: -start * circumference,
+      midRad: (midAngleDeg * Math.PI) / 180,
+    };
+  });
+
+  const handleClick = (index, event) => {
+    const rect = figureRef.current.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    if (selected === index) {
+      setSelected(null);
+      setPopup(null);
+    } else {
+      setSelected(index);
+      setPopup({ index, x, y });
+    }
+  };
+
+  return (
+    <div className="pie-chart-figure" ref={figureRef}>
+      <svg viewBox={`0 0 ${size} ${size}`} width="240" height="240" style={{ display: 'block' }}>
+        <g transform={`rotate(-90 ${cx} ${cy})`}>
+          {slices.map((slice, index) => (
+            <circle
+              key={slice.label}
+              cx={cx}
+              cy={cy}
+              r={radius}
+              fill="none"
+              stroke={slice.color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${slice.dashLength} ${circumference - slice.dashLength}`}
+              strokeDashoffset={slice.dashOffset}
+              opacity={selected == null || selected === index ? 1 : 0.3}
+              style={{ cursor: 'pointer' }}
+              title={`${slice.label}: ${slice.count}`}
+              onClick={event => handleClick(index, event)}
+            />
+          ))}
+        </g>
+      </svg>
+      <div className="pie-chart-center-info">
+        <div className="pci-hint">Click a segment</div>
+      </div>
+      {popup && (
+        <div className="pie-chart-popup" style={{ left: popup.x, top: popup.y }}>
+          <span className="pie-chart-popup-swatch" style={{ background: slices[popup.index].color }} />
+          <div>
+            <div className="pie-chart-popup-count">{slices[popup.index].count}</div>
+            <div className="pie-chart-popup-label">{shortFormLabel(slices[popup.index].label)}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  const formTotalData = DUMMY_FORM_STATS.map(form => ({ service: form.label, count: form.total }));
+  const formCompletedData = DUMMY_FORM_STATS.map(form => ({ service: form.label, count: form.completed }));
+  const renderFormPieCard = (title, data) => (
+    <div className="pie-card">
+      <h2>{title}</h2>
+      <div className="pie-chart-wrap">
+        <FormsDonutChart data={data} />
+        <div className="pie-legend">
+          {generateServiceTypeLegend(data).map(item => (
+            <div className="pie-legend-item" key={item.label}>
+              <span className="pie-legend-swatch" style={{ background: item.color }} />
+              <span>{item.label}: <strong>{item.count}</strong></span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -107,94 +196,38 @@ export default function AdminDashboardPage({ setActivePage }) {
         ))}
       </div>
 
-      {/* ── Content Grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1.25rem' }}>
+      {/* ── Operation Pie Charts ── */}
+      <section className="admin-pie-grid">
+        {renderFormPieCard('Total Forms by Type (9 forms)', formTotalData)}
+        {renderFormPieCard('Completed Forms by Type (9 forms)', formCompletedData)}
+      </section>
 
-        {/* Recent Applications */}
-        <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <h2 style={{ fontSize: '1rem', fontFamily: 'var(--font-head)', color: 'var(--navy)', margin: 0 }}>
-              Recent Applications
-            </h2>
-            <button
-              className="admin-btn ghost"
-              onClick={() => setActivePage('applications')}
-            >
-              View All →
-            </button>
-          </div>
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Reference</th>
-                  <th>Name</th>
-                  <th>Service</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentApps.map(app => (
-                  <tr key={app.id}>
-                    <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--blue)' }}>
-                      {app.referenceNumber}
-                    </td>
-                    <td>{app.name}</td>
-                    <td style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>
-                      {SERVICE_LABELS[app.serviceType] || app.serviceType}
-                    </td>
-                    <td>
-                      <span className={`admin-badge ${STATUS_COLORS[app.status]}`}>
-                        {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* Recent Activity Feed */}
-        <section>
-          <h2 style={{ fontSize: '1rem', fontFamily: 'var(--font-head)', color: 'var(--navy)', marginBottom: '0.75rem' }}>
-            Recent Activity
-          </h2>
-          <div className="admin-table-wrap" style={{ padding: '0.25rem 1rem' }}>
-            <div className="activity-feed">
-              {DUMMY_RECENT_ACTIVITY.map(item => (
-                <div key={item.id} className="activity-item">
-                  <div className={`activity-dot ${item.type}`} />
-                  <span className="activity-msg">{item.message}</span>
-                  <span className="activity-time">{item.time}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </div>
-
-      {/* ── Quick Actions ── */}
-      <section style={{ marginTop: '1.5rem' }}>
-        <h2 style={{ fontSize: '1rem', fontFamily: 'var(--font-head)', color: 'var(--navy)', marginBottom: '0.75rem' }}>
-          Quick Actions
+      {/* ── Form Breakdown Charts ── */}
+      <section>
+        <h2 style={{ fontSize: '1rem', fontFamily: 'var(--font-head)', color: 'var(--navy)', marginBottom: '1rem' }}>
+          Forms Breakdown
         </h2>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          {[
-            { label: '📋 Review KYC Queue', page: 'kyc' },
-            { label: '📅 Today\'s Appointments', page: 'appointments' },
-            { label: '📊 View Analytics', page: 'analytics' },
-            { label: '📄 All Applications', page: 'applications' },
-          ].map(action => (
-            <button
-              key={action.page}
-              className="admin-btn ghost"
-              style={{ padding: '0.65rem 1.25rem', fontSize: '0.88rem' }}
-              onClick={() => setActivePage(action.page)}
-            >
-              {action.label}
-            </button>
-          ))}
+        <div className="form-chart-card">
+          <div className="form-chart-legend-bar">
+            <span><span className="legend-dot completed" /> Completed</span>
+            <span><span className="legend-dot total" /> Total</span>
+          </div>
+          <div className="form-vchart">
+            {DUMMY_FORM_STATS.map(form => {
+              const maxTotal = Math.max(...DUMMY_FORM_STATS.map(f => f.total));
+              const totalH = (form.total / maxTotal) * 100;
+              const completedH = (form.completed / form.total) * totalH;
+              return (
+                <div className="form-vchart-col" key={form.id}>
+                  <div className="form-vchart-bars">
+                    <div className="form-vchart-bar completed" style={{ height: `${completedH}%` }} />
+                    <div className="form-vchart-bar total" style={{ height: `${totalH}%` }} />
+                  </div>
+                  <div className="form-vchart-label">{form.label.replace('Customer Request Acceptance', 'Cust. Request')}</div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
     </>

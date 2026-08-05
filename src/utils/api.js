@@ -10,13 +10,27 @@ const api = axios.create({
   },
 });
 
-// Request Interceptor: Attach access token if it exists
+// ── Session ID ─────────────────────────────────────────────────────────────
+// Provides a stable, anonymous cart session without requiring login.
+const getSessionId = () => {
+  let sid = localStorage.getItem('cartSessionId');
+  if (!sid) {
+    // Generate a simple UUID-like identifier on first visit
+    sid = 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('cartSessionId', sid);
+  }
+  return sid;
+};
+
+// Request Interceptor: Attach access token (if logged in) and session ID
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+    // Always send the session ID for cart operations
+    config.headers['x-session-id'] = getSessionId();
     return config;
   },
   (error) => {
