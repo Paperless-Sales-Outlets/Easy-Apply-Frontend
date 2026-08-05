@@ -21,7 +21,7 @@ export default function SLTLoader({ size = 48, className = '', text = '' }) {
           <g transform="rotate(45 50 50) translate(0, -5)">
             {/* Cyan Pill (Top Left) */}
             <motion.rect 
-              x="26" y="10" width="16" height="38" rx="8" fill={cyan}
+              x="28" y="10" width="16" height="38" rx="8" fill={cyan}
               initial={{ opacity: 0.2, scale: 0.95 }}
               animate={{ opacity: [0.2, 1, 0.2], scale: [0.95, 1, 0.95] }}
               transition={getTransition(0)}
@@ -29,23 +29,23 @@ export default function SLTLoader({ size = 48, className = '', text = '' }) {
             
             {/* Dark Blue Pill (Bottom Left) */}
             <motion.rect 
-              x="26" y="56" width="16" height="38" rx="8" fill={darkBlue}
+              x="28" y="56" width="16" height="38" rx="8" fill={darkBlue}
               initial={{ opacity: 0.2, scale: 0.95 }}
               animate={{ opacity: [0.2, 1, 0.2], scale: [0.95, 1, 0.95] }}
               transition={getTransition(0.2)}
             />
             
-            {/* Green Circle (Center Bottom) */}
+            {/* Green Dot (Center Right) */}
             <motion.circle 
-              cx="58" cy="75" r="8" fill={green}
+              cx="64" cy="40" r="8" fill={green}
               initial={{ opacity: 0.2, scale: 0.95 }}
               animate={{ opacity: [0.2, 1, 0.2], scale: [0.95, 1, 0.95] }}
               transition={getTransition(0.4)}
             />
             
-            {/* Green Pill (Right) */}
+            {/* Green Pill (Bottom Right) */}
             <motion.rect 
-              x="74" y="42" width="16" height="52" rx="8" fill={green}
+              x="56" y="56" width="16" height="38" rx="8" fill={green}
               initial={{ opacity: 0.2, scale: 0.95 }}
               animate={{ opacity: [0.2, 1, 0.2], scale: [0.95, 1, 0.95] }}
               transition={getTransition(0.6)}

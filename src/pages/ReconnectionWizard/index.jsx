@@ -16,6 +16,7 @@ export default function ReconnectionWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [paymentIntention, setPaymentIntention] = useState('online');
   const [reconnectionData, setReconnectionData] = useState(null);
   const formRef = useRef(null);
   const step2Ref = useRef(null);
@@ -139,6 +140,7 @@ export default function ReconnectionWizard() {
             <DeclarationStep 
               ref={step3Ref} 
               isActive={currentStep === 3} 
+              onPaymentIntentionChange={setPaymentIntention}
               customerType={
                 reconnectionData?.customerType === 'office' ? 'Business' 
                 : reconnectionData?.customerType === 'foreign' ? 'Foreign' 
@@ -173,7 +175,12 @@ export default function ReconnectionWizard() {
             </button>
           ) : currentStep === totalSteps - 1 ? (
             <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting ? t('common.submitting') : t('common.submit')}
+              {submitting 
+                ? t('common.submitting') 
+                : paymentIntention === 'paid' 
+                  ? 'Submit Reconnection Request' 
+                  : `Proceed to Pay Rs. ${reconnectionData?.outstandingBalance || '0.00'}`
+              }
             </button>
           ) : null}
         </div>

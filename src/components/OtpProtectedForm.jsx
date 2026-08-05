@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 import { VerificationContext } from './verification';
 import api from '../utils/api';
-import heroImg from '../assets/slt fiber.png';
+import heroImg from '../assets/image copy.png';
 
 const RESEND_SECONDS = 30;
 
