@@ -93,8 +93,8 @@ export default function PayHereButton({
       const payment = {
         sandbox: sandbox, // Sandbox flag
         merchant_id: paymentParams.merchant_id,
-        return_url: paymentParams.return_url || window.location.href,
-        cancel_url: paymentParams.cancel_url || window.location.href,
+        return_url: paymentParams.return_url || 'https://slt.lk',
+        cancel_url: paymentParams.cancel_url || 'https://slt.lk',
         notify_url: paymentParams.notify_url || '',
         order_id: paymentParams.order_id,
         items: paymentParams.items || itemTitle,
