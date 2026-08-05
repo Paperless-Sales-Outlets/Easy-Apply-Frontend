@@ -1,4 +1,7 @@
+// PayHere uses a single SDK URL for both sandbox and production.
+// Sandbox mode is controlled by setting sandbox: true in the payment payload.
 const PAYHERE_SDK_URL = 'https://www.payhere.lk/lib/payhere.js';
+
 
 let payHereLoadPromise = null;
 

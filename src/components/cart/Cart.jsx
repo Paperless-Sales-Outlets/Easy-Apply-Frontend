@@ -19,6 +19,10 @@ const Cart = ({ isOpen, onClose }) => {
   };
 
   const handleCheckout = () => {
+    if (!totalAmount || totalAmount <= 0) {
+      alert('Your cart is empty or the total is Rs. 0. Please add items before checkout.');
+      return;
+    }
     setShowPayHere(true);
   };
 
@@ -42,7 +46,11 @@ const Cart = ({ isOpen, onClose }) => {
   const handlePaymentError = (error) => {
     setShowPayHere(false);
     console.error('Payment error:', error);
-    alert('Payment failed. Please try again.');
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      'Payment failed. Please try again.';
+    alert(`Payment Error: ${message}`);
   };
 
   const cartItems = cart?.items || [];
