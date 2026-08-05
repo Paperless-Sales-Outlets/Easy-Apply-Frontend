@@ -4,6 +4,34 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Icon from '../../components/Icon';
 
+const FacilityCard = ({ id, icon, label, checked, onChange }) => (
+  <motion.label 
+    whileHover={{ scale: 1.02, y: -2 }}
+    whileTap={{ scale: 0.98 }}
+    style={{ 
+      display: 'flex', alignItems: 'center', gap: '1rem', 
+      padding: '1rem', borderRadius: '12px', 
+      border: checked ? '2px solid var(--blue)' : '2px solid var(--line)',
+      backgroundColor: checked ? 'rgba(15, 87, 168, 0.05)' : 'var(--surface)',
+      boxShadow: checked ? '0 8px 16px rgba(15, 87, 168, 0.12)' : '0 2px 4px rgba(0,0,0,0.02)',
+      cursor: 'pointer', transition: 'all 0.3s ease'
+    }}
+  >
+    <input type="checkbox" name={`facility_${id}`} style={{ display: 'none' }} checked={checked} onChange={() => onChange(id)} />
+    <div style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'grid', placeItems: 'center', backgroundColor: checked ? 'var(--blue)' : 'var(--paper)', color: checked ? '#fff' : 'var(--muted)', transition: 'all 0.3s' }}>
+      <Icon name={icon} size={20} />
+    </div>
+    <span style={{ fontWeight: 600, flex: 1, color: checked ? 'var(--blue)' : 'var(--text)', transition: 'color 0.3s' }}>{label}</span>
+    <AnimatePresence>
+      {checked && (
+        <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} style={{ color: 'var(--blue)' }}>
+          <Icon name="check-circle" size={20} />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </motion.label>
+);
+
 const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ isActive, reconnectionData }, ref) {
   const { t } = useTranslation();
 
@@ -37,150 +65,39 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
     <div>
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.reconnection.reconnectionDetails.heading')}</h3>
 
-      {/* Disconnection date range */}
-      <div className="form-group flex flex-col-mobile gap-4 items-center">
-        <label className="form-label" style={{ margin: 0, flexShrink: 0 }}>
-          {t('wizards.reconnection.reconnectionDetails.disconnectedFrom')}
-        </label>
-        <input type="date" name="disconnectedFrom" className="form-control" style={{ flex: '1' }} required={isActive} value={reconnectionData?.disconnectedFrom || ''} readOnly />
-        <span style={{ padding: '0 0.5rem' }}>{t('wizards.reconnection.reconnectionDetails.disconnectedTo')}</span>
-        <input type="date" name="disconnectedTo" className="form-control" style={{ flex: '1' }} required={isActive} value={reconnectionData?.disconnectedTo || ''} readOnly />
-      </div>
-
-      {/* Amount to pay */}
-      <div className="form-group flex gap-4 items-center">
-        <label className="form-label" style={{ margin: 0 }}>
-          {t('wizards.reconnection.reconnectionDetails.amountToPay')}
-        </label>
-        <input type="text" name="amountToPay" className="form-control" style={{ maxWidth: '200px' }} required={isActive} value={reconnectionData?.outstandingBalance !== undefined ? reconnectionData.outstandingBalance : ''} readOnly />
-      </div>
-
       {/* Facilities — at least one required */}
-      <h4 style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+      <h4 style={{ marginTop: '1rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
         {t('wizards.reconnection.reconnectionDetails.facilitiesHeading')}
       </h4>
 
       <div className="form-group">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
           
-          <motion.label 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '1rem', 
-              padding: '1rem', borderRadius: '12px', 
-              border: checkedFacilities['broadband'] ? '2px solid var(--blue)' : '2px solid var(--line)',
-              backgroundColor: checkedFacilities['broadband'] ? 'rgba(15, 87, 168, 0.05)' : 'var(--surface)',
-              cursor: 'pointer', transition: 'border 0.3s, background 0.3s'
-            }}
-          >
-            <input type="checkbox" name="facility_broadband" style={{ display: 'none' }} checked={!!checkedFacilities['broadband']} onChange={() => toggleFacility('broadband')} />
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'grid', placeItems: 'center', backgroundColor: checkedFacilities['broadband'] ? 'var(--blue)' : 'var(--paper)', color: checkedFacilities['broadband'] ? '#fff' : 'var(--muted)', transition: 'all 0.3s' }}>
-              <Icon name="wifi" size={20} />
-            </div>
-            <span style={{ fontWeight: 600, color: checkedFacilities['broadband'] ? 'var(--blue)' : 'var(--text)', transition: 'color 0.3s' }}>{t('wizards.reconnection.reconnectionDetails.broadband')}</span>
-          </motion.label>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <FacilityCard id="broadband" icon="wifi" label={t('wizards.reconnection.reconnectionDetails.broadband')} checked={!!checkedFacilities['broadband']} onChange={toggleFacility} />
+            <AnimatePresence>
+              {checkedFacilities['broadband'] && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+                  <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
+                    <input type="text" name="broadbandUsername" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Broadband Username *" defaultValue={reconnectionData?.broadbandUsername || ''} required={isActive && checkedFacilities['broadband']} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-          <motion.label 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '1rem', 
-              padding: '1rem', borderRadius: '12px', 
-              border: checkedFacilities['peoTv'] ? '2px solid var(--blue)' : '2px solid var(--line)',
-              backgroundColor: checkedFacilities['peoTv'] ? 'rgba(15, 87, 168, 0.05)' : 'var(--surface)',
-              cursor: 'pointer', transition: 'border 0.3s, background 0.3s'
-            }}
-          >
-            <input type="checkbox" name="facility_peoTv" style={{ display: 'none' }} checked={!!checkedFacilities['peoTv']} onChange={() => toggleFacility('peoTv')} />
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'grid', placeItems: 'center', backgroundColor: checkedFacilities['peoTv'] ? 'var(--blue)' : 'var(--paper)', color: checkedFacilities['peoTv'] ? '#fff' : 'var(--muted)', transition: 'all 0.3s' }}>
-              <Icon name="tv" size={20} />
-            </div>
-            <span style={{ fontWeight: 600, color: checkedFacilities['peoTv'] ? 'var(--blue)' : 'var(--text)', transition: 'color 0.3s' }}>{t('wizards.reconnection.reconnectionDetails.peoTv')}</span>
-          </motion.label>
-
-          <motion.label 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '1rem', 
-              padding: '1rem', borderRadius: '12px', 
-              border: checkedFacilities['sltPlus'] ? '2px solid var(--blue)' : '2px solid var(--line)',
-              backgroundColor: checkedFacilities['sltPlus'] ? 'rgba(15, 87, 168, 0.05)' : 'var(--surface)',
-              cursor: 'pointer', transition: 'border 0.3s, background 0.3s'
-            }}
-          >
-            <input type="checkbox" name="facility_sltPlus" style={{ display: 'none' }} checked={!!checkedFacilities['sltPlus']} onChange={() => toggleFacility('sltPlus')} />
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'grid', placeItems: 'center', backgroundColor: checkedFacilities['sltPlus'] ? 'var(--blue)' : 'var(--paper)', color: checkedFacilities['sltPlus'] ? '#fff' : 'var(--muted)', transition: 'all 0.3s' }}>
-              <Icon name="plus-circle" size={20} />
-            </div>
-            <span style={{ fontWeight: 600, color: checkedFacilities['sltPlus'] ? 'var(--blue)' : 'var(--text)', transition: 'color 0.3s' }}>{t('wizards.reconnection.reconnectionDetails.sltPlus')}</span>
-          </motion.label>
-
-          <motion.label 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '1rem', 
-              padding: '1rem', borderRadius: '12px', 
-              border: checkedFacilities['cli'] ? '2px solid var(--blue)' : '2px solid var(--line)',
-              backgroundColor: checkedFacilities['cli'] ? 'rgba(15, 87, 168, 0.05)' : 'var(--surface)',
-              cursor: 'pointer', transition: 'border 0.3s, background 0.3s'
-            }}
-          >
-            <input type="checkbox" name="facility_cli" style={{ display: 'none' }} checked={!!checkedFacilities['cli']} onChange={() => toggleFacility('cli')} />
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'grid', placeItems: 'center', backgroundColor: checkedFacilities['cli'] ? 'var(--blue)' : 'var(--paper)', color: checkedFacilities['cli'] ? '#fff' : 'var(--muted)', transition: 'all 0.3s' }}>
-              <Icon name="phone" size={20} />
-            </div>
-            <span style={{ fontWeight: 600, color: checkedFacilities['cli'] ? 'var(--blue)' : 'var(--text)', transition: 'color 0.3s' }}>{t('wizards.reconnection.reconnectionDetails.cli')}</span>
-          </motion.label>
-
-          <motion.label 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '1rem', 
-              padding: '1rem', borderRadius: '12px', 
-              border: checkedFacilities['idd'] ? '2px solid var(--blue)' : '2px solid var(--line)',
-              backgroundColor: checkedFacilities['idd'] ? 'rgba(15, 87, 168, 0.05)' : 'var(--surface)',
-              cursor: 'pointer', transition: 'border 0.3s, background 0.3s'
-            }}
-          >
-            <input type="checkbox" name="facility_idd" style={{ display: 'none' }} checked={!!checkedFacilities['idd']} onChange={() => toggleFacility('idd')} />
-            <div style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'grid', placeItems: 'center', backgroundColor: checkedFacilities['idd'] ? 'var(--blue)' : 'var(--paper)', color: checkedFacilities['idd'] ? '#fff' : 'var(--muted)', transition: 'all 0.3s' }}>
-              <Icon name="globe" size={20} />
-            </div>
-            <span style={{ fontWeight: 600, color: checkedFacilities['idd'] ? 'var(--blue)' : 'var(--text)', transition: 'color 0.3s' }}>{t('wizards.reconnection.reconnectionDetails.idd')}</span>
-          </motion.label>
+          <FacilityCard id="peoTv" icon="tv" label={t('wizards.reconnection.reconnectionDetails.peoTv')} checked={!!checkedFacilities['peoTv']} onChange={toggleFacility} />
+          <FacilityCard id="sltPlus" icon="plus-circle" label={t('wizards.reconnection.reconnectionDetails.sltPlus')} checked={!!checkedFacilities['sltPlus']} onChange={toggleFacility} />
+          <FacilityCard id="cli" icon="phone" label={t('wizards.reconnection.reconnectionDetails.cli')} checked={!!checkedFacilities['cli']} onChange={toggleFacility} />
+          <FacilityCard id="idd" icon="globe" label={t('wizards.reconnection.reconnectionDetails.idd')} checked={!!checkedFacilities['idd']} onChange={toggleFacility} />
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <motion.label 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '1rem', 
-                padding: '1rem', borderRadius: '12px', 
-                border: checkedFacilities['email'] ? '2px solid var(--blue)' : '2px solid var(--line)',
-                backgroundColor: checkedFacilities['email'] ? 'rgba(15, 87, 168, 0.05)' : 'var(--surface)',
-                cursor: 'pointer', transition: 'border 0.3s, background 0.3s'
-              }}
-            >
-              <input type="checkbox" name="facility_email" style={{ display: 'none' }} checked={!!checkedFacilities['email']} onChange={() => toggleFacility('email')} />
-              <div style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'grid', placeItems: 'center', backgroundColor: checkedFacilities['email'] ? 'var(--blue)' : 'var(--paper)', color: checkedFacilities['email'] ? '#fff' : 'var(--muted)', transition: 'all 0.3s' }}>
-                <Icon name="mail" size={20} />
-              </div>
-              <span style={{ fontWeight: 600, color: checkedFacilities['email'] ? 'var(--blue)' : 'var(--text)', transition: 'color 0.3s' }}>{t('wizards.reconnection.reconnectionDetails.email')}</span>
-            </motion.label>
+            <FacilityCard id="email" icon="mail" label={t('wizards.reconnection.reconnectionDetails.email')} checked={!!checkedFacilities['email']} onChange={toggleFacility} />
             <AnimatePresence>
               {checkedFacilities['email'] && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  style={{ overflow: 'hidden' }}
-                >
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                   <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
-                    <input type="text" name="emailUsername" className="form-control" placeholder="Email Username *" required={isActive && checkedFacilities['email']} />
+                    <input type="text" name="emailUsername" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Email Username *" required={isActive && checkedFacilities['email']} />
                   </div>
                 </motion.div>
               )}
@@ -188,33 +105,12 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <motion.label 
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '1rem', 
-                padding: '1rem', borderRadius: '12px', 
-                border: checkedFacilities['dialUp'] ? '2px solid var(--blue)' : '2px solid var(--line)',
-                backgroundColor: checkedFacilities['dialUp'] ? 'rgba(15, 87, 168, 0.05)' : 'var(--surface)',
-                cursor: 'pointer', transition: 'border 0.3s, background 0.3s'
-              }}
-            >
-              <input type="checkbox" name="facility_dialUp" style={{ display: 'none' }} checked={!!checkedFacilities['dialUp']} onChange={() => toggleFacility('dialUp')} />
-              <div style={{ width: '40px', height: '40px', borderRadius: '8px', display: 'grid', placeItems: 'center', backgroundColor: checkedFacilities['dialUp'] ? 'var(--blue)' : 'var(--paper)', color: checkedFacilities['dialUp'] ? '#fff' : 'var(--muted)', transition: 'all 0.3s' }}>
-                <Icon name="monitor" size={20} />
-              </div>
-              <span style={{ fontWeight: 600, color: checkedFacilities['dialUp'] ? 'var(--blue)' : 'var(--text)', transition: 'color 0.3s' }}>{t('wizards.reconnection.reconnectionDetails.dialUp')}</span>
-            </motion.label>
+            <FacilityCard id="dialUp" icon="monitor" label={t('wizards.reconnection.reconnectionDetails.dialUp')} checked={!!checkedFacilities['dialUp']} onChange={toggleFacility} />
             <AnimatePresence>
               {checkedFacilities['dialUp'] && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  style={{ overflow: 'hidden' }}
-                >
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                   <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
-                    <input type="text" name="dialUpUsername" className="form-control" placeholder="Dial-up Username *" required={isActive && checkedFacilities['dialUp']} />
+                    <input type="text" name="dialUpUsername" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Dial-up Username *" required={isActive && checkedFacilities['dialUp']} />
                   </div>
                 </motion.div>
               )}

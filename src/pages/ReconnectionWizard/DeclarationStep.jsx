@@ -91,7 +91,7 @@ const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange
           required={required && !hasFile}
           ref={inputRef}
           onChange={handleChange}
-          style={{ display: 'none' }}
+          style={{ opacity: 0, position: 'absolute', zIndex: -1, width: '1px', height: '1px', left: 0, top: 0 }}
         />
         
         {hasFile ? (
@@ -130,7 +130,7 @@ const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange
 });
 
 
-const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customerType = 'Residential' }, ref) {
+const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customerType = 'Residential', onPaymentIntentionChange }, ref) {
   const { t } = useTranslation();
   const [signatureBase64, setSignatureBase64] = useState('');
   const [signatureError, setSignatureError] = useState(false);
@@ -138,8 +138,46 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
   const [signatureMethod, setSignatureMethod] = useState('draw'); // 'draw' or 'upload'
   const signatureFileRef = useRef(null);
 
+  const [paymentIntention, setPaymentIntention] = useState('online');
+
+  // Notify parent whenever payment intention changes
+  React.useEffect(() => {
+    if (onPaymentIntentionChange) {
+      onPaymentIntentionChange(paymentIntention);
+    }
+  }, [paymentIntention, onPaymentIntentionChange]);
+
   useImperativeHandle(ref, () => ({
     validate: () => {
+      const form = document.querySelector('form');
+      if (form) {
+        const formData = new FormData(form);
+        if (customerType === 'Residential') {
+          const front = formData.get('nicFront');
+          const back = formData.get('nicBack');
+          if (!front || front.size === 0) {
+            toast.error('Please upload NIC Front Copy');
+            return false;
+          }
+          if (!back || back.size === 0) {
+            toast.error('Please upload NIC Back Copy');
+            return false;
+          }
+        } else if (customerType === 'Foreign') {
+          const passport = formData.get('passportCopy');
+          if (!passport || passport.size === 0) {
+            toast.error('Please upload Passport Copy');
+            return false;
+          }
+        } else if (customerType === 'Business') {
+          const brc = formData.get('brcCopy');
+          if (!brc || brc.size === 0) {
+            toast.error('Please upload Business Registration Certificate');
+            return false;
+          }
+        }
+      }
+
       if (signatureMethod === 'draw' && !signatureBase64) {
         setSignatureError(true);
         toast.error('Please provide your digital signature to proceed');
@@ -166,7 +204,6 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
                 label="NIC Front Copy (PDF/JPG/PNG)"
                 name="nicFront"
                 accept=".pdf,.jpg,.jpeg,.png"
-                required={isActive && customerType === 'Residential'}
               />
             </div>
             <div style={{ flex: '1' }}>
@@ -174,7 +211,6 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
                 label="NIC Back Copy (PDF/JPG/PNG)"
                 name="nicBack"
                 accept=".pdf,.jpg,.jpeg,.png"
-                required={isActive && customerType === 'Residential'}
               />
             </div>
           </>
@@ -186,7 +222,6 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
               label="Passport Copy (PDF/JPG/PNG)"
               name="passportCopy"
               accept=".pdf,.jpg,.jpeg,.png"
-              required={isActive && customerType === 'Foreign'}
             />
           </div>
         )}
@@ -197,20 +232,34 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
               label="Business Registration Certificate (PDF)"
               name="brcCopy"
               accept=".pdf"
-              required={isActive && customerType === 'Business'}
             />
           </div>
         )}
       </div>
 
-      <div className="form-group mb-5" style={{ maxWidth: '400px' }}>
-        <FileInputWithClear
-          label="Payment Receipt (Optional, if dues already settled)"
-          name="paymentReceipt"
-          accept=".pdf,.jpg,.jpeg,.png"
-        />
-      </div>
+      <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: 'rgba(15, 87, 168, 0.05)', borderRadius: '12px', border: '1px solid rgba(15, 87, 168, 0.2)' }}>
+        <h4 style={{ color: 'var(--slt-blue)', marginBottom: '1rem', fontSize: '1.1rem' }}>Pending Balance Settlement</h4>
+        <div className="radio-group" style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <label className="radio-label" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
+            <input type="radio" name="paymentIntention" value="online" checked={paymentIntention === 'online'} onChange={() => setPaymentIntention('online')} /> 
+            Pay Online Now (Recommended)
+          </label>
+          <label className="radio-label" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
+            <input type="radio" name="paymentIntention" value="paid" checked={paymentIntention === 'paid'} onChange={() => setPaymentIntention('paid')} /> 
+            I have already paid
+          </label>
+        </div>
 
+        {paymentIntention === 'paid' && (
+          <div className="form-group mb-2" style={{ maxWidth: '400px' }}>
+            <FileInputWithClear
+              label="Upload Payment Receipt (PDF/JPG/PNG)"
+              name="paymentReceipt"
+              accept=".pdf,.jpg,.jpeg,.png"
+            />
+          </div>
+        )}
+      </div>
 
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem', marginTop: '2.5rem' }}>{t('wizards.reconnection.declaration.heading')}</h3>
 

@@ -301,11 +301,11 @@
         "contactNo": "Contact No."
       },
       "reconnectionDetails": {
-        "heading": "2. Request for Service Re-connection",
+        "heading": "2. Required Services",
         "disconnectedFrom": "My telephone line has been disconnected from",
         "disconnectedTo": "to",
         "amountToPay": "I would like to pay Rs. (Amount)",
-        "facilitiesHeading": "Could you kindly reconnect the line and provide the following facilities as well:",
+        "facilitiesHeading": "Which services would you like to reactivate?",
         "broadband": "SLT Broadband Internet (ADSL/Wi-Max)",
         "peoTv": "PeoTV",
         "sltPlus": "SLT Plus",
@@ -321,7 +321,7 @@
       },
       "declaration": {
         "heading": "3. Customer Agreement",
-        "declarationText": "I/We do hereby request to reconnect the above mentioned services and agree to pay the required reconnection charges.",
+        "declarationText": "I request the reactivation of the selected services and agree to the applicable reconnection charges.",
         "agreeLabel": "I accept the Terms and Conditions"
       }
     },
