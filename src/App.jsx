@@ -18,6 +18,9 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
+import ProductCatalogPage from './pages/ProductCatalogPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import CartPage from './pages/CartPage';
 
 const PageWrapper = ({ children, fullBleed = false }) => {
   return (
@@ -33,13 +36,19 @@ const PageWrapper = ({ children, fullBleed = false }) => {
   );
 };
 
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Main Dashboard & Wizard Routes */}
+        {/* Main Dashboard & Catalog Routes */}
         <Route path="/" element={<PageWrapper fullBleed><Dashboard /></PageWrapper>} />
+        <Route path="/new-connection/products" element={<PageWrapper fullBleed><ProductCatalogPage /></PageWrapper>} />
+        <Route path="/new-connection/product/:id" element={<PageWrapper><ProductDetailPage /></PageWrapper>} />
+        <Route path="/cart" element={<PageWrapper fullBleed><CartPage /></PageWrapper>} />
+
+        {/* Wizard Routes (Protected by OTP) */}
         <Route path="/new-connection" element={<PageWrapper><OtpProtectedForm><NewConnectionWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/reconnection" element={<PageWrapper><OtpProtectedForm><ReconnectionWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/ownership-change" element={<PageWrapper><OtpProtectedForm><OwnershipChangeWizard /></OtpProtectedForm></PageWrapper>} />
@@ -58,6 +67,7 @@ const AnimatedRoutes = () => {
     </AnimatePresence>
   );
 };
+
 
 const NavigationLayout = ({ children }) => {
   const location = useLocation();
