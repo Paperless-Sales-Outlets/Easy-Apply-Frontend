@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   FiHeart,
   FiShoppingCart,
@@ -70,16 +71,21 @@ export default function ProductDetailsPanel({
   };
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, x: 20, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 20, scale: 0.98 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
       style={{
         backgroundColor: '#ffffff',
         borderRadius: '16px',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
         border: '1px solid #e2e8f0',
         padding: '1.5rem',
         display: 'flex',
         flexDirection: 'column',
         gap: '1.5rem',
+        width: '100%',
       }}
     >
       {/* Top Details Grid */}
@@ -423,6 +429,6 @@ export default function ProductDetailsPanel({
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

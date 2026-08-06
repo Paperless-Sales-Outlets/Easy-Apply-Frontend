@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
@@ -17,10 +18,13 @@ const swap = {
   transition: { duration: 0.18 },
 };
 
-export default function OtpProtectedForm({ children }) {
+export default function OtpProtectedForm({ children, onVerified, skipOtp: skipProp }) {
   const { t } = useTranslation();
-  const [phase, setPhase] = useState('mobile'); // 'mobile' | 'otp' | 'verified'
-  const [done, setDone] = useState(false);
+  const location = useLocation();
+  const isSkip = skipProp || location.state?.skipOtp || sessionStorage.getItem('customerType') === 'new';
+
+  const [phase, setPhase] = useState(isSkip ? 'verified' : 'mobile'); // 'mobile' | 'otp' | 'verified'
+  const [done, setDone] = useState(isSkip);
   const [mobileNumber, setMobileNumber] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
@@ -48,10 +52,28 @@ export default function OtpProtectedForm({ children }) {
   // Also persist the verified phone so Dashboard can read it for payments.
   useEffect(() => {
     if (phase !== 'verified') return;
-    sessionStorage.setItem('verifiedPhone', mobileNumber);
-    const id = setTimeout(() => setDone(true), 800);
+    if (mobileNumber) sessionStorage.setItem('verifiedPhone', mobileNumber);
+    const id = setTimeout(() => setDone(true), isSkip ? 0 : 800);
     return () => clearTimeout(id);
-  }, [phase, mobileNumber]);
+  }, [phase, mobileNumber, isSkip]);
+
+  useEffect(() => {
+    if (isSkip) {
+      setDone(true);
+      return;
+    }
+    const savedPhone = sessionStorage.getItem('verifiedPhone');
+    if (savedPhone) {
+      setMobileNumber(savedPhone);
+      setPhase('verified');
+      setDone(true);
+    }
+  }, [isSkip]);
+
+  useEffect(() => {
+    if (!done || !onVerified) return;
+    onVerified();
+  }, [done, onVerified]);
 
   const handleMobileSubmit = async (e) => {
     e.preventDefault();

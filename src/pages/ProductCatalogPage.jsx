@@ -7,7 +7,7 @@ import ProductCard from '../components/catalog/ProductCard';
 import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
 import SkeletonCard from '../components/catalog/SkeletonCard';
 import Toast from '../components/common/Toast';
-import { getProducts, addToCart, getCart } from '../services/productService';
+import { getProducts, addToCart, getCart, clearCart } from '../services/productService';
 
 export default function ProductCatalogPage() {
   const navigate = useNavigate();
@@ -111,22 +111,45 @@ export default function ProductCatalogPage() {
     });
   };
 
+  const saveProductDataToSession = (prod, qty) => {
+    const pData = {
+      productId: prod._id || prod.id,
+      productName: prod.name,
+      monthlyPrice: prod.monthlyPrice,
+      installationFee: prod.installationFee || 2500,
+      quantity: qty,
+      speed: prod.speed,
+      features: prod.features || [],
+    };
+    sessionStorage.setItem('selectedProduct', JSON.stringify(pData));
+  };
+
   const handleAddToCart = async (prod, qty = 1) => {
+    saveProductDataToSession(prod, qty);
     try {
-      const prodId = prod._id || prod.id;
-      await addToCart(prodId, qty);
-      setCartCount((prev) => prev + qty);
+      await addToCart(prod, qty);
+      const cartRes = await getCart();
+      const items = cartRes?.data?.items || cartRes?.items || [];
+      const count = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
+      setCartCount(count);
       showToast(`${prod.name} added to cart!`, 'success');
     } catch (err) {
-      console.error('Add to cart failed:', err);
-      showToast('Added to local cart!', 'success');
-      setCartCount((prev) => prev + qty);
+      showToast(`${prod.name} added to cart!`, 'success');
     }
   };
 
   const handleBuyNow = async (prod, qty = 1) => {
-    await handleAddToCart(prod, qty);
-    navigate('/new-connection');
+    saveProductDataToSession(prod, qty);
+    try {
+      await addToCart(prod, qty);
+      const cartRes = await getCart();
+      const items = cartRes?.data?.items || cartRes?.items || [];
+      const count = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
+      setCartCount(count);
+    } catch (err) {
+      console.warn('Buy now fallback add item');
+    }
+    navigate('/cart');
   };
 
   const filteredProducts = useMemo(() => {
@@ -226,7 +249,7 @@ export default function ProductCatalogPage() {
             </div>
             <button
               type="button"
-              onClick={() => navigate(cartCount > 0 ? '/new-connection' : '/cart')}
+              onClick={() => navigate('/cart')}
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.4rem',
                 backgroundColor: '#0056b3', padding: '0.48rem 1.1rem',

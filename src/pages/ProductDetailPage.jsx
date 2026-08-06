@@ -44,7 +44,7 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = async (prod, qty) => {
     await handleAddToCart(prod, qty);
-    navigate('/new-connection');
+    navigate('/verify-phone');
   };
 
   return (
