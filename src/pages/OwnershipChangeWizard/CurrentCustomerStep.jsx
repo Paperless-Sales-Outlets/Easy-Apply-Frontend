@@ -7,11 +7,6 @@ export default function CurrentCustomerStep({ isActive }) {
   return (
     <div>
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.ownershipChange.currentCustomer.heading')}</h3>
-      
-      <div className="form-group">
-        <label className="form-label">{t('wizards.ownershipChange.currentCustomer.telephone')}</label>
-        <input name="currentTelephone" type="tel" className="form-control" required={isActive} />
-      </div>
 
       <div className="form-group">
         <label className="form-label">{t('wizards.ownershipChange.currentCustomer.customerName')}</label>

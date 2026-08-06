@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ServiceDetailsStep from './ServiceDetailsStep';
 import CurrentCustomerStep from './CurrentCustomerStep';
 import NewApplicantStep from './NewApplicantStep';
 import DocumentsStep from './DocumentsStep';
@@ -16,7 +17,7 @@ export default function OwnershipChangeWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -73,7 +74,7 @@ export default function OwnershipChangeWizard() {
         <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
         <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
 
-        {[1, 2, 3, 4].map(step => (
+        {[1, 2, 3, 4, 5].map(step => (
           <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
             <div style={{
               width: '34px', height: '34px', borderRadius: '50%',
@@ -85,7 +86,7 @@ export default function OwnershipChangeWizard() {
               {step}
             </div>
             <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.ownershipChange.steps.s1') : step === 2 ? t('wizards.ownershipChange.steps.s2') : step === 3 ? t('wizards.ownershipChange.steps.s3') : t('wizards.ownershipChange.steps.s4')}
+              {step === 1 ? t('wizards.ownershipChange.steps.s1') : step === 2 ? t('wizards.ownershipChange.steps.s2') : step === 3 ? t('wizards.ownershipChange.steps.s3') : step === 4 ? t('wizards.ownershipChange.steps.s4') : t('wizards.ownershipChange.steps.s5')}
             </span>
           </div>
         ))}
@@ -96,16 +97,19 @@ export default function OwnershipChangeWizard() {
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <CurrentCustomerStep isActive={currentStep === 1} />
+            <ServiceDetailsStep isActive={currentStep === 1} />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <NewApplicantStep isActive={currentStep === 2} />
+            <CurrentCustomerStep isActive={currentStep === 2} />
           </div>
           <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-            <DocumentsStep isActive={currentStep === 3} />
+            <NewApplicantStep isActive={currentStep === 3} />
           </div>
           <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
-            <DeclarationStep isActive={currentStep === 4} />
+            <DocumentsStep isActive={currentStep === 4} />
+          </div>
+          <div style={{ display: currentStep === 5 ? 'block' : 'none' }}>
+            <DeclarationStep isActive={currentStep === 5} />
           </div>
         </div>
 
