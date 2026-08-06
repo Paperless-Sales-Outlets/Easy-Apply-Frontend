@@ -329,18 +329,18 @@
       "title": "Application for Package Migration",
       "subtitle": "Change your existing SLT package.",
       "steps": {
-        "s1": "Customer Info",
-        "s2": "Package Details"
+        "s1": "Package Details",
+        "s2": "Customer Info"
       },
       "customerInfo": {
-        "heading": "1. Customer Information",
+        "heading": "2. Customer Information",
         "telephone": "Telephone Number",
         "fullName": "Full Name / Company Name",
         "nicBrc": "N.I.C / B.R.C. No",
         "contactNo": "Contact No."
       },
       "packageDetails": {
-        "heading": "2. Required Package Change",
+        "heading": "1. Required Package Change",
         "existingPackage": "Existing Package",
         "requiredPackage": "Required Package",
         "effectiveDate": "With effect from",
@@ -463,22 +463,26 @@
     "ownershipChange": {
       "title": "Application for Change of Customer",
       "steps": {
-        "s1": "Current Owner",
-        "s2": "New Applicant",
-        "s3": "Documents",
-        "s4": "Declaration"
+        "s1": "Service Details",
+        "s2": "Current Owner",
+        "s3": "New Applicant",
+        "s4": "Documents",
+        "s5": "Declaration"
+      },
+      "serviceDetails": {
+        "heading": "Form A - Service Details",
+        "telephone": "1. Telephone number to be transferred"
       },
       "currentCustomer": {
         "heading": "Form A - Current Customer Details",
-        "telephone": "1. Telephone number to be transferred",
-        "customerName": "2. Name of the Customer",
+        "customerName": "1. Name of the Customer",
         "customerNameNote": "(as stated under the existing telephone application/agreement)",
         "customerNamePlaceholder": "Full name / Company name",
         "partnership": "Partnership / Sole Proprietorship Info",
         "partnershipNote": "(If applicable, provide full names of all partners or the sole proprietor)",
         "partnershipPlaceholder": "Partner 1\\nPartner 2...",
-        "nicBrc": "3. N.I.C / B.R.C No",
-        "contactNo": "4. Contact No.",
+        "nicBrc": "2. N.I.C / B.R.C No",
+        "contactNo": "3. Contact No.",
         "transferTo": "Kindly transfer the above telephone to following person/Company",
         "transferToPlaceholder": "Rev. / Mr. / Mrs. / Ms. / Company",
         "remarks": "Remarks"
@@ -618,8 +622,8 @@
       "subtitle": "Request permanent or temporary disconnection of SLT services and facilities.",
       "steps": {
         "s1": "Service Info",
-        "s2": "Contact Info",
-        "s3": "Reason",
+        "s2": "Reason",
+        "s3": "Contact Info",
         "s4": "Agreement"
       },
       "serviceDetails": {
