@@ -96,10 +96,10 @@ export default function PackageMigrationWizard() {
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <CustomerInfoStep isActive={currentStep === 1} />
+            <PackageDetailsStep isActive={currentStep === 1} />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <PackageDetailsStep isActive={currentStep === 2} />
+            <CustomerInfoStep isActive={currentStep === 2} />
           </div>
           <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
             <PaymentStep isActive={currentStep === 3} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
