@@ -100,10 +100,10 @@ export default function TerminationWizard() {
             <ServiceDetailsStep isActive={currentStep === 1} />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <ContactDetailsStep isActive={currentStep === 2} />
+            <ReasonStep isActive={currentStep === 2} />
           </div>
           <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-            <ReasonStep isActive={currentStep === 3} />
+            <ContactDetailsStep isActive={currentStep === 3} />
           </div>
           <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
             <AgreementStep isActive={currentStep === 4} />
