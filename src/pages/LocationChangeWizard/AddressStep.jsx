@@ -87,6 +87,7 @@ export default function AddressStep({
   const [brcError, setBrcError] = useState("");
 
   const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
+  const [selectedPlaceName, setSelectedPlaceName] = useState("");
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markerRef = useRef(null);
@@ -97,6 +98,7 @@ export default function AddressStep({
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [noResultsFound, setNoResultsFound] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   // Fetch Current Address from backend API using verified telephone number
   useEffect(() => {
@@ -202,6 +204,7 @@ export default function AddressStep({
         const detectedCity = addr.city || addr.town || addr.village || addr.suburb || "";
         const detectedPostcode = addr.postcode || "";
         const detectedRoad = addr.road || addr.pedestrian || addr.suburb || data.display_name.split(",")[0] || "";
+        const displayName = data.display_name || `${detectedRoad}, ${detectedCity}, Sri Lanka`;
 
         const matchedDistrict = SRI_LANKA_DISTRICTS.find(
           (d) => d.toLowerCase() === detectedDistrict.replace("District", "").trim().toLowerCase()
@@ -214,6 +217,7 @@ export default function AddressStep({
           postalCode: /^\d{5}$/.test(detectedPostcode) ? detectedPostcode : prev.postalCode,
           address1: prev.address1 || (detectedRoad ? `No ${detectedRoad}` : ""),
         }));
+        setSelectedPlaceName(displayName);
       }
     } catch (err) {
       console.error("Reverse geocoding error:", err);
@@ -247,6 +251,7 @@ export default function AddressStep({
 
     mapRef.current.setView([lat, lng], 13);
     markerRef.current.openPopup();
+    setSelectedPlaceName(displayAddress || "");
 
     if (doReverseGeocode) {
       reverseGeocode(lat, lng);
@@ -255,7 +260,7 @@ export default function AddressStep({
 
   // Leaflet Map Initialization
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!isMapModalOpen || !mapContainerRef.current || mapRef.current) return;
 
     const map = L.map(mapContainerRef.current).setView([7.8731, 80.7718], 7);
 
@@ -282,7 +287,7 @@ export default function AddressStep({
         markerRef.current = null;
       }
     };
-  }, [updateMarkerPosition]);
+  }, [updateMarkerPosition, isMapModalOpen]);
 
   // Recalculate map dimensions on tab/active step transition
   useEffect(() => {
@@ -353,6 +358,7 @@ export default function AddressStep({
 
     setSearchQuery(place.display_name);
     setShowDropdown(false);
+    setSelectedPlaceName(place.display_name);
     updateMarkerPosition(lat, lng, true, place.display_name);
   };
 
@@ -437,23 +443,22 @@ export default function AddressStep({
   const isCityValid = Boolean(relocationAddress.city && relocationAddress.city.trim() !== "");
   const isPostalCodeValid = /^\d{5}$/.test((relocationAddress.postalCode || "").trim());
   const isAddress1Valid = Boolean(relocationAddress.address1 && relocationAddress.address1.trim() !== "");
-  const isAddress2Valid = Boolean(relocationAddress.address2 && relocationAddress.address2.trim() !== "");
+  const isAddress2Valid = true; // Address Line 2 is optional
   const isLandmarkValid = Boolean(relocationAddress.landmark && relocationAddress.landmark.trim() !== "");
 
   const isMapPinned = coordinates.lat !== null && coordinates.lng !== null;
-  const isProofUploaded = proofFile !== null && proofError === "";
-  const isSketchUploaded = sketchFile !== null && sketchError === "";
+  const isProofValid = proofError === "";
+  const isSketchValid = sketchError === "";
 
   const isFormValid =
     isDistrictValid &&
     isCityValid &&
     isPostalCodeValid &&
     isAddress1Valid &&
-    isAddress2Valid &&
     isLandmarkValid &&
     isMapPinned &&
-    isProofUploaded &&
-    isSketchUploaded;
+    isProofValid &&
+    isSketchValid;
 
   const shouldShowError = (field, isValid) => {
     return (touched[field] || showValidationErrors) && !isValid;
@@ -701,7 +706,7 @@ export default function AddressStep({
 
           <div>
             <label htmlFor="address-2" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Address Line 2 <span style={{ color: "red" }}>*</span>
+              Address Line 2
             </label>
             <input
               id="address-2"
@@ -718,182 +723,263 @@ export default function AddressStep({
                 backgroundColor: shouldShowError("address2", isAddress2Valid) ? "#fff8f8" : "#fff"
               }}
             />
-            {shouldShowError("address2", isAddress2Valid) && (
-              <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
-                Address Line 2 is required.
-              </span>
-            )}
           </div>
         </div>
 
-        {/* Location Search Bar */}
         <div
           className="card"
-          ref={searchWrapperRef}
           style={{
             padding: "1.5rem",
-            border: "1px solid #e0e0e0",
-            marginBottom: "1.5rem",
-            borderRadius: "8px",
-            position: "relative",
-            zIndex: 1000,
-            backgroundColor: "#fff",
-            overflow: "visible",
-          }}
-        >
-          <h4 style={{ color: "#333", marginBottom: "0.75rem", fontSize: "1.1rem" }}>
-            Search Relocation Location
-          </h4>
-
-          <div style={{ position: "relative" }}>
-            <input
-              type="text"
-              placeholder="Search city/area (e.g., Trincomalee) - Press Enter to search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={handleKeyDownSearch}
-              onFocus={() => {
-                if (suggestions.length > 0) setShowDropdown(true);
-              }}
-              style={{
-                width: "100%",
-                padding: "0.65rem 2.2rem 0.65rem 0.65rem",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                outline: "none",
-                boxSizing: "border-box"
-              }}
-            />
-
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={clearSearch}
-                style={{
-                  position: "absolute",
-                  right: isSearching ? "85px" : "10px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none",
-                  border: "none",
-                  color: "#888",
-                  fontSize: "1.1rem",
-                  cursor: "pointer",
-                  padding: "2px 6px"
-                }}
-                title="Clear Search"
-              >
-                ✕
-              </button>
-            )}
-
-            {isSearching && (
-              <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem", color: "#666" }}>
-                Searching...
-              </span>
-            )}
-
-            {/* Suggestions Dropdown */}
-            {showDropdown && suggestions.length > 0 && (
-              <ul
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "0 0 6px 6px",
-                  boxShadow: "0 8px 20px rgba(0,0,0,0.18)",
-                  listStyle: "none",
-                  margin: "4px 0 0 0",
-                  padding: 0,
-                  zIndex: 99999,
-                  maxHeight: "220px",
-                  overflowY: "auto",
-                }}
-              >
-                {suggestions.map((item, idx) => (
-                  <li
-                    key={idx}
-                    onClick={() => handleSelectSuggestion(item)}
-                    style={{
-                      padding: "0.7rem 1rem",
-                      borderBottom: idx < suggestions.length - 1 ? "1px solid #f1f5f9" : "none",
-                      cursor: "pointer",
-                      fontSize: "0.88rem",
-                      color: "#1e293b",
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: "8px",
-                      backgroundColor: "#ffffff",
-                      transition: "background-color 0.15s ease"
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
-                  >
-                    <span style={{ color: "#0056a6" }}>📍</span>
-                    <span>{item.display_name}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {noResultsFound && !isSearching && searchQuery.length >= 2 && (
-              <div
-                style={{
-                  marginTop: "0.5rem",
-                  padding: "0.6rem 0.8rem",
-                  backgroundColor: "#fffbe6",
-                  border: "1px solid #ffe58f",
-                  borderRadius: "4px",
-                  fontSize: "0.83rem",
-                  color: "#856404",
-                }}
-              >
-                💡 Area name not found in map search? Try entering the district/city name directly or click on the map below to drop the pin.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Map Container */}
-        <div
-          className="card"
-          style={{
-            padding: "1rem",
             border: shouldShowError("map", isMapPinned) ? "1px solid #dc3545" : "1px solid #e0e0e0",
             backgroundColor: shouldShowError("map", isMapPinned) ? "#fff8f8" : "#fff",
             marginBottom: "1.5rem",
             borderRadius: "8px",
-            position: "relative",
-            zIndex: 1,
           }}
         >
-          <h4 style={{ color: "#333", marginBottom: "0.5rem", fontSize: "1.1rem" }}>
-            Interactive Map Pinpoint <span style={{ color: "red" }}>*</span>
+          <h4 style={{ color: "#333", marginBottom: "0.75rem", fontSize: "1.1rem" }}>
+            Relocation Location
           </h4>
-          <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.75rem" }}>
-            Click anywhere on the map or drag the pin to set the exact installation point.
+          <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>
+            Click the button below to open the map picker, search for the location, and select the exact relocation point.
           </p>
-          <div
-            ref={mapContainerRef}
-            style={{ height: "350px", width: "100%", borderRadius: "6px", border: "1px solid #ccc", zIndex: 1 }}
-          />
+          <button
+            type="button"
+            onClick={() => setIsMapModalOpen(true)}
+            style={{
+              backgroundColor: "#0056a6",
+              color: "#fff",
+              padding: "0.75rem 1.1rem",
+              borderRadius: "6px",
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            📍 Pick on Map
+          </button>
+
+          {coordinates.lat !== null && coordinates.lng !== null && (
+            <div style={{ marginTop: "1rem", color: "#333", lineHeight: 1.5 }}>
+              <strong>Selected Location:</strong> {selectedPlaceName ? `${selectedPlaceName} — ` : ""}
+              {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+            </div>
+          )}
+
           {shouldShowError("map", isMapPinned) && (
-            <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "6px", display: "block", fontWeight: "500" }}>
-              Please click or drop a pin on the map to set the exact installation location.
+            <span style={{ display: "block", marginTop: "0.75rem", fontSize: "0.8rem", color: "#dc3545" }}>
+              Please pick a location on the map to set the exact installation point.
             </span>
           )}
         </div>
+
+        {isMapModalOpen && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 2000,
+              backgroundColor: "rgba(0, 0, 0, 0.45)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "1rem",
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: "980px",
+                maxHeight: "90vh",
+                overflow: "auto",
+                backgroundColor: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 20px 60px rgba(0, 0, 0, 0.25)",
+                position: "relative",
+                padding: "1.5rem",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", color: "#1e293b" }}>
+                    Select Location on Map
+                  </h3>
+                  <p style={{ margin: "0.4rem 0 0", color: "#4b5563" }}>
+                    Search city, street or landmark and pick the point on the map.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMapModalOpen(false)}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    color: "#4b5563",
+                    cursor: "pointer",
+                    fontSize: "1.25rem",
+                    padding: "0.25rem",
+                  }}
+                  aria-label="Close modal"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ marginBottom: "1rem", position: "relative" }}>
+                <input
+                  type="text"
+                  placeholder="Search city, area, street or landmark..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleKeyDownSearch}
+                  onFocus={() => {
+                    if (suggestions.length > 0) setShowDropdown(true);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem 2.2rem 0.75rem 0.75rem",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={clearSearch}
+                    style={{
+                      position: "absolute",
+                      right: "1.5rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      color: "#888",
+                      fontSize: "1.1rem",
+                      cursor: "pointer",
+                      padding: "2px 6px",
+                    }}
+                    title="Clear Search"
+                  >
+                    ✕
+                  </button>
+                )}
+                {isSearching && (
+                  <span style={{ position: "absolute", right: searchQuery ? "4.2rem" : "1.5rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem", color: "#666" }}>
+                    Searching...
+                  </span>
+                )}
+
+                {showDropdown && suggestions.length > 0 && (
+                  <ul
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 0.3rem)",
+                      left: 0,
+                      right: 0,
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "0 0 8px 8px",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+                      listStyle: "none",
+                      margin: 0,
+                      padding: 0,
+                      zIndex: 10001,
+                      maxHeight: "260px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {suggestions.map((item, idx) => (
+                      <li
+                        key={idx}
+                        onClick={() => handleSelectSuggestion(item)}
+                        style={{
+                          padding: "0.85rem 1rem",
+                          borderBottom: idx < suggestions.length - 1 ? "1px solid #f1f5f9" : "none",
+                          cursor: "pointer",
+                          fontSize: "0.95rem",
+                          color: "#1e293b",
+                          backgroundColor: "#ffffff",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
+                      >
+                        <span style={{ marginRight: "0.75rem", color: "#0056a6" }}>📍</span>
+                        {item.display_name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {noResultsFound && !isSearching && searchQuery.length >= 2 && (
+                  <div
+                    style={{
+                      marginTop: "0.75rem",
+                      padding: "0.75rem 0.9rem",
+                      backgroundColor: "#fff7ed",
+                      border: "1px solid #ffd8a8",
+                      borderRadius: "8px",
+                      color: "#7c2d12",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    No locations found. Try a different address or landmark.
+                  </div>
+                )}
+              </div>
+
+              <div
+                ref={mapContainerRef}
+                style={{ height: "420px", width: "100%", borderRadius: "10px", border: "1px solid #d1d5db", marginBottom: "1rem" }}
+              />
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+                <button
+                  type="button"
+                  onClick={() => setIsMapModalOpen(false)}
+                  style={{
+                    padding: "0.75rem 1rem",
+                    borderRadius: "8px",
+                    backgroundColor: "#f3f4f6",
+                    border: "1px solid #d1d5db",
+                    color: "#111827",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsMapModalOpen(false)}
+                  style={{
+                    padding: "0.75rem 1rem",
+                    borderRadius: "8px",
+                    backgroundColor: "#0056a6",
+                    border: "none",
+                    color: "#ffffff",
+                    cursor: "pointer",
+                  }}
+                >
+                  Confirm Address
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Document Upload Section */}
         <div
           className="card"
           style={{
             padding: "1.5rem",
-            border: (shouldShowError("proof", isProofUploaded) || shouldShowError("sketch", isSketchUploaded)) ? "1px solid #dc3545" : "1px solid #e0e0e0",
-            backgroundColor: (shouldShowError("proof", isProofUploaded) || shouldShowError("sketch", isSketchUploaded)) ? "#fff8f8" : "#fff",
+            border: (shouldShowError("proof", isProofValid) || shouldShowError("sketch", isSketchValid)) ? "1px solid #dc3545" : "1px solid #e0e0e0",
+            backgroundColor: (shouldShowError("proof", isProofValid) || shouldShowError("sketch", isSketchValid)) ? "#fff8f8" : "#fff",
             marginBottom: "1.5rem",
             borderRadius: "8px",
           }}
@@ -928,7 +1014,7 @@ export default function AddressStep({
 
           <div style={{ marginBottom: "1.25rem" }}>
             <label htmlFor="proof-file" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Proof of New Address <span style={{ color: "red" }}>*</span>
+              Proof of New Address <span style={{ color: "#888", fontWeight: "400", fontSize: "0.85rem" }}>(Optional)</span>
             </label>
             <input
               id="proof-file"
@@ -938,12 +1024,6 @@ export default function AddressStep({
               style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
             />
             <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
-
-            {shouldShowError("proof", isProofUploaded) && !proofError && (
-              <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px", fontWeight: "500" }}>
-                Proof of address document is required.
-              </div>
-            )}
 
             {proofError && <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>{proofError}</div>}
 
@@ -963,7 +1043,7 @@ export default function AddressStep({
 
           <div style={{ marginBottom: "1.25rem" }}>
             <label htmlFor="sketch-file" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Route Sketch <span style={{ color: "red" }}>*</span>
+              Route Sketch <span style={{ color: "#888", fontWeight: "400", fontSize: "0.85rem" }}>(Optional)</span>
             </label>
             <input
               id="sketch-file"
@@ -973,12 +1053,6 @@ export default function AddressStep({
               style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
             />
             <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
-
-            {shouldShowError("sketch", isSketchUploaded) && !sketchError && (
-              <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px", fontWeight: "500" }}>
-                Route sketch document is required.
-              </div>
-            )}
 
             {sketchError && <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>{sketchError}</div>}
 

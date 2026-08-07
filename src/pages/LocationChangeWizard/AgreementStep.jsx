@@ -8,10 +8,14 @@ export default function AgreementStep({
   setAgreed,
   signature,
   setSignature,
+  signatureFile,
+  setSignatureFile,
 }) {
   const { t } = useTranslation();
 
   // State management
+  const [signatureMethod, setSignatureMethod] = useState('digital');
+  const [signatureFileError, setSignatureFileError] = useState('');
   const [isDrawing, setIsDrawing] = useState(false);
   const signatureData = signature;
 
@@ -72,6 +76,31 @@ export default function AgreementStep({
       if (setSignature) {
         setSignature(null);
       }
+    }
+  };
+
+  const handleSignatureFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) {
+      setSignatureFile(null);
+      setSignatureFileError('');
+      return;
+    }
+    const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
+    if (!allowedTypes.includes(file.type)) {
+      setSignatureFile(null);
+      setSignatureFileError('Unsupported file type. Upload JPG, PNG, or PDF.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setSignatureFile(null);
+      setSignatureFileError('File size exceeds 5MB.');
+      return;
+    }
+    setSignatureFileError('');
+    setSignatureFile(file);
+    if (setSignature) {
+      setSignature(null);
     }
   };
 
@@ -180,47 +209,108 @@ export default function AgreementStep({
         </label>
       </div>
 
-      {/* 4. DIGITAL SIGNATURE */}
+      {/* 4. SIGNATURE */}
       <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '8px', marginBottom: '1.5rem' }}>
         <label style={{ display: 'block', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-          {t('wizards.locationChange.agreement.signatureLabel', 'Digital Signature *')}
+          {t('wizards.locationChange.agreement.signatureLabel', 'Signature')}
         </label>
-        <div style={{ border: '1px dashed var(--border-color)', borderRadius: '6px', backgroundColor: '#ffffff', position: 'relative', touchAction: 'none' }}>
-          <canvas
-            ref={canvasRef}
-            width={500}
-            height={160}
-            style={{ width: '100%', height: '160px', display: 'block', cursor: 'crosshair' }}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-          />
-          {!signatureData && !isDrawing && (
-            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#9ca3af', pointerEvents: 'none', fontSize: '0.9rem' }}>
-              Draw your signature
-            </div>
-          )}
+
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: signatureMethod === 'digital' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+            <input
+              type="radio"
+              name="signatureMethod"
+              value="digital"
+              checked={signatureMethod === 'digital'}
+              onChange={() => setSignatureMethod('digital')}
+              style={{ cursor: 'pointer' }}
+            />
+            Digital Signature
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: signatureMethod === 'upload' ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+            <input
+              type="radio"
+              name="signatureMethod"
+              value="upload"
+              checked={signatureMethod === 'upload'}
+              onChange={() => setSignatureMethod('upload')}
+              style={{ cursor: 'pointer' }}
+            />
+            Upload Signature Image / PDF
+          </label>
         </div>
-        <button
-          type="button"
-          onClick={clearSignature}
-          style={{
-            marginTop: '0.75rem',
-            padding: '0.4rem 0.8rem',
-            fontSize: '0.85rem',
-            backgroundColor: 'transparent',
-            border: '1px solid var(--border-color)',
-            borderRadius: '4px',
-            color: 'var(--text-primary)',
-            cursor: 'pointer'
-          }}
-        >
-          Clear Signature
-        </button>
+
+        {signatureMethod === 'digital' ? (
+          <>
+            <div style={{ border: '1px dashed var(--border-color)', borderRadius: '6px', backgroundColor: '#ffffff', position: 'relative', touchAction: 'none' }}>
+              <canvas
+                ref={canvasRef}
+                width={500}
+                height={160}
+                style={{ width: '100%', height: '160px', display: 'block', cursor: 'crosshair' }}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+              />
+              {!signatureData && !isDrawing && (
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#9ca3af', pointerEvents: 'none', fontSize: '0.9rem' }}>
+                  Draw your signature
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={clearSignature}
+              style={{
+                marginTop: '0.75rem',
+                padding: '0.4rem 0.8rem',
+                fontSize: '0.85rem',
+                backgroundColor: 'transparent',
+                border: '1px solid var(--border-color)',
+                borderRadius: '4px',
+                color: 'var(--text-primary)',
+                cursor: 'pointer'
+              }}
+            >
+              Clear Signature
+            </button>
+          </>
+        ) : (
+          <div>
+            <input
+              type="file"
+              name="signatureFile"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleSignatureFileChange}
+              style={{ display: 'block', width: '100%', padding: '0.4rem 0' }}
+            />
+            <span style={{ fontSize: '0.8rem', color: '#666' }}>Accepted formats: JPG, PNG, PDF (Max 5MB)</span>
+            {signatureFileError && (
+              <div style={{ color: '#dc3545', fontSize: '0.82rem', marginTop: '4px' }}>
+                {signatureFileError}
+              </div>
+            )}
+            {signatureFile && (
+              <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', color: 'var(--text-primary)' }}>
+                <span>{signatureFile.name}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSignatureFile(null);
+                    setSignatureFileError('');
+                  }}
+                  style={{ background: 'none', border: 'none', color: '#dc3545', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.9rem' }}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

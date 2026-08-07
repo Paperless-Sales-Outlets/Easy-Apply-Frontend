@@ -21,6 +21,8 @@ export default function LocationChangeWizard() {
   const [formData, setFormData] = useState({});
   const [agreed, setAgreed] = useState(false);
   const [signature, setSignature] = useState(null);
+  const [signatureFile, setSignatureFile] = useState(null);
+  const [signatureFileError, setSignatureFileError] = useState('');
   const [isGeneralInfoStepValid, setIsGeneralInfoStepValid] = useState(false);
   const [isAddressStepValid, setIsAddressStepValid] = useState(false);
   const [isPreferencesStepValid, setIsPreferencesStepValid] = useState(false);
@@ -83,8 +85,8 @@ export default function LocationChangeWizard() {
     }
 
     // Step 4 final submission validation
-    if (!agreed || !signature) {
-      setSubmitError('Please accept the agreement and provide a digital signature.');
+    if (!agreed || (!signature && !signatureFile)) {
+      setSubmitError('Please accept the agreement and provide a signature by drawing or uploading a file.');
       return;
     }
 
@@ -113,6 +115,7 @@ export default function LocationChangeWizard() {
         ['sketchFile', completePayload.sketchFile],
         ['authorizationLetter', completePayload.authorizationLetter],
         ['brcFile', completePayload.brcFile],
+        ['signatureFile', signatureFile],
         ['nicFront', completePayload.nicFront],
         ['nicBack', completePayload.nicBack],
       ];
@@ -219,6 +222,8 @@ export default function LocationChangeWizard() {
               setAgreed={setAgreed}
               signature={signature}
               setSignature={setSignature}
+              signatureFile={signatureFile}
+              setSignatureFile={setSignatureFile}
             />
           )}
         </div>
