@@ -101,6 +101,7 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
       if (response.data && response.data.success && response.data.data) {
         const customerData = response.data.data;
         const updatedCustomer = {
+          ...customerData,
           telephone: customerData.telephone || customer.telephone,
           legalOwner: customerData.legalOwner || '',
           serviceType: customerData.serviceType || '',
@@ -108,6 +109,13 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
           tel: customerData.telephone || customer.telephone,
           mobile: customerData.mobile || '',
           email: customerData.email || '',
+          currentAddress: customerData.currentAddress || {
+            address1: customerData.address1 || '',
+            address2: customerData.address2 || '',
+            city: customerData.city || '',
+            district: customerData.district || '',
+            postalCode: customerData.postal_code || customerData.postalCode || '',
+          },
         };
 
         setCustomer(updatedCustomer);
