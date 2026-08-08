@@ -1295,3 +1295,38 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* Spinner Keyframe Animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+/* Hover Card Animations */
+.hover-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Form Control Read-Only / Disabled Enhancements */
+.form-control:disabled,
+.form-control[readonly] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+  cursor: not-allowed !important;
+}
+

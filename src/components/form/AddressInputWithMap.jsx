@@ -13,6 +13,8 @@ export default function AddressInputWithMap({
   rows = 3,
   required = false,
   className = 'form-control',
+  disabled = false,
+  readOnly = false,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
@@ -62,6 +64,7 @@ export default function AddressInputWithMap({
   };
 
   const handleInputChange = (e) => {
+    if (disabled || readOnly) return;
     setInternalValue(e.target.value);
     if (onChange) {
       onChange(e);
@@ -69,6 +72,7 @@ export default function AddressInputWithMap({
   };
 
   const handleDetectLocation = () => {
+    if (disabled || readOnly) return;
     if (!navigator.geolocation) {
       setStatusMessage('Geolocation is not supported by your browser.');
       return;
@@ -139,6 +143,7 @@ export default function AddressInputWithMap({
   };
 
   const handleModalSelectAddress = (selectedAddress) => {
+    if (disabled || readOnly) return;
     triggerChange(selectedAddress);
     setStatusMessage('Address selected from map!');
     setTimeout(() => setStatusMessage(''), 3000);
@@ -158,39 +163,49 @@ export default function AddressInputWithMap({
           onChange={handleInputChange}
           placeholder={placeholder}
           required={required}
-          style={{ width: '100%', resize: 'vertical' }}
+          disabled={disabled || readOnly}
+          readOnly={readOnly}
+          style={{
+            width: '100%',
+            resize: 'vertical',
+            backgroundColor: disabled || readOnly ? '#f8fafc' : undefined,
+            cursor: disabled || readOnly ? 'not-allowed' : undefined,
+            color: disabled || readOnly ? '#334155' : undefined,
+          }}
         />
       </div>
 
       {/* Action Buttons: Detect Location & Pick on Map */}
-      <div style={actionsContainerStyle}>
-        <button
-          type="button"
-          onClick={handleDetectLocation}
-          disabled={isDetectingLocation}
-          style={actionButtonStyle}
-          title="Auto-detect current location"
-        >
-          <FiNavigation style={{ color: '#0284c7', fontSize: '0.95rem' }} />
-          {isDetectingLocation ? 'Detecting...' : 'Detect My Location'}
-        </button>
+      {!disabled && !readOnly && (
+        <div style={actionsContainerStyle}>
+          <button
+            type="button"
+            onClick={handleDetectLocation}
+            disabled={isDetectingLocation}
+            style={actionButtonStyle}
+            title="Auto-detect current location"
+          >
+            <FiNavigation style={{ color: '#0284c7', fontSize: '0.95rem' }} />
+            {isDetectingLocation ? 'Detecting...' : 'Detect My Location'}
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          style={actionButtonStyle}
-          title="Open interactive map to select address"
-        >
-          <FiMapPin style={{ color: '#16a34a', fontSize: '0.95rem' }} />
-          Pick on Map
-        </button>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            style={actionButtonStyle}
+            title="Open interactive map to select address"
+          >
+            <FiMapPin style={{ color: '#16a34a', fontSize: '0.95rem' }} />
+            Pick on Map
+          </button>
 
-        {statusMessage && (
-          <span style={statusMessageStyle}>
-            {statusMessage}
-          </span>
-        )}
-      </div>
+          {statusMessage && (
+            <span style={statusMessageStyle}>
+              {statusMessage}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Interactive Map Modal */}
       <LocationPickerModal

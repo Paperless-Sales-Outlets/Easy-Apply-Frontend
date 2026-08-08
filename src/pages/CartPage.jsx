@@ -110,12 +110,15 @@ export default function CartPage() {
     };
 
     sessionStorage.setItem('selectedProduct', JSON.stringify(selectedProductData));
+    sessionStorage.setItem('customerType', 'new');
 
-    // Navigate to Customer Selection Page
-    navigate('/customer-selection', {
+    // Navigate directly to New Connection Form Page
+    navigate('/new-connection', {
       state: {
         items,
         selectedProduct: selectedProductData,
+        customerType: 'new',
+        skipOtp: true,
       },
     });
   };
@@ -125,7 +128,7 @@ export default function CartPage() {
       <Toast toast={toast} onClose={() => setToast(null)} />
 
       <div className="page-container" style={{ maxWidth: '1380px', margin: '0 auto', padding: '0 1.5rem' }}>
-        
+
         {/* Breadcrumbs */}
         <nav style={{ fontSize: '0.825rem', color: '#64748b', marginBottom: '1.25rem', display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
           <Link to="/" style={{ color: '#64748b', textDecoration: 'none' }}>Home</Link>
@@ -294,7 +297,7 @@ export default function CartPage() {
                       key={product._id || product.id}
                       product={product}
                       onSelect={() => navigate('/new-connection/products')}
-                      onToggleFavorite={() => {}}
+                      onToggleFavorite={() => { }}
                       onAddToCart={() => {
                         addToCart(product, 1);
                         fetchCartData();
@@ -367,10 +370,10 @@ export default function CartPage() {
           /* ── NON-EMPTY CART VIEW (Matches Image 3 Exactly) ── */
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.75rem', alignItems: 'start', marginBottom: '2.5rem' }}>
-              
+
               {/* Left Column: Cart Items List (8 cols) */}
               <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem' }}>
                   <FiShoppingCart color="#0056b3" size={20} />
                   <span>Cart Items ({totalItemCount})</span>
@@ -399,7 +402,7 @@ export default function CartPage() {
                       }}
                     >
                       <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                        
+
                         {/* Left visual box with POPULAR badge and Device Graphic */}
                         <div
                           style={{
@@ -488,7 +491,7 @@ export default function CartPage() {
                               Rs. {monthly.toLocaleString()}
                             </span>
                             <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>/month</span>
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: '0.5rem' }}>
+                            <span style={{ fontSize: '0.825rem', color: '#475569', fontWeight: 600, marginLeft: '0.5rem' }}>
                               Installation Fee: Rs. {instFee.toLocaleString()} (One-time)
                             </span>
                           </div>
@@ -496,7 +499,7 @@ export default function CartPage() {
 
                         {/* Right: Quantity Selector, Remove Button & Item Total */}
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', alignSelf: 'stretch', gap: '1rem' }}>
-                          
+
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                             {/* Quantity Selector [- 1 +] */}
                             <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#fff' }}>

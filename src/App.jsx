@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import Dashboard from './pages/Dashboard';
 import NewConnectionWizard from './pages/NewConnectionWizard';
@@ -36,9 +36,6 @@ const PageWrapper = ({ children, fullBleed = false }) => {
   );
 };
 
-
-import CustomerSelectionPage from './pages/CustomerSelectionPage';
-
 const VerifyPhonePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,7 +58,7 @@ const AnimatedRoutes = () => {
         <Route path="/new-connection/products" element={<PageWrapper fullBleed><ProductCatalogPage /></PageWrapper>} />
         <Route path="/new-connection/product/:id" element={<PageWrapper><ProductDetailPage /></PageWrapper>} />
         <Route path="/cart" element={<PageWrapper fullBleed><CartPage /></PageWrapper>} />
-        <Route path="/customer-selection" element={<PageWrapper fullBleed><CustomerSelectionPage /></PageWrapper>} />
+        <Route path="/customer-selection" element={<Navigate to="/new-connection" replace />} />
         <Route path="/verify-phone" element={<PageWrapper fullBleed><VerifyPhonePage /></PageWrapper>} />
 
         {/* Wizard Routes (Protected by OTP) */}
