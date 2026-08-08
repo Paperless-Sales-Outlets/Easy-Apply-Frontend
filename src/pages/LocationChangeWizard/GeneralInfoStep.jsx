@@ -103,11 +103,11 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
         const updatedCustomer = {
           ...customerData,
           telephone: customerData.telephone || customer.telephone,
-          legalOwner: customerData.legalOwner || '',
-          serviceType: customerData.serviceType || '',
-          contactPerson: customerData.contactPerson || '',
+          legalOwner: customerData.legalOwner || customerData.fullName || '',
+          serviceType: customerData.serviceType || customer.serviceType || 'Megaline',
+          contactPerson: customerData.contactPerson || customerData.legalOwner || customerData.fullName || '',
           tel: customerData.telephone || customer.telephone,
-          mobile: customerData.mobile || '',
+          mobile: customerData.mobile || customerData.contactNo || '',
           email: customerData.email || '',
           currentAddress: customerData.currentAddress || {
             address1: customerData.address1 || '',
