@@ -87,6 +87,7 @@ export default function LocationChangeWizard() {
     // Step 4 final submission validation
     if (!agreed || (!signature && !signatureFile)) {
       setSubmitError('Please accept the agreement and provide a signature by drawing or uploading a file.');
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
       return;
     }
 
@@ -98,7 +99,7 @@ export default function LocationChangeWizard() {
       ...finalStepData,
       agreed,
       signature,
-      nic: formData.telephone || finalStepData.telephone
+      nic: formData.nic || formData.telephone || finalStepData.telephone || ''
     };
 
     setSubmitting(true);
@@ -107,7 +108,7 @@ export default function LocationChangeWizard() {
     try {
       const fd = new FormData();
       fd.append('serviceType', 'relocation');
-      fd.append('phone', verifiedMobile || '');
+      fd.append('phone', verifiedMobile || formData.mobile || formData.telephone || '');
       fd.append('formData', JSON.stringify(completePayload));
 
       const maybeFiles = [
@@ -149,7 +150,7 @@ export default function LocationChangeWizard() {
     }
   };
 
-  const isStep4Valid = agreed && !!signature;
+  const isStep4Valid = agreed && (!!signature || !!signatureFile);
 
   return (
     <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
@@ -227,6 +228,24 @@ export default function LocationChangeWizard() {
             />
           )}
         </div>
+
+        {submitError && (
+          <div style={{
+            padding: '0.75rem 1rem',
+            marginBottom: '1rem',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '6px',
+            color: '#dc2626',
+            fontSize: '0.9rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span style={{ fontSize: '1.1rem' }}>⚠</span>
+            {submitError}
+          </div>
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color, #e2e8f0)', paddingTop: '1.5rem' }}>
           <button
