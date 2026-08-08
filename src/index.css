@@ -478,6 +478,13 @@ a {
   border: 1px solid var(--line);
 }
 
+.location-change-card {
+  padding: 1.5rem;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+}
+
 /* Landing: application form tiles ------------------------------------ */
 
 .dashboard-grid {
@@ -1330,3 +1337,17 @@ a {
   cursor: not-allowed !important;
 }
 
+.leaflet-container {
+  width: 100%;
+  height: 320px;
+  position: relative;
+  display: block;
+}
+
+.leaflet-pane {
+  z-index: 400;
+}
+
+.leaflet-control {
+  z-index: 500;
+}
