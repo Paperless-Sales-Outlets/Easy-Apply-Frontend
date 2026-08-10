@@ -91,7 +91,7 @@ const NavigationLayout = ({ children }) => {
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         <main className="main-content" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
           <ErrorBoundary>
-            {children}
+            {children} 
           </ErrorBoundary>
         </main>
       </div>
