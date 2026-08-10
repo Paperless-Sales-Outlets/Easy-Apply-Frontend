@@ -49,7 +49,11 @@ export default function Dashboard() {
         >
           {FORMS.map((form) => (
             <motion.li key={form.id} variants={itemVariants}>
-              <Link to={form.route} className="form-tile">
+              <Link 
+                to={form.route} 
+                className="form-tile"
+                onClick={() => sessionStorage.removeItem('verifiedPhone')}
+              >
                 <span className="tile-icon">
                   <Icon name={form.icon} size={24} />
                 </span>

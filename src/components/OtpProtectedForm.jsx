@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 import { VerificationContext } from './verification';
 import api from '../utils/api';
+import heroBanner from '../assets/HeroSLT.png';
 
 const RESEND_SECONDS = 30;
 
@@ -217,6 +218,11 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
       >
+        <div className="otp-banner-side">
+          <img src={heroBanner} alt="SLT Mobitel Fibre Promo" className="otp-banner-img" />
+        </div>
+
+        <div className="otp-form-side">
         <AnimatePresence mode="wait">
           {phase === 'mobile' && (
             <motion.div key="mobile" {...swap}>
@@ -335,6 +341,7 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </motion.div>
     </div>
   );
