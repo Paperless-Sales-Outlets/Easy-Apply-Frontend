@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { getProducts } from '../services/cartService';
@@ -22,20 +22,23 @@ const AddToCartPage = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [packageFromWizard, setPackageFromWizard] = useState(null);
-  const [packageAdded, setPackageAdded] = useState(false);
+  const packageAddedRef = useRef(false);
 
   useEffect(() => {
     fetchProducts();
     
-    // Check if package info was passed from wizard
-    if (location.state?.package && !packageAdded) {
+    // Check if package info was passed from wizard or dashboard
+    if (location.state?.package && !packageAddedRef.current) {
       setPackageFromWizard(location.state.package);
-      setPackageAdded(true);
-      // Use a stable ID for the package to prevent duplicates
-      const packageId = 'pkg-new-connection';
+      packageAddedRef.current = true;
+      
+      const packageId = location.state.package.id ? `pkg-${location.state.package.id}` : 'pkg-new-connection';
       addItemToCart(packageId, 1, location.state.package);
+
+      // Clear the state so it doesn't get re-added on page refresh
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, []);
+  }, [location.state, navigate, location.pathname]);
 
   useEffect(() => {
     applyFilters();
@@ -246,7 +249,7 @@ const AddToCartPage = () => {
                   {packageFromWizard.duration} Plan
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {packageFromWizard.features.map((feature, index) => (
+                  {(packageFromWizard.features || []).map((feature, index) => (
                     <span
                       key={index}
                       style={{
