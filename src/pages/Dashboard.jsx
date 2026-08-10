@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
 
 const FORMS = [
-  { id: 'new-connection', key: 'newConnection', icon: 'plus-circle', route: '/new-connection' },
+  { id: 'new-connection', key: 'newConnection', icon: 'plus-circle', route: '/new-connection/products' },
   { id: 'reconnection', key: 'reconnection', icon: 'link', route: '/reconnection' },
   { id: 'relocation', key: 'relocation', icon: 'map-pin', route: '/location-change' },
   { id: 'termination', key: 'termination', icon: 'trash', route: '/termination' },
@@ -55,7 +55,11 @@ export default function Dashboard() {
         >
           {FORMS.map((form) => (
             <motion.li key={form.id} variants={itemVariants}>
-              <Link to={form.route} className="form-tile">
+              <Link 
+                to={form.route} 
+                className="form-tile"
+                onClick={() => sessionStorage.removeItem('verifiedPhone')}
+              >
                 <span className="tile-icon">
                   <Icon name={form.icon} size={24} />
                 </span>
