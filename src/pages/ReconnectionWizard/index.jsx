@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import CustomerDetailsStep from './CustomerDetailsStep';
 import ReconnectionDetailsStep from './ReconnectionDetailsStep';
 import WizardStepper from '../../components/WizardStepper';
 import DeclarationStep from './DeclarationStep';
@@ -21,7 +20,7 @@ export default function ReconnectionWizard() {
   const formRef = useRef(null);
   const step2Ref = useRef(null);
   const step3Ref = useRef(null);
-  const totalSteps = 4;
+  const totalSteps = 3;
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -35,10 +34,8 @@ export default function ReconnectionWizard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (currentStep < totalSteps) {
-      // validate step 2 facilities before advancing
-      if (currentStep === 2 && step2Ref.current && !step2Ref.current.validate()) return;
-      if (currentStep === 3 && step3Ref.current && !step3Ref.current.validate()) return;
-      // Step 4 is payment — handled by PaymentStep component itself, just advance
+      if (currentStep === 1 && step2Ref.current && !step2Ref.current.validate()) return;
+      if (currentStep === 2 && step3Ref.current && !step3Ref.current.validate()) return;
       nextStep();
       return;
     }
@@ -51,11 +48,12 @@ export default function ReconnectionWizard() {
     submitData.append('serviceType', 'reconnection');
     
     // Ensure phone is 10 digits starting with 0
-    let formattedPhone = verifiedMobile;
+    let formattedPhone = formData.verifiedMobile || '';
     if (formattedPhone && formattedPhone.length === 9) {
       formattedPhone = '0' + formattedPhone;
     }
     submitData.append('phone', formattedPhone);
+    delete formData.verifiedMobile;
     
     // Extract digital signature base64 and delete from JSON formData to save space
     const signatureBase64 = formData.digitalSignatureBase64;
@@ -68,7 +66,7 @@ export default function ReconnectionWizard() {
     // Append all file inputs explicitly
     for (let [key, value] of raw.entries()) {
       if (value instanceof File && value.size > 0) {
-        submitData.append('documents', value);
+        submitData.append(key, value);
       }
     }
 
@@ -78,7 +76,7 @@ export default function ReconnectionWizard() {
         const res = await fetch(signatureBase64);
         const blob = await res.blob();
         const signatureFile = new File([blob], 'signature.png', { type: 'image/png' });
-        submitData.append('documents', signatureFile);
+        submitData.append('signatureDoc', signatureFile);
       } catch (err) {
         console.error('Failed to convert signature to file:', err);
       }
@@ -120,10 +118,9 @@ export default function ReconnectionWizard() {
       <WizardStepper 
         currentStep={currentStep} 
         steps={[
-          t('wizards.reconnection.steps.s1'),
-          t('wizards.reconnection.steps.s2'),
-          t('wizards.reconnection.steps.s3'),
-          'Payment'
+          'Select Services',
+          'Details & Documents',
+          'Checkout & Auth'
         ]} 
       />
 
@@ -131,16 +128,19 @@ export default function ReconnectionWizard() {
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <CustomerDetailsStep isActive={currentStep === 1} onVerifySuccess={(data) => setReconnectionData(data)} />
+            <ReconnectionDetailsStep 
+              ref={step2Ref} 
+              isActive={currentStep === 1} 
+              reconnectionData={reconnectionData} 
+              onVerifySuccess={(data) => setReconnectionData(data)} 
+            />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <ReconnectionDetailsStep ref={step2Ref} isActive={currentStep === 2} reconnectionData={reconnectionData} />
-          </div>
-          <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
             <DeclarationStep 
               ref={step3Ref} 
-              isActive={currentStep === 3} 
+              isActive={currentStep === 2} 
               onPaymentIntentionChange={setPaymentIntention}
+              reconnectionData={reconnectionData}
               customerType={
                 reconnectionData?.customerType === 'office' ? 'Business' 
                 : reconnectionData?.customerType === 'foreign' ? 'Foreign' 
@@ -148,10 +148,10 @@ export default function ReconnectionWizard() {
               } 
             />
           </div>
-          <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
+          <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
             <PaymentStep 
-              isActive={currentStep === 4} 
-              verifiedPhone={verifiedMobile} 
+              isActive={currentStep === 3} 
+              verifiedPhone={verifiedMobile}
               amount={formRef.current ? new FormData(formRef.current).get('amountToPay') : null}
               hasPaymentReceipt={formRef.current ? (new FormData(formRef.current).get('paymentReceipt')?.size > 0) : false}
               onSuccess={() => handleSubmit({ preventDefault: () => {} })} 
