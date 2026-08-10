@@ -20,55 +20,61 @@ export default function AddressInputWithMap({
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [internalValue, setInternalValue] = useState(value || '');
-  const autocompleteInputRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  // A hidden <input> that Google Maps Autocomplete attaches to.
+  // google.maps.places.Autocomplete ONLY accepts HTMLInputElement —
+  // passing a <textarea> throws "InvalidValueError: not an instance of HTMLInputElement".
+  const hiddenInputRef = useRef(null);
 
   // Sync internalValue with controlled value prop
   useEffect(() => {
     setInternalValue(value || '');
   }, [value]);
 
-  // Initialize Google Places Autocomplete if API key is provided
+  // Initialize Google Places Autocomplete on the hidden <input>.
+  // Falls back gracefully — the textarea + map picker still work without it.
   useEffect(() => {
+    if (disabled || readOnly) return;
+
     loadGoogleMapsScript()
       .then((gMaps) => {
-        if (!autocompleteInputRef.current || !gMaps.places) return;
-        const autocomplete = new gMaps.places.Autocomplete(autocompleteInputRef.current, {
-          types: ['geocode', 'establishment'],
-        });
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          if (place && place.formatted_address) {
-            const cleaned = cleanGoogleAddress([place]);
-            triggerChange(cleaned || place.formatted_address);
-          } else if (place && place.name) {
-            triggerChange(place.name);
-          }
-        });
+        if (!hiddenInputRef.current || !gMaps?.places?.Autocomplete) return;
+        try {
+          const autocomplete = new gMaps.places.Autocomplete(hiddenInputRef.current, {
+            types: ['geocode', 'establishment'],
+          });
+          autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            if (place?.formatted_address) {
+              const cleaned = cleanGoogleAddress([place]);
+              triggerChange(cleaned || place.formatted_address);
+            } else if (place?.name) {
+              triggerChange(place.name);
+            }
+            // Clear the hidden input after selection so it doesn't show stale text
+            if (hiddenInputRef.current) hiddenInputRef.current.value = '';
+          });
+        } catch (e) {
+          console.warn('Google Maps Autocomplete init failed:', e);
+        }
       })
       .catch((err) => {
         console.warn('Google Maps Autocomplete not enabled:', err);
       });
-  }, []);
+  }, [disabled, readOnly]);
 
   const triggerChange = (newAddressValue) => {
     setInternalValue(newAddressValue);
-
     if (onChange) {
-      onChange({
-        target: {
-          name,
-          value: newAddressValue,
-        },
-      });
+      onChange({ target: { name, value: newAddressValue } });
     }
   };
 
   const handleInputChange = (e) => {
     if (disabled || readOnly) return;
     setInternalValue(e.target.value);
-    if (onChange) {
-      onChange(e);
-    }
+    if (onChange) onChange(e);
   };
 
   const handleDetectLocation = () => {
@@ -85,13 +91,12 @@ export default function AddressInputWithMap({
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          // Check for Google Maps Geocoding API with callback support
-          if (window.google && window.google.maps && window.google.maps.Geocoder) {
+          // Try Google Maps Geocoding first
+          if (window.google?.maps?.Geocoder) {
             const geocoder = new window.google.maps.Geocoder();
             const results = await new Promise((resolve) => {
               geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (res, status) => {
-                if (status === 'OK' && res) resolve(res);
-                else resolve(null);
+                resolve(status === 'OK' && res ? res : null);
               });
             });
 
@@ -113,13 +118,8 @@ export default function AddressInputWithMap({
           const data = await response.json();
           const cleanedNom = cleanNominatimAddress(data);
 
-          if (cleanedNom) {
-            triggerChange(cleanedNom);
-            setStatusMessage('Location detected!');
-          } else {
-            triggerChange(getFallbackAddressText());
-            setStatusMessage('Location detected!');
-          }
+          triggerChange(cleanedNom || getFallbackAddressText());
+          setStatusMessage('Location detected!');
         } catch (error) {
           console.error('Error fetching address:', error);
           setStatusMessage('Failed to get address.');
@@ -131,11 +131,11 @@ export default function AddressInputWithMap({
       (error) => {
         console.error('Geolocation error:', error);
         setIsDetectingLocation(false);
-        if (error.code === error.PERMISSION_DENIED) {
-          setStatusMessage('Location permission denied.');
-        } else {
-          setStatusMessage('Location unavailable.');
-        }
+        setStatusMessage(
+          error.code === error.PERMISSION_DENIED
+            ? 'Location permission denied.'
+            : 'Location unavailable.'
+        );
         setTimeout(() => setStatusMessage(''), 3000);
       },
       { timeout: 10000, enableHighAccuracy: true }
@@ -153,9 +153,31 @@ export default function AddressInputWithMap({
     <div className="form-group" style={{ marginBottom: '1.25rem' }}>
       {label && <label className="form-label">{label}</label>}
 
+      {/* Hidden <input> for Google Maps Autocomplete widget — must be an HTMLInputElement */}
+      {!disabled && !readOnly && (
+        <input
+          ref={hiddenInputRef}
+          type="text"
+          placeholder="Search for an address..."
+          style={{
+            width: '100%',
+            padding: '0.45rem 0.75rem',
+            fontSize: '0.9rem',
+            border: '1px solid var(--line, #d9e2ef)',
+            borderRadius: 'var(--radius, 12px) var(--radius, 12px) 0 0',
+            outline: 'none',
+            fontFamily: 'inherit',
+            marginBottom: '-1px',
+            backgroundColor: '#fff',
+            color: 'var(--text, #16233a)',
+          }}
+          aria-label="Search address with autocomplete"
+        />
+      )}
+
       <div style={{ position: 'relative' }}>
         <textarea
-          ref={autocompleteInputRef}
+          ref={textareaRef}
           name={name}
           className={className}
           rows={rows}
@@ -168,6 +190,7 @@ export default function AddressInputWithMap({
           style={{
             width: '100%',
             resize: 'vertical',
+            borderRadius: disabled || readOnly ? 'var(--radius, 12px)' : '0 0 var(--radius, 12px) var(--radius, 12px)',
             backgroundColor: disabled || readOnly ? '#f8fafc' : undefined,
             cursor: disabled || readOnly ? 'not-allowed' : undefined,
             color: disabled || readOnly ? '#334155' : undefined,
