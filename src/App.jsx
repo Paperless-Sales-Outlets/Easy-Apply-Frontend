@@ -73,7 +73,7 @@ const AnimatedRoutes = () => {
         <Route path="/customer-request-acceptance" element={<PageWrapper><OtpProtectedForm><CustomerRequestAcceptanceWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/check-status" element={<PageWrapper><CheckStatusPage /></PageWrapper>} />
         <Route path="/completion" element={<PageWrapper><CompletionPage /></PageWrapper>} />
-        
+
         {/* Operations Admin Portal */}
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
