@@ -1,6 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ServiceDetailsStep from './ServiceDetailsStep';
 import CurrentCustomerStep from './CurrentCustomerStep';
 import NewApplicantStep from './NewApplicantStep';
 import DocumentsStep from './DocumentsStep';
@@ -8,6 +7,8 @@ import DeclarationStep from './DeclarationStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
+import CustomerProfileSummary from '../../components/CustomerProfileSummary';
+import { getMockCustomerProfile } from '../../utils/mockCustomerProfile';
 
 export default function OwnershipChangeWizard() {
   const navigate = useNavigate();
@@ -17,7 +18,14 @@ export default function OwnershipChangeWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
-  const totalSteps = 5;
+  const totalSteps = 4;
+  const profile = useMemo(() => getMockCustomerProfile(verifiedMobile), [verifiedMobile]);
+  const profileFields = [
+    { name: 'currentTelephone', label: t('wizards.ownershipChange.profile.telephone'), value: profile.contactNo },
+    { name: 'currentCustomerName', label: t('wizards.ownershipChange.profile.fullName'), value: profile.fullName },
+    { name: 'currentNic', label: t('wizards.ownershipChange.profile.nic'), value: profile.nic },
+    { name: 'currentContactNo', label: t('wizards.ownershipChange.profile.contactNo'), value: profile.contactNo },
+  ];
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -74,7 +82,7 @@ export default function OwnershipChangeWizard() {
         <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
         <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
 
-        {[1, 2, 3, 4, 5].map(step => (
+        {[1, 2, 3, 4].map(step => (
           <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
             <div style={{
               width: '34px', height: '34px', borderRadius: '50%',
@@ -86,7 +94,7 @@ export default function OwnershipChangeWizard() {
               {step}
             </div>
             <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.ownershipChange.steps.s1') : step === 2 ? t('wizards.ownershipChange.steps.s2') : step === 3 ? t('wizards.ownershipChange.steps.s3') : step === 4 ? t('wizards.ownershipChange.steps.s4') : t('wizards.ownershipChange.steps.s5')}
+              {step === 1 ? t('wizards.ownershipChange.steps.s1') : step === 2 ? t('wizards.ownershipChange.steps.s2') : step === 3 ? t('wizards.ownershipChange.steps.s3') : t('wizards.ownershipChange.steps.s4')}
             </span>
           </div>
         ))}
@@ -95,21 +103,20 @@ export default function OwnershipChangeWizard() {
 
       <form ref={formRef} onSubmit={handleSubmit}>
 
+        <CustomerProfileSummary fields={profileFields} />
+
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <ServiceDetailsStep isActive={currentStep === 1} />
+            <CurrentCustomerStep isActive={currentStep === 1} />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <CurrentCustomerStep isActive={currentStep === 2} />
+            <NewApplicantStep isActive={currentStep === 2} />
           </div>
           <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-            <NewApplicantStep isActive={currentStep === 3} />
+            <DocumentsStep isActive={currentStep === 3} />
           </div>
           <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
-            <DocumentsStep isActive={currentStep === 4} />
-          </div>
-          <div style={{ display: currentStep === 5 ? 'block' : 'none' }}>
-            <DeclarationStep isActive={currentStep === 5} />
+            <DeclarationStep isActive={currentStep === 4} />
           </div>
         </div>
 

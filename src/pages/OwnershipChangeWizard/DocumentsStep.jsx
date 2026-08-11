@@ -74,10 +74,12 @@ export default function DocumentsStep({ isActive }) {
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.ownershipChange.documents.heading')}</h3>
       
       <div className="form-group">
-        <label className="form-label">{t('wizards.ownershipChange.documents.scenario')}</label>
-        <select 
-          className="form-control" 
-          value={transferType} 
+        <label className="form-label" htmlFor="oc-transferScenario">{t('wizards.ownershipChange.documents.scenario')}</label>
+        <select
+          id="oc-transferScenario"
+          name="transferScenario"
+          className="form-control"
+          value={transferType}
           onChange={(e) => setTransferType(e.target.value)}
           style={{ padding: '0.8rem' }}
         >
@@ -99,14 +101,16 @@ export default function DocumentsStep({ isActive }) {
         </select>
       </div>
 
-      <div className="card mt-4" style={{ backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', padding: '1.5rem' }}>
-        <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>{t('wizards.ownershipChange.documents.provideFollowing')}</h4>
-        
-        <ul style={{ listStyleType: 'none', padding: 0 }}>
+      <fieldset className="card mt-4" style={{ backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', padding: '1.5rem' }}>
+        <legend className="form-label" style={{ padding: 0, marginBottom: '1rem', color: 'var(--text-primary)', fontWeight: 600 }}>{t('wizards.ownershipChange.documents.provideFollowing')}</legend>
+
+        <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
           {getDocuments().map((doc, idx) => (
-            <li key={idx} style={{ marginBottom: '1rem', display: 'flex', alignItems: 'flex-start', gap: '0.8rem' }}>
-              <input type="checkbox" className="checkbox-input" style={{ marginTop: '0.2rem' }} required={isActive} />
-              <span style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>{doc}</span>
+            <li key={idx} style={{ marginBottom: '1rem' }}>
+              <label className="checkbox-label" style={{ alignItems: 'flex-start' }}>
+                <input type="checkbox" name={`requiredDoc_${idx}`} className="checkbox-input" style={{ marginTop: '0.2rem' }} required={isActive} />
+                <span style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>{doc}</span>
+              </label>
             </li>
           ))}
         </ul>
@@ -114,7 +118,7 @@ export default function DocumentsStep({ isActive }) {
         <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: 'rgba(0, 166, 80, 0.05)', borderLeft: '4px solid var(--slt-green)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
           <strong>{t('wizards.ownershipChange.documents.note')}</strong> {t('wizards.ownershipChange.documents.noteText')}
         </div>
-      </div>
+      </fieldset>
     </div>
   );
 }
