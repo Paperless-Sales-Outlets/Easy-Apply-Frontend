@@ -1,52 +1,46 @@
 import React, { useState } from 'react';
-import { FiMessageSquare } from 'react-icons/fi';
-import { DUMMY_FORM_WEEKLY, DUMMY_APPLICATIONS } from '../data/dummyData';
+import { FiFileText, FiCheckCircle, FiClock, FiMessageSquare } from 'react-icons/fi';
+import { DUMMY_APPLICATIONS } from '../data/dummyData';
 
-const MAX_BAR = Math.max(
-  ...DUMMY_FORM_WEEKLY.flatMap(f => f.daily.map(d => d.submitted)),
-  1
-);
-
-const SERVICE_TO_FORM = {
-  'new-connection': 'new-connection',
-  'reconnection': 'reconnection',
-  'location-change': 'relocation',
-  'termination': 'termination',
-  'ownership-change': 'transfer',
-  'package-migration': 'package-migration',
-  'service-vacation': 'service-vacation',
-  'refund-request': 'refund-request',
-  'customer-request-acceptance': 'customer-request-acceptance',
+const SERVICE_LABELS = {
+  'new-connection': 'New Connection',
+  'reconnection': 'Reconnection',
+  'location-change': 'Location Change',
+  'termination': 'Termination',
+  'ownership-change': 'Ownership Change',
+  'package-migration': 'Package Migration',
+  'service-vacation': 'Service Vacation',
+  'refund-request': 'Refund Request',
+  'customer-request-acceptance': 'Customer Request Acceptance',
 };
 
 function formatDate(iso) {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric',
+  return new Date(iso).toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
   });
 }
 
-function RecentHistory({ formId, commentMap = {}, onSaveComment }) {
+export default function ApplicationsPage({ commentMap = {}, onSaveComment }) {
+  const [expandedComments, setExpandedComments] = useState({});
   const [activeEditorId, setActiveEditorId] = useState(null);
   const [commentDrafts, setCommentDrafts] = useState({});
-  const [expandedComments, setExpandedComments] = useState({});
-  const [searchQuery, setSearchQuery] = useState('');
 
-  const history = DUMMY_APPLICATIONS
-    .filter(app => SERVICE_TO_FORM[app.serviceType] === formId)
+  const recentApplications = [...DUMMY_APPLICATIONS]
     .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
 
-  const matchesSearch = (app, query) => {
-    const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      app.referenceNumber.toLowerCase().includes(q)
-      || app.nic.toLowerCase().includes(q)
-      || app.phone.toLowerCase().includes(q)
-      || app.name.toLowerCase().includes(q)
-    );
+  const totals = recentApplications.reduce((acc, app) => {
+    acc.total += 1;
+    acc[app.status] = (acc[app.status] || 0) + 1;
+    return acc;
+  }, { total: 0, pending: 0, approved: 0, rejected: 0, flagged: 0 });
+
+  const handleToggleExpanded = (id) => {
+    setExpandedComments(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const filteredHistory = history.filter(app => matchesSearch(app, searchQuery));
+  const handleCommentChange = (id, value) => {
+    setCommentDrafts(prev => ({ ...prev, [id]: value }));
+  };
 
   const handleActionClick = (id) => {
     setActiveEditorId(prevId => {
@@ -58,15 +52,7 @@ function RecentHistory({ formId, commentMap = {}, onSaveComment }) {
     });
   };
 
-  const handleToggleCommentExpand = (id) => {
-    setExpandedComments(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const handleCommentChange = (id, value) => {
-    setCommentDrafts(prev => ({ ...prev, [id]: value }));
-  };
-
-  const handleSave = (id) => {
+  const handleSaveComment = (id) => {
     const comment = (commentDrafts[id] ?? commentMap[id] ?? '').trim();
     if (!comment) return;
     onSaveComment?.(id, comment);
@@ -74,65 +60,78 @@ function RecentHistory({ formId, commentMap = {}, onSaveComment }) {
   };
 
   return (
-    <div className="form-weekly-card">
-      <h2 style={{ fontSize: '1rem', fontFamily: 'var(--font-head)', color: 'var(--navy)', marginBottom: '0.25rem' }}>
-        Recent History
-      </h2>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center' }}>
-        <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0 }}>
-          Latest submissions for this form type — {history.length} recent application{history.length !== 1 ? 's' : ''}
+    <>
+      <div className="admin-page-header">
+        <h1 className="admin-page-title">Applications</h1>
+        <p className="admin-page-subtitle">
+          Recent application history for submitted forms.
         </p>
-        <input
-          type="search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search reference, NIC, phone or name"
-          style={{
-            flex: '1 1 240px',
-            minWidth: 240,
-            padding: '0.75rem 1rem',
-            border: '1px solid var(--line)',
-            borderRadius: '12px',
-            background: 'var(--surface)',
-            color: 'var(--text)',
-          }}
-        />
       </div>
 
-      {history.length === 0 ? (
-        <div className="admin-empty">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-          </svg>
-          <p>No recent submissions for this form type yet.</p>
+      <div className="admin-summary-grid">
+        <div className="admin-stat-card">
+          <div className="admin-stat-icon blue">
+            <FiFileText size={18} />
+          </div>
+          <div>
+            <div className="admin-stat-label">Total applications</div>
+            <div className="admin-stat-value">{totals.total}</div>
+            <div className="admin-stat-trend">Latest form submissions</div>
+          </div>
         </div>
-      ) : (
+        <div className="admin-stat-card">
+          <div className="admin-stat-icon green">
+            <FiCheckCircle size={18} />
+          </div>
+          <div>
+            <div className="admin-stat-label">Approved</div>
+            <div className="admin-stat-value">{totals.approved}</div>
+            <div className="admin-stat-trend">Completed review</div>
+          </div>
+        </div>
+        <div className="admin-stat-card">
+          <div className="admin-stat-icon amber">
+            <FiClock size={18} />
+          </div>
+          <div>
+            <div className="admin-stat-label">Pending</div>
+            <div className="admin-stat-value">{totals.pending}</div>
+            <div className="admin-stat-trend">Awaiting processing</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="form-weekly-card" style={{ overflowX: 'auto' }}>
+        <h2 style={{ fontSize: '1rem', fontFamily: 'var(--font-head)', color: 'var(--navy)', marginBottom: '0.75rem' }}>
+          Recent submission history
+        </h2>
         <div className="admin-table-wrap">
-          <table className="admin-table">
+          <table className="admin-table" style={{ minWidth: 1120 }}>
             <thead>
               <tr>
                 <th>Reference</th>
                 <th>Applicant</th>
-                <th>NIC</th>
+                <th>Service</th>
+                <th>Status</th>
+                <th>Submitted</th>
                 <th>Phone</th>
                 <th>Address</th>
-                <th>Submitted</th>
-                <th>Status</th>
                 <th>Comments</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {history.map(app => {
+              {recentApplications.map(app => {
                 const comment = commentMap[app.id] || '';
                 const isExpanded = expandedComments[app.id];
-                const visibleText = comment.length > 90 && !isExpanded ? `${comment.slice(0, 90)}...` : comment;
+                const isLong = comment.length > 90;
+                const visibleText = isExpanded ? comment : comment.slice(0, 90);
 
                 return (
                   <React.Fragment key={app.id}>
                     <tr>
                       <td>
-                        <span style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--blue)' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--blue)' }}>
                           {app.referenceNumber}
                         </span>
                       </td>
@@ -140,23 +139,26 @@ function RecentHistory({ formId, commentMap = {}, onSaveComment }) {
                         <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{app.name}</div>
                         <div style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>{app.email}</div>
                       </td>
-                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.nic}</td>
-                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.phone}</td>
-                      <td style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{app.address}</td>
-                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{formatDate(app.submittedAt)}</td>
+                      <td style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+                        {SERVICE_LABELS[app.serviceType] || app.serviceType}
+                      </td>
                       <td>
                         <span className={`admin-badge ${app.status}`}>
                           {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
                         </span>
                       </td>
+                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{formatDate(app.submittedAt)}</td>
+                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.phone}</td>
+                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.address}</td>
                       <td style={{ fontSize: '0.82rem', color: 'var(--muted)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxWidth: '24rem' }}>
                         {comment ? (
                           <>
                             {visibleText}
-                            {comment.length > 90 && (
+                            {isLong && !isExpanded ? '...' : ''}
+                            {isLong && (
                               <button
                                 type="button"
-                                onClick={() => handleToggleCommentExpand(app.id)}
+                                onClick={() => handleToggleExpanded(app.id)}
                                 style={{
                                   border: 'none',
                                   background: 'transparent',
@@ -214,7 +216,7 @@ function RecentHistory({ formId, commentMap = {}, onSaveComment }) {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.35rem' }}>
                               <button
                                 type="button"
-                                onClick={() => handleSave(app.id)}
+                                onClick={() => handleSaveComment(app.id)}
                                 style={{
                                   padding: '0.75rem 1rem',
                                   backgroundColor: 'var(--blue)',
@@ -253,66 +255,7 @@ function RecentHistory({ formId, commentMap = {}, onSaveComment }) {
             </tbody>
           </table>
         </div>
-      )}
-    </div>
-  );
-}
-
-export default function FormsPage({ initialFormId, commentMap = {}, onSaveComment }) {
-  const form = DUMMY_FORM_WEEKLY.find(f => f.id === initialFormId) || null;
-
-  if (!form) {
-    return (
-      <div className="admin-empty">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-        </svg>
-        <p>Select a form type from the Forms menu to view its submission charts.</p>
       </div>
-    );
-  }
-
-  const totalSubmitted = form.daily.reduce((s, d) => s + d.submitted, 0);
-  const totalCompleted = form.daily.reduce((s, d) => s + d.completed, 0);
-
-  return (
-    <>
-      <div className="admin-page-header">
-        <h1 className="admin-page-title" style={{ marginBottom: 0 }}>{form.label}</h1>
-        <p className="admin-page-subtitle">
-          {totalCompleted} completed out of {totalSubmitted} submissions in the last 14 days
-        </p>
-      </div>
-
-      <div className="form-weekly-card">
-        <div className="form-weekly-legend">
-          <span><span className="fw-dot submitted" /> Submitted</span>
-          <span><span className="fw-dot completed" /> Completed</span>
-        </div>
-
-        <div className="form-detail-chart">
-          {form.daily.map(d => {
-            const subH = (d.submitted / MAX_BAR) * 100;
-            const comH = (d.completed / d.submitted) * subH || 0;
-            return (
-              <div className="form-detail-col" key={d.date}>
-                <div className="form-detail-bars">
-                  <div className="form-weekly-bar completed" style={{ height: `${comH}%` }} />
-                  <div className="form-weekly-bar submitted" style={{ height: `${subH}%` }} />
-                </div>
-                <div className="form-detail-day">{d.day}</div>
-                <div className="form-detail-values">
-                  <span>{d.submitted}</span>
-                  <span>{d.completed}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <RecentHistory formId={form.id} commentMap={commentMap} onSaveComment={onSaveComment} />
     </>
   );
 }
