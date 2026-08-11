@@ -345,7 +345,7 @@ export default function Dashboard() {
           {/* ── Sticky Side Detail Panel ── */}
           {hasDetailPanel && (
             <div className="dashboard-detail-col">
-              <div style={{ position: 'sticky', top: '1.5rem' }}>
+              <div className="dashboard-detail-inner" style={{ position: 'sticky', top: '1.5rem' }}>
                 <ProductDetailsPanel
                   product={selectedProduct}
                   isFavorite={favorites.includes(selectedProduct._id || selectedProduct.id)}

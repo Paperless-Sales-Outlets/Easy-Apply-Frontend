@@ -277,12 +277,7 @@ export default function ProductCatalogPage() {
 
       {/* ── Main Layout ── */}
       <div style={{ ...wide, marginTop: '1.2rem' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: hasDetailPanel ? '210px 1fr 420px' : '210px 1fr',
-          gap: '1.2rem',
-          alignItems: 'start',
-        }}>
+        <div className={`dashboard-grid-container ${hasDetailPanel ? 'has-detail' : ''}`}>
 
           {/* ── Sidebar ── */}
           <div style={{ position: 'sticky', top: '1.5rem' }}>
@@ -393,8 +388,8 @@ export default function ProductCatalogPage() {
 
           {/* ── Detail Panel ── */}
           {hasDetailPanel && (
-            <div>
-              <div style={{ position: 'sticky', top: '1.5rem' }}>
+            <div className="dashboard-detail-col">
+              <div className="dashboard-detail-inner" style={{ position: 'sticky', top: '1.5rem' }}>
                 <ProductDetailsPanel
                   product={selectedProduct}
                   isFavorite={favorites.includes(selectedProduct._id || selectedProduct.id)}
