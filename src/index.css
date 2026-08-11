@@ -1370,8 +1370,8 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 2rem;
-  max-width: 1400px;
+  padding: 0.75rem 1.5rem;
+  max-width: 1600px;
   margin: 0 auto;
 }
 

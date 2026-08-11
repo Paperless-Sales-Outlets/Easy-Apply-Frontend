@@ -183,7 +183,7 @@ export default function Dashboard() {
 
       {/* Secondary Hero Bar */}
       <div style={{ borderBottom: '1px solid var(--line)', padding: '1.2rem 0', background: 'white' }}>
-        <div className="site-container dashboard-hero-bar" style={{ padding: '0 1.5rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="dashboard-hero-bar" style={{ maxWidth: '1600px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div className="search-cart-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div className="search-input-wrapper" style={{ position: 'relative' }}>
               <FiSearch style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={16} />
