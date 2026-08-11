@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CustomerInfoStep from './CustomerInfoStep';
 import PackageDetailsStep from './PackageDetailsStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
+import CustomerProfileSummary from '../../components/CustomerProfileSummary';
+import { getMockCustomerProfile } from '../../utils/mockCustomerProfile';
 
 export default function PackageMigrationWizard() {
   const navigate = useNavigate();
@@ -15,7 +16,15 @@ export default function PackageMigrationWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
-  const totalSteps = 3;
+  const totalSteps = 2;
+  const profile = useMemo(() => getMockCustomerProfile(verifiedMobile), [verifiedMobile]);
+  const profileFields = [
+    { name: 'telephone', label: t('wizards.packageMigration.profile.telephone'), value: profile.contactNo },
+    { name: 'fullName', label: t('wizards.packageMigration.profile.fullName'), value: profile.fullName },
+    { name: 'nic', label: t('wizards.packageMigration.profile.nic'), value: profile.nic },
+    { name: 'contactNo', label: t('wizards.packageMigration.profile.contactNo'), value: profile.contactNo },
+    { name: 'existingPackage', label: t('wizards.packageMigration.profile.existingPackage'), value: profile.existingPackage },
+  ];
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -73,7 +82,7 @@ export default function PackageMigrationWizard() {
         <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
         <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
 
-        {[1, 2, 3].map(step => (
+        {[1, 2].map(step => (
           <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
             <div style={{
               width: '34px', height: '34px', borderRadius: '50%',
@@ -85,7 +94,7 @@ export default function PackageMigrationWizard() {
               {step}
             </div>
             <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.packageMigration.steps.s1') : step === 2 ? t('wizards.packageMigration.steps.s2') : 'Payment'}
+              {step === 1 ? t('wizards.packageMigration.steps.s1') : t('wizards.packageMigration.steps.s2')}
             </span>
           </div>
         ))}
@@ -94,15 +103,14 @@ export default function PackageMigrationWizard() {
 
       <form ref={formRef} onSubmit={handleSubmit}>
 
+        <CustomerProfileSummary fields={profileFields} />
+
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <CustomerInfoStep isActive={currentStep === 1} />
+            <PackageDetailsStep isActive={currentStep === 1} />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <PackageDetailsStep isActive={currentStep === 2} />
-          </div>
-          <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-            <PaymentStep isActive={currentStep === 3} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
+            <PaymentStep isActive={currentStep === 2} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
           </div>
         </div>
 

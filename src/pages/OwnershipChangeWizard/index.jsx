@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CurrentCustomerStep from './CurrentCustomerStep';
 import NewApplicantStep from './NewApplicantStep';
@@ -7,6 +7,8 @@ import DeclarationStep from './DeclarationStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
+import CustomerProfileSummary from '../../components/CustomerProfileSummary';
+import { getMockCustomerProfile } from '../../utils/mockCustomerProfile';
 
 export default function OwnershipChangeWizard() {
   const navigate = useNavigate();
@@ -17,6 +19,13 @@ export default function OwnershipChangeWizard() {
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
   const totalSteps = 4;
+  const profile = useMemo(() => getMockCustomerProfile(verifiedMobile), [verifiedMobile]);
+  const profileFields = [
+    { name: 'currentTelephone', label: t('wizards.ownershipChange.profile.telephone'), value: profile.contactNo },
+    { name: 'currentCustomerName', label: t('wizards.ownershipChange.profile.fullName'), value: profile.fullName },
+    { name: 'currentNic', label: t('wizards.ownershipChange.profile.nic'), value: profile.nic },
+    { name: 'currentContactNo', label: t('wizards.ownershipChange.profile.contactNo'), value: profile.contactNo },
+  ];
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -93,6 +102,8 @@ export default function OwnershipChangeWizard() {
       </div>
 
       <form ref={formRef} onSubmit={handleSubmit}>
+
+        <CustomerProfileSummary fields={profileFields} />
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>

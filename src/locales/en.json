@@ -84,7 +84,8 @@
     "submit": "Submit Application",
     "submitting": "Submitting...",
     "submitError": "Submission failed. Please try again.",
-    "confirmTermination": "Confirm Termination"
+    "confirmTermination": "Confirm Termination",
+    "autoFilledHeading": "Auto-filled from your account"
   },
   "wizardFlow": {
     "verify": "Verify",
@@ -329,23 +330,24 @@
       "title": "Application for Package Migration",
       "subtitle": "Change your existing SLT package.",
       "steps": {
-        "s1": "Customer Info",
-        "s2": "Package Details"
+        "s1": "Package Details",
+        "s2": "Payment"
       },
-      "customerInfo": {
-        "heading": "1. Customer Information",
-        "telephone": "Telephone Number",
-        "fullName": "Full Name / Company Name",
-        "nicBrc": "N.I.C / B.R.C. No",
-        "contactNo": "Contact No."
+      "profile": {
+        "telephone": "Telephone / Account Number",
+        "fullName": "Full Name",
+        "nic": "NIC",
+        "contactNo": "Contact Number",
+        "existingPackage": "Existing Package"
       },
       "packageDetails": {
-        "heading": "2. Required Package Change",
-        "existingPackage": "Existing Package",
+        "heading": "Required Package Change",
         "requiredPackage": "Required Package",
         "effectiveDate": "With effect from",
         "remarks": "Remarks",
-        "declaration": "Please change my existing package as requested above."
+        "declarationHeading": "Customer Declaration",
+        "declarationText": "I hereby declare that the information provided in this package migration application is true and accurate to the best of my knowledge. I understand that migrating to the requested package may change my monthly charges, contract terms, and service features, and I agree to bear any applicable migration fees as per SLT's prevailing terms and conditions. I confirm I am the registered owner of this connection, or an authorized representative, and I consent to SLT processing this request based on the details provided above.",
+        "declarationLabel": "I accept the above declaration and request SLT to change my existing package as requested."
       }
     },
     "serviceVacation": {
@@ -468,17 +470,17 @@
         "s3": "Documents",
         "s4": "Declaration"
       },
+      "profile": {
+        "telephone": "Current Telephone Number",
+        "fullName": "Current Customer Name",
+        "nic": "Current NIC",
+        "contactNo": "Current Contact Number"
+      },
       "currentCustomer": {
         "heading": "Form A - Current Customer Details",
-        "telephone": "1. Telephone number to be transferred",
-        "customerName": "2. Name of the Customer",
-        "customerNameNote": "(as stated under the existing telephone application/agreement)",
-        "customerNamePlaceholder": "Full name / Company name",
         "partnership": "Partnership / Sole Proprietorship Info",
         "partnershipNote": "(If applicable, provide full names of all partners or the sole proprietor)",
         "partnershipPlaceholder": "Partner 1\\nPartner 2...",
-        "nicBrc": "3. N.I.C / B.R.C No",
-        "contactNo": "4. Contact No.",
         "transferTo": "Kindly transfer the above telephone to following person/Company",
         "transferToPlaceholder": "Rev. / Mr. / Mrs. / Ms. / Company",
         "remarks": "Remarks"
@@ -510,8 +512,14 @@
         "provideFollowing": "Please provide the following documents:",
         "note": "Note:",
         "noteText": "In case the above specified documents are unavailable, you may contact the Regional Telecom Manager or the Manager of the nearest SLT Teleshop in your area.",
+        "consentHelp": "Upload as a PDF file.",
+        "nicFormatLabel": "How would you like to upload the NIC copy?",
+        "nicFormatPdf": "PDF (both sides in one file)",
+        "nicFormatJpeg": "JPEG (separate front & back photos)",
+        "nicPdfHelp": "Upload a single PDF containing both the front and back of the NIC.",
+        "nicFront": "NIC Front (JPEG)",
+        "nicBack": "NIC Back (JPEG)",
         "docs": {
-          "formA_or_consent": "Form A in overleaf or letter of consent from present owner",
           "newOwnerConsent": "New owner's consent letter",
           "newOwnerNic": "Photo copy of NIC of new owner",
           "form20": "A copy of the form 20 obtained from the registrar of companies",
@@ -618,9 +626,16 @@
       "subtitle": "Request permanent or temporary disconnection of SLT services and facilities.",
       "steps": {
         "s1": "Service Info",
-        "s2": "Contact Info",
-        "s3": "Reason",
-        "s4": "Agreement"
+        "s2": "Reason",
+        "s3": "Agreement"
+      },
+      "profile": {
+        "telephone": "Telephone Number to be Disconnected",
+        "fullName": "Customer Name",
+        "nic": "NIC / Passport / BRC No.",
+        "mobile": "Mobile Number",
+        "fixed": "Fixed Contact Number",
+        "email": "Email Address"
       },
       "serviceDetails": {
         "heading": "1. Service Details",
@@ -633,13 +648,13 @@
         "disconnectAll": "b. Disconnect the telephone line with all facilities",
         "permanent": "Disconnect Permanently",
         "temporary": "Temporary",
-        "presentNumber": "c. Present Telephone number (to be disconnected)",
-        "presentNumberNote": "(If more, attach separately or list in remarks)",
         "specificServices": "Specific Services to Disconnect",
+        "selectServicesLabel": "Select services to disconnect",
+        "selectServicesPlaceholder": "Select services...",
+        "usernameFor": "{{service}} Username",
         "broadband": "SLT Broadband Internet",
         "dialUp": "Dial-up Internet",
         "email": "Email",
-        "username": "User name:",
         "peoTv": "PeoTV",
         "sltPlus": "SLTPlus",
         "idd": "IDD",
@@ -650,7 +665,7 @@
         "disconnectDate": "1.2 Disconnect the above requested service with effect from (Date)"
       },
       "reason": {
-        "heading": "3. Reason for Disconnection",
+        "heading": "2. Reason for Disconnection",
         "desc": "Please select the reasons for disconnecting the service to help us improve our service excellence.",
         "compDetails": "* Better Competitor Offer Details",
         "compDetailsDesc": "Please specify the competitor and package you are switching to.",
@@ -682,19 +697,8 @@
           "Children Addicted to TV": "Children Addicted to TV"
         }
       },
-      "contact": {
-        "heading": "2. Contact Details",
-        "name": "2.1 Name of the person / Company",
-        "nameNote": "(Name should be the same as it appears under the agreement for provisioning of telecom services)",
-        "nicBrc": "2.2 N.I.C. No. / Passport No. / Business Registration No.",
-        "contactHeading": "2.3 Contact Numbers",
-        "mobile": "Mobile",
-        "fixed": "Fixed",
-        "email": "E-mail",
-        "fax": "Fax"
-      },
       "agreement": {
-        "heading": "4. Customer Agreement",
+        "heading": "3. Customer Agreement",
         "para1": "I do hereby declare that the information furnished by me are true and confirm that I have settled all the dues to SLT outstanding under the account number/s mentioned in this application.",
         "para2": "I further agree to indemnify and hold harmless SLT against any claim, action, demand, expense, loss or other liabilities which may arise in future due to negligence and /or omission and /or failure to fulfill any obligation on our part or for the using there service for illegal or immoral purpose or for the transmission and /or introduction of harmful computer viruses or programs into telecommunication network, computer systems, computers and computer apparatus, any unauthorized use of the service and the violation of any applicable laws and regulations by my self, during the tenor of the agreement.",
         "agreeLabel": "I accept the Declaration and agree to the Terms & Conditions"
