@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import FileUploadField from '../../components/form/FileUploadField';
 
 export default function DocumentsStep({ isActive }) {
   const { t } = useTranslation();
   const [transferType, setTransferType] = useState('person-to-person');
+  const [nicFormat, setNicFormat] = useState('pdf');
+  const [uploads, setUploads] = useState({
+    newOwnerConsent: null,
+    newOwnerNicPdf: null,
+    newOwnerNicFront: null,
+    newOwnerNicBack: null,
+  });
+
+  const handleFileChange = (name, fileData) => {
+    setUploads((prev) => ({ ...prev, [name]: fileData }));
+  };
 
   const getDocuments = () => {
     switch(transferType) {
-      case 'person-to-person':
-        return [
-          t('wizards.ownershipChange.documents.docs.formA_or_consent'),
-          t('wizards.ownershipChange.documents.docs.newOwnerConsent'),
-          t('wizards.ownershipChange.documents.docs.newOwnerNic')
-        ];
       case 'person-to-company':
         return [
-          t('wizards.ownershipChange.documents.docs.formA_or_consent'),
           t('wizards.ownershipChange.documents.docs.form20'),
           t('wizards.ownershipChange.documents.docs.brCopy'),
           t('wizards.ownershipChange.documents.docs.companyRequest'),
@@ -104,16 +109,83 @@ export default function DocumentsStep({ isActive }) {
       <fieldset className="card mt-4" style={{ backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', padding: '1.5rem' }}>
         <legend className="form-label" style={{ padding: 0, marginBottom: '1rem', color: 'var(--text-primary)', fontWeight: 600 }}>{t('wizards.ownershipChange.documents.provideFollowing')}</legend>
 
-        <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
-          {getDocuments().map((doc, idx) => (
-            <li key={idx} style={{ marginBottom: '1rem' }}>
-              <label className="checkbox-label" style={{ alignItems: 'flex-start' }}>
-                <input type="checkbox" name={`requiredDoc_${idx}`} className="checkbox-input" style={{ marginTop: '0.2rem' }} required={isActive} />
-                <span style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>{doc}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
+        {transferType === 'person-to-person' ? (
+          <div>
+            <FileUploadField
+              name="newOwnerConsent"
+              label={t('wizards.ownershipChange.documents.docs.newOwnerConsent')}
+              accept=".pdf"
+              required={isActive}
+              value={uploads.newOwnerConsent}
+              onChange={handleFileChange}
+              helpText={t('wizards.ownershipChange.documents.consentHelp')}
+            />
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="oc-nicFormat">{t('wizards.ownershipChange.documents.nicFormatLabel')}</label>
+              <select
+                id="oc-nicFormat"
+                className="form-control"
+                value={nicFormat}
+                onChange={(e) => setNicFormat(e.target.value)}
+                style={{ maxWidth: '360px' }}
+              >
+                <option value="pdf">{t('wizards.ownershipChange.documents.nicFormatPdf')}</option>
+                <option value="jpeg">{t('wizards.ownershipChange.documents.nicFormatJpeg')}</option>
+              </select>
+            </div>
+
+            {nicFormat === 'pdf' ? (
+              <FileUploadField
+                name="newOwnerNicPdf"
+                label={t('wizards.ownershipChange.documents.docs.newOwnerNic')}
+                accept=".pdf"
+                required={isActive}
+                value={uploads.newOwnerNicPdf}
+                onChange={handleFileChange}
+                helpText={t('wizards.ownershipChange.documents.nicPdfHelp')}
+              />
+            ) : (
+              <div className="form-group flex flex-col-mobile gap-4">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <FileUploadField
+                    name="newOwnerNicFront"
+                    label={t('wizards.ownershipChange.documents.nicFront')}
+                    accept=".jpg,.jpeg"
+                    required={isActive}
+                    value={uploads.newOwnerNicFront}
+                    onChange={handleFileChange}
+                  />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <FileUploadField
+                    name="newOwnerNicBack"
+                    label={t('wizards.ownershipChange.documents.nicBack')}
+                    accept=".jpg,.jpeg"
+                    required={isActive}
+                    value={uploads.newOwnerNicBack}
+                    onChange={handleFileChange}
+                  />
+                </div>
+              </div>
+            )}
+
+            {Object.entries(uploads).map(([key, val]) => (
+              val ? <input key={key} type="hidden" name={key} value={val.data} /> : null
+            ))}
+          </div>
+        ) : (
+          <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+            {getDocuments().map((doc, idx) => (
+              <li key={idx} style={{ marginBottom: '1rem' }}>
+                <label className="checkbox-label" style={{ alignItems: 'flex-start' }}>
+                  <input type="checkbox" name={`requiredDoc_${idx}`} className="checkbox-input" style={{ marginTop: '0.2rem' }} required={isActive} />
+                  <span style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>{doc}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
 
         <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: 'rgba(0, 166, 80, 0.05)', borderLeft: '4px solid var(--slt-green)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
           <strong>{t('wizards.ownershipChange.documents.note')}</strong> {t('wizards.ownershipChange.documents.noteText')}

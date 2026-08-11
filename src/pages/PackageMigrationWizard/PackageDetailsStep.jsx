@@ -28,8 +28,12 @@ export default function PackageDetailsStep({ isActive }) {
       </div>
 
       <div className="card mt-6" style={{ padding: '1.5rem', backgroundColor: 'var(--bg-color)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
+        <h4 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>{t('wizards.packageMigration.packageDetails.declarationHeading')}</h4>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+          {t('wizards.packageMigration.packageDetails.declarationText')}
+        </p>
         <label className="checkbox-label" style={{ fontWeight: '500', color: 'var(--text-primary)', margin: 0 }}>
-          <input type="checkbox" name="declarationAccepted" className="checkbox-input" required={isActive} /> {t('wizards.packageMigration.packageDetails.declaration')}
+          <input type="checkbox" name="declarationAccepted" className="checkbox-input" required={isActive} /> {t('wizards.packageMigration.packageDetails.declarationLabel')}
         </label>
       </div>
 
