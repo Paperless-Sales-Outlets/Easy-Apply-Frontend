@@ -130,7 +130,7 @@ const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange
 });
 
 
-const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customerType = 'Residential', onPaymentIntentionChange }, ref) {
+const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customerType = 'Residential', onPaymentIntentionChange, reconnectionData }, ref) {
   const { t } = useTranslation();
   const [signatureBase64, setSignatureBase64] = useState('');
   const [signatureError, setSignatureError] = useState(false);
@@ -152,30 +152,6 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
       const form = document.querySelector('form');
       if (form) {
         const formData = new FormData(form);
-        if (customerType === 'Residential') {
-          const front = formData.get('nicFront');
-          const back = formData.get('nicBack');
-          if (!front || front.size === 0) {
-            toast.error('Please upload NIC Front Copy');
-            return false;
-          }
-          if (!back || back.size === 0) {
-            toast.error('Please upload NIC Back Copy');
-            return false;
-          }
-        } else if (customerType === 'Foreign') {
-          const passport = formData.get('passportCopy');
-          if (!passport || passport.size === 0) {
-            toast.error('Please upload Passport Copy');
-            return false;
-          }
-        } else if (customerType === 'Business') {
-          const brc = formData.get('brcCopy');
-          if (!brc || brc.size === 0) {
-            toast.error('Please upload Business Registration Certificate');
-            return false;
-          }
-        }
       }
 
       if (signatureMethod === 'draw' && !signatureBase64) {
@@ -194,48 +170,35 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
 
   return (
     <div>
-      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>Supporting Documents</h3>
-
-      <div className="form-group flex flex-col-mobile gap-4 mb-4">
-        {customerType === 'Residential' && (
-          <>
-            <div style={{ flex: '1' }}>
-              <FileInputWithClear
-                label="NIC Front Copy (PDF/JPG/PNG)"
-                name="nicFront"
-                accept=".pdf,.jpg,.jpeg,.png"
-              />
+      {reconnectionData && (
+        <div style={{ marginBottom: '2.5rem' }}>
+          <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>Customer Details</h3>
+          <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', display: 'grid', placeItems: 'center', color: 'var(--slt-blue)' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <div>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>{reconnectionData.fullName}</h4>
+                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Account Holder</p>
+              </div>
             </div>
-            <div style={{ flex: '1' }}>
-              <FileInputWithClear
-                label="NIC Back Copy (PDF/JPG/PNG)"
-                name="nicBack"
-                accept=".pdf,.jpg,.jpeg,.png"
-              />
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+              <div style={{ color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                  <strong>Service Address:</strong><br />
+                  {[reconnectionData.addressLine1, reconnectionData.addressLine2].filter(Boolean).join(', ')}
+                </p>
+              </div>
             </div>
-          </>
-        )}
-
-        {customerType === 'Foreign' && (
-          <div style={{ flex: '1' }}>
-            <FileInputWithClear
-              label="Passport Copy (PDF/JPG/PNG)"
-              name="passportCopy"
-              accept=".pdf,.jpg,.jpeg,.png"
-            />
           </div>
-        )}
+        </div>
+      )}
 
-        {customerType === 'Business' && (
-          <div style={{ flex: '1' }}>
-            <FileInputWithClear
-              label="Business Registration Certificate (PDF)"
-              name="brcCopy"
-              accept=".pdf"
-            />
-          </div>
-        )}
-      </div>
+
 
       <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: 'rgba(15, 87, 168, 0.05)', borderRadius: '12px', border: '1px solid rgba(15, 87, 168, 0.2)' }}>
         <h4 style={{ color: 'var(--slt-blue)', marginBottom: '1rem', fontSize: '1.1rem' }}>Pending Balance Settlement</h4>
@@ -299,7 +262,7 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
           <div style={{ maxWidth: '400px' }}>
             <FileInputWithClear
               label="Upload Signature (PDF/JPG/PNG)"
-              name="signatureUpload"
+              name="signatureDoc"
               accept=".pdf,.jpg,.jpeg,.png"
               ref={signatureFileRef}
               onChange={(e) => { if (e.target.files.length > 0) setSignatureError(false); }}

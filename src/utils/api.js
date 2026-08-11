@@ -52,7 +52,6 @@ api.interceptors.response.use(
       if (refreshToken) {
         try {
           // Attempt to get a new access token using the refresh token
-          // We use direct axios here to avoid triggering the request interceptor loop
           const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
             refreshToken,
           });
@@ -70,12 +69,15 @@ api.interceptors.response.use(
           console.error('Refresh token expired or invalid:', refreshError);
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
-          
-          // Optionally redirect to login page (we can trigger window refresh to clear auth context state)
-          window.location.href = '/login';
+
+          // Redirect to login respecting the Vite BASE_URL (e.g. /Paperlessbackup/)
+          const base = import.meta.env.BASE_URL || '/';
+          window.location.href = base.replace(/\/$/, '') + '/login';
           return Promise.reject(refreshError);
         }
       }
+      // No refresh token — 401 on session-based endpoints (e.g. /cart) should
+      // fall through and be handled by the caller as a graceful fallback.
     }
 
     return Promise.reject(error);
