@@ -345,7 +345,9 @@
         "requiredPackage": "Required Package",
         "effectiveDate": "With effect from",
         "remarks": "Remarks",
-        "declaration": "Please change my existing package as requested above."
+        "declarationHeading": "Customer Declaration",
+        "declarationText": "I hereby declare that the information provided in this package migration application is true and accurate to the best of my knowledge. I understand that migrating to the requested package may change my monthly charges, contract terms, and service features, and I agree to bear any applicable migration fees as per SLT's prevailing terms and conditions. I confirm I am the registered owner of this connection, or an authorized representative, and I consent to SLT processing this request based on the details provided above.",
+        "declarationLabel": "I accept the above declaration and request SLT to change my existing package as requested."
       }
     },
     "serviceVacation": {
@@ -510,8 +512,14 @@
         "provideFollowing": "Please provide the following documents:",
         "note": "Note:",
         "noteText": "In case the above specified documents are unavailable, you may contact the Regional Telecom Manager or the Manager of the nearest SLT Teleshop in your area.",
+        "consentHelp": "Upload as a PDF file.",
+        "nicFormatLabel": "How would you like to upload the NIC copy?",
+        "nicFormatPdf": "PDF (both sides in one file)",
+        "nicFormatJpeg": "JPEG (separate front & back photos)",
+        "nicPdfHelp": "Upload a single PDF containing both the front and back of the NIC.",
+        "nicFront": "NIC Front (JPEG)",
+        "nicBack": "NIC Back (JPEG)",
         "docs": {
-          "formA_or_consent": "Form A in overleaf or letter of consent from present owner",
           "newOwnerConsent": "New owner's consent letter",
           "newOwnerNic": "Photo copy of NIC of new owner",
           "form20": "A copy of the form 20 obtained from the registrar of companies",
