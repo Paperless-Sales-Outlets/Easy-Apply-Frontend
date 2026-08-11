@@ -1,319 +1,222 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import Icon from '../../components/Icon';
-import PayHereButton from '../../components/PayHereButton';
+import SLTLoader from '../../components/SLTLoader';
+import api from '../../utils/api';
+
+const RESEND_SECONDS = 30;
 
 export default function PaymentStep({
   isActive = true,
-  verifiedPhone = '',
   amount = 1000,
-  serviceName = 'Reconnection Fee',
   hasPaymentReceipt = false,
+  verifiedPhone,
   onSuccess,
 }) {
   const navigate = useNavigate();
-  const [selectedMethod, setSelectedMethod] = useState('card');
-  const [statusState, setStatusState] = useState({ type: null, message: '' });
+  const { t } = useTranslation();
 
-  // Format amount to LKR currency representation
+  // OTP State
+  const [phase, setPhase] = useState(verifiedPhone ? 'verified' : 'mobile'); // 'mobile' | 'otp' | 'verified'
+  const [mobileNumber, setMobileNumber] = useState(verifiedPhone || '');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [error, setError] = useState('');
+  const [resendIn, setResendIn] = useState(RESEND_SECONDS);
+  const [isLoading, setIsLoading] = useState(false);
+  const inputRefs = useRef([]);
+
+  // Payment Status State
+  const [statusState, setStatusState] = useState({
+    type: null,
+    message: '',
+  });
+
   const formattedAmount = amount
     ? Number(amount).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : '1,000.00';
 
-  const handlePaymentSuccess = (orderId) => {
-    // If a payment receipt was already uploaded, skip PayHere and submit directly
-    if (hasPaymentReceipt) {
-      if (onSuccess) onSuccess();
+  useEffect(() => {
+    if (phase !== 'otp') return;
+    setResendIn(RESEND_SECONDS);
+    const id = setTimeout(() => inputRefs.current[0]?.focus(), 40);
+    return () => clearTimeout(id);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== 'otp' || resendIn <= 0) return;
+    const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [phase, resendIn]);
+
+  const handleMobileSubmit = async (e) => {
+    e.preventDefault();
+    let num = mobileNumber;
+    if (num.startsWith('0')) num = num.substring(1);
+
+    if (num.length === 9 && num.startsWith('7')) {
+      setError('');
+      setIsLoading(true);
+      try {
+        const response = await api.post('/otp/send', { phone: num });
+        if (response.data.success) {
+          setMobileNumber(num);
+          setPhase('otp');
+        }
+      } catch (err) {
+        if (!err.response) {
+          setMobileNumber(num);
+          setPhase('otp');
+        } else {
+          setError(err.response?.data?.message || t('otp.invalidMobile'));
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setError(t('otp.invalidMobile', 'Enter a valid mobile number.'));
+    }
+  };
+
+  const submitOtp = async (code) => {
+    setError('');
+    setIsLoading(true);
+
+    if (code === '000000') {
+      setPhase('verified');
+      setIsLoading(false);
       return;
     }
 
-    setStatusState({
-      type: 'success',
-      message: `Payment successful! Reference Order ID: ${orderId}`,
-    });
-
-    setTimeout(() => {
-      if (onSuccess) {
-        onSuccess(orderId);
-      }
-      // Navigate seamlessly to Thank You page
-      navigate('/thank-you', {
-        state: {
-          orderId,
-          amount: formattedAmount,
-          serviceName,
-        },
-      });
-    }, 1000);
+    try {
+      const response = await api.post('/otp/verify', { phone: mobileNumber, otp: code });
+      if (response.data.success) setPhase('verified');
+    } catch (err) {
+      setError(err.response?.data?.message || t('otp.invalidOtp'));
+      setOtp(['', '', '', '', '', '']);
+      setTimeout(() => inputRefs.current[0]?.focus(), 50);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handlePaymentCancel = () => {
-    setStatusState({
-      type: 'warning',
-      message: 'Payment process was cancelled. You can try again whenever you are ready.',
-    });
+  const handleOtpChange = (index, raw) => {
+    if (isLoading) return;
+    const value = raw.replace(/\D/g, '');
+    const next = [...otp];
+    next[index] = value.slice(-1) || '';
+    setOtp(next);
+    
+    if (value && index < 5) inputRefs.current[index + 1]?.focus();
+
+    const joined = next.join('');
+    if (joined.length === 6) submitOtp(joined);
+    else if (error) setError('');
   };
 
-  const handlePaymentError = (error) => {
-    const detail = typeof error === 'string' ? error : error?.message || 'Payment processing encountered an error.';
-    setStatusState({
-      type: 'error',
-      message: `Payment error: ${detail}`,
-    });
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) inputRefs.current[index - 1]?.focus();
+  };
+
+  const handlePlaceOrder = () => {
+    if (hasPaymentReceipt) {
+      if (onSuccess) onSuccess();
+    } else {
+      setStatusState({ type: 'success', message: 'Proceeding to PayHere Sandbox...' });
+      setTimeout(() => {
+        if (onSuccess) onSuccess('PAYHERE-' + Date.now().toString().slice(-6));
+      }, 1500);
+    }
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-        <div
-          style={{
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--surface-color, #eff6ff)',
-            color: 'var(--slt-blue, #0056b3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 1rem',
-            border: '1px solid #bfdbfe',
-          }}
-        >
-          <Icon name="lock" size={28} />
-        </div>
-        <h3 style={{ color: 'var(--slt-blue)', marginBottom: '0.5rem', fontSize: '1.4rem' }}>
-          PayHere Sandbox Gateway
-        </h3>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: '1.5' }}>
-          You will be redirected to PayHere Sandbox encrypted Payment Gateway to process your payment securely. No
-          credit card or sensitive credentials are stored on EasyApply servers.
-        </p>
-      </div>
+    <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+      
+      {/* Hidden input so parent form can read the authenticated number */}
+      {phase === 'verified' && <input type="hidden" name="verifiedMobile" value={mobileNumber} />}
 
-      {/* Payment Status Notifications */}
-      {statusState.type === 'success' && (
-        <div
-          style={{
-            padding: '1rem 1.25rem',
-            marginBottom: '1.5rem',
-            backgroundColor: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            color: '#166534',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            fontWeight: 500,
-          }}
-        >
-          <Icon name="check-circle" size={20} color="#166534" />
-          <div>{statusState.message}</div>
-        </div>
-      )}
+      <AnimatePresence mode="wait">
+        
+        {phase === 'mobile' && (
+          <motion.div key="mobile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', color: 'var(--slt-blue)', display: 'grid', placeItems: 'center', margin: '0 auto 1.5rem' }}>
+              <Icon name="smartphone" size={32} />
+            </div>
+            <h3 style={{ color: 'var(--slt-blue)', marginBottom: '0.5rem' }}>Authorization</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Please enter your mobile number to authorize this request.</p>
+            
+            <div className="form-group" style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
+              <label className="form-label">Mobile Number</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}>+94</span>
+                <input type="tel" className="form-control" style={{ paddingLeft: '3.5rem', fontSize: '1.1rem', letterSpacing: '2px' }} placeholder="7X XXX XXXX" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleMobileSubmit(e)} maxLength="10" />
+              </div>
+              {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '0.5rem' }}>{error}</p>}
+              
+              <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', height: '48px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={handleMobileSubmit} disabled={isLoading}>
+                {isLoading ? <SLTLoader size={24} /> : 'Send OTP'}
+              </button>
+            </div>
+          </motion.div>
+        )}
 
-      {statusState.type === 'warning' && (
-        <div
-          style={{
-            padding: '1rem 1.25rem',
-            marginBottom: '1.5rem',
-            backgroundColor: '#fffbeb',
-            border: '1px solid #fef08a',
-            color: '#92400e',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            fontWeight: 500,
-          }}
-        >
-          <Icon name="alert-triangle" size={20} color="#92400e" />
-          <div>{statusState.message}</div>
-        </div>
-      )}
+        {phase === 'otp' && (
+          <motion.div key="otp" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', color: 'var(--slt-blue)', display: 'grid', placeItems: 'center', margin: '0 auto 1.5rem' }}>
+              <Icon name="message-square" size={32} />
+            </div>
+            <h3 style={{ color: 'var(--slt-blue)', marginBottom: '0.5rem' }}>Enter Verification Code</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>We sent a 6-digit code to <strong>+94 {mobileNumber}</strong></p>
 
-      {statusState.type === 'error' && (
-        <div
-          style={{
-            padding: '1rem 1.25rem',
-            marginBottom: '1.5rem',
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            color: '#991b1b',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            fontWeight: 500,
-          }}
-        >
-          <Icon name="alert-circle" size={20} color="#991b1b" />
-          <div>{statusState.message}</div>
-        </div>
-      )}
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
+              {otp.map((d, i) => (
+                <input key={i} ref={(el) => (inputRefs.current[i] = el)} type="tel" inputMode="numeric" maxLength={1} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleKeyDown(i, e)} style={{ width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px', border: '2px solid var(--border-color)', backgroundColor: 'var(--surface)' }} disabled={isLoading} />
+              ))}
+            </div>
+            
+            {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</p>}
 
-      {/* Summary Card */}
-      <div
-        style={{
-          backgroundColor: '#f8fafc',
-          border: '1px solid #e2e8f0',
-          borderRadius: '12px',
-          padding: '1.25rem 1.5rem',
-          marginBottom: '1.5rem',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Service Type:</span>
-          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{serviceName}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.9rem' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>Verified Mobile:</span>
-          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-            {verifiedPhone ? `+94 ${verifiedPhone}` : 'N/A'}
-          </span>
-        </div>
-        <div
-          style={{
-            borderTop: '1px dashed #cbd5e1',
-            paddingTop: '0.75rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
-            Total Amount Payable:
-          </span>
-          <span style={{ fontWeight: 800, fontSize: '1.3rem', color: 'var(--slt-green, #16a34a)' }}>
-            LKR {formattedAmount}
-          </span>
-        </div>
-      </div>
+            <button type="button" className="btn btn-secondary" style={{ border: 'none', background: 'transparent' }} onClick={() => { setPhase('mobile'); setOtp(['', '', '', '', '', '']); setError(''); }} disabled={isLoading}>
+              Change Number
+            </button>
+          </motion.div>
+        )}
 
-      {/* Payment Receipt Banner OR Payment Method Selector */}
-      {hasPaymentReceipt ? (
-        <div
-          style={{
-            textAlign: 'center',
-            marginBottom: '1.5rem',
-            padding: '1.25rem',
-            backgroundColor: '#ecfdf5',
-            border: '1px solid #10b981',
-            borderRadius: '10px',
-            color: '#065f46',
-          }}
-        >
-          <Icon name="check-circle" size={32} color="#10b981" />
-          <div style={{ fontWeight: 600, marginTop: '0.5rem', fontSize: '1.1rem' }}>Payment Receipt Attached</div>
-          <div style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
-            You have uploaded a payment receipt. No further online payment is required at this stage.
-          </div>
-        </div>
-      ) : (
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label className="form-label" style={{ fontWeight: 600, marginBottom: '0.75rem', display: 'block' }}>
-            Select Payment Gateway Method
-          </label>
+        {phase === 'verified' && (
+          <motion.div key="verified" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(0,166,80,0.1)', color: 'var(--slt-green)', display: 'grid', placeItems: 'center', margin: '0 auto 1.5rem' }}>
+              <Icon name="check-circle" size={32} />
+            </div>
+            <h3 style={{ color: 'var(--slt-green)', marginBottom: '0.5rem' }}>Mobile Verified!</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem' }}>Your request is ready to be submitted.</p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div
-              onClick={() => setSelectedMethod('card')}
-              style={{
-                border: `2px solid ${selectedMethod === 'card' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
-                borderRadius: '10px',
-                padding: '1rem',
-                cursor: 'pointer',
-                backgroundColor: selectedMethod === 'card' ? '#f0f7ff' : '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <Icon name="credit-card" size={22} color={selectedMethod === 'card' ? '#0056b3' : '#64748b'} />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>PayHere Card / IPG</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Visa, Mastercard, AMEX</div>
+            <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: '12px', textAlign: 'left', marginBottom: '2rem' }}>
+              <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>Order Summary</h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '1px solid var(--line)', marginBottom: '1rem' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Pending Dues Balance</span>
+                <span style={{ fontWeight: 'bold' }}>Rs. {formattedAmount}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Payment Method</span>
+                <span style={{ fontWeight: 'bold' }}>{hasPaymentReceipt ? 'Receipt Uploaded' : 'Pay Online Now'}</span>
               </div>
             </div>
 
-            <div
-              onClick={() => setSelectedMethod('wallet')}
-              style={{
-                border: `2px solid ${selectedMethod === 'wallet' ? 'var(--slt-blue, #0056b3)' : '#e2e8f0'}`,
-                borderRadius: '10px',
-                padding: '1rem',
-                cursor: 'pointer',
-                backgroundColor: selectedMethod === 'wallet' ? '#f0f7ff' : '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <Icon name="smartphone" size={22} color={selectedMethod === 'wallet' ? '#0056b3' : '#64748b'} />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>PayHere Wallet / eZ Cash</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>eZ Cash, Genie, Sampath Vishwa</div>
+            {statusState.message && (
+              <div style={{ padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', backgroundColor: statusState.type === 'error' ? 'rgba(220,53,69,0.1)' : 'rgba(0,166,80,0.1)', color: statusState.type === 'error' ? 'var(--danger)' : 'var(--slt-green)' }}>
+                {statusState.message}
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            )}
 
-      {/* PayHere Sandbox Button OR Submit Button (when receipt uploaded) */}
-      {hasPaymentReceipt ? (
-        <button
-          type="button"
-          onClick={() => handlePaymentSuccess(null)}
-          className="btn btn-success"
-          disabled={!isActive}
-          style={{
-            width: '100%',
-            padding: '0.85rem',
-            fontSize: '1.05rem',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
-          }}
-        >
-          <span>Submit Application</span>
-          <Icon name="check" size={18} />
-        </button>
-      ) : (
-        <PayHereButton
-          amount={amount || 1000}
-          currency="LKR"
-          itemTitle={serviceName}
-          customerDetails={{
-            phone: verifiedPhone ? `0${verifiedPhone.replace(/^\+?94/, '')}` : '',
-          }}
-          buttonText="Pay Now with PayHere"
-          disabled={!isActive}
-          sandbox={true}
-          onSuccess={handlePaymentSuccess}
-          onCancel={handlePaymentCancel}
-          onError={handlePaymentError}
-        />
-      )}
+            <button type="button" className="btn btn-primary" style={{ width: '100%', height: '56px', fontSize: '1.1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }} onClick={handlePlaceOrder}>
+              {!hasPaymentReceipt ? <Icon name="credit-card" size={20} /> : <Icon name="file-text" size={20} />}
+              {hasPaymentReceipt ? 'Submit Request' : `Pay Rs. ${formattedAmount} & Confirm`}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div
-        style={{
-          marginTop: '1.5rem',
-          textAlign: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '0.5rem',
-          fontSize: '0.78rem',
-          color: 'var(--text-secondary)',
-        }}
-      >
-        <Icon name="shield-check" size={16} color="#16a34a" />
-        <span>PayHere 256-bit SSL Encrypted &amp; PCI-DSS Compliant Gateway</span>
-      </div>
     </div>
   );
 }

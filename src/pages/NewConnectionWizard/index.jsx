@@ -1,5 +1,5 @@
 import React, { useState, useReducer, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
 import ConnectionPackageStep from './ConnectionPackageStep';
@@ -53,13 +53,43 @@ const initialState = {
 
 export default function NewConnectionWizard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  useEffect(() => {
+    const fromState = location.state?.selectedProduct;
+    if (fromState) {
+      setSelectedProduct(fromState);
+    } else {
+      const stored = sessionStorage.getItem('selectedProduct');
+      if (stored) {
+        try {
+          setSelectedProduct(JSON.parse(stored));
+        } catch (e) { }
+      }
+    }
+  }, [location.state]);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
   const totalSteps = 5;
+
+  useEffect(() => {
+    if (selectedProduct?.productName) {
+      dispatch({
+        type: 'UPDATE_FIELD',
+        payload: {
+          name: 'otherBroadbandPackage',
+          value: `${selectedProduct.productName} (Qty: ${selectedProduct.quantity || 1})`,
+        },
+      });
+    }
+  }, [selectedProduct]);
 
   // Auto-populate mobile number from OTP context
   useEffect(() => {
@@ -182,38 +212,71 @@ export default function NewConnectionWizard() {
 
   return (
     <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.newConnection.title')}</h2>
+      <h2 style={{ marginBottom: selectedProduct ? '0.75rem' : '1.5rem' }}>{t('wizards.newConnection.title')}</h2>
+
+      {selectedProduct && (
+        <div
+          style={{
+            backgroundColor: '#eff6ff',
+            border: '1.5px solid #bfdbfe',
+            borderRadius: '12px',
+            padding: '0.85rem 1.25rem',
+            marginBottom: '1.75rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+          }}
+        >
+          <div>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Selected Product</span>
+            <h4 style={{ margin: '0.1rem 0 0 0', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+              {selectedProduct.productName}
+            </h4>
+          </div>
+          <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.88rem', color: '#334155' }}>
+            <span>Monthly: <strong style={{ color: '#0056b3' }}>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
+            <span>Installation: <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong></span>
+            {selectedProduct.quantity > 1 && <span>Qty: <strong>{selectedProduct.quantity}</strong></span>}
+          </div>
+        </div>
+      )}
 
       {/* Progress Bar */}
       <div className="wizard-nav-wrapper">
         <div className="wizard-steps-container" style={{ display: "flex", marginBottom: "2rem", position: "relative" }}>
-        <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
-        <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
+          <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
+          <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
 
-        {[1, 2, 3, 4, 5].map(step => (
-          <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '50%',
-              backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
-              border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
-              color: step <= currentStep ? 'white' : 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
-            }}>
-              {step}
+          {[1, 2, 3, 4, 5].map(step => (
+            <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
+              <div style={{
+                width: '34px', height: '34px', borderRadius: '50%',
+                backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
+                border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
+                color: step <= currentStep ? 'white' : 'var(--text-secondary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
+              }}>
+                {step}
+              </div>
+              <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                {step === 1 ? t('wizards.newConnection.steps.s1') : step === 2 ? t('wizards.newConnection.steps.s2') : step === 3 ? t('wizards.newConnection.steps.s3') : step === 4 ? t('wizards.newConnection.steps.s4') : 'Payment'}
+              </span>
             </div>
-            <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.newConnection.steps.s1') : step === 2 ? t('wizards.newConnection.steps.s2') : step === 3 ? t('wizards.newConnection.steps.s3') : step === 4 ? t('wizards.newConnection.steps.s4') : 'Payment'}
-            </span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit}>
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           {currentStep === 1 && (
-            <CustomerInfoStep formData={formData} handleChange={handleChange} />
+            <CustomerInfoStep
+              formData={formData}
+              handleChange={handleChange}
+              setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
+            />
           )}
           {currentStep === 2 && (
             <ServiceInfoStep formData={formData} handleChange={handleChange} />

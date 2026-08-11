@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Icon from '../components/Icon';
 
 const FORMS = [
-  { id: 'new-connection', key: 'newConnection', icon: 'plus-circle', route: '/new-connection' },
+  { id: 'new-connection', key: 'newConnection', icon: 'plus-circle', route: '/new-connection/products' },
   { id: 'reconnection', key: 'reconnection', icon: 'link', route: '/reconnection' },
   { id: 'relocation', key: 'relocation', icon: 'map-pin', route: '/location-change' },
   { id: 'termination', key: 'termination', icon: 'trash', route: '/termination' },
@@ -36,9 +36,15 @@ export default function Dashboard() {
           <h2 id="forms-heading" className="section-title" style={{ marginBottom: 0 }}>
             {t('dashboard.title')}
           </h2>
-          <Link to="/check-status" className="btn btn-secondary">
-            {t('dashboard.forms.checkStatus.title')}
-          </Link>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <Link to="/add-to-cart" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Icon name="shopping-cart" size={18} />
+              Add to Cart
+            </Link>
+            <Link to="/check-status" className="btn btn-secondary">
+              {t('dashboard.forms.checkStatus.title')}
+            </Link>
+          </div>
         </div>
 
         <motion.ul
@@ -49,7 +55,11 @@ export default function Dashboard() {
         >
           {FORMS.map((form) => (
             <motion.li key={form.id} variants={itemVariants}>
-              <Link to={form.route} className="form-tile">
+              <Link 
+                to={form.route} 
+                className="form-tile"
+                onClick={() => sessionStorage.removeItem('verifiedPhone')}
+              >
                 <span className="tile-icon">
                   <Icon name={form.icon} size={24} />
                 </span>

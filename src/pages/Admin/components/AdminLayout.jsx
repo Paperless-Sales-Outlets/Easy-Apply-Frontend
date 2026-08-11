@@ -61,7 +61,7 @@ const NAV_ICONS = {
 
 const NAV_ITEMS = [
   ...MODULE_ACCESS.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
-  { key: 'privileges', label: 'User Privileges', icon: '🔐', roles: ['Admin'] },
+  { key: 'privileges', label: 'User Privileges', icon: NAV_ICONS.privileges, roles: ['Admin'] },
 ];
 
 const SHORT_FORM_LABELS = {
@@ -95,9 +95,9 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
 
   const roleLabel = {
     Admin: 'Administrator',
-    Staff: 'Staff Member',
-    FieldTechnician: 'Field Technician',
-  }[admin?.role] || 'Staff';
+    Manager: 'Manager',
+    SalesOfficer: 'Sales Officer',
+  }[admin?.role] || 'Manager';
 
   return (
     <div className="admin-shell">
@@ -150,7 +150,12 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
             </div>
           </div>
           <button className="admin-signout-btn" onClick={logout}>
-            <span>↩</span> Sign Out
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Sign Out
           </button>
         </div>
       </aside>

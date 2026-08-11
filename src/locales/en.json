@@ -45,8 +45,8 @@
         "description": "Request for new connection of FTTH, LTE, or Copper services."
       },
       "reconnection": {
-        "title": "Re-connection",
-        "description": "Request for re-connection of an existing SLT service."
+        "title": "Reactivate Account",
+        "description": "Quickly restore your disconnected SLT services."
       },
       "relocation": {
         "title": "Relocation",
@@ -121,6 +121,9 @@
         "home": "Home",
         "office": "Office",
         "religious": "Religious",
+        "business": "Business / Company",
+        "government": "Government",
+        "foreign": "Foreign / Embassy",
         "title": "Title",
         "select": "Select",
         "rev": "Rev",
@@ -131,7 +134,7 @@
         "namePlaceholder": "Personal or Business name",
         "dob": "1.3 Date of birth",
         "nic": "1.4 NIC / Passport / Business Reg No.",
-        "vat": "1.5 VAT registration number (if available)",
+        "vat": "1.5 VAT registration number",
         "taxExemption": "1.6 Tax exemption reference number (if available)",
         "address": "1.7 Permanent Principle address",
         "contactDetails": "1.8 Contact details",
@@ -141,7 +144,16 @@
         "mobileNumber": "Mobile Number (Mandatory)",
         "faxNumber": "Fax Number",
         "email": "E-mail (Mandatory)",
-        "mobileNote": "(This mobile number will be used to send billing information and other communications in future)"
+        "mobileNote": "(This mobile number will be used to send billing information and other communications in future)",
+        "documentsHeading": "1.9 Identity & Supporting Documents",
+        "nicFront": "NIC Front Side (Mandatory)",
+        "nicBack": "NIC Back Side (Mandatory)",
+        "passportDoc": "Passport Main Page (Mandatory for Foreign Customers)",
+        "brcDoc": "Business Registration Certificate (BRC)",
+        "vatDoc": "VAT Registration Certificate",
+        "taxExemptionDoc": "Tax Exemption Certificate",
+        "signature": "Digital Signature",
+        "signatureRequired": "Please draw your digital signature before submitting."
       },
       "serviceInfo": {
         "heading": "2. Service Information",
@@ -274,11 +286,11 @@
       }
     },
     "reconnection": {
-      "title": "Application for Re-connection of SLT Service",
+      "title": "Reactivate Account",
       "steps": {
-        "s1": "Customer Details",
-        "s2": "Facilities",
-        "s3": "Declaration"
+        "s1": "Let's find your account",
+        "s2": "Service Preferences",
+        "s3": "Verify and sign in"
       },
       "customerInfo": {
         "heading": "1. Customer & Line Details",
@@ -289,11 +301,11 @@
         "contactNo": "Contact No."
       },
       "reconnectionDetails": {
-        "heading": "2. Request for Service Re-connection",
+        "heading": "2. Required Services",
         "disconnectedFrom": "My telephone line has been disconnected from",
         "disconnectedTo": "to",
         "amountToPay": "I would like to pay Rs. (Amount)",
-        "facilitiesHeading": "Could you kindly reconnect the line and provide the following facilities as well:",
+        "facilitiesHeading": "Which services would you like to reactivate?",
         "broadband": "SLT Broadband Internet (ADSL/Wi-Max)",
         "peoTv": "PeoTV",
         "sltPlus": "SLT Plus",
@@ -309,7 +321,7 @@
       },
       "declaration": {
         "heading": "3. Customer Agreement",
-        "declarationText": "I/We do hereby request to reconnect the above mentioned services and agree to pay the required reconnection charges.",
+        "declarationText": "I request the reactivation of the selected services and agree to the applicable reconnection charges.",
         "agreeLabel": "I accept the Terms and Conditions"
       }
     },
