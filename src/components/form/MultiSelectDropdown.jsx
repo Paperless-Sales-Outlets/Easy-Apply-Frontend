@@ -1,27 +1,46 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Icon from '../Icon';
 
 /* Closed: form-control-styled button showing selected labels (or a placeholder).
-   Open: a checkbox-backed panel anchored below it. Closes on outside click or Escape. */
+   Open: a checkbox-backed panel portalled to <body> so it floats above the
+   surrounding card instead of being visually trapped inside it. Closes on
+   outside click, Escape, or scroll of an ancestor. */
 export default function MultiSelectDropdown({ label, options, selected, onChange, placeholder }) {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef(null);
+  const [rect, setRect] = useState(null);
+  const triggerRef = useRef(null);
+  const panelRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const r = triggerRef.current.getBoundingClientRect();
+    setRect({ top: r.bottom + 6, left: r.left, width: r.width });
+  }, [open]);
 
   useEffect(() => {
     if (!open) return undefined;
-    const handleClick = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+    const handlePointerDown = (e) => {
+      if (
+        triggerRef.current && !triggerRef.current.contains(e.target) &&
+        panelRef.current && !panelRef.current.contains(e.target)
+      ) {
         setOpen(false);
       }
     };
     const handleKey = (e) => {
       if (e.key === 'Escape') setOpen(false);
     };
-    document.addEventListener('mousedown', handleClick);
+    const handleReposition = () => setOpen(false);
+    document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleKey);
+    window.addEventListener('scroll', handleReposition, true);
+    window.addEventListener('resize', handleReposition);
     return () => {
-      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('keydown', handleKey);
+      window.removeEventListener('scroll', handleReposition, true);
+      window.removeEventListener('resize', handleReposition);
     };
   }, [open]);
 
@@ -32,9 +51,10 @@ export default function MultiSelectDropdown({ label, options, selected, onChange
   const selectedLabels = options.filter((o) => selected.includes(o.value)).map((o) => o.label);
 
   return (
-    <div className="form-group" ref={containerRef} style={{ position: 'relative' }}>
+    <div className="form-group">
       {label && <label className="form-label">{label}</label>}
       <button
+        ref={triggerRef}
         type="button"
         className="form-control"
         onClick={() => setOpen((v) => !v)}
@@ -67,21 +87,24 @@ export default function MultiSelectDropdown({ label, options, selected, onChange
         />
       </button>
 
-      {open && (
+      {open && rect && createPortal(
         <div
-          className="card"
+          ref={panelRef}
           role="group"
           aria-label={label}
           style={{
-            position: 'absolute',
-            top: 'calc(100% + 0.4rem)',
-            left: 0,
-            right: 0,
-            zIndex: 20,
+            position: 'fixed',
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            zIndex: 1000,
+            background: 'var(--surface)',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--border-color)',
+            boxShadow: '0 12px 32px rgba(15, 23, 42, 0.18)',
             padding: '0.6rem 0.9rem',
             maxHeight: '280px',
             overflowY: 'auto',
-            border: '1px solid var(--border-color)',
           }}
         >
           {options.map((opt) => (
@@ -95,7 +118,8 @@ export default function MultiSelectDropdown({ label, options, selected, onChange
               {opt.label}
             </label>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
