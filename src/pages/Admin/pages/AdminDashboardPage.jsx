@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
   DUMMY_SUMMARY,
   DUMMY_FORM_STATS,
+  DUMMY_APPLICATIONS,
 } from '../data/dummyData';
 
 const SHORT_FORM_LABELS = {
@@ -149,7 +150,7 @@ function FormsDonutChart({ data }) {
   );
 }
 
-export default function AdminDashboardPage() {
+export default function AdminDashboardPage({ commentMap = {}, onSaveComment }) {
   const formTotalData = DUMMY_FORM_STATS.map(form => ({ service: form.label, count: form.total }));
   const formCompletedData = DUMMY_FORM_STATS.map(form => ({ service: form.label, count: form.completed }));
   const renderFormPieCard = (title, data) => (
@@ -168,6 +169,29 @@ export default function AdminDashboardPage() {
       </div>
     </div>
   );
+
+  const [expandedComments, setExpandedComments] = useState({});
+  const [dashboardSearch, setDashboardSearch] = useState('');
+
+  const matchesSearch = (app, query) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      app.referenceNumber.toLowerCase().includes(q)
+      || app.nic.toLowerCase().includes(q)
+      || app.phone.toLowerCase().includes(q)
+      || app.name.toLowerCase().includes(q)
+    );
+  };
+
+  const handleToggleExpanded = (id) => {
+    setExpandedComments(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const recentApplications = [...DUMMY_APPLICATIONS]
+    .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+  const filteredApplications = recentApplications.filter(app => matchesSearch(app, dashboardSearch));
 
   return (
     <>
@@ -228,6 +252,107 @@ export default function AdminDashboardPage() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      <section style={{ marginTop: '1.5rem' }}>
+        <h2 style={{ fontSize: '1rem', fontFamily: 'var(--font-head)', color: 'var(--navy)', marginBottom: '1rem' }}>
+          Recent application history
+        </h2>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+          <input
+            type="search"
+            value={dashboardSearch}
+            onChange={(e) => setDashboardSearch(e.target.value)}
+            placeholder="Search reference, NIC, phone or name"
+            style={{
+              flex: '1 1 320px',
+              minWidth: 240,
+              padding: '0.75rem 1rem',
+              border: '1px solid var(--line)',
+              borderRadius: '12px',
+              background: 'var(--surface)',
+              color: 'var(--text)',
+            }}
+          />
+        </div>
+        <div className="admin-table-wrap" style={{ overflowX: 'auto' }}>
+          <table className="admin-table" style={{ minWidth: 1120 }}>
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Applicant</th>
+                <th>Service</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredApplications.map(app => {
+                const comment = commentMap[app.id] || '';
+                const isExpanded = expandedComments[app.id];
+                const isLong = comment.length > 90;
+                const visibleText = isExpanded ? comment : comment.slice(0, 90);
+
+                return (
+                  <React.Fragment key={app.id}>
+                    <tr>
+                      <td>
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--blue)' }}>
+                          {app.referenceNumber}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{app.name}</div>
+                        <div style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>{app.email}</div>
+                      </td>
+                      <td style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{app.serviceType.replace(/-/g, ' ')}</td>
+                      <td>
+                        <span className={`admin-badge ${app.status}`}>
+                          {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{new Date(app.submittedAt).toLocaleString('en-GB', {
+                        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
+                      })}</td>
+                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.phone}</td>
+                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.address}</td>
+                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxWidth: '24rem' }}>
+                        {comment ? (
+                          <>
+                            {visibleText}
+                            {isLong && !isExpanded ? '...' : ''}
+                            {isLong && (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleExpanded(app.id)}
+                                style={{
+                                  border: 'none',
+                                  background: 'transparent',
+                                  color: 'var(--blue)',
+                                  cursor: 'pointer',
+                                  marginLeft: 4,
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {isExpanded ? 'less' : 'more'}
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <span style={{ color: 'var(--muted)' }}>No comment</span>
+                        )}
+                      </td>
+                    </tr>
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </section>
     </>
