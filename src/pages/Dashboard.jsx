@@ -183,7 +183,7 @@ export default function Dashboard() {
 
       {/* Secondary Hero Bar */}
       <div style={{ borderBottom: '1px solid var(--line)', padding: '1.2rem 0', background: 'white' }}>
-        <div className="site-container" style={{ padding: '0 2rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="site-container dashboard-hero-bar" style={{ padding: '0 1.5rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div className="search-cart-bar" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div className="search-input-wrapper" style={{ position: 'relative' }}>
               <FiSearch style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={16} />
@@ -201,7 +201,6 @@ export default function Dashboard() {
                   border: '1.5px solid #cbd5e1',
                   fontSize: '0.875rem',
                   outline: 'none',
-                  width: '240px',
                 }}
               />
             </div>
@@ -220,6 +219,7 @@ export default function Dashboard() {
                 fontWeight: 600,
                 fontSize: '0.875rem',
                 boxShadow: '0 3px 10px rgba(0,86,179,0.25)',
+                whiteSpace: 'nowrap',
               }}
             >
               <FiShoppingCart size={16} />
@@ -245,14 +245,9 @@ export default function Dashboard() {
       </div>
 
       <div style={{ maxWidth: '1600px', margin: '1.5rem auto 0', padding: '0 1.5rem' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: hasDetailPanel ? '210px 1fr 420px' : '210px 1fr',
-          gap: '1.2rem',
-          alignItems: 'start',
-        }}>
+        <div className={`dashboard-grid-container ${hasDetailPanel ? 'has-detail' : ''}`}>
           {/* Sidebar (Our Services) */}
-          <aside style={{ position: 'sticky', top: '1.5rem' }}>
+          <aside className="sidebar-section">
             <div className="sidebar-box">
               <div className="sidebar-title">Our Services</div>
               <div className="sidebar-menu">
@@ -275,20 +270,18 @@ export default function Dashboard() {
           </aside>
 
           {/* Main Content (Our Products) */}
-          <main style={{ flex: 1 }}>
-            <div className="main-content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>Our Products</h2>
+          <main style={{ minWidth: 0 }}>
+            <div className="main-content-header">
+              <h2>Our Products</h2>
               <button className="btn-view-all" onClick={() => navigate('/new-connection/products')}>
                 View All -&gt;
               </button>
             </div>
 
             {/* Voice Category */}
-            <div className="category-section" style={{ marginBottom: '2.5rem' }}>
-              <div className="category-title" style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem', borderBottom: '2px solid #e2e8f0', paddingBottom: '0.4rem' }}>
-                Voice
-              </div>
-              <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: hasDetailPanel ? 'repeat(auto-fill, minmax(200px, 1fr))' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem' }}>
+            <div className="category-section">
+              <div className="category-title">Voice</div>
+              <div className="product-grid">
                 {voiceProducts.map((product) => {
                   const prodId = product._id || product.id;
                   return (
@@ -307,11 +300,9 @@ export default function Dashboard() {
             </div>
 
             {/* Data Category */}
-            <div className="category-section" style={{ marginBottom: '2.5rem' }}>
-              <div className="category-title" style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem', borderBottom: '2px solid #e2e8f0', paddingBottom: '0.4rem' }}>
-                Data &amp; Broadband
-              </div>
-              <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: hasDetailPanel ? 'repeat(auto-fill, minmax(200px, 1fr))' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem' }}>
+            <div className="category-section">
+              <div className="category-title">Data &amp; Broadband</div>
+              <div className="product-grid">
                 {dataProducts.map((product) => {
                   const prodId = product._id || product.id;
                   return (
@@ -330,11 +321,9 @@ export default function Dashboard() {
             </div>
 
             {/* Peo TV Category */}
-            <div className="category-section" style={{ marginBottom: '2.5rem' }}>
-              <div className="category-title" style={{ fontSize: '1.2rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem', borderBottom: '2px solid #e2e8f0', paddingBottom: '0.4rem' }}>
-                Peo TV
-              </div>
-              <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: hasDetailPanel ? 'repeat(auto-fill, minmax(200px, 1fr))' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem' }}>
+            <div className="category-section">
+              <div className="category-title">Peo TV</div>
+              <div className="product-grid">
                 {peoTvProducts.map((product) => {
                   const prodId = product._id || product.id;
                   return (
@@ -355,7 +344,7 @@ export default function Dashboard() {
 
           {/* ── Sticky Side Detail Panel ── */}
           {hasDetailPanel && (
-            <div>
+            <div className="dashboard-detail-col">
               <div style={{ position: 'sticky', top: '1.5rem' }}>
                 <ProductDetailsPanel
                   product={selectedProduct}
