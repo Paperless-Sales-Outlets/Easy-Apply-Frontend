@@ -8,27 +8,31 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="footer">
+    <footer className="footer" style={{ padding: '2rem 0' }}>
       <div style={{
+        maxWidth: '1600px',
+        margin: '0 auto',
+        padding: '0 1.5rem',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: '2rem',
-        marginBottom: '0.75rem',
+        justifyContent: 'space-between',
         flexWrap: 'wrap',
+        gap: '1rem'
       }}>
-        <img
-          src={sltLogo}
-          alt="SLTMobitel"
-          style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
-        />
-        <img
-          src={transzentLogo}
-          alt="Transzent"
-          style={{ height: '28px', width: 'auto', objectFit: 'contain' }}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <img
+            src={sltLogo}
+            alt="SLTMobitel"
+            style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
+          />
+          <img
+            src={transzentLogo}
+            alt="Transzent"
+            style={{ height: '28px', width: 'auto', objectFit: 'contain' }}
+          />
+        </div>
+        <p style={{ margin: 0 }}>{t('footer.rights', { year })}</p>
       </div>
-      <p>{t('footer.rights', { year })}</p>
     </footer>
   );
 }
