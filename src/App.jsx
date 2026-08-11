@@ -26,6 +26,7 @@ import CompletionPage from './pages/CompletionPage';
 import ThankYouPage from './pages/ThankYouPage';
 import AdminDashboard from './pages/Admin';
 import AddToCartPage from './pages/AddToCartPage';
+import ServicesPage from './pages/ServicesPage';
 
 import ProductCatalogPage from './pages/ProductCatalogPage';
 import ProductDetailPage from './pages/ProductDetailPage';
@@ -93,6 +94,16 @@ const AnimatedRoutes = () => {
           element={
             <PageWrapper fullBleed>
               <ProductCatalogPage />
+            </PageWrapper>
+          }
+        />
+
+        {/* Services Page */}
+        <Route
+          path="/services"
+          element={
+            <PageWrapper fullBleed>
+              <ServicesPage />
             </PageWrapper>
           }
         />
