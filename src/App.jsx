@@ -1,5 +1,12 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+  Navigate,
+} from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 
@@ -13,11 +20,17 @@ import PackageMigrationWizard from './pages/PackageMigrationWizard';
 import ServiceVacationWizard from './pages/ServiceVacationWizard';
 import RefundRequestWizard from './pages/RefundRequestWizard';
 import CustomerRequestAcceptanceWizard from './pages/CustomerRequestAcceptanceWizard';
+
 import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
 import ThankYouPage from './pages/ThankYouPage';
 import AdminDashboard from './pages/Admin';
 import AddToCartPage from './pages/AddToCartPage';
+import ServicesPage from './pages/ServicesPage';
+
+import ProductCatalogPage from './pages/ProductCatalogPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import CartPage from './pages/CartPage';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -25,7 +38,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
 
 import { CartProvider } from './context/CartContext';
-
 
 const PageWrapper = ({ children, fullBleed = false }) => {
   return (
@@ -36,11 +48,29 @@ const PageWrapper = ({ children, fullBleed = false }) => {
       transition={{ duration: 0.2 }}
       style={{ width: '100%' }}
     >
-      {fullBleed ? children : <div className="page-container">{children}</div>}
+      {children}
     </motion.div>
   );
 };
 
+const VerifyPhonePage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const targetRoute = location.state?.redirectTo || '/reconnection';
+
+  return (
+    <OtpProtectedForm
+      onVerified={() =>
+        navigate(targetRoute, {
+          state: location.state,
+        })
+      }
+    >
+      <div />
+    </OtpProtectedForm>
+  );
+};
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -48,7 +78,6 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-
         {/* Main Dashboard */}
         <Route
           path="/"
@@ -59,6 +88,60 @@ const AnimatedRoutes = () => {
           }
         />
 
+        {/* Product Catalog */}
+        <Route
+          path="/new-connection/products"
+          element={
+            <PageWrapper fullBleed>
+              <ProductCatalogPage />
+            </PageWrapper>
+          }
+        />
+
+        {/* Services Page */}
+        <Route
+          path="/services"
+          element={
+            <PageWrapper fullBleed>
+              <ServicesPage />
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/new-connection/product/:id"
+          element={
+            <PageWrapper>
+              <ProductDetailPage />
+            </PageWrapper>
+          }
+        />
+
+        {/* Cart */}
+        <Route
+          path="/cart"
+          element={
+            <PageWrapper fullBleed>
+              <CartPage />
+            </PageWrapper>
+          }
+        />
+
+        {/* Customer Selection */}
+        <Route
+          path="/customer-selection"
+          element={<Navigate to="/new-connection" replace />}
+        />
+
+        {/* Phone Verification */}
+        <Route
+          path="/verify-phone"
+          element={
+            <PageWrapper fullBleed>
+              <VerifyPhonePage />
+            </PageWrapper>
+          }
+        />
 
         {/* Customer Request Wizards */}
         <Route
@@ -160,7 +243,6 @@ const AnimatedRoutes = () => {
           }
         />
 
-
         {/* General Pages */}
         <Route
           path="/check-status"
@@ -189,7 +271,6 @@ const AnimatedRoutes = () => {
           }
         />
 
-
         {/* Payment Gateway Cart */}
         <Route
           path="/add-to-cart"
@@ -200,25 +281,19 @@ const AnimatedRoutes = () => {
           }
         />
 
-
         {/* Admin Portal */}
         <Route
           path="/admin"
           element={<AdminDashboard />}
         />
-
       </Routes>
     </AnimatePresence>
   );
 };
 
-
-
 const NavigationLayout = ({ children }) => {
   const location = useLocation();
-
   const isAdmin = location.pathname.startsWith('/admin');
-
 
   if (isAdmin) {
     return (
@@ -237,14 +312,11 @@ const NavigationLayout = ({ children }) => {
             flex: 1,
           }}
         >
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
+          <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>
     );
   }
-
 
   return (
     <div
@@ -254,8 +326,6 @@ const NavigationLayout = ({ children }) => {
         flexDirection: 'column',
       }}
     >
-      <div className="brand-topbar" />
-
       <Navbar />
 
       <main
@@ -266,9 +336,7 @@ const NavigationLayout = ({ children }) => {
           flex: 1,
         }}
       >
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
+        <ErrorBoundary>{children}</ErrorBoundary>
       </main>
 
       <Footer />
@@ -276,13 +344,9 @@ const NavigationLayout = ({ children }) => {
   );
 };
 
-
-
 function App() {
-
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-
       <Toaster
         position="top-center"
         toastOptions={{
@@ -294,14 +358,12 @@ function App() {
             boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             padding: '16px',
           },
-
           success: {
             iconTheme: {
               primary: 'var(--slt-green)',
               secondary: '#fff',
             },
           },
-
           error: {
             iconTheme: {
               primary: 'var(--danger, #dc3545)',
@@ -311,23 +373,15 @@ function App() {
         }}
       />
 
-
       <MotionConfig reducedMotion="user">
-
         <CartProvider>
-
           <NavigationLayout>
             <AnimatedRoutes />
           </NavigationLayout>
-
         </CartProvider>
-
       </MotionConfig>
-
-
     </BrowserRouter>
   );
 }
-
 
 export default App;
