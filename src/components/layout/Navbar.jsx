@@ -42,10 +42,6 @@ export default function Navbar() {
             <Icon name="home" size={18} />
             Home
           </Link>
-          <Link to="/online-applications" className={`nav-link ${isActive('/online-applications')}`}>
-            <Icon name="file-text" size={18} />
-            Online Applications
-          </Link>
           <Link to="/check-status" className={`nav-link ${isActive('/check-status')}`}>
             <Icon name="check-circle" size={18} />
             Application Status

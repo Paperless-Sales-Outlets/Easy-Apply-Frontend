@@ -31,6 +31,8 @@ import ServicesPage from './pages/ServicesPage';
 import ProductCatalogPage from './pages/ProductCatalogPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
+import HelpSupportPage from './pages/HelpSupportPage';
+import MyProfilePage from './pages/MyProfilePage';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -244,6 +246,23 @@ const AnimatedRoutes = () => {
         />
 
         {/* General Pages */}
+        <Route
+          path="/help"
+          element={
+            <PageWrapper>
+              <HelpSupportPage />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PageWrapper>
+              <MyProfilePage />
+            </PageWrapper>
+          }
+        />
+        
         <Route
           path="/check-status"
           element={
