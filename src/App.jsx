@@ -20,6 +20,7 @@ import PackageMigrationWizard from './pages/PackageMigrationWizard';
 import ServiceVacationWizard from './pages/ServiceVacationWizard';
 import RefundRequestWizard from './pages/RefundRequestWizard';
 import CustomerRequestAcceptanceWizard from './pages/CustomerRequestAcceptanceWizard';
+import InternetServicesWizard from './pages/InternetServicesWizard';
 
 import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
@@ -240,6 +241,17 @@ const AnimatedRoutes = () => {
             <PageWrapper>
               <OtpProtectedForm>
                 <CustomerRequestAcceptanceWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/internet-services"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <InternetServicesWizard />
               </OtpProtectedForm>
             </PageWrapper>
           }
