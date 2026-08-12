@@ -1947,3 +1947,8 @@ a {
 .leaflet-control {
   z-index: 500;
 }
+.floating-input:focus ~ .floating-label, .floating-input:not(:placeholder-shown) ~ .floating-label { top: 0.1rem; font-size: 0.75rem; color: var(--slt-blue); background: white; padding: 0 0.25rem; }
+
+
+.floating-input { padding-top: 1.2rem !important; padding-bottom: 0 !important; height: 3.5rem !important; line-height: 1.5 !important; }
+

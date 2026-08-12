@@ -180,6 +180,7 @@ export default function ReconnectionWizard() {
               isActive={currentStep === 1} 
               reconnectionData={reconnectionData} 
               onVerifySuccess={(data) => setReconnectionData(data)} 
+              verifiedMobile={verifiedMobile}
             />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
