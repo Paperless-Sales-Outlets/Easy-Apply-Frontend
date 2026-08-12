@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 
 export default function GeneralInfoStep({ isActive, formData, onChange, onValidationChange, showValidationErrors = false }) {
   const { t } = useTranslation();
+
+  const onValidationChangeRef = useRef(onValidationChange);
+  useEffect(() => {
+    onValidationChangeRef.current = onValidationChange;
+  }, [onValidationChange]);
 
   const [loading, setLoading] = useState(false);
   const [verificationState, setVerificationState] = useState('idle'); // 'idle' | 'verifying' | 'verified' | 'failed'
@@ -69,10 +74,10 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
   const isStepValid = isVerified && isTelephoneValid && isServiceTypeValid && isNicFrontValid && isNicBackValid;
 
   useEffect(() => {
-    if (typeof onValidationChange === 'function') {
-      onValidationChange(isStepValid);
+    if (typeof onValidationChangeRef.current === 'function') {
+      onValidationChangeRef.current(isStepValid);
     }
-  }, [isStepValid, onValidationChange]);
+  }, [isStepValid]);
 
   const handleVerify = async () => {
     if (!customer.telephone) {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiCheckCircle, FiCopy, FiHome } from 'react-icons/fi';
+import { FiCopy, FiHome } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 
 export default function CompletionPage() {
@@ -20,6 +20,117 @@ export default function CompletionPage() {
     navigator.clipboard.writeText(refNumber);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadPDF = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to download or print the Application Summary.');
+      return;
+    }
+
+    const todayStr = new Date().toLocaleDateString('en-LK', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>SLTMobitel EasyApply - Application ${refNumber}</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1e293b; background: #fff; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0056b3; padding-bottom: 20px; margin-bottom: 30px; }
+          .logo { font-size: 24px; font-weight: bold; color: #0056b3; }
+          .logo span { color: #22c55e; }
+          .title { font-size: 20px; font-weight: 700; color: #1e3a8a; margin-bottom: 10px; }
+          .ref-box { background: #f0f9ff; border: 2px dashed #0284c7; border-radius: 8px; padding: 20px; text-align: center; margin: 25px 0; }
+          .ref-label { font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+          .ref-val { font-size: 28px; font-weight: 800; color: #0056b3; margin-top: 5px; }
+          .info-table { width: 100%; border-collapse: collapse; margin: 25px 0; }
+          .info-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+          .info-table td.label { font-weight: 600; color: #475569; width: 40%; }
+          .notice { background: #f8fafc; border-left: 4px solid #0056b3; padding: 15px; font-size: 13px; color: #475569; margin-top: 30px; }
+          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">SLT<span>MOBITEL</span> EasyApply</div>
+          <div style="font-size: 13px; color: #64748b;">Official Application Acknowledgement</div>
+        </div>
+
+        <div class="title">Application Submission Summary</div>
+        <p style="color: #64748b; font-size: 14px;">Thank you for submitting your application via SLTMobitel EasyApply. Keep this document for your records.</p>
+
+        <div class="ref-box">
+          <div class="ref-label">Application Reference Number</div>
+          <div class="ref-val">${refNumber}</div>
+        </div>
+
+        <table class="info-table">
+          <tr>
+            <td class="label">Reference Number</td>
+            <td><strong>${refNumber}</strong></td>
+          </tr>
+          <tr>
+            <td class="label">Submission Date & Time</td>
+            <td>${todayStr}</td>
+          </tr>
+          <tr>
+            <td class="label">Application Message</td>
+            <td>${message}</td>
+          </tr>
+          <tr>
+            <td class="label">Estimated Processing Time</td>
+            <td>24 – 48 Hours</td>
+          </tr>
+          <tr>
+            <td class="label">Application Status</td>
+            <td><strong style="color: #0284c7;">Received / Pending Review</strong></td>
+          </tr>
+        </table>
+
+        <div class="notice">
+          <strong>Important Information:</strong>
+          <br/>
+          - Please quote reference number <strong>${refNumber}</strong> for all future inquiries regarding this application.
+          <br/>
+          - You will receive an SMS notification once your application is reviewed and processed by SLTMobitel.
+          <br/>
+          - For immediate support, call <strong>1212</strong> or visit your nearest SLT Teleshop.
+        </div>
+
+        <div class="footer">
+          &copy; ${new Date().getFullYear()} Sri Lanka Telecom PLC. All rights reserved. | SLTMobitel EasyApply Digital Portal
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
+  const handleTrackStatus = () => {
+    if (refNumber && refNumber !== '—') {
+      navigate(`/check-status?ref=${encodeURIComponent(refNumber)}`);
+    } else {
+      navigate('/check-status');
+    }
   };
 
   return (
@@ -112,20 +223,45 @@ export default function CompletionPage() {
           style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
         >
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-outline-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '200px', justifyContent: 'center' }}>
+            <button 
+              type="button"
+              className="btn btn-primary" 
+              onClick={handleDownloadPDF}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                flex: 1,
+                minWidth: '200px',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                backgroundColor: '#0056b3',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: '600',
+                borderRadius: '8px',
+                padding: '0.75rem 1.25rem',
+              }}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               Download Summary PDF
             </button>
-            <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '200px', justifyContent: 'center' }}>
+            <button 
+              type="button"
+              className="btn btn-primary" 
+              onClick={handleTrackStatus}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '200px', justifyContent: 'center', cursor: 'pointer' }}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               Track Status
             </button>
           </div>
           
           <button 
+            type="button"
             className="btn btn-primary" 
             onClick={() => navigate('/')}
-            style={{ width: '100%', padding: '1rem', fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+            style={{ width: '100%', padding: '1rem', fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
           >
             <FiHome /> {t('completion.backToDashboard')}
           </button>

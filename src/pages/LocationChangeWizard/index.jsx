@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GeneralInfoStep from './GeneralInfoStep';
 import AddressStep from './AddressStep';
@@ -31,9 +31,9 @@ export default function LocationChangeWizard() {
   const formRef = useRef(null);
   const totalSteps = 4;
 
-  const updateFormData = (stepData) => {
+  const updateFormData = useCallback((stepData) => {
     setFormData(prev => ({ ...prev, ...stepData }));
-  };
+  }, []);
 
   const nextStep = () => {
     // Collect serializable form fields from current step DOM before advancing.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export default function PreferencesStep({ 
@@ -10,6 +10,14 @@ export default function PreferencesStep({
   showValidationErrors = false,
 }) {
   const { t } = useTranslation();
+
+  const onValidationChangeRef = useRef(onValidationChange);
+  const onDataChangeRef = useRef(onDataChange);
+
+  useEffect(() => {
+    onValidationChangeRef.current = onValidationChange;
+    onDataChangeRef.current = onDataChange;
+  }, [onValidationChange, onDataChange]);
 
   // State Management
   const [relocationDate, setRelocationDate] = useState('');
@@ -79,14 +87,14 @@ export default function PreferencesStep({
   const isStepValid = isRelocationDateValid && isDisconnectDateValid && isSltNumbersValid && isAuthLetterValid && isBrcValid;
 
   useEffect(() => {
-    if (onValidationChange) {
-      onValidationChange(isStepValid);
+    if (onValidationChangeRef.current) {
+      onValidationChangeRef.current(isStepValid);
     }
-  }, [isStepValid, onValidationChange]);
+  }, [isStepValid]);
 
   useEffect(() => {
-    if (onDataChange) {
-      onDataChange({
+    if (onDataChangeRef.current) {
+      onDataChangeRef.current({
         relocationDate,
         sltNumber1,
         sltNumber2,
@@ -95,7 +103,7 @@ export default function PreferencesStep({
         brcFile,
       });
     }
-  }, [onDataChange, relocationDate, sltNumber1, sltNumber2, isRepresentative, authLetter, brcFile]);
+  }, [relocationDate, sltNumber1, sltNumber2, isRepresentative, authLetter, brcFile]);
 
   return (
     <div className="preferences-step-container">
