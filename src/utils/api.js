@@ -13,11 +13,11 @@ const api = axios.create({
 // ── Session ID ─────────────────────────────────────────────────────────────
 // Provides a stable, anonymous cart session without requiring login.
 const getSessionId = () => {
-  let sid = localStorage.getItem('cartSessionId');
+  let sid = localStorage.getItem('slt_session_id');
   if (!sid) {
     // Generate a simple UUID-like identifier on first visit
     sid = 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
-    localStorage.setItem('cartSessionId', sid);
+    localStorage.setItem('slt_session_id', sid);
   }
   return sid;
 };

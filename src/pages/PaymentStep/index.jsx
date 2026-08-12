@@ -83,12 +83,6 @@ export default function PaymentStep({
     setError('');
     setIsLoading(true);
 
-    if (code === '000000') {
-      setPhase('verified');
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const response = await api.post('/otp/verify', { phone: mobileNumber, otp: code });
       if (response.data.success) setPhase('verified');

@@ -94,7 +94,6 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
         }
       } catch (err) {
         if (!err.response) {
-          // Backend unreachable — proceed anyway so demo code 000000 still works
           setMobileNumber(num);
           setPhase('otp');
         } else {
@@ -111,14 +110,6 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
   const submitOtp = async (code) => {
     setError('');
     setIsLoading(true);
-
-    // Accept 000000 as the demo bypass code
-    if (code === '000000') {
-      setPhase('verified');
-      setTimeout(() => setDone(true), 1000);
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const response = await api.post('/otp/verify', {
