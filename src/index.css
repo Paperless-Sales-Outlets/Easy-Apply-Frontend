@@ -1410,13 +1410,127 @@ a {
   border-radius: 3px 3px 0 0;
 }
 
-@media (max-width: 900px) {
+/* Navbar right-side group (language + hamburger) */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.6rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+/* Hamburger button — hidden on desktop */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+.hamburger-btn:hover {
+  background: #f1f5f9;
+}
+
+/* Three-line icon */
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 22px;
+  height: 16px;
+}
+.hamburger-icon span {
+  display: block;
+  height: 2.5px;
+  width: 100%;
+  background: var(--navy);
+  border-radius: 3px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform-origin: center;
+}
+/* Animate to X when open */
+.hamburger-icon.open span:nth-child(1) {
+  transform: translateY(6.75px) rotate(45deg);
+}
+.hamburger-icon.open span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.hamburger-icon.open span:nth-child(3) {
+  transform: translateY(-6.75px) rotate(-45deg);
+}
+
+/* Mobile slide-down menu */
+.mobile-nav-menu {
+  display: none;
+  flex-direction: column;
+  background: white;
+  border-top: 1px solid var(--line);
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s ease, padding 0.3s ease;
+  padding: 0 1rem;
+}
+.mobile-nav-menu.mobile-nav-menu--open {
+  max-height: 320px;
+  padding: 0.5rem 1rem 1rem;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 0.5rem;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  border-bottom: 1px solid #f1f5f9;
+  transition: color 0.2s;
+}
+.mobile-nav-link:last-child {
+  border-bottom: none;
+}
+.mobile-nav-link:hover,
+.mobile-nav-link.active {
+  color: var(--blue);
+}
+
+@media (max-width: 768px) {
+  /* Hide desktop nav links, show hamburger */
+  .nav-links-desktop {
+    display: none;
+  }
+  .hamburger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mobile-nav-menu {
+    display: flex;
+  }
+  .top-navbar-container {
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 900px) {
   .top-navbar-container {
     flex-wrap: wrap;
     gap: 1rem;
     padding: 0.75rem 1rem;
   }
-  .nav-links {
+  .nav-links-desktop {
     width: 100%;
     overflow-x: auto;
     padding-bottom: 0.5rem;
