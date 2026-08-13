@@ -1,18 +1,48 @@
-import React, { useState } from 'react';
-import { DUMMY_KYC_QUEUE } from '../data/dummyData';
+import React, { useState, useEffect } from 'react';
+import { getKycQueue, reviewKycApplication } from '../services/adminService';
+import { getAssetUrl } from '../utils/applicationUtils';
 
 function formatDate(iso) {
+  if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 }
 
+const PRIMARY_DOC_KEYS = ['passportDoc', 'nicFront', 'brcDoc'];
+const SECONDARY_DOC_KEYS = ['nicBack', 'vatDoc', 'taxExemptionDoc'];
+
+function pickDoc(docs, keys) {
+  for (const key of keys) {
+    const doc = docs.find(d => d.key === key);
+    if (doc) return doc;
+  }
+  return null;
+}
+
+function DocImage({ url, alt, style }) {
+  const [failed, setFailed] = useState(false);
+  const src = getAssetUrl(url);
+  if (!src) {
+    return <div className="kyc-doc-missing" style={{ minHeight: 220 }}>{alt || 'No image'}</div>;
+  }
+  if (failed) {
+    return <div className="kyc-doc-missing" style={{ minHeight: 220 }}>Could not load image</div>;
+  }
+  return (
+    <img src={src} alt={alt} style={{ minHeight: 220, objectFit: 'contain', ...style }} onError={() => setFailed(true)} />
+  );
+}
+
 export default function KycReviewPage() {
-  const [queue, setQueue]     = useState(DUMMY_KYC_QUEUE);
+  const [queue, setQueue]     = useState([]);
   const [index, setIndex]     = useState(0);
   const [note, setNote]       = useState('');
   const [toast, setToast]     = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
+  const [busy, setBusy]       = useState(false);
 
   const current = queue[index];
 
@@ -21,14 +51,33 @@ export default function KycReviewPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const loadQueue = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getKycQueue();
+      setQueue(data.queue || []);
+      setIndex(0);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to load KYC queue.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadQueue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const searchResults = searchQuery.trim()
     ? queue.filter(k => {
         const q = searchQuery.trim().toLowerCase();
         return (
-          k.name.toLowerCase().includes(q) ||
-          k.nic.toLowerCase().includes(q) ||
-          k.phone.toLowerCase().includes(q) ||
-          k.status.toLowerCase().includes(q)
+          k.name?.toLowerCase().includes(q) ||
+          k.nic?.toLowerCase().includes(q) ||
+          k.phone?.toLowerCase().includes(q) ||
+          k.status?.toLowerCase().includes(q)
         );
       })
     : [];
@@ -40,13 +89,22 @@ export default function KycReviewPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const updateStatus = (status) => {
-    setQueue(prev => prev.map((k, i) => i === index ? { ...k, status } : k));
-    showToast(`KYC ${status} successfully.`, status === 'approved' ? 'success' : status === 'rejected' ? 'danger' : 'warning');
-    setNote('');
-    // Advance to next pending item if possible
-    const next = queue.findIndex((k, i) => i > index && k.status === 'pending');
-    if (next !== -1) setIndex(next);
+  const updateStatus = async (status) => {
+    if (!current || busy) return;
+    setBusy(true);
+    try {
+      await reviewKycApplication(current.id, status, note.trim());
+      const updated = queue.map((k, i) => i === index ? { ...k, status, notes: note.trim() } : k);
+      setQueue(updated);
+      showToast(`KYC ${status} successfully.`, status === 'approved' ? 'success' : status === 'rejected' ? 'danger' : 'warning');
+      setNote('');
+      const next = updated.findIndex((k, i) => i > index && k.status === 'pending');
+      if (next !== -1) setIndex(next);
+    } catch (err) {
+      showToast(err.response?.data?.message || err.message || 'Review failed. Please try again.', 'danger');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const pendingCount = queue.filter(k => k.status === 'pending').length;
@@ -73,7 +131,18 @@ export default function KycReviewPage() {
         </p>
       </div>
 
-      {queue.length === 0 || !current ? (
+      {loading ? (
+        <div className="admin-empty">
+          <p>Loading KYC review queue…</p>
+        </div>
+      ) : error ? (
+        <div className="admin-empty">
+          <p>{error}</p>
+          <button className="admin-btn" style={{ marginTop: '0.75rem' }} onClick={loadQueue}>
+            Retry
+          </button>
+        </div>
+      ) : queue.length === 0 || !current ? (
         <div className="admin-empty">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" />
@@ -102,27 +171,31 @@ export default function KycReviewPage() {
               Next →
             </button>
             <span className={`admin-badge ${current.status}`} style={{ marginLeft: 'auto' }}>
-              {current.status.charAt(0).toUpperCase() + current.status.slice(1)}
+              {(current.status || 'pending').charAt(0).toUpperCase() + (current.status || 'pending').slice(1)}
             </span>
           </div>
 
-          {/* ── Document + Face Validation Side-by-Side ── */}
+          {/* ── Document + Reverse / Face Side-by-Side ── */}
           <div className="kyc-panel">
             <div className="kyc-doc-frame">
               <div className="kyc-doc-header">Identity Document</div>
-              <img
-                src={current.docUrl}
+              <DocImage
+                url={(pickDoc(current.documents || [], PRIMARY_DOC_KEYS) || (current.documents || [])[0])?.url}
                 alt="Identity document"
-                style={{ minHeight: 220, objectFit: 'contain' }}
               />
             </div>
             <div className="kyc-doc-frame">
-              <div className="kyc-doc-header">Face Validation</div>
-              <img
-                src={current.selfieUrl}
-                alt="Applicant selfie"
-                style={{ minHeight: 220, objectFit: 'cover' }}
-              />
+              <div className="kyc-doc-header">
+                {current.selfieUrl ? 'Face Validation' : 'Document Reverse'}
+              </div>
+              {current.selfieUrl ? (
+                <DocImage url={current.selfieUrl} alt="Applicant selfie" style={{ objectFit: 'cover' }} />
+              ) : (
+                <DocImage
+                  url={(pickDoc(current.documents || [], SECONDARY_DOC_KEYS) || (current.documents || []).find(d => d.key !== (pickDoc(current.documents || [], PRIMARY_DOC_KEYS) || (current.documents || [])[0])?.key))?.url}
+                  alt="Reverse side document"
+                />
+              )}
             </div>
           </div>
 
@@ -167,7 +240,7 @@ export default function KycReviewPage() {
                 className="admin-btn success"
                 style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}
                 onClick={() => updateStatus('approved')}
-                disabled={current.status === 'approved'}
+                disabled={busy || current.status === 'approved'}
               >
                 ✓ Approve
               </button>
@@ -175,7 +248,7 @@ export default function KycReviewPage() {
                 className="admin-btn danger"
                 style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}
                 onClick={() => updateStatus('rejected')}
-                disabled={current.status === 'rejected'}
+                disabled={busy || current.status === 'rejected'}
               >
                 ✕ Reject
               </button>
@@ -183,7 +256,7 @@ export default function KycReviewPage() {
                 className="admin-btn warning"
                 style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem' }}
                 onClick={() => updateStatus('flagged')}
-                disabled={current.status === 'flagged'}
+                disabled={busy || current.status === 'flagged'}
               >
                 ⚑ Flag for Review
               </button>
@@ -223,7 +296,7 @@ export default function KycReviewPage() {
                   <span className="kyc-search-result-nic">{item.nic}</span>
                 </span>
                 <span className={`admin-badge ${item.status}`}>
-                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                  {(item.status || 'pending').charAt(0).toUpperCase() + (item.status || 'pending').slice(1)}
                 </span>
                 <span className="kyc-search-result-phone">{item.phone}</span>
               </button>

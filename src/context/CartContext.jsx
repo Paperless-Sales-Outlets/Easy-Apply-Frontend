@@ -110,7 +110,16 @@ export const CartProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchCart();
+    // Skip the cart fetch on admin routes: the admin portal never uses cart
+    // data, and this avoids pointless /api/cart calls (and console noise).
+    // Match "/admin" anywhere in the path (works with the /Paperlessbackup/
+    // base path) and also for hash-based URLs.
+    const isAdminRoute =
+      window.location.pathname.includes('/admin') ||
+      window.location.hash.startsWith('#/admin');
+    if (!isAdminRoute) {
+      fetchCart();
+    }
   }, []);
 
   const value = {
