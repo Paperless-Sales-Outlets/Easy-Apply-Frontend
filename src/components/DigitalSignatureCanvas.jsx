@@ -83,18 +83,30 @@ export default function DigitalSignatureCanvas({ onChange, required, isActive })
       </label>
       <div 
         style={{ 
-          border: `1px solid ${isEmpty && required && isActive ? 'var(--danger, #dc3545)' : 'var(--border-color)'}`, 
-          borderRadius: '8px', 
+          position: 'relative',
+          border: `2px solid ${isEmpty && required && isActive ? 'var(--danger, #ef4444)' : 'rgba(0,0,0,0.06)'}`, 
+          borderRadius: '16px', 
           overflow: 'hidden',
-          backgroundColor: '#fff',
-          boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.05)'
+          backgroundColor: '#fafafa',
+          boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.05)'
         }}
       >
+        {isEmpty && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+            pointerEvents: 'none', color: 'rgba(0,0,0,0.1)',
+            fontSize: '2rem', fontWeight: 800, userSelect: 'none',
+            letterSpacing: '4px', textTransform: 'uppercase'
+          }}>
+            Sign Here
+          </div>
+        )}
         <canvas
           ref={canvasRef}
           width={500}
           height={200}
-          style={{ display: 'block', width: '100%', touchAction: 'none', cursor: 'crosshair' }}
+          style={{ display: 'block', width: '100%', touchAction: 'none', cursor: 'crosshair', position: 'relative', zIndex: 1, mixBlendMode: 'multiply' }}
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}

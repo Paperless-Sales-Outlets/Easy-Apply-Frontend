@@ -185,15 +185,33 @@ export default function PaymentStep({
             <h3 style={{ color: 'var(--slt-green)', marginBottom: '0.5rem' }}>Mobile Verified!</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem' }}>Your request is ready to be submitted.</p>
 
-            <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: '12px', textAlign: 'left', marginBottom: '2rem' }}>
-              <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>Order Summary</h4>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '1px solid var(--line)', marginBottom: '1rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Pending Dues Balance</span>
-                <span style={{ fontWeight: 'bold' }}>Rs. {formattedAmount}</span>
+            <div 
+              style={{ 
+                padding: '2rem 1.5rem', backgroundColor: '#fafafa', borderRadius: '4px 4px 12px 12px', textAlign: 'left', marginBottom: '2rem',
+                position: 'relative',
+                boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)',
+                border: '1px solid rgba(0,0,0,0.05)',
+                borderTop: 'none',
+                marginTop: '10px'
+              }}
+            >
+              {/* Receipt top colored bar */}
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: 'var(--slt-blue)' }} />
+              
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', display: 'grid', placeItems: 'center', margin: '0 auto 0.5rem', color: 'var(--slt-blue)' }}>
+                  <Icon name="file-text" size={20} />
+                </div>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem' }}>Digital Receipt</h4>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '2px dashed rgba(0,0,0,0.15)', marginBottom: '1rem' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Pending Dues Balance</span>
+                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Rs. {formattedAmount}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Payment Method</span>
-                <span style={{ fontWeight: 'bold' }}>{hasPaymentReceipt ? 'Receipt Uploaded' : 'Pay Online Now'}</span>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Payment Method</span>
+                <span style={{ fontWeight: 700, color: 'var(--slt-blue)' }}>{hasPaymentReceipt ? 'Receipt Uploaded' : 'Pay Online Now'}</span>
               </div>
             </div>
 
@@ -203,10 +221,39 @@ export default function PaymentStep({
               </div>
             )}
 
-            <button type="button" className="btn btn-primary" style={{ width: '100%', height: '56px', fontSize: '1.1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }} onClick={handlePlaceOrder}>
-              {!hasPaymentReceipt ? <Icon name="credit-card" size={20} /> : <Icon name="file-text" size={20} />}
-              {hasPaymentReceipt ? 'Submit Request' : `Pay Rs. ${formattedAmount} & Confirm`}
-            </button>
+            <motion.button 
+              type="button" 
+              className="btn btn-primary" 
+              style={{ 
+                height: '56px', 
+                fontSize: '1.1rem', 
+                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem',
+                margin: '0 auto',
+                overflow: 'hidden', whiteSpace: 'nowrap'
+              }} 
+              initial={{ width: '100%', borderRadius: '8px' }}
+              animate={{ 
+                width: statusState.message ? '56px' : '100%',
+                borderRadius: statusState.message ? '28px' : '8px',
+                pointerEvents: statusState.message ? 'none' : 'auto',
+                opacity: statusState.message ? 0.8 : 1
+              }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              onClick={handlePlaceOrder}
+            >
+              {statusState.message ? (
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                  style={{ width: '24px', height: '24px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }}
+                />
+              ) : (
+                <>
+                  {!hasPaymentReceipt ? <Icon name="credit-card" size={20} /> : <Icon name="file-text" size={20} />}
+                  {hasPaymentReceipt ? 'Submit Request' : `Pay Rs. ${formattedAmount} & Confirm`}
+                </>
+              )}
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>

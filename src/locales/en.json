@@ -321,7 +321,7 @@
         "facilitiesRequired": "Please select at least one facility."
       },
       "declaration": {
-        "heading": "3. Customer Agreement",
+        "heading": "Customer Agreement",
         "declarationText": "I request the reactivation of the selected services and agree to the applicable reconnection charges.",
         "agreeLabel": "I accept the Terms and Conditions"
       }
