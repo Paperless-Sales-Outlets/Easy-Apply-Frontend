@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { DUMMY_USER } from '../data/dummyData';
+import api from '../../../utils/api';
 
 const AdminAuthContext = createContext(null);
 
@@ -29,21 +29,42 @@ function clearSession() {
 export function AdminAuthProvider({ children }) {
   const [admin, setAdmin] = useState(() => loadSession());
 
-  const login = (email, password) => {
-    const ADMIN_EMAIL = 'admin@slt.lk';
-    const ADMIN_PASSWORD = 'admin123';
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      const session = { ...DUMMY_USER, email };
+  const login = async (email, password) => {
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      const { user, accessToken, refreshToken } = response.data;
+
+      if (!['Admin', 'Staff'].includes(user.role)) {
+        return { ok: false, message: 'Admin or Staff access required for this portal.' };
+      }
+
+      // Store JWTs so the shared api client can authenticate admin routes.
+      if (accessToken) localStorage.setItem('accessToken', accessToken);
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
+      const session = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      };
+
       setAdmin(session);
       saveSession(session);
-      return true;
+      return { ok: true, user: session };
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Login failed';
+      return { ok: false, message };
     }
-    return false;
   };
 
   const logout = () => {
     setAdmin(null);
     clearSession();
+    try {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+    } catch { /* ignore */ }
   };
 
   return (

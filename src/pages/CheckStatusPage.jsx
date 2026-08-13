@@ -49,6 +49,9 @@ export default function CheckStatusPage() {
       setResult({
         status: response.data.status, // 'pending', 'approved', 'rejected', 'flagged'
         serviceType: response.data.serviceType,
+        notes: response.data.notes || '',
+        actionedBy: response.data.actionedBy || null,
+        actionedAt: response.data.actionedAt || null,
         message: t('checkStatusPage.statusDescription'),
       });
     } catch (error) {
@@ -110,6 +113,30 @@ export default function CheckStatusPage() {
             )}
 
             <p style={{ margin: 0, fontSize: '0.9rem' }}>{result.message}</p>
+
+            {result.status !== 'not-found' && result.notes && (
+              <div style={{ marginTop: '1rem', padding: '0.9rem 1rem', borderRadius: '8px', background: 'rgba(0,0,0,0.04)' }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', opacity: 0.7, marginBottom: '0.35rem' }}>
+                  {t('checkStatusPage.adminNote')}
+                </div>
+                <div style={{ fontSize: '0.92rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{result.notes}</div>
+              </div>
+            )}
+
+            {result.status !== 'not-found' && result.actionedBy && (
+              <div style={{ fontSize: '0.82rem', opacity: 0.8, marginTop: '0.75rem' }}>
+                <strong>{t('checkStatusPage.actionedBy')}:</strong>{' '}
+                {result.actionedBy.name || result.actionedBy.email || result.actionedBy._id}
+                {result.actionedBy._id && (
+                  <span style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}> (ID: {result.actionedBy._id})</span>
+                )}
+                {result.actionedAt && (
+                  <span style={{ marginLeft: '0.5rem' }}>
+                    {t('checkStatusPage.actionedAt')}: {new Date(result.actionedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}
+                  </span>
+                )}
+              </div>
+            )}
           </motion.div>
         )}
       </div>

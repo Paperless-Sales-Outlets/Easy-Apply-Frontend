@@ -95,9 +95,10 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
 
   const roleLabel = {
     Admin: 'Administrator',
+    Staff: 'Staff',
     Manager: 'Manager',
     SalesOfficer: 'Sales Officer',
-  }[admin?.role] || 'Manager';
+  }[admin?.role] || 'Staff';
 
   return (
     <div className="admin-shell">

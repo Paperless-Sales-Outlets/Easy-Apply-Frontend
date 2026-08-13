@@ -10,9 +10,10 @@ export default function AdminLoginPage({ onLogin }) {
     e.preventDefault();
     setError('');
     setLoading(true);
-    await new Promise(r => setTimeout(r, 600)); // simulate network
-    const ok = onLogin(email, password);
-    if (!ok) setError('Invalid email or password. Please try again.');
+    const result = await onLogin(email, password);
+    if (!result || !result.ok) {
+      setError(result?.message || 'Invalid email or password. Please try again.');
+    }
     setLoading(false);
   };
 
