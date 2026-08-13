@@ -3,60 +3,64 @@ import api from '../../../utils/api';
 
 const AdminAuthContext = createContext(null);
 
-const REFRESH_TOKEN_KEY = 'admin_refresh_token';
+const SESSION_KEY = 'admin_session';
 
-function loadRefreshToken() {
+function loadSession() {
   try {
-    return sessionStorage.getItem(REFRESH_TOKEN_KEY);
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-function saveRefreshToken(token) {
+function saveSession(data) {
   try {
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, token);
+    localStorage.setItem(SESSION_KEY, JSON.stringify(data));
   } catch { /* ignore */ }
 }
 
-function clearRefreshToken() {
+function clearSession() {
   try {
-    sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(SESSION_KEY);
   } catch { /* ignore */ }
 }
 
 export function AdminAuthProvider({ children }) {
-  const [admin, setAdmin] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [admin, setAdmin] = useState(() => loadSession());
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // Initialize: try to refresh token if refresh token exists
-  useEffect(() => {
-    const refreshToken = loadRefreshToken();
-    if (refreshToken) {
-      refreshAccessToken(refreshToken);
-    } else {
-      setLoading(false);
-    }
-  }, []);
 
   const login = async (email, password) => {
     setLoading(true);
     setError(null);
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { accessToken, refreshToken, user } = response.data;
+      const { user, accessToken, refreshToken } = response.data;
 
-      setAccessToken(accessToken);
-      setAdmin(user);
-      saveRefreshToken(refreshToken);
-      
-      return { success: true };
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message || 'Login failed';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      if (!['Admin', 'Staff'].includes(user.role)) {
+        setError('Admin or Staff access required for this portal.');
+        return { ok: false, message: 'Admin or Staff access required for this portal.' };
+      }
+
+      // Store JWTs so the shared api client can authenticate admin routes.
+      if (accessToken) localStorage.setItem('accessToken', accessToken);
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
+      const session = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      };
+
+      setAdmin(session);
+      saveSession(session);
+      return { ok: true, user: session };
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Login failed';
+      setError(message);
+      return { ok: false, message };
     } finally {
       setLoading(false);
     }
@@ -68,63 +72,22 @@ export function AdminAuthProvider({ children }) {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
-      setAccessToken(null);
       setAdmin(null);
-      clearRefreshToken();
+      clearSession();
+      try {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      } catch { /* ignore */ }
     }
   };
-
-  const refreshAccessToken = async (refreshToken) => {
-    try {
-      const response = await api.post('/auth/refresh', { refreshToken });
-      const { accessToken, user } = response.data;
-      
-      setAccessToken(accessToken);
-      setAdmin(user);
-      setLoading(false);
-    } catch (err) {
-      console.error('Token refresh failed:', err);
-      clearRefreshToken();
-      setAccessToken(null);
-      setAdmin(null);
-      setLoading(false);
-    }
-  };
-
-  // Auto-refresh token before expiry (optional enhancement)
-  useEffect(() => {
-    if (!accessToken) return;
-
-    // Decode JWT to get expiry time (simplified - assumes standard JWT)
-    try {
-      const payload = JSON.parse(atob(accessToken.split('.')[1]));
-      const expiryTime = payload.exp * 1000;
-      const timeUntilExpiry = expiryTime - Date.now();
-
-      // Refresh 5 minutes before expiry
-      if (timeUntilExpiry > 0) {
-        const timeout = setTimeout(() => {
-          const refreshToken = loadRefreshToken();
-          if (refreshToken) {
-            refreshAccessToken(refreshToken);
-          }
-        }, Math.max(timeUntilExpiry - 5 * 60 * 1000, 0));
-
-        return () => clearTimeout(timeout);
-      }
-    } catch (err) {
-      console.error('Failed to decode token:', err);
-    }
-  }, [accessToken]);
 
   const value = {
     admin,
-    accessToken,
     loading,
     error,
     login,
     logout,
-    isAuthenticated: !!admin && !!accessToken,
+    isAuthenticated: !!admin,
   };
 
   return (
