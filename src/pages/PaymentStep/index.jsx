@@ -14,6 +14,8 @@ export default function PaymentStep({
   hasPaymentReceipt = false,
   verifiedPhone,
   onSuccess,
+  feeAmount = 0,
+  feeLabel = '',
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -27,15 +29,20 @@ export default function PaymentStep({
   const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef([]);
 
+  const parsedAmount = parseFloat(amount) || 0;
+  const parsedFee = parseFloat(feeAmount) || 0;
+  const totalAmount = parsedAmount + parsedFee;
+  const formattedAmount = Number(totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+  const formattedPending = Number(parsedAmount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+  const formattedFee = Number(parsedFee).toLocaleString('en-US', { minimumFractionDigits: 2 });
+
   // Payment Status State
   const [statusState, setStatusState] = useState({
     type: null,
     message: '',
   });
 
-  const formattedAmount = amount
-    ? Number(amount).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : '1,000.00';
+
 
   useEffect(() => {
     if (phase !== 'otp') return;
@@ -172,7 +179,13 @@ export default function PaymentStep({
 
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
               {otp.map((d, i) => (
-                <input key={i} ref={(el) => (inputRefs.current[i] = el)} type="tel" inputMode="numeric" maxLength={1} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleKeyDown(i, e)} style={{ width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px', border: '2px solid var(--border-color)', backgroundColor: 'var(--surface)' }} disabled={isLoading} />
+                <input key={i} ref={(el) => (inputRefs.current[i] = el)} type="tel" inputMode="numeric" maxLength={1} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleKeyDown(i, e)} 
+                style={{ 
+                  width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px', 
+                  border: '1px solid rgba(255,255,255,0.6)', 
+                  background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                  boxShadow: '0 4px 12px rgba(31, 38, 135, 0.05)'
+                }} disabled={isLoading} />
               ))}
             </div>
             
@@ -194,10 +207,13 @@ export default function PaymentStep({
 
             <div 
               style={{ 
-                padding: '2rem 1.5rem', backgroundColor: '#fafafa', borderRadius: '4px 4px 12px 12px', textAlign: 'left', marginBottom: '2rem',
+                padding: '2rem 1.5rem', borderRadius: '4px 4px 16px 16px', textAlign: 'left', marginBottom: '2rem',
                 position: 'relative',
-                boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)',
-                border: '1px solid rgba(0,0,0,0.05)',
+                background: 'rgba(255, 255, 255, 0.4)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.05)',
+                border: '1px solid rgba(255,255,255,0.5)',
                 borderTop: 'none',
                 marginTop: '10px'
               }}
@@ -212,10 +228,25 @@ export default function PaymentStep({
                 <h4 style={{ margin: 0, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem' }}>Digital Receipt</h4>
               </div>
               
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '2px dashed rgba(0,0,0,0.15)', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: parsedFee > 0 ? 'none' : '2px dashed rgba(0,0,0,0.15)', marginBottom: parsedFee > 0 ? '0.5rem' : '1rem' }}>
                 <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Pending Dues Balance</span>
-                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Rs. {formattedAmount}</span>
+                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Rs. {formattedPending}</span>
               </div>
+              
+              {parsedFee > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '2px dashed rgba(0,0,0,0.15)', marginBottom: '1rem' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{feeLabel || 'Fee'}</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Rs. {formattedFee}</span>
+                </div>
+              )}
+              
+              {parsedFee > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', marginBottom: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>Total Due</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--slt-blue)' }}>Rs. {formattedAmount}</span>
+                </div>
+              )}
+
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Payment Method</span>
                 <span style={{ fontWeight: 700, color: 'var(--slt-blue)' }}>{hasPaymentReceipt ? 'Receipt Uploaded' : 'Pay Online Now'}</span>

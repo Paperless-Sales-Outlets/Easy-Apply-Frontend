@@ -354,11 +354,15 @@
       "title": "Service Vacation",
       "subtitle": "Apply for temporary service deactivation.",
       "steps": {
-        "s1": "General Info",
-        "s2": "Service Info",
-        "s3": "Agreement"
+        "s1": "General Information",
+        "s2": "Vacation Details",
+        "s3": "Agreement",
+        "s4": "Checkout & Auth"
       },
       "generalInfo": {
+        "connectionLookupTitle": "Connection Lookup",
+        "multipleConnectionsTitle": "Multiple Connections Found",
+        "multipleConnectionsSubtitle": "Please select the connection you want to put on vacation.",
         "heading": "1. General Information (Mandatory)",
         "telephone": "1.1 Customer Telephone Number",
         "fullName": "1.2 Customer Name / Company Name",
