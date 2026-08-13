@@ -129,7 +129,7 @@ export default function PackageDetailsStep({
 
           {isSamePackageError && (
             <div style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.4rem', fontWeight: '500' }}>
-              ⚠ Requested package cannot be the same as your current package (BRD 5.6).
+              Requested package cannot be the same as your current package (BRD 5.6).
             </div>
           )}
 
@@ -223,7 +223,7 @@ export default function PackageDetailsStep({
             />
             {nicFrontFile ? (
               <div style={{ color: '#0056b3', fontSize: '0.85rem', marginTop: '0.3rem', fontWeight: '500' }}>
-                ✓ {nicFrontFile.name} ({(nicFrontFile.size / (1024 * 1024)).toFixed(2)} MB)
+                {nicFrontFile.name} ({(nicFrontFile.size / (1024 * 1024)).toFixed(2)} MB)
               </div>
             ) : showValidationErrors && (
               <div style={{ color: '#dc2626', fontSize: '0.82rem', marginTop: '0.3rem' }}>
@@ -245,7 +245,7 @@ export default function PackageDetailsStep({
             />
             {nicBackFile ? (
               <div style={{ color: '#0056b3', fontSize: '0.85rem', marginTop: '0.3rem', fontWeight: '500' }}>
-                ✓ {nicBackFile.name} ({(nicBackFile.size / (1024 * 1024)).toFixed(2)} MB)
+                {nicBackFile.name} ({(nicBackFile.size / (1024 * 1024)).toFixed(2)} MB)
               </div>
             ) : showValidationErrors && (
               <div style={{ color: '#dc2626', fontSize: '0.82rem', marginTop: '0.3rem' }}>

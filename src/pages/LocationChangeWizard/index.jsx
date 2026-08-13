@@ -354,7 +354,7 @@ export default function LocationChangeWizard() {
               gap: '0.55rem',
             }}
           >
-            <span style={{ fontSize: '1.15rem' }}>⚠️</span>
+            <FiAlertCircle size={18} />
             <span>{submitError}</span>
           </div>
         )}
@@ -365,11 +365,12 @@ export default function LocationChangeWizard() {
             backgroundColor: '#ffffff',
             borderRadius: '16px',
             padding: '1.25rem 2rem',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
             border: '1px solid #e2e8f0',
             display: 'flex',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             alignItems: 'center',
+            marginTop: '1.5rem',
           }}
         >
           <button
@@ -377,21 +378,21 @@ export default function LocationChangeWizard() {
             onClick={prevStep}
             disabled={currentStep === 1 || submitting}
             style={{
-              padding: '0.75rem 1.75rem',
-              borderRadius: '10px',
-              border: '1px solid #cbd5e1',
+              padding: '0.85rem 1.85rem',
+              borderRadius: '12px',
+              border: '1.5px solid #cbd5e1',
               backgroundColor: currentStep === 1 ? '#f8fafc' : '#ffffff',
               color: currentStep === 1 ? '#cbd5e1' : '#334155',
               cursor: currentStep === 1 || submitting ? 'not-allowed' : 'pointer',
               fontWeight: 800,
-              fontSize: '0.88rem',
+              fontSize: '0.9rem',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.45rem',
+              gap: '0.5rem',
               transition: 'all 0.15s ease',
             }}
           >
-            <FiArrowLeft size={16} />
+            <FiArrowLeft size={18} />
             <span>Back</span>
           </button>
 
@@ -400,45 +401,45 @@ export default function LocationChangeWizard() {
               type="submit"
               disabled={submitting}
               style={{
-                padding: '0.75rem 2.25rem',
-                borderRadius: '10px',
+                padding: '0.85rem 2.25rem',
+                borderRadius: '12px',
                 background: 'linear-gradient(135deg, #0056b3 0%, #003b73 100%)',
                 color: '#ffffff',
                 border: 'none',
                 fontWeight: 800,
-                fontSize: '0.9rem',
+                fontSize: '0.95rem',
                 cursor: submitting ? 'not-allowed' : 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                boxShadow: '0 4px 16px rgba(0, 86, 179, 0.35)',
+                gap: '0.55rem',
+                boxShadow: '0 4px 16px rgba(0, 86, 179, 0.3)',
                 transition: 'all 0.15s ease',
               }}
             >
               <span>Next Step</span>
-              <FiArrowRight size={16} />
+              <FiArrowRight size={18} />
             </button>
           ) : (
             <button
               type="submit"
               disabled={submitting || !isStep4Valid}
               style={{
-                padding: '0.75rem 2.25rem',
-                borderRadius: '10px',
-                background: isStep4Valid && !submitting ? 'linear-gradient(135deg, #047857 0%, #064e3b 100%)' : '#cbd5e1',
+                padding: '0.85rem 2.5rem',
+                borderRadius: '12px',
+                background: isStep4Valid && !submitting ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#cbd5e1',
                 color: '#ffffff',
                 border: 'none',
                 fontWeight: 800,
-                fontSize: '0.9rem',
+                fontSize: '0.95rem',
                 cursor: isStep4Valid && !submitting ? 'pointer' : 'not-allowed',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                boxShadow: isStep4Valid && !submitting ? '0 4px 16px rgba(4, 120, 87, 0.35)' : 'none',
+                gap: '0.55rem',
+                boxShadow: isStep4Valid && !submitting ? '0 4px 18px rgba(16, 185, 129, 0.35)' : 'none',
                 transition: 'all 0.15s ease',
               }}
             >
-              <FiSend size={16} />
+              <FiSend size={18} />
               <span>{submitting ? 'Submitting Application...' : 'Submit Relocation Application'}</span>
             </button>
           )}

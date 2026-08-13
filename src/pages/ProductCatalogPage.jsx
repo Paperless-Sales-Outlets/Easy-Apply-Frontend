@@ -447,7 +447,7 @@ export default function ProductCatalogPage() {
             </span>
             <div>
               <div style={{ fontWeight: 800, fontSize: '0.88rem', color: cartCategoryAnalysis.hasVoice ? '#14532d' : '#1e40af' }}>
-                {cartCategoryAnalysis.hasVoice ? 'Voice Package Selected ✓' : 'Voice Package Required (Compulsory)'}
+                {cartCategoryAnalysis.hasVoice ? 'Voice Package Selected' : 'Voice Package Required (Compulsory)'}
               </div>
               <div style={{ fontSize: '0.78rem', color: cartCategoryAnalysis.hasVoice ? '#15803d' : '#1e3a8a', fontWeight: 600 }}>
                 Allowed bundles: <strong>Voice Only</strong> • <strong>Voice + Broadband</strong> • <strong>Voice + Broadband + PEO TV</strong> (Max 1 package per category)

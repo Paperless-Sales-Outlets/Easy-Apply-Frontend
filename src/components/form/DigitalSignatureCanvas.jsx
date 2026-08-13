@@ -156,14 +156,14 @@ export default function DigitalSignatureCanvas({
               textAlign: 'center',
             }}
           >
-            ✍️ Draw your signature here
+            Draw your signature here
           </div>
         )}
 
         <div
           style={{
             display: 'flex',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             alignItems: 'center',
             marginTop: '0.5rem',
             borderTop: '1px solid var(--border-color, #eee)',
@@ -171,7 +171,7 @@ export default function DigitalSignatureCanvas({
           }}
         >
           <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-            {isEmpty ? 'No signature provided' : '✓ Signature captured'}
+            {isEmpty ? 'No signature provided' : 'Signature captured'}
           </span>
           <button
             type="button"

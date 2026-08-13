@@ -372,9 +372,9 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
               {nicFrontFile ? (
                 <div style={{ textAlign: 'center' }}>
                   <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#15803d', display: 'block' }}>
-                    📄 {nicFrontFile.name}
+                    {nicFrontFile.name}
                   </span>
-                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded ✓</span>
+                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded</span>
                 </div>
               ) : (
                 <div style={{ textAlign: 'center' }}>
@@ -387,7 +387,7 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
             </label>
             {showValidationErrors && !isNicFrontValid && (
               <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.4rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                ⚠️ NIC Front file is required.
+                NIC Front file is required.
               </div>
             )}
           </div>
@@ -428,9 +428,9 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
               {nicBackFile ? (
                 <div style={{ textAlign: 'center' }}>
                   <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#15803d', display: 'block' }}>
-                    📄 {nicBackFile.name}
+                    {nicBackFile.name}
                   </span>
-                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded ✓</span>
+                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded</span>
                 </div>
               ) : (
                 <div style={{ textAlign: 'center' }}>
@@ -443,7 +443,7 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
             </label>
             {showValidationErrors && !isNicBackValid && (
               <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.4rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                ⚠️ NIC Back file is required.
+                NIC Back file is required.
               </div>
             )}
           </div>

@@ -169,7 +169,7 @@ export default function PackageMigrationDeclarationStep({
 
             {signatureFile && (
               <div style={{ color: '#0056b3', fontSize: '0.85rem', marginTop: '0.5rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span>✓ {signatureFile.name} ({(signatureFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
+                <span>{signatureFile.name} ({(signatureFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
                 <button
                   type="button"
                   onClick={() => setSignatureFile(null)}

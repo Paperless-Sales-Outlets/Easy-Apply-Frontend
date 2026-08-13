@@ -31,7 +31,7 @@ const Cart = ({ isOpen, onClose }) => {
     });
 
     if (!hasVoicePackage) {
-      alert('⚠️ Voice Package Required (Compulsory):\n\nAll SLTMobitel bundles require at least 1 Voice package.\nAllowed combinations:\n• Voice Only\n• Voice + Broadband\n• Voice + Broadband + PEO TV\n\nPlease add 1 Voice package to your cart to proceed with checkout.');
+      alert('Voice Package Required (Compulsory):\n\nAll SLTMobitel bundles require at least 1 Voice package.\nAllowed combinations:\n• Voice Only\n• Voice + Broadband\n• Voice + Broadband + PEO TV\n\nPlease add 1 Voice package to your cart to proceed with checkout.');
       return;
     }
 

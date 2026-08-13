@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
@@ -15,6 +15,7 @@ import {
   FiMapPin,
   FiPackage,
   FiPhoneCall,
+  FiShoppingCart,
 } from 'react-icons/fi';
 import { VerificationContext } from './verification';
 import api from '../utils/api';
@@ -35,9 +36,10 @@ const swap = {
 export default function OtpProtectedForm({ children, onVerified, skipOtp: skipProp }) {
   const { t } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const isSkip = skipProp || location.state?.skipOtp || sessionStorage.getItem('customerType') === 'new';
 
-  const [phase, setPhase] = useState(isSkip ? 'verified' : 'mobile'); // 'mobile' | 'otp' | 'lookup' | 'account-select' | 'verified'
+  const [phase, setPhase] = useState(isSkip ? 'verified' : 'mobile'); // 'mobile' | 'otp' | 'lookup' | 'account-select' | 'new-customer-redirect' | 'verified'
   const [done, setDone] = useState(isSkip);
   const [mobileNumber, setMobileNumber] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -45,6 +47,7 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
   const [notice, setNotice] = useState('');
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
   const [isLoading, setIsLoading] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(3);
   const inputRefs = useRef([]);
 
   // Database customer lookup states
@@ -66,6 +69,25 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
     const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
     return () => clearTimeout(id);
   }, [phase, resendIn]);
+
+  // Countdown timer & automatic redirect when a NEW customer attempts an existing customer service (Relocation, Migration, etc.)
+  useEffect(() => {
+    if (phase !== 'new-customer-redirect') return;
+    setRedirectCountdown(3);
+
+    const interval = setInterval(() => {
+      setRedirectCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          navigate('/new-connection/products');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [phase, navigate]);
 
   useEffect(() => {
     if (isSkip) {
@@ -119,14 +141,44 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
         sessionStorage.setItem('customerExists', 'false');
         sessionStorage.removeItem('selectedAccount');
         sessionStorage.removeItem('customerData');
-        setPhase('verified');
+
+        const currentPath = location.pathname;
+        const requiresExistingAccount = [
+          '/location-change',
+          '/package-migration',
+          '/reconnection',
+          '/ownership-change',
+          '/termination',
+          '/service-vacation',
+        ].some((path) => currentPath.includes(path));
+
+        if (requiresExistingAccount) {
+          setPhase('new-customer-redirect');
+        } else {
+          setPhase('verified');
+        }
       }
     } catch (err) {
       console.warn('Customer lookup fallback:', err);
       setCustomerExists(false);
       setAccountsList([]);
       setSelectedAccount(null);
-      setPhase('verified');
+
+      const currentPath = location.pathname;
+      const requiresExistingAccount = [
+        '/location-change',
+        '/package-migration',
+        '/reconnection',
+        '/ownership-change',
+        '/termination',
+        '/service-vacation',
+      ].some((path) => currentPath.includes(path));
+
+      if (requiresExistingAccount) {
+        setPhase('new-customer-redirect');
+      } else {
+        setPhase('verified');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -764,6 +816,70 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
                       </div>
                     </div>
                   ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* PHASE: New Customer Redirect Notification Card */}
+            {phase === 'new-customer-redirect' && (
+              <motion.div key="new-customer-redirect" {...swap} style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <div
+                  style={{
+                    backgroundColor: '#fff7ed',
+                    color: '#ea580c',
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1.25rem auto',
+                    border: '2px solid #ffedd5',
+                  }}
+                >
+                  <FiShoppingCart size={28} />
+                </div>
+
+                <h2 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.5rem 0' }}>
+                  Active Product Required
+                </h2>
+
+                <p style={{ fontSize: '0.98rem', color: '#ea580c', fontWeight: 800, margin: '0 0 0.85rem 0', lineHeight: 1.5 }}>
+                  First you need to buy or activate a new product.
+                </p>
+
+                <p style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600, marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                  No existing SLT customer account was found for <strong>{formatNumber(mobileNumber)}</strong>. Relocation and Package Migration require an active SLT connection.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/new-connection/products')}
+                    style={{
+                      width: '100%',
+                      padding: '0.85rem 1.5rem',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #0056b3 0%, #003b73 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontWeight: 800,
+                      fontSize: '0.92rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      boxShadow: '0 4px 16px rgba(0, 86, 179, 0.3)',
+                    }}
+                  >
+                    <span>Browse Products & Buy Now</span>
+                    <FiArrowRight size={18} />
+                  </button>
+
+                  <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>
+                    Automatically redirecting in {redirectCountdown}s...
+                  </span>
                 </div>
               </motion.div>
             )}

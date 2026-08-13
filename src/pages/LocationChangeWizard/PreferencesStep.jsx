@@ -168,7 +168,7 @@ export default function PreferencesStep({
             />
             {showValidationErrors && !relocationDate && (
               <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '4px', display: 'block', fontWeight: 700 }}>
-                ⚠️ Preferred Relocation Date is required.
+                Preferred Relocation Date is required.
               </span>
             )}
           </div>
@@ -196,7 +196,7 @@ export default function PreferencesStep({
             />
             {showValidationErrors && !disconnectDate && (
               <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '4px', display: 'block', fontWeight: 700 }}>
-                ⚠️ Disconnect Date is required.
+                Disconnect Date is required.
               </span>
             )}
           </div>
@@ -605,9 +605,9 @@ export default function PreferencesStep({
               {authLetter ? (
                 <div style={{ textAlign: 'center' }}>
                   <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#15803d', display: 'block' }}>
-                    📄 {authLetter.name}
+                    {authLetter.name}
                   </span>
-                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded ✓</span>
+                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded</span>
                 </div>
               ) : (
                 <div style={{ textAlign: 'center' }}>
@@ -651,9 +651,9 @@ export default function PreferencesStep({
               {brcFile ? (
                 <div style={{ textAlign: 'center' }}>
                   <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#15803d', display: 'block' }}>
-                    📄 {brcFile.name}
+                    {brcFile.name}
                   </span>
-                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded ✓</span>
+                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded</span>
                 </div>
               ) : (
                 <div style={{ textAlign: 'center' }}>
@@ -666,7 +666,7 @@ export default function PreferencesStep({
             </label>
             {showValidationErrors && customerType === 'business' && !brcFile && (
               <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '4px', display: 'block', fontWeight: 700 }}>
-                ⚠️ Business Registration Certificate is required.
+                Business Registration Certificate is required.
               </span>
             )}
           </div>

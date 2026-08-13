@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { FiUploadCloud } from 'react-icons/fi';
 
 /**
  * Reusable FileUploadField component supporting drag-and-drop,
@@ -121,7 +122,7 @@ export default function FileUploadField({
           style={{
             display: 'flex',
             alignItems: 'center',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             padding: '0.75rem 1rem',
             border: '1px solid var(--slt-green, #28a745)',
             borderRadius: '8px',
@@ -215,8 +216,8 @@ export default function FileUploadField({
             style={{ display: 'none' }}
           />
 
-          <div style={{ color: 'var(--slt-blue, #0056b3)', marginBottom: '0.25rem', fontSize: '1.5rem' }}>
-            📁
+          <div style={{ color: 'var(--slt-blue, #0056b3)', marginBottom: '0.25rem' }}>
+            <FiUploadCloud size={28} />
           </div>
           <div style={{ fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-primary)' }}>
             Drag & drop your file here or <span style={{ color: 'var(--slt-blue)', textDecoration: 'underline' }}>browse</span>

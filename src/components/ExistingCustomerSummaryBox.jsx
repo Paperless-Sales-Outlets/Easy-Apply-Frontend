@@ -1,30 +1,7 @@
 import React from 'react';
 
 export default function ExistingCustomerSummaryBox({ customerData, customerExists, onSwitchAccount }) {
-  if (customerExists === false) {
-    return (
-      <div
-        style={{
-          backgroundColor: '#eff6ff',
-          border: '1.5px solid #93c5fd',
-          borderRadius: '14px',
-          padding: '1rem 1.25rem',
-          marginBottom: '1.5rem',
-          boxShadow: '0 2px 8px rgba(30,58,138,0.05)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', color: '#1e40af' }}>
-          <span style={{ fontSize: '1.1rem', fontWeight: 900 }}>ℹ</span>
-          <span style={{ fontSize: '0.95rem', fontWeight: 800 }}>New Customer</span>
-        </div>
-        <p style={{ fontSize: '0.84rem', color: '#1e3a8a', margin: '0.35rem 0 0 0', fontWeight: 600 }}>
-          No existing customer account was found for this number in the database. Please fill in your details below.
-        </p>
-      </div>
-    );
-  }
-
-  if (!customerData) return null;
+  if (!customerExists || !customerData) return null;
 
   return (
     <div
@@ -68,18 +45,6 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
           </div>
           <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#14532d' }}>
             Customer Information Verified
-          </span>
-          <span
-            style={{
-              fontSize: '0.72rem',
-              backgroundColor: '#dcfce7',
-              color: '#15803d',
-              padding: '0.2rem 0.6rem',
-              borderRadius: '9999px',
-              fontWeight: 800,
-            }}
-          >
-            Auto-filled from Database
           </span>
         </div>
 

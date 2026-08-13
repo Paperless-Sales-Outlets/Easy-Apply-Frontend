@@ -417,10 +417,10 @@ export default function CustomerInfoStep({ formData, handleChange, setFields }) 
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <h5 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#065f46' }}>
-                  ✓ Existing Customer Record Found & Locked
+                  Existing Customer Record Found & Locked
                 </h5>
                 <span style={{ backgroundColor: '#059669', color: '#fff', fontSize: '0.65rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase' }}>
-                  🔒 Read-Only Mode
+                  Read-Only Mode
                 </span>
               </div>
               <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.86rem', color: '#047857', lineHeight: 1.5 }}>

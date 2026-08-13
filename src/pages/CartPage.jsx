@@ -650,7 +650,7 @@ export default function CartPage() {
                       gap: '0.4rem',
                     }}
                   >
-                    <span style={{ fontSize: '0.9rem' }}>🏷️</span>
+                    <FiTag size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
                     <span>Installation fees are one-time charges payable during activation.</span>
                   </div>
 

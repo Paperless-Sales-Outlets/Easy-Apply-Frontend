@@ -230,7 +230,7 @@ export default function AgreementStep({
               key={idx}
               style={{
                 display: 'flex',
-                justify: 'space-between',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 padding: '0.85rem 1.15rem',
                 backgroundColor: file ? '#f0fdf4' : '#f8fafc',
@@ -381,7 +381,7 @@ export default function AgreementStep({
               />
               {!signatureData && !isDrawing && (
                 <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#94a3b8', pointerEvents: 'none', fontSize: '0.9rem', fontWeight: 600 }}>
-                  ✏️ Draw your signature here using mouse or touchscreen
+                  Draw your signature here using mouse or touchscreen
                 </div>
               )}
             </div>
@@ -433,9 +433,9 @@ export default function AgreementStep({
               {signatureFile ? (
                 <div style={{ textAlign: 'center' }}>
                   <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#15803d', display: 'block' }}>
-                    📄 {signatureFile.name}
+                    {signatureFile.name}
                   </span>
-                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded ✓</span>
+                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded</span>
                 </div>
               ) : (
                 <div style={{ textAlign: 'center' }}>
@@ -448,7 +448,7 @@ export default function AgreementStep({
             </label>
             {signatureFileError && (
               <div style={{ color: '#dc2626', fontSize: '0.82rem', marginTop: '0.5rem', fontWeight: 700 }}>
-                ⚠️ {signatureFileError}
+                {signatureFileError}
               </div>
             )}
           </div>

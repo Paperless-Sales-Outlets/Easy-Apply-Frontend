@@ -43,7 +43,7 @@ export default function PackageMigrationWizard() {
       setPhone(selectedAccount.telephone || selectedAccount.phoneNumber || mobileNumber || '');
     } else if (customerExists === false) {
       setCustomerPackage(null);
-      setLookupError('No existing customer account was found for this number in the database.');
+      setLookupError('');
     }
   }, [selectedAccount, customerExists, mobileNumber]);
 
@@ -65,12 +65,17 @@ export default function PackageMigrationWizard() {
         setLookupError('');
       } else {
         setCustomerPackage(null);
-        setLookupError('No customer account found in database for this number.');
+        setLookupError('First you need to buy or activate a new product.');
+        setTimeout(() => {
+          navigate('/new-connection/products');
+        }, 2500);
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'No customer found for this telephone number.';
       setCustomerPackage(null);
-      setLookupError(errorMessage);
+      setLookupError('First you need to buy or activate a new product.');
+      setTimeout(() => {
+        navigate('/new-connection/products');
+      }, 2500);
     } finally {
       setLookupLoading(false);
     }
