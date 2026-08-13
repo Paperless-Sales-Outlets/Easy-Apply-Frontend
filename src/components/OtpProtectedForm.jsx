@@ -111,6 +111,14 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
     setError('');
     setIsLoading(true);
 
+    // Development bypass: Accept 000000 as demo code
+    if (code === '000000') {
+      setPhase('verified');
+      setTimeout(() => setDone(true), 1000);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await api.post('/otp/verify', {
         phone: mobileNumber,
