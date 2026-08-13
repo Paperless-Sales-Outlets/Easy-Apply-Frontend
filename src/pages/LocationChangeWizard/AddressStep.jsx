@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { FiMapPin, FiHome, FiUploadCloud, FiCheckCircle, FiNavigation, FiFileText, FiCheck, FiX } from "react-icons/fi";
 import api from "../../utils/api";
 import AddressInputWithMap from "../../components/form/AddressInputWithMap";
 
@@ -528,34 +529,55 @@ export default function AddressStep({
   ]);
 
   return (
-    <div style={{ maxWidth: "850px", margin: "0 auto", fontFamily: "inherit" }}>
-      <h3 style={{ color: "#0056a6", marginBottom: "1.5rem" }}>
-        {t("wizards.locationChange.address.heading", "Step 2 – Address & Relocation")}
-      </h3>
-
+    <div style={{ width: "100%", margin: "0 auto", fontFamily: "inherit" }}>
       {/* Current Address Read-Only Section */}
       <div
-        className="card"
         style={{
-          padding: "1.5rem",
-          border: "1px solid #e0e0e0",
-          backgroundColor: "#f9fbfd",
-          marginBottom: "1.5rem",
-          borderRadius: "8px",
+          backgroundColor: "#ffffff",
+          borderRadius: "16px",
+          padding: "1.75rem 2rem",
+          marginBottom: "1.75rem",
+          border: "1px solid #e2e8f0",
+          borderLeft: "5px solid #0056b3",
+          boxShadow: "0 8px 30px rgba(0, 0, 0, 0.04)",
         }}
       >
-        <h4 style={{ color: "#333", marginBottom: "0.75rem", fontSize: "1.1rem" }}>
-          Current Service Address <span style={{ fontSize: "0.8rem", color: "#666", fontWeight: "normal" }}>(Read-Only)</span>
-        </h4>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", borderBottom: "1px solid #f1f5f9", paddingBottom: "0.75rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+            <div style={{ backgroundColor: "#eff6ff", color: "#0056b3", width: "34px", height: "34px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <FiMapPin size={18} />
+            </div>
+            <h4 style={{ margin: 0, color: "#0f172a", fontSize: "1.1rem", fontWeight: 800 }}>
+              Current Registered Service Address
+            </h4>
+          </div>
+          <span style={{ fontSize: "0.75rem", backgroundColor: "#f1f5f9", color: "#475569", padding: "0.3rem 0.75rem", borderRadius: "9999px", fontWeight: 800 }}>
+            Read-Only (Verified from DB)
+          </span>
+        </div>
+
         {loadingCurrent ? (
-          <p style={{ color: "#777" }}>Loading current address...</p>
+          <p style={{ color: "#64748b", margin: 0, fontWeight: 600 }}>Loading current registered address...</p>
         ) : (
-          <div style={{ lineHeight: "1.6", color: "#444", fontWeight: "500" }}>
-            <p style={{ margin: 0 }}>{currentAddress.address1}</p>
-            {currentAddress.address2 && <p style={{ margin: 0 }}>{currentAddress.address2}</p>}
-            <p style={{ margin: 0 }}>{currentAddress.city}</p>
-            <p style={{ margin: 0 }}>{currentAddress.district}</p>
-            <p style={{ margin: 0 }}>{currentAddress.postalCode}</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+            <div>
+              <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>Address Line 1</div>
+              <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#0f172a", marginTop: "0.15rem" }}>{currentAddress.address1 || "—"}</div>
+            </div>
+            {currentAddress.address2 && (
+              <div>
+                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>Address Line 2</div>
+                <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#0f172a", marginTop: "0.15rem" }}>{currentAddress.address2}</div>
+              </div>
+            )}
+            <div>
+              <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>City & District</div>
+              <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#0f172a", marginTop: "0.15rem" }}>{currentAddress.city ? `${currentAddress.city}, ${currentAddress.district}` : "—"}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>Postal Code</div>
+              <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#0056b3", marginTop: "0.15rem" }}>{currentAddress.postalCode || "—"}</div>
+            </div>
           </div>
         )}
       </div>
@@ -563,21 +585,28 @@ export default function AddressStep({
       <div>
         {/* Relocation Address Fields */}
         <div
-          className="card"
           style={{
-            padding: "1.5rem",
-            border: "1px solid #e0e0e0",
-            marginBottom: "1.5rem",
-            borderRadius: "8px",
-            backgroundColor: "#fff"
+            backgroundColor: "#ffffff",
+            borderRadius: "16px",
+            padding: "1.75rem 2rem",
+            marginBottom: "1.75rem",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 8px 30px rgba(0, 0, 0, 0.04)",
           }}
         >
-          <h4 style={{ color: "#333", marginBottom: "1rem", fontSize: "1.1rem" }}>Relocation Address</h4>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "1.25rem", borderBottom: "1px solid #f1f5f9", paddingBottom: "0.85rem" }}>
+            <div style={{ backgroundColor: "#eff6ff", color: "#0056b3", width: "34px", height: "34px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <FiHome size={18} />
+            </div>
+            <h4 style={{ margin: 0, color: "#0f172a", fontSize: "1.1rem", fontWeight: 800 }}>
+              1. New Relocation Address Details
+            </h4>
+          </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.25rem", marginBottom: "1.25rem" }}>
             <div>
-              <label htmlFor="district-select" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-                District <span style={{ color: "red" }}>*</span>
+              <label htmlFor="district-select" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
+                District <span style={{ color: "#dc2626" }}>*</span>
               </label>
               <select
                 id="district-select"
@@ -586,10 +615,15 @@ export default function AddressStep({
                 onBlur={() => handleBlur("district")}
                 style={{
                   width: "100%",
-                  padding: "0.55rem",
-                  borderRadius: "4px",
-                  border: shouldShowError("district", isDistrictValid) ? "1px solid #dc3545" : "1px solid #ccc",
-                  backgroundColor: shouldShowError("district", isDistrictValid) ? "#fff8f8" : "#fff"
+                  padding: "0.75rem 1rem",
+                  borderRadius: "10px",
+                  border: shouldShowError("district", isDistrictValid) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
+                  backgroundColor: shouldShowError("district", isDistrictValid) ? "#fef2f2" : "#ffffff",
+                  fontSize: "0.9rem",
+                  fontWeight: 700,
+                  color: "#0f172a",
+                  outline: "none",
+                  cursor: "pointer",
                 }}
               >
                 <option value="">Select District</option>
@@ -598,15 +632,15 @@ export default function AddressStep({
                 ))}
               </select>
               {shouldShowError("district", isDistrictValid) && (
-                <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
-                  District is required.
+                <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
+                  ⚠️ District is required.
                 </span>
               )}
             </div>
 
             <div>
-              <label htmlFor="city-input" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-                City / Town <span style={{ color: "red" }}>*</span>
+              <label htmlFor="city-input" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
+                City / Town <span style={{ color: "#dc2626" }}>*</span>
               </label>
               {DISTRICT_CITIES[relocationAddress.district] ? (
                 <select
@@ -616,10 +650,15 @@ export default function AddressStep({
                   onBlur={() => handleBlur("city")}
                   style={{
                     width: "100%",
-                    padding: "0.55rem",
-                    borderRadius: "4px",
-                    border: shouldShowError("city", isCityValid) ? "1px solid #dc3545" : "1px solid #ccc",
-                    backgroundColor: shouldShowError("city", isCityValid) ? "#fff8f8" : "#fff"
+                    padding: "0.75rem 1rem",
+                    borderRadius: "10px",
+                    border: shouldShowError("city", isCityValid) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
+                    backgroundColor: shouldShowError("city", isCityValid) ? "#fef2f2" : "#ffffff",
+                    fontSize: "0.9rem",
+                    fontWeight: 700,
+                    color: "#0f172a",
+                    outline: "none",
+                    cursor: "pointer",
                   }}
                 >
                   <option value="">Select City</option>
@@ -637,24 +676,28 @@ export default function AddressStep({
                   onBlur={() => handleBlur("city")}
                   style={{
                     width: "100%",
-                    padding: "0.55rem",
-                    borderRadius: "4px",
-                    border: shouldShowError("city", isCityValid) ? "1px solid #dc3545" : "1px solid #ccc",
-                    backgroundColor: shouldShowError("city", isCityValid) ? "#fff8f8" : "#fff"
+                    padding: "0.75rem 1rem",
+                    borderRadius: "10px",
+                    border: shouldShowError("city", isCityValid) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
+                    backgroundColor: shouldShowError("city", isCityValid) ? "#fef2f2" : "#ffffff",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                    color: "#0f172a",
+                    outline: "none",
                   }}
                 />
               )}
               {shouldShowError("city", isCityValid) && (
-                <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
-                  City / Town is required.
+                <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
+                  ⚠️ City / Town is required.
                 </span>
               )}
             </div>
           </div>
 
-          <div style={{ marginBottom: "1rem" }}>
-            <label htmlFor="postal-code" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Postal Code (5 digits) <span style={{ color: "red" }}>*</span>
+          <div style={{ marginBottom: "1.25rem" }}>
+            <label htmlFor="postal-code" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
+              Postal Code (5 digits) <span style={{ color: "#dc2626" }}>*</span>
             </label>
             <input
               id="postal-code"
@@ -666,22 +709,26 @@ export default function AddressStep({
               onBlur={() => handleBlur("postalCode")}
               style={{
                 width: "100%",
-                padding: "0.55rem",
-                borderRadius: "4px",
-                border: shouldShowError("postalCode", isPostalCodeValid) ? "1px solid #dc3545" : "1px solid #ccc",
-                backgroundColor: shouldShowError("postalCode", isPostalCodeValid) ? "#fff8f8" : "#fff"
+                padding: "0.75rem 1rem",
+                borderRadius: "10px",
+                border: shouldShowError("postalCode", isPostalCodeValid) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
+                backgroundColor: shouldShowError("postalCode", isPostalCodeValid) ? "#fef2f2" : "#ffffff",
+                fontSize: "0.9rem",
+                fontWeight: 700,
+                color: "#0f172a",
+                outline: "none",
               }}
             />
             {shouldShowError("postalCode", isPostalCodeValid) && (
-              <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
-                {!relocationAddress.postalCode ? "Postal Code is required." : "Postal Code must be exactly 5 numeric digits."}
+              <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
+                ⚠️ {!relocationAddress.postalCode ? "Postal Code is required." : "Postal Code must be exactly 5 numeric digits."}
               </span>
             )}
           </div>
 
-          <div style={{ marginBottom: "1rem" }}>
-            <label htmlFor="address-1" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Address Line 1 / Building / Shop Name <span style={{ color: "red" }}>*</span>
+          <div style={{ marginBottom: "1.25rem" }}>
+            <label htmlFor="address-1" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
+              Address Line 1 / Building / Shop Name <span style={{ color: "#dc2626" }}>*</span>
             </label>
             <input
               id="address-1"
@@ -692,22 +739,26 @@ export default function AddressStep({
               onBlur={() => handleBlur("address1")}
               style={{
                 width: "100%",
-                padding: "0.55rem",
-                borderRadius: "4px",
-                border: shouldShowError("address1", isAddress1Valid) ? "1px solid #dc3545" : "1px solid #ccc",
-                backgroundColor: shouldShowError("address1", isAddress1Valid) ? "#fff8f8" : "#fff"
+                padding: "0.75rem 1rem",
+                borderRadius: "10px",
+                border: shouldShowError("address1", isAddress1Valid) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
+                backgroundColor: shouldShowError("address1", isAddress1Valid) ? "#fef2f2" : "#ffffff",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                color: "#0f172a",
+                outline: "none",
               }}
             />
             {shouldShowError("address1", isAddress1Valid) && (
-              <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
-                Address Line 1 is required.
+              <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
+                ⚠️ Address Line 1 is required.
               </span>
             )}
           </div>
 
           <div>
-            <label htmlFor="address-2" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Address Line 2
+            <label htmlFor="address-2" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
+              Address Line 2 (Optional)
             </label>
             <input
               id="address-2"
@@ -718,64 +769,83 @@ export default function AddressStep({
               onBlur={() => handleBlur("address2")}
               style={{
                 width: "100%",
-                padding: "0.55rem",
-                borderRadius: "4px",
-                border: shouldShowError("address2", isAddress2Valid) ? "1px solid #dc3545" : "1px solid #ccc",
-                backgroundColor: shouldShowError("address2", isAddress2Valid) ? "#fff8f8" : "#fff"
+                padding: "0.75rem 1rem",
+                borderRadius: "10px",
+                border: "1px solid #cbd5e1",
+                backgroundColor: "#ffffff",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                color: "#0f172a",
+                outline: "none",
               }}
             />
           </div>
         </div>
 
+        {/* Map Location Card */}
         <div
-          className="card"
           style={{
-            padding: "1.5rem",
-            border: shouldShowError("map", isMapPinned) ? "1px solid #dc3545" : "1px solid #e0e0e0",
-            backgroundColor: shouldShowError("map", isMapPinned) ? "#fff8f8" : "#fff",
-            marginBottom: "1.5rem",
-            borderRadius: "8px",
+            backgroundColor: shouldShowError("map", isMapPinned) ? "#fef2f2" : "#ffffff",
+            borderRadius: "16px",
+            padding: "1.75rem 2rem",
+            marginBottom: "1.75rem",
+            border: shouldShowError("map", isMapPinned) ? "1.5px solid #dc2626" : "1px solid #e2e8f0",
+            boxShadow: "0 8px 30px rgba(0, 0, 0, 0.04)",
           }}
         >
-          <h4 style={{ color: "#333", marginBottom: "0.75rem", fontSize: "1.1rem" }}>
-            Relocation Location
-          </h4>
-          <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>
-            Click the button below to open the map picker, search for the location, and select the exact relocation point.
+          <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "0.75rem" }}>
+            <div style={{ backgroundColor: "#fef3c7", color: "#d97706", width: "34px", height: "34px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <FiNavigation size={18} />
+            </div>
+            <h4 style={{ margin: 0, color: "#0f172a", fontSize: "1.1rem", fontWeight: 800 }}>
+              2. Relocation Location Pinning (Map)
+            </h4>
+          </div>
+
+          <p style={{ fontSize: "0.88rem", color: "#64748b", marginBottom: "1.25rem", fontWeight: 500 }}>
+            Search for the relocation address on the interactive map and drop the exact installation pin.
           </p>
+
           <button
             type="button"
             onClick={() => setIsMapModalOpen(true)}
             style={{
-              backgroundColor: "#0056a6",
-              color: "#fff",
-              padding: "0.75rem 1.1rem",
-              borderRadius: "6px",
+              padding: "0.75rem 1.75rem",
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, #0056b3 0%, #003b73 100%)",
+              color: "#ffffff",
               border: "none",
               cursor: "pointer",
-              fontWeight: 600,
+              fontWeight: 800,
+              fontSize: "0.9rem",
               display: "inline-flex",
               alignItems: "center",
-              gap: "0.5rem",
+              gap: "0.55rem",
+              boxShadow: "0 4px 16px rgba(0, 86, 179, 0.3)",
             }}
           >
-            📍 Pick on Map
+            <FiMapPin size={18} />
+            <span>Open Interactive Map Picker</span>
           </button>
 
           {coordinates.lat !== null && coordinates.lng !== null && (
-            <div style={{ marginTop: "1rem", color: "#333", lineHeight: 1.5 }}>
-              <strong>Selected Location:</strong> {selectedPlaceName ? `${selectedPlaceName} — ` : ""}
-              {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+            <div style={{ marginTop: "1.25rem", padding: "0.85rem 1.25rem", backgroundColor: "#f0fdf4", border: "1px solid #86efac", borderRadius: "10px", color: "#14532d", fontSize: "0.88rem", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <FiCheckCircle size={18} style={{ color: "#16a34a" }} />
+              <div>
+                <strong>Selected Coordinates:</strong> {selectedPlaceName ? `${selectedPlaceName} — ` : ""}
+                ({coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}) ✓
+              </div>
             </div>
           )}
 
           {shouldShowError("map", isMapPinned) && (
-            <span style={{ display: "block", marginTop: "0.75rem", fontSize: "0.8rem", color: "#dc3545" }}>
-              Please pick a location on the map to set the exact installation point.
+            <span style={{ display: "block", marginTop: "0.75rem", fontSize: "0.8rem", color: "#dc2626", fontWeight: 700 }}>
+              ⚠️ Please pick a location on the map to set the exact installation point.
             </span>
           )}
         </div>
 
+        {/* Map Dialog Modal */}
         {isMapModalOpen && (
           <div
             style={{
@@ -784,34 +854,35 @@ export default function AddressStep({
               left: 0,
               right: 0,
               bottom: 0,
-              zIndex: 2000,
-              backgroundColor: "rgba(0, 0, 0, 0.45)",
+              zIndex: 20000,
+              backgroundColor: "rgba(15, 23, 42, 0.65)",
+              backdropFilter: "blur(6px)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: "1rem",
+              padding: "1.5rem",
             }}
           >
             <div
               style={{
                 width: "100%",
-                maxWidth: "980px",
+                maxWidth: "960px",
                 maxHeight: "90vh",
                 overflow: "auto",
-                backgroundColor: "#fff",
-                borderRadius: "12px",
-                boxShadow: "0 20px 60px rgba(0, 0, 0, 0.25)",
+                backgroundColor: "#ffffff",
+                borderRadius: "20px",
+                boxShadow: "0 25px 50px rgba(0, 0, 0, 0.25)",
                 position: "relative",
-                padding: "1.5rem",
+                padding: "1.75rem",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "1.25rem", color: "#1e293b" }}>
-                    Select Location on Map
+                  <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 900, color: "#0f172a" }}>
+                    Select Installation Location on Map
                   </h3>
-                  <p style={{ margin: "0.4rem 0 0", color: "#4b5563" }}>
-                    Search city, street or landmark and pick the point on the map.
+                  <p style={{ margin: "0.3rem 0 0", color: "#64748b", fontSize: "0.88rem", fontWeight: 500 }}>
+                    Search city, street or landmark and click on the map to drop your pin.
                   </p>
                 </div>
                 <button
@@ -819,15 +890,19 @@ export default function AddressStep({
                   onClick={() => setIsMapModalOpen(false)}
                   style={{
                     border: "none",
-                    background: "transparent",
-                    color: "#4b5563",
+                    background: "#f1f5f9",
+                    color: "#64748b",
+                    borderRadius: "50%",
+                    width: "34px",
+                    height: "34px",
                     cursor: "pointer",
-                    fontSize: "1.25rem",
-                    padding: "0.25rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                   aria-label="Close modal"
                 >
-                  ✕
+                  <FiX size={18} />
                 </button>
               </div>
 
@@ -843,9 +918,11 @@ export default function AddressStep({
                   }}
                   style={{
                     width: "100%",
-                    padding: "0.75rem 2.2rem 0.75rem 0.75rem",
-                    borderRadius: "8px",
+                    padding: "0.75rem 2.5rem 0.75rem 1rem",
+                    borderRadius: "10px",
                     border: "1px solid #cbd5e1",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
                     outline: "none",
                     boxSizing: "border-box",
                   }}
@@ -856,25 +933,19 @@ export default function AddressStep({
                     onClick={clearSearch}
                     style={{
                       position: "absolute",
-                      right: "1.5rem",
+                      right: "1.25rem",
                       top: "50%",
                       transform: "translateY(-50%)",
                       background: "none",
                       border: "none",
-                      color: "#888",
-                      fontSize: "1.1rem",
+                      color: "#94a3b8",
+                      fontSize: "1rem",
                       cursor: "pointer",
-                      padding: "2px 6px",
                     }}
                     title="Clear Search"
                   >
-                    ✕
+                    <FiX size={16} />
                   </button>
-                )}
-                {isSearching && (
-                  <span style={{ position: "absolute", right: searchQuery ? "4.2rem" : "1.5rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem", color: "#666" }}>
-                    Searching...
-                  </span>
                 )}
 
                 {showDropdown && suggestions.length > 0 && (
@@ -886,13 +957,13 @@ export default function AddressStep({
                       right: 0,
                       backgroundColor: "#ffffff",
                       border: "1px solid #cbd5e1",
-                      borderRadius: "0 0 8px 8px",
+                      borderRadius: "10px",
                       boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
                       listStyle: "none",
                       margin: 0,
                       padding: 0,
                       zIndex: 10001,
-                      maxHeight: "260px",
+                      maxHeight: "240px",
                       overflowY: "auto",
                     }}
                   >
@@ -904,52 +975,34 @@ export default function AddressStep({
                           padding: "0.85rem 1rem",
                           borderBottom: idx < suggestions.length - 1 ? "1px solid #f1f5f9" : "none",
                           cursor: "pointer",
-                          fontSize: "0.95rem",
+                          fontSize: "0.9rem",
+                          fontWeight: 600,
                           color: "#1e293b",
-                          backgroundColor: "#ffffff",
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ffffff")}
                       >
-                        <span style={{ marginRight: "0.75rem", color: "#0056a6" }}>📍</span>
-                        {item.display_name}
+                        📍 {item.display_name}
                       </li>
                     ))}
                   </ul>
-                )}
-
-                {noResultsFound && !isSearching && searchQuery.length >= 2 && (
-                  <div
-                    style={{
-                      marginTop: "0.75rem",
-                      padding: "0.75rem 0.9rem",
-                      backgroundColor: "#fff7ed",
-                      border: "1px solid #ffd8a8",
-                      borderRadius: "8px",
-                      color: "#7c2d12",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    No locations found. Try a different address or landmark.
-                  </div>
                 )}
               </div>
 
               <div
                 ref={mapContainerRef}
-                style={{ height: "420px", width: "100%", borderRadius: "10px", border: "1px solid #d1d5db", marginBottom: "1rem" }}
+                style={{ height: "420px", width: "100%", borderRadius: "14px", border: "1px solid #cbd5e1", marginBottom: "1.25rem" }}
               />
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.85rem" }}>
                 <button
                   type="button"
                   onClick={() => setIsMapModalOpen(false)}
                   style={{
-                    padding: "0.75rem 1rem",
-                    borderRadius: "8px",
-                    backgroundColor: "#f3f4f6",
-                    border: "1px solid #d1d5db",
-                    color: "#111827",
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "10px",
+                    backgroundColor: "#f1f5f9",
+                    border: "1px solid #cbd5e1",
+                    color: "#334155",
+                    fontWeight: 700,
                     cursor: "pointer",
                   }}
                 >
@@ -959,37 +1012,46 @@ export default function AddressStep({
                   type="button"
                   onClick={() => setIsMapModalOpen(false)}
                   style={{
-                    padding: "0.75rem 1rem",
-                    borderRadius: "8px",
-                    backgroundColor: "#0056a6",
+                    padding: "0.75rem 1.75rem",
+                    borderRadius: "10px",
+                    backgroundColor: "#0056b3",
                     border: "none",
                     color: "#ffffff",
+                    fontWeight: 800,
                     cursor: "pointer",
                   }}
                 >
-                  Confirm Address
+                  Confirm Location Pin
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Document Upload Section */}
+        {/* Additional Installation Details & Document Upload Section */}
         <div
-          className="card"
           style={{
-            padding: "1.5rem",
-            border: (shouldShowError("proof", isProofValid) || shouldShowError("sketch", isSketchValid)) ? "1px solid #dc3545" : "1px solid #e0e0e0",
-            backgroundColor: (shouldShowError("proof", isProofValid) || shouldShowError("sketch", isSketchValid)) ? "#fff8f8" : "#fff",
-            marginBottom: "1.5rem",
-            borderRadius: "8px",
+            backgroundColor: "#ffffff",
+            borderRadius: "16px",
+            padding: "1.75rem 2rem",
+            marginBottom: "1.75rem",
+            border: (shouldShowError("proof", isProofValid) || shouldShowError("sketch", isSketchValid)) ? "1.5px solid #dc2626" : "1px solid #e2e8f0",
+            boxShadow: "0 8px 30px rgba(0, 0, 0, 0.04)",
           }}
         >
-          <h4 style={{ color: "#333", marginBottom: "1rem", fontSize: "1.1rem" }}>Additional Installation Details</h4>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "1.25rem", borderBottom: "1px solid #f1f5f9", paddingBottom: "0.85rem" }}>
+            <div style={{ backgroundColor: "#f0fdf4", color: "#16a34a", width: "34px", height: "34px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <FiFileText size={18} />
+            </div>
+            <h4 style={{ margin: 0, color: "#0f172a", fontSize: "1.1rem", fontWeight: 800 }}>
+              3. Additional Installation Details & Address Documents
+            </h4>
+          </div>
 
-          <div style={{ marginBottom: "1.25rem" }}>
-            <label htmlFor="landmark" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Nearest Landmark <span style={{ color: "red" }}>*</span>
+          {/* Landmark Input */}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label htmlFor="landmark" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
+              Nearest Landmark <span style={{ color: "#dc2626" }}>*</span>
             </label>
             <input
               id="landmark"
@@ -1000,111 +1062,169 @@ export default function AddressStep({
               onBlur={() => handleBlur("landmark")}
               style={{
                 width: "100%",
-                padding: "0.55rem",
-                borderRadius: "4px",
-                border: shouldShowError("landmark", isLandmarkValid) ? "1px solid #dc3545" : "1px solid #ccc",
-                backgroundColor: shouldShowError("landmark", isLandmarkValid) ? "#fff8f8" : "#fff"
+                padding: "0.75rem 1rem",
+                borderRadius: "10px",
+                border: shouldShowError("landmark", isLandmarkValid) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
+                backgroundColor: shouldShowError("landmark", isLandmarkValid) ? "#fef2f2" : "#ffffff",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                color: "#0f172a",
+                outline: "none",
               }}
             />
             {shouldShowError("landmark", isLandmarkValid) && (
-              <span style={{ fontSize: "0.8rem", color: "#dc3545", marginTop: "4px", display: "block" }}>
-                Nearest Landmark is required.
+              <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
+                ⚠️ Nearest Landmark is required.
               </span>
             )}
           </div>
 
-          <div style={{ marginBottom: "1.25rem" }}>
-            <label htmlFor="proof-file" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Proof of New Address <span style={{ color: "red" }}>*</span>
-            </label>
-            <input
-              id="proof-file"
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => validateAndSetFile(e.target.files[0], setProofFile, setProofError, "Proof of address document")}
-              style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
-            />
-            <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
+          {/* Document Uploads Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.25rem" }}>
+            {/* Proof of Address File Upload Dropzone */}
+            <div>
+              <label style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.5rem" }}>
+                Proof of New Address <span style={{ color: "#dc2626" }}>*</span>
+              </label>
 
-            {proofError && <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>{proofError}</div>}
-            {showValidationErrors && !proofFile && !proofError && (
-              <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>
-                Proof of new address document is required (BRD 5.3.2).
-              </div>
-            )}
+              <label
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "1.5rem",
+                  border: proofFile ? "2px stroke #10b981" : "2px dashed #93c5fd",
+                  borderRadius: "12px",
+                  backgroundColor: proofFile ? "#f0fdf4" : "#f8fafc",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  style={{ display: "none" }}
+                  onChange={(e) => validateAndSetFile(e.target.files[0], setProofFile, setProofError, "Proof of address document")}
+                />
+                <FiUploadCloud size={30} style={{ color: proofFile ? "#16a34a" : "#0056b3", marginBottom: "0.5rem" }} />
+                {proofFile ? (
+                  <div style={{ textAlign: "center" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#15803d", display: "block" }}>
+                      📄 {proofFile.name}
+                    </span>
+                    <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>File Uploaded ✓</span>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#0056b3", display: "block" }}>
+                      Upload Proof of Address
+                    </span>
+                    <span style={{ fontSize: "0.72rem", color: "#64748b" }}>Utility Bill, Grama Niladhari, PDF, JPG up to 5MB</span>
+                  </div>
+                )}
+              </label>
 
-            {proofFile && (
-              <div style={{ color: "#0056a6", fontSize: "0.85rem", marginTop: "6px", fontWeight: "500", display: "flex", alignItems: "center", gap: "8px" }}>
-                <span>✓ Uploaded: {proofFile.name} ({(proofFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
-                <button
-                  type="button"
-                  onClick={() => { setProofFile(null); setProofError(""); }}
-                  style={{ background: "none", border: "none", color: "#dc3545", cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline" }}
-                >
-                  Remove
-                </button>
-              </div>
-            )}
+              {proofError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}>⚠️ {proofError}</div>}
+              {showValidationErrors && !proofFile && !proofError && (
+                <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}>
+                  ⚠️ Proof of new address document is required.
+                </div>
+              )}
+            </div>
+
+            {/* Route Sketch Upload Dropzone */}
+            <div>
+              <label style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.5rem" }}>
+                Route Sketch <span style={{ color: "#64748b", fontWeight: 500, fontSize: "0.8rem" }}>(Optional)</span>
+              </label>
+
+              <label
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "1.5rem",
+                  border: sketchFile ? "2px stroke #10b981" : "2px dashed #93c5fd",
+                  borderRadius: "12px",
+                  backgroundColor: sketchFile ? "#f0fdf4" : "#f8fafc",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  style={{ display: "none" }}
+                  onChange={(e) => validateAndSetFile(e.target.files[0], setSketchFile, setSketchError, "Route sketch document")}
+                />
+                <FiUploadCloud size={30} style={{ color: sketchFile ? "#16a34a" : "#0056b3", marginBottom: "0.5rem" }} />
+                {sketchFile ? (
+                  <div style={{ textAlign: "center" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#15803d", display: "block" }}>
+                      📄 {sketchFile.name}
+                    </span>
+                    <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>File Uploaded ✓</span>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#0056b3", display: "block" }}>
+                      Upload Route Sketch
+                    </span>
+                    <span style={{ fontSize: "0.72rem", color: "#64748b" }}>Handwritten map/sketch up to 5MB</span>
+                  </div>
+                )}
+              </label>
+              {sketchError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}>⚠️ {sketchError}</div>}
+            </div>
+
+            {/* Authorization Letter Upload Dropzone */}
+            <div>
+              <label style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.5rem" }}>
+                Authorization Letter <span style={{ color: "#64748b", fontWeight: 500, fontSize: "0.8rem" }}>(Optional)</span>
+              </label>
+
+              <label
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "1.5rem",
+                  border: authorizationLetterFile ? "2px stroke #10b981" : "2px dashed #93c5fd",
+                  borderRadius: "12px",
+                  backgroundColor: authorizationLetterFile ? "#f0fdf4" : "#f8fafc",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  style={{ display: "none" }}
+                  onChange={(e) => validateAndSetFile(e.target.files[0], setAuthorizationLetterFile, setAuthorizationLetterError, "Authorization letter")}
+                />
+                <FiUploadCloud size={30} style={{ color: authorizationLetterFile ? "#16a34a" : "#0056b3", marginBottom: "0.5rem" }} />
+                {authorizationLetterFile ? (
+                  <div style={{ textAlign: "center" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#15803d", display: "block" }}>
+                      📄 {authorizationLetterFile.name}
+                    </span>
+                    <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>File Uploaded ✓</span>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#0056b3", display: "block" }}>
+                      Upload Authorization Letter
+                    </span>
+                    <span style={{ fontSize: "0.72rem", color: "#64748b" }}>Letter from property owner up to 5MB</span>
+                  </div>
+                )}
+              </label>
+              {authorizationLetterError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}>⚠️ {authorizationLetterError}</div>}
+            </div>
           </div>
-
-          <div style={{ marginBottom: "1.25rem" }}>
-            <label htmlFor="sketch-file" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Route Sketch <span style={{ color: "#888", fontWeight: "400", fontSize: "0.85rem" }}>(Optional)</span>
-            </label>
-            <input
-              id="sketch-file"
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => validateAndSetFile(e.target.files[0], setSketchFile, setSketchError, "Route sketch document")}
-              style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
-            />
-            <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
-
-            {sketchError && <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>{sketchError}</div>}
-
-            {sketchFile && (
-              <div style={{ color: "#0056a6", fontSize: "0.85rem", marginTop: "6px", fontWeight: "500", display: "flex", alignItems: "center", gap: "8px" }}>
-                <span>✓ Uploaded: {sketchFile.name} ({(sketchFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
-                <button
-                  type="button"
-                  onClick={() => { setSketchFile(null); setSketchError(""); }}
-                  style={{ background: "none", border: "none", color: "#dc3545", cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline" }}
-                >
-                  Remove
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Authorization Letter (Optional) */}
-          <div style={{ marginBottom: "1.25rem" }}>
-            <label htmlFor="auth-letter-file" style={{ fontWeight: "600", display: "block", marginBottom: "0.3rem" }}>
-              Authorization Letter <span style={{ color: "#888", fontWeight: "400", fontSize: "0.85rem" }}>(Optional)</span>
-            </label>
-            <input
-              id="auth-letter-file"
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => validateAndSetFile(e.target.files[0], setAuthorizationLetterFile, setAuthorizationLetterError, "Authorization letter")}
-              style={{ display: "block", width: "100%", padding: "0.4rem 0" }}
-            />
-            <span style={{ fontSize: "0.8rem", color: "#666" }}>Supported Formats: PDF, JPG, PNG, JPEG (Max 5MB)</span>
-            {authorizationLetterError && <div style={{ color: "#dc3545", fontSize: "0.82rem", marginTop: "4px" }}>{authorizationLetterError}</div>}
-            {authorizationLetterFile && (
-              <div style={{ color: "#0056a6", fontSize: "0.85rem", marginTop: "6px", fontWeight: "500", display: "flex", alignItems: "center", gap: "8px" }}>
-                <span>✓ Uploaded: {authorizationLetterFile.name} ({(authorizationLetterFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
-                <button
-                  type="button"
-                  onClick={() => { setAuthorizationLetterFile(null); setAuthorizationLetterError(""); }}
-                  style={{ background: "none", border: "none", color: "#dc3545", cursor: "pointer", fontSize: "0.8rem", textDecoration: "underline" }}
-                >
-                  Remove
-                </button>
-              </div>
-            )}
-          </div>
-
-
         </div>
       </div>
     </div>

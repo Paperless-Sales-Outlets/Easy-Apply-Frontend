@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
 import CustomerProfileSummary from '../../components/CustomerProfileSummary';
-import { getMockCustomerProfile } from '../../utils/mockCustomerProfile';
 
 export default function TerminationWizard() {
   const navigate = useNavigate();
@@ -18,14 +17,13 @@ export default function TerminationWizard() {
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
   const totalSteps = 3;
-  const profile = useMemo(() => getMockCustomerProfile(verifiedMobile), [verifiedMobile]);
   const profileFields = [
-    { name: 'presentNumber', label: t('wizards.termination.profile.telephone'), value: profile.contactNo },
-    { name: 'fullName', label: t('wizards.termination.profile.fullName'), value: profile.fullName },
-    { name: 'nic', label: t('wizards.termination.profile.nic'), value: profile.nic },
-    { name: 'contactNo', label: t('wizards.termination.profile.mobile'), value: profile.contactNo },
-    { name: 'fixedNo', label: t('wizards.termination.profile.fixed'), value: profile.fixedNo },
-    { name: 'email', label: t('wizards.termination.profile.email'), value: profile.email },
+    { name: 'presentNumber', label: t('wizards.termination.profile.telephone'), value: verifiedMobile || '' },
+    { name: 'fullName', label: t('wizards.termination.profile.fullName'), value: '' },
+    { name: 'nic', label: t('wizards.termination.profile.nic'), value: '' },
+    { name: 'contactNo', label: t('wizards.termination.profile.mobile'), value: verifiedMobile || '' },
+    { name: 'fixedNo', label: t('wizards.termination.profile.fixed'), value: '' },
+    { name: 'email', label: t('wizards.termination.profile.email'), value: '' },
   ];
 
   const nextStep = () => {
@@ -81,26 +79,26 @@ export default function TerminationWizard() {
       {/* Progress Bar */}
       <div className="wizard-nav-wrapper">
         <div className="wizard-steps-container" style={{ display: "flex", marginBottom: "2rem", position: "relative" }}>
-        <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
-        <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
+          <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
+          <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
 
-        {[1, 2, 3].map(step => (
-          <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '50%',
-              backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
-              border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
-              color: step <= currentStep ? 'white' : 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
-            }}>
-              {step}
+          {[1, 2, 3].map(step => (
+            <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
+              <div style={{
+                width: '34px', height: '34px', borderRadius: '50%',
+                backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
+                border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
+                color: step <= currentStep ? 'white' : 'var(--text-secondary)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
+              }}>
+                {step}
+              </div>
+              <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                {step === 1 ? t('wizards.termination.steps.s1') : step === 2 ? t('wizards.termination.steps.s2') : t('wizards.termination.steps.s3')}
+              </span>
             </div>
-            <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.termination.steps.s1') : step === 2 ? t('wizards.termination.steps.s2') : t('wizards.termination.steps.s3')}
-            </span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       </div>
 
       <form ref={formRef} onSubmit={handleSubmit}>

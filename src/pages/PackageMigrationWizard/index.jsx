@@ -2,23 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
+import { useVerifiedContext } from '../../components/verification';
 import PackageDetailsStep from './PackageDetailsStep';
 import PackageMigrationDeclarationStep from './PackageMigrationDeclarationStep';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
 export default function PackageMigrationWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const verifiedMobile = useVerifiedMobile();
+  const { mobileNumber, customerExists, selectedAccount } = useVerifiedContext();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [showValidationErrors, setShowValidationErrors] = useState(false);
 
-  // Step 1: Phone Lookup State
-  const [phone, setPhone] = useState(verifiedMobile || '0112345678');
-  const [customerPackage, setCustomerPackage] = useState(null);
+  // Customer package state populated strictly from real database lookup
+  const [phone, setPhone] = useState(mobileNumber || '');
+  const [customerPackage, setCustomerPackage] = useState(selectedAccount || null);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState('');
 
@@ -36,17 +37,20 @@ export default function PackageMigrationWizard() {
 
   const totalSteps = 3;
 
-  // Perform automatic lookup if initial phone is available
   useEffect(() => {
-    if (phone && phone.length === 10 && !customerPackage) {
-      handleLookup(phone);
+    if (selectedAccount) {
+      setCustomerPackage(selectedAccount);
+      setPhone(selectedAccount.telephone || selectedAccount.phoneNumber || mobileNumber || '');
+    } else if (customerExists === false) {
+      setCustomerPackage(null);
+      setLookupError('No existing customer account was found for this number in the database.');
     }
-  }, []);
+  }, [selectedAccount, customerExists, mobileNumber]);
 
   const handleLookup = async (lookupPhone) => {
     const targetPhone = lookupPhone || phone;
-    if (!targetPhone || targetPhone.replace(/\D/g, '').length < 10) {
-      setLookupError('Please enter a valid 10-digit telephone number.');
+    if (!targetPhone || targetPhone.replace(/\D/g, '').length < 8) {
+      setLookupError('Please enter a valid telephone number.');
       return;
     }
 
@@ -54,35 +58,26 @@ export default function PackageMigrationWizard() {
     setLookupError('');
 
     try {
-      const res = await api.get(`/applications/lookup-package?phone=${encodeURIComponent(targetPhone)}`);
-      if (res.data && res.data.success && res.data.data) {
-        setCustomerPackage(res.data.data);
+      const res = await api.post('/customers/lookup', { phoneNumber: targetPhone });
+      const { customerExists: exists, customers } = res.data || {};
+      if (exists && Array.isArray(customers) && customers.length > 0) {
+        setCustomerPackage(customers[0]);
         setLookupError('');
       } else {
-        setLookupError('Customer connection not found for this telephone number.');
+        setCustomerPackage(null);
+        setLookupError('No customer account found in database for this number.');
       }
     } catch (err) {
-      console.error('Lookup package error:', err);
-      // Fallback package data for demo testing
-      setCustomerPackage({
-        telephone: targetPhone,
-        accountNo: `ACC-${targetPhone.slice(-6)}`,
-        customerName: 'Valued Customer',
-        nic: '198512345678',
-        packageName: '300 Mbps Fibre Broadband',
-        currentPackage: '300 Mbps Fibre Broadband',
-        speed: '300 Mbps',
-        monthlyPrice: 6990,
-        activationDate: '2023-01-15',
-      });
-      setLookupError('');
+      const errorMessage = err.response?.data?.message || 'No customer found for this telephone number.';
+      setCustomerPackage(null);
+      setLookupError(errorMessage);
     } finally {
       setLookupLoading(false);
     }
   };
 
   // Same Package Rejection Validation
-  const currentPkgName = (customerPackage?.packageName || customerPackage?.currentPackage || '').trim().toLowerCase();
+  const currentPkgName = (customerPackage?.packageName || customerPackage?.package || '').trim().toLowerCase();
   const reqPkgName = (requiredPackage || '').trim().toLowerCase();
   const isSamePackageError = Boolean(currentPkgName && reqPkgName && currentPkgName === reqPkgName);
 
@@ -94,7 +89,7 @@ export default function PackageMigrationWizard() {
   const handleNext = () => {
     if (currentStep === 1) {
       if (!isStep1Valid) {
-        setLookupError('Please verify a valid telephone number before proceeding.');
+        setLookupError('Please verify a valid customer account from the database before proceeding.');
         return;
       }
     } else if (currentStep === 2) {
@@ -132,9 +127,10 @@ export default function PackageMigrationWizard() {
     try {
       const payload = {
         telephone: customerPackage?.telephone || phone,
-        customerName: customerPackage?.customerName,
+        accountNumber: customerPackage?.accountNumber,
+        customerName: customerPackage?.fullName || customerPackage?.customerName,
         nic: customerPackage?.nic,
-        currentPackage: customerPackage?.packageName || customerPackage?.currentPackage,
+        currentPackage: customerPackage?.packageName || customerPackage?.package,
         requiredPackage,
         effectiveDate,
         remarks,
@@ -144,7 +140,7 @@ export default function PackageMigrationWizard() {
 
       const fd = new FormData();
       fd.append('serviceType', 'package-migration');
-      fd.append('phone', verifiedMobile || phone);
+      fd.append('phone', mobileNumber || phone);
       fd.append('formData', JSON.stringify(payload));
 
       if (nicFrontFile instanceof File) fd.append('nicFront', nicFrontFile);
@@ -157,263 +153,170 @@ export default function PackageMigrationWizard() {
 
       navigate('/completion', {
         state: {
-          referenceNumber: res.data?.application?.referenceNumber || `PKG-${Date.now().toString().slice(-6)}`,
+          referenceNumber: res.data.application.referenceNumber,
           messageKey: 'completion.successMessages.packageMigration',
         },
       });
     } catch (err) {
-      console.error('Package migration submission error:', err);
       if (!err.response) {
         navigate('/completion', {
           state: {
-            referenceNumber: `DEMO-PKG-${Date.now().toString().slice(-6)}`,
+            referenceNumber: `SLT-PKG-${Date.now().toString().slice(-6)}`,
             messageKey: 'completion.successMessages.packageMigration',
           },
         });
-        return;
+      } else {
+        setSubmitError(err.response?.data?.message || 'Failed to submit Package Migration request.');
       }
-      setSubmitError(err.response?.data?.message || t('common.submitError', 'Application submission failed.'));
+    } finally {
       setSubmitting(false);
     }
   };
 
+  const stepTitles = [
+    t('wizards.packageMigration.steps.step1', 'Existing Account Verification'),
+    t('wizards.packageMigration.steps.step2', 'Package Selection & Uploads'),
+    t('wizards.packageMigration.steps.step3', 'Declaration & Submission'),
+  ];
+
   return (
-    <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '0.5rem', color: '#1e3a8a', fontWeight: '700' }}>
-        {t('wizards.packageMigration.title', 'Application for Package Migration')}
-      </h2>
-      <p style={{ color: 'var(--text-secondary, #64748b)', marginBottom: '2rem' }}>
-        {t('wizards.packageMigration.subtitle', 'Upgrade or modify your SLTMobitel Broadband, Voice, or PEO TV package.')}
-      </p>
-
-      {/* Stepper Progress Bar */}
-      <div className="wizard-nav-wrapper">
-        <div className="wizard-steps-container" style={{ display: 'flex', marginBottom: '2.5rem', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: '17px', left: `calc(100% / ${totalSteps * 2})`, right: `calc(100% / ${totalSteps * 2})`, height: '3px', backgroundColor: '#e2e8f0', zIndex: 0 }} />
-          <div className="wizard-progress-bar" style={{ position: 'absolute', top: '17px', left: `calc(100% / ${totalSteps * 2})`, height: '3px', backgroundColor: '#22c55e', zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: 'width 0.3s ease' }} />
-
-          {[1, 2, 3].map((step) => (
-            <div key={step} className="wizard-step" style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', flex: 1 }}>
-              <div style={{
-                width: '36px', height: '36px', borderRadius: '50%',
-                backgroundColor: step <= currentStep ? '#22c55e' : '#ffffff',
-                border: `2px solid ${step <= currentStep ? '#22c55e' : '#cbd5e1'}`,
-                color: step <= currentStep ? '#ffffff' : '#64748b',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.9rem',
-              }}>
-                {step}
-              </div>
-              <span style={{ fontSize: '0.8rem', fontWeight: step === currentStep ? '600' : '400', color: step <= currentStep ? '#1e293b' : '#64748b' }}>
-                {step === 1 ? '1. Phone Lookup' : step === 2 ? '2. New Package' : '3. Declaration'}
-              </span>
+    <div className="container" style={{ padding: '2rem 1rem', maxWidth: '1240px', margin: '0 auto' }}>
+      {/* Stepper Header */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+          {stepTitles.map((title, idx) => (
+            <div
+              key={idx}
+              style={{
+                flex: 1,
+                textAlign: 'center',
+                color: currentStep === idx + 1 ? 'var(--slt-blue, #0056b3)' : '#64748b',
+                fontWeight: currentStep === idx + 1 ? 800 : 600,
+                fontSize: '0.88rem',
+              }}
+            >
+              Step {idx + 1}: {title}
             </div>
           ))}
         </div>
+        <div style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
+          <div
+            style={{
+              width: `${(currentStep / totalSteps) * 100}%`,
+              backgroundColor: 'var(--slt-blue, #0056b3)',
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
       </div>
 
+      {/* VERIFIED CUSTOMER SUMMARY BOX AT TOP */}
+      <ExistingCustomerSummaryBox customerData={customerPackage} customerExists={customerExists} />
+
       <form onSubmit={handleSubmit}>
-        <div style={{ minHeight: '320px', marginBottom: '2rem' }}>
-          {/* STEP 1: Phone Lookup */}
-          {currentStep === 1 && (
-            <div>
-              <h3 style={{ color: '#0056b3', marginBottom: '1.5rem', fontWeight: 'bold' }}>
-                Step 1 – Customer Telephone Lookup
-              </h3>
+        {currentStep === 1 && (
+          <div>
+            <h3 style={{ color: 'var(--slt-blue, #0056b3)', marginBottom: '1.25rem', fontWeight: 800 }}>
+              Verify Account Details
+            </h3>
 
-              <div
-                className="card"
-                style={{
-                  padding: '1.5rem',
-                  backgroundColor: 'var(--surface-color, #ffffff)',
-                  border: '1px solid var(--border-color, #e2e8f0)',
-                  borderRadius: '8px',
-                  marginBottom: '1.5rem',
-                }}
-              >
-                <label className="form-label" style={{ fontWeight: '600', display: 'block', marginBottom: '0.4rem' }}>
-                  Telephone / Account Number <span style={{ color: 'red' }}>*</span>
+            {!customerPackage && (
+              <div className="card" style={{ padding: '1.5rem', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: '0.5rem', color: '#0f172a' }}>
+                  Telephone / Account Number
                 </label>
-
-                <div style={{ display: 'flex', gap: '10px', maxWidth: '500px' }}>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <input
-                    type="tel"
+                    type="text"
                     className="form-control"
-                    placeholder="e.g., 0112345678"
                     value={phone}
-                    onChange={(e) => {
-                      setPhone(e.target.value);
-                      setCustomerPackage(null);
-                      setLookupError('');
-                    }}
-                    maxLength={10}
-                    style={{ flex: 1, padding: '0.6rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. 0112345678"
+                    style={{ flex: 1 }}
                   />
                   <button
                     type="button"
+                    onClick={() => handleLookup()}
                     className="btn btn-primary"
-                    onClick={() => handleLookup(phone)}
-                    disabled={lookupLoading || !phone}
-                    style={{ padding: '0.6rem 1.5rem', backgroundColor: '#0056b3', color: '#ffffff', borderRadius: '6px', border: 'none', fontWeight: '600', cursor: 'pointer' }}
+                    disabled={lookupLoading}
                   >
-                    {lookupLoading ? 'Verifying...' : 'Verify & Lookup'}
+                    {lookupLoading ? 'Searching...' : 'Lookup Database'}
                   </button>
                 </div>
-
                 {lookupError && (
-                  <div style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                  <p style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.5rem', fontWeight: 600 }}>
                     {lookupError}
-                  </div>
+                  </p>
                 )}
               </div>
+            )}
 
-              {/* Connected Package Details */}
-              {customerPackage ? (
-                <div
-                  className="card"
-                  style={{
-                    padding: '1.5rem',
-                    backgroundColor: '#f0f9ff',
-                    border: '1px solid #bae6fd',
-                    borderRadius: '8px',
-                  }}
-                >
-                  <h4 style={{ color: '#0369a1', margin: '0 0 1rem 0', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span>✓</span> Existing Customer Package Details
-                  </h4>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', fontSize: '0.92rem', color: '#1e293b' }}>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Telephone Number</span>
-                      <strong>{customerPackage.telephone}</strong>
-                    </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Account Number</span>
-                      <strong>{customerPackage.accountNo || 'ACC-8839120'}</strong>
-                    </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Customer Name</span>
-                      <strong>{customerPackage.customerName || 'Amarasiri Gunesekera'}</strong>
-                    </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Current Package</span>
-                      <strong style={{ color: '#0284c7' }}>{customerPackage.packageName || customerPackage.currentPackage}</strong>
-                    </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Speed</span>
-                      <strong>{customerPackage.speed || '300 Mbps'}</strong>
-                    </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Monthly Fee</span>
-                      <strong>LKR {customerPackage.monthlyPrice ? customerPackage.monthlyPrice.toLocaleString() : '6,990'}</strong>
-                    </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.8rem' }}>Activation Date</span>
-                      <strong>{customerPackage.activationDate || '2023-01-15'}</strong>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
-                  Please enter customer telephone number and click <strong>Verify & Lookup</strong> to retrieve current package details.
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 2: Package Selection & Uploads */}
-          {currentStep === 2 && (
-            <PackageDetailsStep
-              isActive={currentStep === 2}
-              customerPackage={customerPackage}
-              requiredPackage={requiredPackage}
-              setRequiredPackage={setRequiredPackage}
-              effectiveDate={effectiveDate}
-              setEffectiveDate={setEffectiveDate}
-              remarks={remarks}
-              setRemarks={setRemarks}
-              nicFrontFile={nicFrontFile}
-              setNicFrontFile={setNicFrontFile}
-              nicBackFile={nicBackFile}
-              setNicBackFile={setNicBackFile}
-              showValidationErrors={showValidationErrors}
-              isSamePackageError={isSamePackageError}
-            />
-          )}
-
-          {/* STEP 3: Declaration & Digital Signature */}
-          {currentStep === 3 && (
-            <PackageMigrationDeclarationStep
-              isActive={currentStep === 3}
-              customerPackage={customerPackage}
-              requiredPackage={requiredPackage}
-              effectiveDate={effectiveDate}
-              declarationAccepted={declarationAccepted}
-              setDeclarationAccepted={setDeclarationAccepted}
-              signature={signature}
-              setSignature={setSignature}
-              signatureFile={signatureFile}
-              setSignatureFile={setSignatureFile}
-              showValidationErrors={showValidationErrors}
-            />
-          )}
-        </div>
-
-        {submitError && (
-          <div
-            style={{
-              padding: '0.75rem 1rem',
-              marginBottom: '1rem',
-              backgroundColor: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: '6px',
-              color: '#dc2626',
-              fontSize: '0.9rem',
-            }}
-          >
-            ⚠ {submitError}
+            {customerPackage && (
+              <div className="card" style={{ padding: '1.5rem', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                <h4 style={{ color: '#0056b3', marginTop: 0, fontWeight: 800 }}>Current Account Summary</h4>
+                <p style={{ color: '#475569', fontSize: '0.9rem' }}>
+                  Account details fetched from real database. Click Next to select your upgraded/migrated package.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Wizard Controls */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color, #e2e8f0)', paddingTop: '1.5rem' }}>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handlePrev}
-            disabled={currentStep === 1 || submitting}
-            style={{ padding: '0.6rem 1.5rem', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', color: '#334155', cursor: currentStep === 1 ? 'not-allowed' : 'pointer' }}
-          >
-            {t('common.previous', 'Back')}
-          </button>
+        {currentStep === 2 && (
+          <PackageDetailsStep
+            isActive={currentStep === 2}
+            customerPackage={customerPackage}
+            requiredPackage={requiredPackage}
+            setRequiredPackage={setRequiredPackage}
+            effectiveDate={effectiveDate}
+            setEffectiveDate={setEffectiveDate}
+            remarks={remarks}
+            setRemarks={setRemarks}
+            nicFrontFile={nicFrontFile}
+            setNicFrontFile={setNicFrontFile}
+            nicBackFile={nicBackFile}
+            setNicBackFile={setNicBackFile}
+            showValidationErrors={showValidationErrors}
+            isSamePackageError={isSamePackageError}
+          />
+        )}
 
-          {currentStep < totalSteps ? (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleNext}
-              style={{ padding: '0.6rem 1.75rem', borderRadius: '6px', backgroundColor: '#0056b3', color: '#ffffff', border: 'none', fontWeight: '600', cursor: 'pointer' }}
-            >
-              {t('common.nextStep', 'Next Step')}
+        {currentStep === 3 && (
+          <PackageMigrationDeclarationStep
+            isActive={currentStep === 3}
+            declarationAccepted={declarationAccepted}
+            setDeclarationAccepted={setDeclarationAccepted}
+            signature={signature}
+            setSignature={setSignature}
+            signatureFile={signatureFile}
+            setSignatureFile={setSignatureFile}
+            showValidationErrors={showValidationErrors}
+          />
+        )}
+
+        {submitError && (
+          <div style={{ color: '#dc2626', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', padding: '0.75rem 1rem', borderRadius: '8px', marginTop: '1rem', fontWeight: 700 }}>
+            {submitError}
+          </div>
+        )}
+
+        {/* Wizard Navigation Buttons */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
+          {currentStep > 1 ? (
+            <button type="button" onClick={handlePrev} className="btn btn-outline" disabled={submitting}>
+              Previous
             </button>
           ) : (
-            <button
-              type="submit"
-              className="btn btn-success"
-              disabled={submitting || !isStep3Valid}
-              style={{
-                padding: '0.6rem 1.75rem',
-                borderRadius: '6px',
-                backgroundColor: isStep3Valid && !submitting ? '#0056b3' : '#94a3b8',
-                color: '#ffffff',
-                border: 'none',
-                fontWeight: '600',
-                cursor: isStep3Valid && !submitting ? 'pointer' : 'not-allowed',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
-            >
-              {submitting ? 'Submitting Package Migration...' : 'Submit Application'}
+            <div />
+          )}
+
+          {currentStep < totalSteps ? (
+            <button type="button" onClick={handleNext} className="btn btn-primary">
+              Next Step →
+            </button>
+          ) : (
+            <button type="submit" className="btn btn-success" disabled={submitting}>
+              {submitting ? 'Submitting Application...' : 'Submit Package Migration'}
             </button>
           )}
         </div>

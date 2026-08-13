@@ -44,7 +44,7 @@ export default function WizardStepper({ currentStep, steps }) {
           const statusColor = (isActive || isCompleted) ? 'var(--blue)' : 'var(--line)';
 
           return (
-            <div key={stepNum} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100px' }}>
+            <div key={stepNum} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 0, padding: '0 4px' }}>
               <motion.div
                 initial={false}
                 animate={{

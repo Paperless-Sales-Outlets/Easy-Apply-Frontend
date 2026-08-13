@@ -25,7 +25,7 @@ export default function ReconnectionWizard() {
       if (stored) {
         try {
           setSelectedProduct(JSON.parse(stored));
-        } catch (e) {}
+        } catch (e) { }
       }
     }
   }, [location.state]);
@@ -64,7 +64,7 @@ export default function ReconnectionWizard() {
     // Construct FormData for multipart/form-data submission
     const submitData = new FormData();
     submitData.append('serviceType', 'reconnection');
-    
+
     // Ensure phone is 10 digits starting with 0
     let formattedPhone = formData.verifiedMobile || '';
     if (formattedPhone && formattedPhone.length === 9) {
@@ -72,7 +72,7 @@ export default function ReconnectionWizard() {
     }
     submitData.append('phone', formattedPhone);
     delete formData.verifiedMobile;
-    
+
     // Extract digital signature base64 and delete from JSON formData to save space
     const signatureBase64 = formData.digitalSignatureBase64;
     delete formData.digitalSignatureBase64;
@@ -162,46 +162,46 @@ export default function ReconnectionWizard() {
         </div>
       )}
 
-      <WizardStepper 
-        currentStep={currentStep} 
+      <WizardStepper
+        currentStep={currentStep}
         steps={[
           'Select Services',
           'Details & Documents',
           'Checkout & Auth'
-        ]} 
+        ]}
       />
 
       <form ref={formRef} onSubmit={handleSubmit}>
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <ReconnectionDetailsStep 
-              ref={step2Ref} 
-              isActive={currentStep === 1} 
-              reconnectionData={reconnectionData} 
-              onVerifySuccess={(data) => setReconnectionData(data)} 
+            <ReconnectionDetailsStep
+              ref={step2Ref}
+              isActive={currentStep === 1}
+              reconnectionData={reconnectionData}
+              onVerifySuccess={(data) => setReconnectionData(data)}
             />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <DeclarationStep 
-              ref={step3Ref} 
-              isActive={currentStep === 2} 
+            <DeclarationStep
+              ref={step3Ref}
+              isActive={currentStep === 2}
               onPaymentIntentionChange={setPaymentIntention}
               reconnectionData={reconnectionData}
               customerType={
-                reconnectionData?.customerType === 'office' ? 'Business' 
-                : reconnectionData?.customerType === 'foreign' ? 'Foreign' 
-                : 'Residential'
-              } 
+                reconnectionData?.customerType === 'office' ? 'Business'
+                  : reconnectionData?.customerType === 'foreign' ? 'Foreign'
+                    : 'Residential'
+              }
             />
           </div>
           <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-            <PaymentStep 
-              isActive={currentStep === 3} 
+            <PaymentStep
+              isActive={currentStep === 3}
               verifiedPhone={verifiedMobile}
               amount={formRef.current ? new FormData(formRef.current).get('amountToPay') : null}
               hasPaymentReceipt={formRef.current ? (new FormData(formRef.current).get('paymentReceipt')?.size > 0) : false}
-              onSuccess={() => handleSubmit({ preventDefault: () => {} })} 
+              onSuccess={() => handleSubmit({ preventDefault: () => { } })}
             />
           </div>
         </div>
@@ -222,10 +222,10 @@ export default function ReconnectionWizard() {
             </button>
           ) : currentStep === totalSteps - 1 ? (
             <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting 
-                ? t('common.submitting') 
-                : paymentIntention === 'paid' 
-                  ? 'Submit Reconnection Request' 
+              {submitting
+                ? t('common.submitting')
+                : paymentIntention === 'paid'
+                  ? 'Submit Reconnection Request'
                   : `Proceed to Pay Rs. ${reconnectionData?.outstandingBalance || '0.00'}`
               }
             </button>

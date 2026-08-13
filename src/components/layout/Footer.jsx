@@ -9,29 +9,32 @@ export default function Footer() {
 
   return (
     <footer className="footer" style={{ padding: '2rem 0' }}>
-      <div style={{
-        maxWidth: '1600px',
-        margin: '0 auto',
-        padding: '0 1.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '1rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+      <div
+        className="footer-container"
+        style={{
+          maxWidth: '1600px',
+          margin: '0 auto',
+          padding: '0 1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}
+      >
+        <div className="footer-logos-group" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
           <img
             src={sltLogo}
             alt="SLTMobitel"
-            style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
+            style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
           />
           <img
             src={transzentLogo}
             alt="Transzent"
-            style={{ height: '28px', width: 'auto', objectFit: 'contain' }}
+            style={{ height: '24px', width: 'auto', objectFit: 'contain' }}
           />
         </div>
-        <p style={{ margin: 0 }}>{t('footer.rights', { year })}</p>
+        <p style={{ margin: 0, fontSize: '0.85rem' }}>{t('footer.rights', { year })}</p>
       </div>
     </footer>
   );

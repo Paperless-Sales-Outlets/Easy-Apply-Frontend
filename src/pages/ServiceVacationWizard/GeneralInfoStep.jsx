@@ -8,7 +8,7 @@ export default function GeneralInfoStep({ isActive }) {
   return (
     <div>
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.serviceVacation.generalInfo.heading')}</h3>
-      
+
       <div className="form-group">
         <label className="form-label">{t('wizards.serviceVacation.generalInfo.telephone')}</label>
         <input name="telephone" type="tel" className="form-control" required={isActive} />

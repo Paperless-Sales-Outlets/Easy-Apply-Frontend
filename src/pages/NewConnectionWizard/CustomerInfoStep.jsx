@@ -14,14 +14,43 @@ import {
 } from 'react-icons/fi';
 import AddressInputWithMap from '../../components/form/AddressInputWithMap';
 import api from '../../utils/api';
+import { useVerifiedContext } from '../../components/verification';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
 export default function CustomerInfoStep({ formData, handleChange, setFields }) {
   const { t } = useTranslation();
+  const { mobileNumber, customerExists, selectedAccount } = useVerifiedContext();
 
-  const [phoneSearch, setPhoneSearch] = useState(formData.mobileNumber || formData.fixedNumber || '');
+  const [phoneSearch, setPhoneSearch] = useState(formData.mobileNumber || formData.fixedNumber || mobileNumber || '');
   const [searching, setSearching] = useState(false);
-  const [checkStatus, setCheckStatus] = useState(null); // null | 'existing' | 'new'
-  const [customerRecord, setCustomerRecord] = useState(null);
+  const [checkStatus, setCheckStatus] = useState(selectedAccount ? 'existing' : customerExists === false ? 'new' : null);
+  const [customerRecord, setCustomerRecord] = useState(selectedAccount || null);
+
+  useEffect(() => {
+    if (selectedAccount && setFields) {
+      setCheckStatus('existing');
+      setCustomerRecord(selectedAccount);
+      setFields({
+        customerType: selectedAccount.customerType || 'home',
+        title: selectedAccount.title || 'Mr',
+        nameFull: selectedAccount.fullName || selectedAccount.customerName || '',
+        nic: selectedAccount.nic || '',
+        address: selectedAccount.address || selectedAccount.addressLine1 || '',
+        contactName: selectedAccount.fullName || selectedAccount.customerName || '',
+        fixedNumber: selectedAccount.telephone || '',
+        mobileNumber: selectedAccount.mobileNumber || selectedAccount.phoneNumber || mobileNumber || '',
+        email: selectedAccount.email || '',
+        isExistingCustomer: 'yes',
+        existingNumber: selectedAccount.accountNumber || selectedAccount.telephone || '',
+      });
+    } else if (customerExists === false && setFields) {
+      setCheckStatus('new');
+      setFields({
+        isExistingCustomer: 'no',
+        mobileNumber: mobileNumber || '',
+      });
+    }
+  }, [selectedAccount, customerExists, mobileNumber]);
 
   const isReadOnly = checkStatus === 'existing';
 
@@ -137,6 +166,9 @@ export default function CustomerInfoStep({ formData, handleChange, setFields }) 
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.25rem' }}>
         {t('wizards.newConnection.customerInfo.heading')}
       </h3>
+
+      {/* VERIFIED CUSTOMER SUMMARY BOX AT TOP */}
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       {/* ── HIGH-END CUSTOMER CHECK & AUTO-FILL CARD ── */}
       <div
