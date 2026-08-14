@@ -1,59 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import api from '../../utils/api';
 
 export default function PackageDetailsStep({
   isActive,
   customerPackage,
   requiredPackage,
-  setRequiredPackage,
   effectiveDate,
   setEffectiveDate,
   remarks,
   setRemarks,
   showValidationErrors,
-  isSamePackageError,
 }) {
   const { t } = useTranslation();
-  const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
   const today = new Date().toISOString().split('T')[0];
-
-  useEffect(() => {
-    let isSubscribed = true;
-    async function fetchProducts() {
-      try {
-        setLoadingProducts(true);
-        const res = await api.get('/products');
-        if (isSubscribed) {
-          const list = res.data?.data?.products || res.data?.data || res.data?.products || [];
-          setProducts(Array.isArray(list) ? list : []);
-        }
-      } catch (err) {
-        console.error('Failed to load products for package migration dropdown:', err);
-        // Fallback default packages if API fails
-        if (isSubscribed) {
-          setProducts([
-            { _id: '1', name: '300 Mbps Fibre Broadband', speed: '300 Mbps', monthlyPrice: 6990 },
-            { _id: '2', name: '500 Mbps Fibre Broadband', speed: '500 Mbps', monthlyPrice: 8990 },
-            { _id: '3', name: '1 Gbps Fibre Broadband', speed: '1 Gbps', monthlyPrice: 12990 },
-            { _id: '4', name: 'LTE Home 150 GB', speed: 'Up to 100 Mbps', monthlyPrice: 4490 },
-            { _id: '5', name: 'LTE Home 300 GB', speed: 'Up to 100 Mbps', monthlyPrice: 6490 },
-            { _id: '6', name: 'PEO TV Starter Pack', speed: 'HD Quality', monthlyPrice: 1999 },
-          ]);
-        }
-      } finally {
-        if (isSubscribed) setLoadingProducts(false);
-      }
-    }
-    fetchProducts();
-    return () => { isSubscribed = false; };
-  }, []);
 
   return (
     <div>
       <h3 style={{ color: 'var(--slt-blue, #0056b3)', marginBottom: '1.5rem', fontWeight: 'bold' }}>
-        {t('wizards.packageMigration.packageDetails.heading', 'Step 2 – Package Selection & Uploads')}
+        {t('wizards.packageMigration.packageDetails.heading', 'Step 2 – Migration Schedule')}
       </h3>
 
       {/* Customer Current Package Summary Card */}

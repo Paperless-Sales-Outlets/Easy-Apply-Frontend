@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiAlertCircle, FiCheck } from 'react-icons/fi';
 import CategoryChips from '../components/catalog/CategoryChips';
@@ -511,8 +512,8 @@ export default function ProductCatalogPage() {
 
         {/* ── Main Catalog Body Layout (Sidebar Filters + Category-Wise Products) ── */}
         <div className="catalog-layout-grid" style={{ display: 'grid', gap: '1.5rem', marginTop: '1.5rem' }}>
-          {/* Left Sidebar Filter Column — collapsed behind a toggle on mobile */}
-          <div className={`catalog-sidebar-col${showMobileFilters ? ' open' : ''}`}>
+          {/* Left Sidebar Filter Column — desktop only; hidden ≤900px in favor of the "Filters" popup below */}
+          <div className="catalog-sidebar-col">
             <SidebarFilters
               selectedTypes={selectedTypes}
               onTypeToggle={handleTypeToggle}
@@ -521,6 +522,31 @@ export default function ProductCatalogPage() {
               onClearAll={handleClearAll}
             />
           </div>
+
+          {/* Mobile/tablet filter popup. Portaled to <body> because position:fixed
+              breaks under the PageWrapper's animated (transformed) ancestor otherwise. */}
+          {showMobileFilters &&
+            createPortal(
+              <div
+                className="catalog-filter-modal-backdrop"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setShowMobileFilters(false);
+                }}
+              >
+                <div className="catalog-sidebar-col-inner">
+                  <SidebarFilters
+                    selectedTypes={selectedTypes}
+                    onTypeToggle={handleTypeToggle}
+                    selectedSpeeds={selectedSpeeds}
+                    onSpeedToggle={handleSpeedToggle}
+                    onClearAll={handleClearAll}
+                    onApply={() => setShowMobileFilters(false)}
+                    onCloseMobile={() => setShowMobileFilters(false)}
+                  />
+                </div>
+              </div>,
+              document.body
+            )}
 
           {/* Right Product Listing Area */}
           <div>

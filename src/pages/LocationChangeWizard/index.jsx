@@ -245,6 +245,7 @@ export default function LocationChangeWizard() {
                     alignItems: 'center',
                     gap: '0.5rem',
                     flex: 1,
+                    minWidth: 0,
                   }}
                 >
                   <div
@@ -275,6 +276,9 @@ export default function LocationChangeWizard() {
                       fontSize: '0.82rem',
                       fontWeight: isCurrent ? 800 : isDone ? 700 : 500,
                       color: isCurrent ? '#0056b3' : isDone ? '#10b981' : '#64748b',
+                      textAlign: 'center',
+                      wordBreak: 'break-word',
+                      maxWidth: '100%',
                     }}
                   >
                     {st.label}
