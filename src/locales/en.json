@@ -331,7 +331,10 @@
       "subtitle": "Change your existing SLT package.",
       "steps": {
         "s1": "Package Details",
-        "s2": "Payment"
+        "s2": "Payment",
+        "step1": "Existing Account Verification",
+        "step2": "Migration Schedule",
+        "step3": "Declaration & Submission"
       },
       "profile": {
         "telephone": "Telephone / Account Number",
@@ -341,7 +344,7 @@
         "existingPackage": "Existing Package"
       },
       "packageDetails": {
-        "heading": "Required Package Change",
+        "heading": "Migration Schedule",
         "requiredPackage": "Required Package",
         "effectiveDate": "With effect from",
         "remarks": "Remarks",
