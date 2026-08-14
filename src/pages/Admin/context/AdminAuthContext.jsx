@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../../../utils/api';
 
 const AdminAuthContext = createContext(null);
@@ -28,13 +28,18 @@ function clearSession() {
 
 export function AdminAuthProvider({ children }) {
   const [admin, setAdmin] = useState(() => loadSession());
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const login = async (email, password) => {
+    setLoading(true);
+    setError(null);
     try {
       const response = await api.post('/auth/login', { email, password });
       const { user, accessToken, refreshToken } = response.data;
 
       if (!['Admin', 'Staff'].includes(user.role)) {
+        setError('Admin or Staff access required for this portal.');
         return { ok: false, message: 'Admin or Staff access required for this portal.' };
       }
 
@@ -54,21 +59,39 @@ export function AdminAuthProvider({ children }) {
       return { ok: true, user: session };
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Login failed';
+      setError(message);
       return { ok: false, message };
+    } finally {
+      setLoading(false);
     }
   };
 
-  const logout = () => {
-    setAdmin(null);
-    clearSession();
+  const logout = async () => {
     try {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-    } catch { /* ignore */ }
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      setAdmin(null);
+      clearSession();
+      try {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      } catch { /* ignore */ }
+    }
+  };
+
+  const value = {
+    admin,
+    loading,
+    error,
+    login,
+    logout,
+    isAuthenticated: !!admin,
   };
 
   return (
-    <AdminAuthContext.Provider value={{ admin, login, logout }}>
+    <AdminAuthContext.Provider value={value}>
       {children}
     </AdminAuthContext.Provider>
   );
