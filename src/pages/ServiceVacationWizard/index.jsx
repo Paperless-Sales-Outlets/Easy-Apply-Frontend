@@ -52,13 +52,50 @@ export default function ServiceVacationWizard() {
     const raw = new FormData(formRef.current);
     const formData = Object.fromEntries(raw.entries());
 
+    // Prepare multipart data
+    const submitData = new FormData();
+    submitData.append('serviceType', 'service-vacation');
+    
+    let formattedPhone = verifiedMobile || formData.verifiedMobile || '';
+    if (formattedPhone && formattedPhone.length === 9) {
+      formattedPhone = '0' + formattedPhone;
+    }
+    submitData.append('phone', formattedPhone);
+    delete formData.verifiedMobile;
+
+    // Extract signature
+    const signatureBase64 = formData.digitalSignatureBase64;
+    delete formData.digitalSignatureBase64;
+    delete formData.signatureMethod;
+    delete formData.paymentIntention;
+
+    // Append JSON payload
+    submitData.append('formData', JSON.stringify(formData));
+
+    // Append standard file uploads (if any exist, e.g. Payment Receipt, Signature Doc)
+    for (let [key, value] of raw.entries()) {
+      if (value instanceof File && value.size > 0) {
+        submitData.append(key, value);
+      }
+    }
+
+    // Convert signature Base64 to Blob
+    if (signatureBase64) {
+      try {
+        const res = await fetch(signatureBase64);
+        const blob = await res.blob();
+        const signatureFile = new File([blob], 'signature.png', { type: 'image/png' });
+        submitData.append('signatureDoc', signatureFile);
+      } catch (err) {
+        console.error('Failed to convert signature to file:', err);
+      }
+    }
+
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/applications', {
-        serviceType: 'service-vacation',
-        formData,
-        phone: verifiedMobile,
+      const res = await api.post('/applications', submitData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       navigate('/completion', {
         state: {

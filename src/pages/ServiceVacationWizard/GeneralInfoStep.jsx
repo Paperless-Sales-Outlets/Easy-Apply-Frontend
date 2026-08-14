@@ -44,24 +44,38 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
     toast.success('Connection details loaded securely.', { position: 'top-center' });
   };
 
-  useEffect(() => {
-    if (verifiedMobile && !vacationData && !loading && matchedConnections.length === 0) {
-      const autoVerify = async () => {
-        setLoading(true);
-        try {
-          const res = await api.get(`/applications/lookup-connection?phone=${verifiedMobile}`);
-          if (res.data.success && res.data.data) {
-            handleApiResponse(res.data.data);
-          }
-        } catch (err) {
-          toast.error('Could not find existing connections. Please contact support.', { position: 'top-center' });
-        } finally {
-          setLoading(false);
-        }
-      };
-      autoVerify();
+  const [errorOccurred, setErrorOccurred] = useState(false);
+  const [showManualLookup, setShowManualLookup] = useState(false);
+  const [manualLookupNumber, setManualLookupNumber] = useState('');
+
+  const performLookup = async (searchNumber) => {
+    const sanitizedNumber = (searchNumber || '').toString().replace(/\D/g, '');
+    if (!sanitizedNumber) return;
+    
+    setLoading(true);
+    setErrorOccurred(false);
+    try {
+      const res = await api.get(`/applications/lookup-connection?phone=${sanitizedNumber}`);
+      if (res.data.success && res.data.data) {
+        handleApiResponse(res.data.data);
+        setShowManualLookup(false);
+      }
+    } catch (err) {
+      setErrorOccurred(true);
+      setShowManualLookup(true);
+      if (searchNumber !== verifiedMobile) {
+        toast.error('No connection found for that number. Please check and try again.', { position: 'top-center' });
+      }
+    } finally {
+      setLoading(false);
     }
-  }, [verifiedMobile, vacationData, loading, matchedConnections.length]);
+  };
+
+  useEffect(() => {
+    if (verifiedMobile && !vacationData && !loading && matchedConnections.length === 0 && !errorOccurred && !showManualLookup) {
+      performLookup(verifiedMobile);
+    }
+  }, [verifiedMobile, vacationData, loading, matchedConnections.length, errorOccurred, showManualLookup]);
 
   return (
     <div>
@@ -72,9 +86,53 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
           <SLTLoader size={48} />
           <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Searching for your connections...</p>
         </div>
-      ) : !vacationData && matchedConnections.length === 0 ? (
-        <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#fafafa', borderRadius: '12px' }}>
-          <p style={{ color: 'var(--text-secondary)' }}>No connection loaded. Please refresh or contact support.</p>
+      ) : showManualLookup && !vacationData && matchedConnections.length === 0 ? (
+        <div style={{
+          padding: '2.5rem',
+          background: 'rgba(255, 255, 255, 0.4)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255, 255, 255, 0.5)',
+          borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.05)',
+          textAlign: 'center'
+        }}>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '50%', color: '#ef4444' }}>
+              <Icon name="alert-circle" size={32} />
+            </div>
+          </div>
+          <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '1.25rem' }}>No Connection Found</h4>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '450px', margin: '0 auto 2rem', lineHeight: 1.5 }}>
+            We couldn't automatically link this mobile number to an existing SLT service. Please enter your Telephone or Account Number below to continue.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', maxWidth: '400px', margin: '0 auto', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <input 
+                type="text" 
+                className="form-control"
+                placeholder="e.g. 0112345678"
+                value={manualLookupNumber}
+                onChange={(e) => setManualLookupNumber(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && manualLookupNumber.length >= 9) performLookup(manualLookupNumber); }}
+                style={{
+                  flex: 1,
+                  background: 'rgba(255,255,255,0.7)',
+                  border: '1.5px solid rgba(15, 87, 168, 0.2)',
+                  borderRadius: '12px'
+                }}
+              />
+              <button 
+                type="button"
+                className="btn btn-primary"
+                disabled={!manualLookupNumber || manualLookupNumber.length < 9}
+                onClick={() => performLookup(manualLookupNumber)}
+                style={{ borderRadius: '12px', padding: '0 1.5rem' }}
+              >
+                Search
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 
