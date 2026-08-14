@@ -391,6 +391,8 @@ export default function HelpSupportPage() {
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
               gap: '1rem',
+              maxWidth: '80%',
+              margin: '0 auto',
             }}
           >
             {[

@@ -176,6 +176,7 @@ export default function ProductCatalogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('Popularity');
   const [viewMode, setViewMode] = useState('grid');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Cart Items State Sync (reads the same local cart used by the Cart page & navbar badge)
   const [cartItems, setCartItems] = useState(() => getLocalCart());
@@ -509,9 +510,9 @@ export default function ProductCatalogPage() {
         />
 
         {/* ── Main Catalog Body Layout (Sidebar Filters + Category-Wise Products) ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '260px minmax(0, 1fr)', gap: '1.5rem', marginTop: '1.5rem' }}>
-          {/* Left Sidebar Filter Column */}
-          <div>
+        <div className="catalog-layout-grid" style={{ display: 'grid', gap: '1.5rem', marginTop: '1.5rem' }}>
+          {/* Left Sidebar Filter Column — collapsed behind a toggle on mobile */}
+          <div className={`catalog-sidebar-col${showMobileFilters ? ' open' : ''}`}>
             <SidebarFilters
               selectedTypes={selectedTypes}
               onTypeToggle={handleTypeToggle}
@@ -531,13 +532,36 @@ export default function ProductCatalogPage() {
                 alignItems: 'center',
                 marginBottom: '1.2rem',
                 width: '100%',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
               }}
             >
               <div style={{ fontSize: '0.92rem', color: '#475569', fontWeight: 600 }}>
                 Showing <strong style={{ color: '#0f172a' }}>{filteredProducts.length}</strong> total results across categories
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="catalog-filter-toggle-btn"
+                  onClick={() => setShowMobileFilters((prev) => !prev)}
+                  style={{
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: showMobileFilters ? '#0056b3' : '#ffffff',
+                    color: showMobileFilters ? '#ffffff' : '#0f172a',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <FiSliders size={14} />
+                  <span>Filters</span>
+                </button>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <span style={{ fontSize: '0.82rem', color: '#64748b' }}>Sort by:</span>
                   <select
