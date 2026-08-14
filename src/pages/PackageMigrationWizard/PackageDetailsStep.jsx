@@ -45,7 +45,7 @@ export default function PackageDetailsStep({
         </div>
       )}
 
-      {/* Required Package Dropdown & Effective Date */}
+      {/* Effective Date & Remarks */}
       <div
         className="card"
         style={{
@@ -56,48 +56,9 @@ export default function PackageDetailsStep({
           marginBottom: '1.5rem',
         }}
       >
-        <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-          <label className="form-label" htmlFor="pm-requiredPackage" style={{ fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}>
-            {t('wizards.packageMigration.packageDetails.requiredPackage', 'Required Package')} <span style={{ color: 'red' }}>*</span>
-          </label>
-          <select
-            id="pm-requiredPackage"
-            name="requiredPackage"
-            className="form-control"
-            value={requiredPackage}
-            onChange={(e) => setRequiredPackage(e.target.value)}
-            required={isActive}
-            style={{
-              width: '100%',
-              padding: '0.6rem',
-              borderRadius: '6px',
-              border: (isSamePackageError || (showValidationErrors && !requiredPackage)) ? '1px solid #dc2626' : '1px solid #cbd5e1',
-              backgroundColor: (isSamePackageError || (showValidationErrors && !requiredPackage)) ? '#fef2f2' : '#ffffff',
-            }}
-          >
-            <option value="">-- Select Requested Package --</option>
-            {loadingProducts ? (
-              <option disabled>Loading packages...</option>
-            ) : (
-              products.map((pkg) => (
-                <option key={pkg._id || pkg.name} value={pkg.name}>
-                  {pkg.name} {pkg.speed ? `(${pkg.speed})` : ''} {pkg.monthlyPrice ? `- LKR ${pkg.monthlyPrice.toLocaleString()}/mo` : ''}
-                </option>
-              ))
-            )}
-          </select>
-
-          {isSamePackageError && (
-            <div style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.4rem', fontWeight: '500' }}>
-              Requested package cannot be the same as your current package (BRD 5.6).
-            </div>
-          )}
-
-          {showValidationErrors && !requiredPackage && !isSamePackageError && (
-            <div style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.4rem' }}>
-              Please select a requested package.
-            </div>
-          )}
+        <div style={{ marginBottom: '1.25rem', padding: '0.75rem 1rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px' }}>
+          <span style={{ fontSize: '0.75rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Requested Package</span>
+          <div style={{ fontSize: '0.95rem', color: '#14532d', fontWeight: 700 }}>{requiredPackage}</div>
         </div>
 
         {/* Effective Date */}

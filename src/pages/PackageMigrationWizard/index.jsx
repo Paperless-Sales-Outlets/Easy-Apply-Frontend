@@ -346,13 +346,11 @@ export default function PackageMigrationWizard() {
             isActive={currentStep === 2}
             customerPackage={customerPackage}
             requiredPackage={requiredPackage}
-            setRequiredPackage={setRequiredPackage}
             effectiveDate={effectiveDate}
             setEffectiveDate={setEffectiveDate}
             remarks={remarks}
             setRemarks={setRemarks}
             showValidationErrors={showValidationErrors}
-            isSamePackageError={isSamePackageError}
           />
         )}
 
