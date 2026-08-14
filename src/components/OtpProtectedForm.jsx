@@ -491,20 +491,22 @@ export default function OtpProtectedForm({ children, onVerified }) {
                       {t('otp.mobileLabel', 'Mobile Number')}
                     </label>
 
-                    <div style={{ display: 'flex' }}>
+                    <div style={{ display: 'flex', flexWrap: 'nowrap', width: '100%' }}>
                       <div
                         style={{
                           backgroundColor: '#f8fafc',
                           border: '1px solid #cbd5e1',
                           borderRight: 'none',
                           borderRadius: '12px 0 0 12px',
-                          padding: '0.85rem 1rem',
+                          padding: '0.85rem 0.75rem',
                           fontWeight: 800,
                           color: '#0f172a',
                           fontSize: '0.95rem',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '0.35rem',
+                          gap: '0.3rem',
+                          flexShrink: 0,
+                          whiteSpace: 'nowrap',
                         }}
                       >
                         <span>🇱🇰 +94</span>
@@ -524,6 +526,8 @@ export default function OtpProtectedForm({ children, onVerified }) {
                         }}
                         autoFocus
                         style={{
+                          flex: '1 1 auto',
+                          minWidth: 0,
                           width: '100%',
                           padding: '0.85rem 1rem',
                           borderRadius: '0 12px 12px 0',
