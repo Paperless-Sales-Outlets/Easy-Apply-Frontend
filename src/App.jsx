@@ -42,13 +42,14 @@ import OtpProtectedForm from './components/OtpProtectedForm';
 
 import { CartProvider } from './context/CartContext';
 
-const PageWrapper = ({ children, fullBleed = false }) => {
+const PageWrapper = ({ children, fullBleed = false, form = false }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.2 }}
+      className={fullBleed ? undefined : form ? 'page-shell--form' : 'page-shell'}
       style={{ width: '100%' }}
     >
       {children}

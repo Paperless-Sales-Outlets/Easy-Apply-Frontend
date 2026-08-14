@@ -177,6 +177,30 @@ a {
   padding: clamp(1rem, 5vw, var(--s8)) clamp(0.75rem, 5vw, 5%);
 }
 
+/* Shared route-level width caps (see PageWrapper in App.jsx). General pages
+   cap at 90%, form/wizard pages at 80%, so nothing stretches edge-to-edge on
+   wide monitors. Mobile opts out of the percentage cap in favor of full width
+   with fixed padding, which reads better on narrow screens. */
+.page-shell {
+  width: 100%;
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+.page-shell--form {
+  width: 100%;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .page-shell,
+  .page-shell--form {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+}
+
 .scroll-target {
   scroll-margin-top: 96px;
 }
@@ -736,6 +760,7 @@ a {
 
 .otp-field {
   display: flex;
+  flex-wrap: nowrap;
   margin-bottom: var(--s5);
 }
 
@@ -749,11 +774,15 @@ a {
   border-radius: var(--radius) 0 0 var(--radius);
   font-weight: 600;
   color: var(--text);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .otp-field .form-control {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .otp-fieldset {
@@ -1189,6 +1218,8 @@ a {
 
 .input-prefixed {
   display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .input-prefixed .prefix {
@@ -1201,11 +1232,15 @@ a {
   border-radius: var(--radius) 0 0 var(--radius);
   font-weight: 600;
   color: var(--text);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .input-prefixed .form-control {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .field-group {
@@ -2254,6 +2289,18 @@ a {
 @media (max-width: 600px) {
   .catalog-product-5-col-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .catalog-product-list-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .catalog-product-list-actions {
+    justify-content: space-between !important;
+    width: 100%;
   }
 }
 
