@@ -637,12 +637,16 @@ export default function ProductCatalogPage() {
 
                       {/* Section Cards Grid */}
                       <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: `repeat(${Math.min(section.products.length, 5)}, minmax(0, 1fr))`,
-                          gap: '1rem',
-                        }}
-                        className="catalog-product-5-col-grid"
+                        style={
+                          viewMode === 'list'
+                            ? { display: 'flex', flexDirection: 'column', gap: '0.85rem' }
+                            : {
+                                display: 'grid',
+                                gridTemplateColumns: `repeat(${Math.min(section.products.length, 5)}, minmax(0, 1fr))`,
+                                gap: '1rem',
+                              }
+                        }
+                        className={viewMode === 'list' ? '' : 'catalog-product-5-col-grid'}
                       >
                         {section.products.map((prod) => {
                           const prodId = String(prod._id || prod.id);
@@ -670,6 +674,7 @@ export default function ProductCatalogPage() {
                               onAddToCart={(p) => handleAddToCart(p, 1)}
                               disabled={isCategoryDisabled}
                               disabledReason={disabledReason}
+                              viewMode={viewMode}
                             />
                           );
                         })}
