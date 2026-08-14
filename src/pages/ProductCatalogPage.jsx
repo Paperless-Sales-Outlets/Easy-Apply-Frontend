@@ -642,11 +642,10 @@ export default function ProductCatalogPage() {
                             ? { display: 'flex', flexDirection: 'column', gap: '0.85rem' }
                             : {
                                 display: 'grid',
-                                gridTemplateColumns: `repeat(${Math.min(section.products.length, 5)}, minmax(0, 1fr))`,
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
                                 gap: '1rem',
                               }
                         }
-                        className={viewMode === 'list' ? '' : 'catalog-product-5-col-grid'}
                       >
                         {section.products.map((prod) => {
                           const prodId = String(prod._id || prod.id);
