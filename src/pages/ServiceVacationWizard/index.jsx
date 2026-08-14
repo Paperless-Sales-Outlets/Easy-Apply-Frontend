@@ -1,33 +1,52 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import GeneralInfoStep from './GeneralInfoStep';
-import ServiceInfoStep from './ServiceInfoStep';
-import AgreementStep from './AgreementStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
+import WizardStepper from '../../components/WizardStepper';
+
+import GeneralInfoStep from './GeneralInfoStep';
+import ServiceInfoStep from './ServiceInfoStep';
+import AgreementStep from './AgreementStep';
+import PaymentStep from '../PaymentStep';
 
 export default function ServiceVacationWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  
+  const [vacationData, setVacationData] = useState(null);
+  const [paymentIntention, setPaymentIntention] = useState('later'); // 'later', 'paid', 'gateway'
+  
   const formRef = useRef(null);
-  const totalSteps = 3;
+  const step1Ref = useRef(null);
+  const step2Ref = useRef(null);
+  const step3Ref = useRef(null);
+  
+  const totalSteps = 4;
 
   const nextStep = () => {
-    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
-    window.scrollTo(0, 0);
+    if (currentStep === 1 && step1Ref.current && !step1Ref.current.validate()) return;
+    if (currentStep === 2 && step2Ref.current && !step2Ref.current.validate()) return;
+    if (currentStep === 3 && step3Ref.current && !step3Ref.current.validate()) return;
+
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+      window.scrollTo(0, 0);
+    }
   };
+
   const prevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     if (currentStep < totalSteps) { nextStep(); return; }
 
     const raw = new FormData(formRef.current);
@@ -63,70 +82,126 @@ export default function ServiceVacationWizard() {
   };
 
   return (
-    <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.serviceVacation.title')}</h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('wizards.serviceVacation.subtitle')}</p>
 
-      {/* Progress Bar */}
-      <div className="wizard-nav-wrapper">
-        <div className="wizard-steps-container" style={{ display: "flex", marginBottom: "2rem", position: "relative" }}>
-          <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
-          <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
+    <div className="mesh-gradient-bg" style={{ minHeight: 'calc(100vh - 80px)', padding: '2rem 1rem' }}>
+      <style>{`
+        .mesh-gradient-bg {
+          background-color: #f0f8ff;
+          background-image: 
+            radial-gradient(at 0% 0%, rgba(15, 87, 168, 0.1) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(0, 204, 255, 0.1) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(15, 87, 168, 0.1) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, rgba(0, 204, 255, 0.1) 0px, transparent 50%);
+          background-size: 200% 200%;
+          animation: meshGradient 15s ease infinite alternate;
+        }
+        @keyframes meshGradient {
+          0% { background-position: 0% 0%; }
+          50% { background-position: 100% 100%; }
+          100% { background-position: 0% 100%; }
+        }
+      `}</style>
 
-          {[1, 2, 3].map(step => (
-            <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-              <div style={{
-                width: '34px', height: '34px', borderRadius: '50%',
-                backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
-                border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
-                color: step <= currentStep ? 'white' : 'var(--text-secondary)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
-              }}>
-                {step}
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+          <h1 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem', fontSize: '2rem', fontWeight: 800 }}>
+            {t('wizards.serviceVacation.title')}
+          </h1>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            {t('wizards.serviceVacation.subtitle')}
+          </p>
+        </div>
+
+
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.75)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderRadius: '24px',
+          border: '1px solid rgba(255, 255, 255, 0.6)',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8)',
+          padding: '3rem',
+          minHeight: '600px',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          
+          <WizardStepper 
+            currentStep={currentStep} 
+            steps={[
+              t('wizards.serviceVacation.steps.s1'),
+              t('wizards.serviceVacation.steps.s2'),
+              t('wizards.serviceVacation.steps.s3'),
+              t('wizards.serviceVacation.steps.s4')
+            ]} 
+          />
+
+          <form ref={formRef} onSubmit={handleSubmit}>
+            <div style={{ minHeight: '300px', marginBottom: '2rem', paddingBottom: '6rem' }}>
+              <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
+                <GeneralInfoStep 
+                  ref={step1Ref}
+                  isActive={currentStep === 1} 
+                  vacationData={vacationData}
+                  onVerifySuccess={(data) => setVacationData(data)}
+                  verifiedMobile={verifiedMobile}
+                />
               </div>
-              <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-                {step === 1 ? t('wizards.serviceVacation.steps.s1') : step === 2 ? t('wizards.serviceVacation.steps.s2') : t('wizards.serviceVacation.steps.s3')}
-              </span>
+              <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
+                <ServiceInfoStep 
+                  ref={step2Ref}
+                  isActive={currentStep === 2} 
+                />
+              </div>
+              <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
+                <AgreementStep 
+                  ref={step3Ref}
+                  isActive={currentStep === 3} 
+                  onPaymentIntentionChange={setPaymentIntention}
+                />
+              </div>
+              <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
+                <PaymentStep 
+                  isActive={currentStep === 4} 
+                  verifiedPhone={verifiedMobile}
+                  amount={vacationData?.outstandingBalance || 0}
+                  feeAmount={500}
+                  feeLabel="Vacation Fee"
+                  hasPaymentReceipt={formRef.current ? (new FormData(formRef.current).get('paymentReceipt')?.size > 0) : false}
+                  onSuccess={() => handleSubmit({ preventDefault: () => {} })} 
+                />
+              </div>
             </div>
-          ))}
+
+            {submitError && (
+              <p style={{ color: 'var(--danger, #dc3545)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                {submitError}
+              </p>
+            )}
+
+            <div style={{ 
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)',
+              width: 'calc(100% - 2rem)', maxWidth: '800px',
+              padding: '1rem 1.5rem', borderRadius: '100px',
+              background: 'rgba(255, 255, 255, 0.75)',
+              backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255,255,255,0.8)',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.05)',
+              zIndex: 100
+            }}>
+              <button type="button" className="btn btn-secondary" style={{ borderRadius: '100px', padding: '0.5rem 1.5rem', opacity: currentStep === 1 ? 0 : 1, pointerEvents: currentStep === 1 ? 'none' : 'auto' }} onClick={prevStep} disabled={submitting}>
+                {t('common.previous')}
+              </button>
+              {currentStep < totalSteps ? (
+                <button type="button" className="btn btn-primary" style={{ borderRadius: '100px', padding: '0.5rem 2rem', boxShadow: '0 4px 12px rgba(15, 87, 168, 0.3)' }} onClick={nextStep}>
+                  {t('common.nextStep')}
+                </button>
+              ) : null}
+            </div>
+          </form>
         </div>
       </div>
-
-      <form ref={formRef} onSubmit={handleSubmit}>
-
-        <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
-          <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <GeneralInfoStep isActive={currentStep === 1} />
-          </div>
-          <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <ServiceInfoStep isActive={currentStep === 2} />
-          </div>
-          <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-            <AgreementStep isActive={currentStep === 3} />
-          </div>
-        </div>
-
-        {submitError && (
-          <p style={{ color: 'var(--danger, #dc3545)', marginBottom: '1rem', fontSize: '0.9rem' }}>
-            {submitError}
-          </p>
-        )}
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-          <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
-            {t('common.previous')}
-          </button>
-          {currentStep < totalSteps ? (
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
-              {t('common.nextStep')}
-            </button>
-          ) : (
-            <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting ? t('common.submitting') : t('common.submit')}
-            </button>
-          )}
-        </div>
-      </form>
     </div>
   );
 }

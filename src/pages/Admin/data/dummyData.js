@@ -16,12 +16,12 @@ export const SYSTEM_ROLES = [
 ];
 
 export const MODULE_ACCESS = [
-  { key: 'dashboard',    label: 'Dashboard',    roles: ['Admin', 'Manager', 'SalesOfficer'] },
-  { key: 'kyc',          label: 'KYC Review',   roles: ['Admin', 'Manager'] },
-  { key: 'appointments', label: 'Appointments', roles: ['Admin', 'Manager'] },
-  { key: 'technician',   label: 'My Jobs',      roles: ['Admin', 'SalesOfficer'] },
-  { key: 'forms',        label: 'Forms',        roles: ['Admin', 'Manager'] },
-  { key: 'analytics',    label: 'Analytics',    roles: ['Admin', 'Manager'] },
+  { key: 'dashboard',    label: 'Dashboard',    roles: ['Admin', 'Staff', 'Manager', 'SalesOfficer'] },
+  { key: 'kyc',          label: 'KYC Review',   roles: ['Admin', 'Staff', 'Manager'] },
+  { key: 'appointments', label: 'Appointments', roles: ['Admin', 'Staff', 'Manager'] },
+  { key: 'technician',   label: 'My Jobs',      roles: ['Admin', 'Staff', 'SalesOfficer'] },
+  { key: 'forms',        label: 'Forms',        roles: ['Admin', 'Staff', 'Manager'] },
+  { key: 'analytics',    label: 'Analytics',    roles: ['Admin', 'Staff', 'Manager'] },
 ];
 
 // ── Applications ─────────────────────────────────────────────────────────────

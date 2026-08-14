@@ -14,6 +14,8 @@ export default function PaymentStep({
   hasPaymentReceipt = false,
   verifiedPhone,
   onSuccess,
+  feeAmount = 0,
+  feeLabel = '',
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -27,15 +29,20 @@ export default function PaymentStep({
   const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef([]);
 
+  const parsedAmount = parseFloat(amount) || 0;
+  const parsedFee = parseFloat(feeAmount) || 0;
+  const totalAmount = parsedAmount + parsedFee;
+  const formattedAmount = Number(totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+  const formattedPending = Number(parsedAmount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+  const formattedFee = Number(parsedFee).toLocaleString('en-US', { minimumFractionDigits: 2 });
+
   // Payment Status State
   const [statusState, setStatusState] = useState({
     type: null,
     message: '',
   });
 
-  const formattedAmount = amount
-    ? Number(amount).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : '1,000.00';
+
 
   useEffect(() => {
     if (phase !== 'otp') return;
@@ -83,6 +90,7 @@ export default function PaymentStep({
     setError('');
     setIsLoading(true);
 
+    // Development bypass: Accept 000000 as demo code
     if (code === '000000') {
       setPhase('verified');
       setIsLoading(false);
@@ -171,7 +179,13 @@ export default function PaymentStep({
 
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
               {otp.map((d, i) => (
-                <input key={i} ref={(el) => (inputRefs.current[i] = el)} type="tel" inputMode="numeric" maxLength={1} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleKeyDown(i, e)} style={{ width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px', border: '2px solid var(--border-color)', backgroundColor: 'var(--surface)' }} disabled={isLoading} />
+                <input key={i} ref={(el) => (inputRefs.current[i] = el)} type="tel" inputMode="numeric" maxLength={1} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleKeyDown(i, e)} 
+                style={{ 
+                  width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px', 
+                  border: '1px solid rgba(255,255,255,0.6)', 
+                  background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                  boxShadow: '0 4px 12px rgba(31, 38, 135, 0.05)'
+                }} disabled={isLoading} />
               ))}
             </div>
             
@@ -191,15 +205,51 @@ export default function PaymentStep({
             <h3 style={{ color: 'var(--slt-green)', marginBottom: '0.5rem' }}>Mobile Verified!</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem' }}>Your request is ready to be submitted.</p>
 
-            <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: '12px', textAlign: 'left', marginBottom: '2rem' }}>
-              <h4 style={{ margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>Order Summary</h4>
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '1px solid var(--line)', marginBottom: '1rem' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Pending Dues Balance</span>
-                <span style={{ fontWeight: 'bold' }}>Rs. {formattedAmount}</span>
+            <div 
+              style={{ 
+                padding: '2rem 1.5rem', borderRadius: '4px 4px 16px 16px', textAlign: 'left', marginBottom: '2rem',
+                position: 'relative',
+                background: 'rgba(255, 255, 255, 0.4)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.05)',
+                border: '1px solid rgba(255,255,255,0.5)',
+                borderTop: 'none',
+                marginTop: '10px'
+              }}
+            >
+              {/* Receipt top colored bar */}
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: 'var(--slt-blue)' }} />
+              
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', display: 'grid', placeItems: 'center', margin: '0 auto 0.5rem', color: 'var(--slt-blue)' }}>
+                  <Icon name="file-text" size={20} />
+                </div>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem' }}>Digital Receipt</h4>
               </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: parsedFee > 0 ? 'none' : '2px dashed rgba(0,0,0,0.15)', marginBottom: parsedFee > 0 ? '0.5rem' : '1rem' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Pending Dues Balance</span>
+                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Rs. {formattedPending}</span>
+              </div>
+              
+              {parsedFee > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '2px dashed rgba(0,0,0,0.15)', marginBottom: '1rem' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{feeLabel || 'Fee'}</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Rs. {formattedFee}</span>
+                </div>
+              )}
+              
+              {parsedFee > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', marginBottom: '0.5rem' }}>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>Total Due</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--slt-blue)' }}>Rs. {formattedAmount}</span>
+                </div>
+              )}
+
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Payment Method</span>
-                <span style={{ fontWeight: 'bold' }}>{hasPaymentReceipt ? 'Receipt Uploaded' : 'Pay Online Now'}</span>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Payment Method</span>
+                <span style={{ fontWeight: 700, color: 'var(--slt-blue)' }}>{hasPaymentReceipt ? 'Receipt Uploaded' : 'Pay Online Now'}</span>
               </div>
             </div>
 
@@ -209,10 +259,39 @@ export default function PaymentStep({
               </div>
             )}
 
-            <button type="button" className="btn btn-primary" style={{ width: '100%', height: '56px', fontSize: '1.1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }} onClick={handlePlaceOrder}>
-              {!hasPaymentReceipt ? <Icon name="credit-card" size={20} /> : <Icon name="file-text" size={20} />}
-              {hasPaymentReceipt ? 'Submit Request' : `Pay Rs. ${formattedAmount} & Confirm`}
-            </button>
+            <motion.button 
+              type="button" 
+              className="btn btn-primary" 
+              style={{ 
+                height: '56px', 
+                fontSize: '1.1rem', 
+                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem',
+                margin: '0 auto',
+                overflow: 'hidden', whiteSpace: 'nowrap'
+              }} 
+              initial={{ width: '100%', borderRadius: '8px' }}
+              animate={{ 
+                width: statusState.message ? '56px' : '100%',
+                borderRadius: statusState.message ? '28px' : '8px',
+                pointerEvents: statusState.message ? 'none' : 'auto',
+                opacity: statusState.message ? 0.8 : 1
+              }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              onClick={handlePlaceOrder}
+            >
+              {statusState.message ? (
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                  style={{ width: '24px', height: '24px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }}
+                />
+              ) : (
+                <>
+                  {!hasPaymentReceipt ? <Icon name="credit-card" size={20} /> : <Icon name="file-text" size={20} />}
+                  {hasPaymentReceipt ? 'Submit Request' : `Pay Rs. ${formattedAmount} & Confirm`}
+                </>
+              )}
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>

@@ -321,7 +321,7 @@
         "facilitiesRequired": "Please select at least one facility."
       },
       "declaration": {
-        "heading": "3. Customer Agreement",
+        "heading": "Customer Agreement",
         "declarationText": "I request the reactivation of the selected services and agree to the applicable reconnection charges.",
         "agreeLabel": "I accept the Terms and Conditions"
       }
@@ -354,11 +354,15 @@
       "title": "Service Vacation",
       "subtitle": "Apply for temporary service deactivation.",
       "steps": {
-        "s1": "General Info",
-        "s2": "Service Info",
-        "s3": "Agreement"
+        "s1": "General Information",
+        "s2": "Vacation Details",
+        "s3": "Agreement",
+        "s4": "Checkout & Auth"
       },
       "generalInfo": {
+        "connectionLookupTitle": "Connection Lookup",
+        "multipleConnectionsTitle": "Multiple Connections Found",
+        "multipleConnectionsSubtitle": "Please select the connection you want to put on vacation.",
         "heading": "1. General Information (Mandatory)",
         "telephone": "1.1 Customer Telephone Number",
         "fullName": "1.2 Customer Name / Company Name",
@@ -755,6 +759,9 @@
     "statusApproved": "Approved",
     "statusRejected": "Rejected",
     "statusDescription": "Your application is currently being processed. You will be notified once there is an update.",
+    "adminNote": "Admin Note",
+    "actionedBy": "Processed by",
+    "actionedAt": "Processed on",
     "notFound": "No application found with these details. Please check the reference number and NIC."
   }
 }

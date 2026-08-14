@@ -67,13 +67,21 @@ export default function CheckStatusPage() {
 
       const data = response.data || {};
       setResult({
-        status: data.status || 'pending', // 'pending' | 'approved' | 'rejected' | 'in_progress'
+        status: data.status || 'pending', // 'pending' | 'approved' | 'rejected' | 'in_progress' | 'flagged'
         serviceType: data.serviceType || 'relocation',
-        referenceNumber: refToSearch.trim(),
+        referenceNumber: data.referenceNumber || refToSearch.trim(),
         createdAt: data.createdAt || new Date().toLocaleDateString('en-LK'),
-        message: data.message || t('checkStatusPage.statusDescription', 'Your application is currently under review by our technical team.'),
+        message:
+          data.message ||
+          t(
+            'checkStatusPage.statusDescription',
+            'Your application is currently under review by our technical team.'
+          ),
         customerName: data.customerName || 'Nimal Bandara',
         telephone: data.telephone || '0774053185',
+        notes: data.notes || '',
+        actionedBy: data.actionedBy || null,
+        actionedAt: data.actionedAt || null,
       });
     } catch (error) {
       // Clean fallback object for demonstration if backend lookup is mock
@@ -420,6 +428,7 @@ export default function CheckStatusPage() {
                         </span>
                       </div>
 
+
                       <div>
                         <span style={{ display: 'block', fontSize: '0.75rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
                           Submission Date
@@ -504,13 +513,110 @@ export default function CheckStatusPage() {
                       </div>
                     </div>
 
+                    {/* Latest Status Message */}
+                    {result.message && (
+                      <div
+                        style={{
+                          marginBottom: '1.25rem',
+                          padding: '1rem 1.15rem',
+                          borderRadius: '12px',
+                          backgroundColor: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          color: '#475569',
+                          fontSize: '0.9rem',
+                          lineHeight: 1.6,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {result.message}
+                      </div>
+                    )}
+
+                    {/* Admin Note */}
+                    {result.notes && (
+                      <div
+                        style={{
+                          marginBottom: '1.25rem',
+                          padding: '1rem 1.15rem',
+                          borderRadius: '12px',
+                          backgroundColor: '#fff7ed',
+                          border: '1px solid #fed7aa',
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 900,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            color: '#c2410c',
+                            marginBottom: '0.4rem',
+                          }}
+                        >
+                          {t('checkStatusPage.adminNote', 'Admin Note')}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '0.9rem',
+                            color: '#7c2d12',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.55,
+                          }}
+                        >
+                          {result.notes}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Admin Action Metadata */}
+                    {result.actionedBy && (
+                      <div
+                        style={{
+                          marginBottom: '1.25rem',
+                          fontSize: '0.82rem',
+                          color: '#64748b',
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        <strong>{t('checkStatusPage.actionedBy', 'Actioned By')}:</strong>{' '}
+                        {result.actionedBy.name ||
+                          result.actionedBy.email ||
+                          result.actionedBy._id}
+                        {result.actionedBy._id && (
+                          <span
+                            style={{
+                              fontFamily: 'monospace',
+                              fontSize: '0.75rem',
+                            }}
+                          >
+                            {' '}
+                            (ID: {result.actionedBy._id})
+                          </span>
+                        )}
+                        {result.actionedAt && (
+                          <span style={{ marginLeft: '0.5rem' }}>
+                            {t('checkStatusPage.actionedAt', 'Actioned At')}:{' '}
+                            {new Date(result.actionedAt).toLocaleString('en-GB', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false,
+                            })}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     {/* Bottom Action Helpline Bar */}
                     <div
                       style={{
                         paddingTop: '1.25rem',
                         borderTop: '1px solid #e2e8f0',
                         display: 'flex',
-                        justify: 'space-between',
+                        justifyContent: 'space-between',
                         alignItems: 'center',
                         flexWrap: 'wrap',
                         gap: '0.85rem',
@@ -544,6 +650,7 @@ export default function CheckStatusPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
       </div>
 
       <style>{`
