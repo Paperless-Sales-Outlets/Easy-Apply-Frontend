@@ -110,15 +110,12 @@ export default function CartPage() {
     };
 
     sessionStorage.setItem('selectedProduct', JSON.stringify(selectedProductData));
-    sessionStorage.setItem('customerType', 'new');
 
-    // Navigate directly to New Connection Form Page
+    // Navigate to New Connection Form Page
     navigate('/new-connection', {
       state: {
         items,
         selectedProduct: selectedProductData,
-        customerType: 'new',
-        skipOtp: true,
       },
     });
   };

@@ -33,14 +33,13 @@ const swap = {
   transition: { duration: 0.2, ease: 'easeOut' },
 };
 
-export default function OtpProtectedForm({ children, onVerified, skipOtp: skipProp }) {
+export default function OtpProtectedForm({ children, onVerified }) {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const isSkip = skipProp || location.state?.skipOtp || sessionStorage.getItem('customerType') === 'new';
 
-  const [phase, setPhase] = useState(isSkip ? 'verified' : 'mobile'); // 'mobile' | 'otp' | 'lookup' | 'account-select' | 'new-customer-redirect' | 'verified'
-  const [done, setDone] = useState(isSkip);
+  const [phase, setPhase] = useState('mobile'); // 'mobile' | 'otp' | 'lookup' | 'account-select' | 'new-customer-redirect' | 'verified'
+  const [done, setDone] = useState(false);
   const [mobileNumber, setMobileNumber] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
@@ -90,13 +89,9 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
   }, [phase, navigate]);
 
   useEffect(() => {
-    if (isSkip) {
-      setDone(true);
-      return;
-    }
     setPhase('mobile');
     setDone(false);
-  }, [isSkip, location.pathname]);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!done || !onVerified) return;
@@ -188,9 +183,9 @@ export default function OtpProtectedForm({ children, onVerified, skipOtp: skipPr
   useEffect(() => {
     if (phase !== 'verified') return;
     if (mobileNumber) sessionStorage.setItem('verifiedPhone', mobileNumber);
-    const id = setTimeout(() => setDone(true), isSkip ? 0 : 700);
+    const id = setTimeout(() => setDone(true), 700);
     return () => clearTimeout(id);
-  }, [phase, mobileNumber, isSkip]);
+  }, [phase, mobileNumber]);
 
   const handleMobileSubmit = async (e) => {
     e.preventDefault();
