@@ -11,10 +11,6 @@ export default function PackageDetailsStep({
   setEffectiveDate,
   remarks,
   setRemarks,
-  nicFrontFile,
-  setNicFrontFile,
-  nicBackFile,
-  setNicBackFile,
   showValidationErrors,
   isSamePackageError,
 }) {
@@ -188,71 +184,6 @@ export default function PackageDetailsStep({
             placeholder="Any specific instructions or preferences regarding the package migration..."
             style={{ width: '100%', padding: '0.55rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
           />
-        </div>
-      </div>
-
-      {/* Mandatory Document Uploads (NIC Front & Back) */}
-      <div
-        className="card"
-        style={{
-          padding: '1.5rem',
-          backgroundColor: 'var(--surface-color, #ffffff)',
-          border: (showValidationErrors && (!nicFrontFile || !nicBackFile)) ? '1px solid #dc2626' : '1px solid var(--border-color, #e2e8f0)',
-          borderRadius: '8px',
-          marginBottom: '1.5rem',
-        }}
-      >
-        <h4 style={{ color: '#1e293b', margin: '0 0 1rem 0', fontSize: '1.05rem', fontWeight: '600' }}>
-          Customer Identification Documents <span style={{ color: 'red' }}>*</span>
-        </h4>
-        <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '1rem' }}>
-          Both NIC Front and NIC Back document uploads are mandatory for package migration requests.
-        </p>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-          <div>
-            <label className="form-label" style={{ fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}>
-              NIC Front (or Passport) <span style={{ color: 'red' }}>*</span>
-            </label>
-            <input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              className="form-control"
-              onChange={(e) => setNicFrontFile(e.target.files[0] || null)}
-              style={{ width: '100%', padding: '0.4rem 0' }}
-            />
-            {nicFrontFile ? (
-              <div style={{ color: '#0056b3', fontSize: '0.85rem', marginTop: '0.3rem', fontWeight: '500' }}>
-                {nicFrontFile.name} ({(nicFrontFile.size / (1024 * 1024)).toFixed(2)} MB)
-              </div>
-            ) : showValidationErrors && (
-              <div style={{ color: '#dc2626', fontSize: '0.82rem', marginTop: '0.3rem' }}>
-                NIC Front document is required.
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="form-label" style={{ fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}>
-              NIC Back <span style={{ color: 'red' }}>*</span>
-            </label>
-            <input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              className="form-control"
-              onChange={(e) => setNicBackFile(e.target.files[0] || null)}
-              style={{ width: '100%', padding: '0.4rem 0' }}
-            />
-            {nicBackFile ? (
-              <div style={{ color: '#0056b3', fontSize: '0.85rem', marginTop: '0.3rem', fontWeight: '500' }}>
-                {nicBackFile.name} ({(nicBackFile.size / (1024 * 1024)).toFixed(2)} MB)
-              </div>
-            ) : showValidationErrors && (
-              <div style={{ color: '#dc2626', fontSize: '0.82rem', marginTop: '0.3rem' }}>
-                NIC Back document is required.
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
