@@ -8,7 +8,7 @@ import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
 import SkeletonCard from '../components/catalog/SkeletonCard';
 import Toast from '../components/common/Toast';
 import HeroBannerCarousel from '../components/catalog/HeroBannerCarousel';
-import { getProducts, addToCart, getCart } from '../services/productService';
+import { getProducts, addToCart, getLocalCart, clearCart } from '../services/productService';
 
 const DEFAULT_MOCKUP_PRODUCTS = [
   // ── 🌐 Broadband Category (5 Packages) ──
@@ -177,26 +177,17 @@ export default function ProductCatalogPage() {
   const [sortBy, setSortBy] = useState('Popularity');
   const [viewMode, setViewMode] = useState('grid');
 
-  // Cart Items State Sync
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const stored = localStorage.getItem('cart');
-      return stored ? JSON.parse(stored).items || [] : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  // Cart Items State Sync (reads the same local cart used by the Cart page & navbar badge)
+  const [cartItems, setCartItems] = useState(() => getLocalCart());
 
   useEffect(() => {
-    const syncCart = () => {
-      try {
-        const stored = localStorage.getItem('cart');
-        setCartItems(stored ? JSON.parse(stored).items || [] : []);
-      } catch (e) {}
-    };
-
+    const syncCart = () => setCartItems(getLocalCart());
+    window.addEventListener('easyapply:cart-updated', syncCart);
     window.addEventListener('storage', syncCart);
-    return () => window.removeEventListener('storage', syncCart);
+    return () => {
+      window.removeEventListener('easyapply:cart-updated', syncCart);
+      window.removeEventListener('storage', syncCart);
+    };
   }, []);
 
   // Favorites & Toast
@@ -275,10 +266,10 @@ export default function ProductCatalogPage() {
 
     cartItems.forEach((item) => {
       const p = item.product || item;
-      const id = String(p._id || p.id || item.productId || '');
+      const id = String(item.productId || p._id || p.id || '');
       if (id) selectedProdIds.add(id);
 
-      const cat = (p.category || p.name || '').toLowerCase();
+      const cat = (p.category || item.category || p.name || item.productName || '').toLowerCase();
       if (cat.includes('voice')) categoriesInCart.add('Voice');
       else if (cat.includes('peo')) categoriesInCart.add('PEO TV');
       else categoriesInCart.add('Broadband');
@@ -306,10 +297,7 @@ export default function ProductCatalogPage() {
 
     try {
       await addToCart(prod, qty);
-      const newItems = [...cartItems, { productId: prodId, quantity: qty, product: prod }];
-      setCartItems(newItems);
-      localStorage.setItem('cart', JSON.stringify({ items: newItems }));
-      window.dispatchEvent(new Event('storage'));
+      setCartItems(getLocalCart());
 
       if (group !== 'Voice' && !cartCategoryAnalysis.hasVoice) {
         showToast(`Added ${prod.name}! Remember: 1 Voice package is COMPULSORY to checkout.`, 'info');
@@ -321,10 +309,9 @@ export default function ProductCatalogPage() {
     }
   };
 
-  const handleClearCartSelection = () => {
+  const handleClearCartSelection = async () => {
+    await clearCart();
     setCartItems([]);
-    localStorage.removeItem('cart');
-    window.dispatchEvent(new Event('storage'));
     showToast('Selection reset. All packages are now unselected.', 'info');
   };
 
