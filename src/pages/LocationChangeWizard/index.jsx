@@ -156,7 +156,6 @@ export default function LocationChangeWizard() {
     <div
       style={{
         width: '100%',
-        maxWidth: '1240px',
         margin: '0 auto',
         padding: '2rem 1.5rem',
       }}
