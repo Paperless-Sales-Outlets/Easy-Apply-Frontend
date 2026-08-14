@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiFilter, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FiFilter, FiChevronDown, FiChevronUp, FiX } from 'react-icons/fi';
 
 const PRODUCT_TYPES = [
   { id: 'Fibre Broadband', label: 'Fibre Broadband' },
@@ -22,9 +22,9 @@ export default function SidebarFilters({
   selectedSpeeds = [],
   onSpeedToggle,
   onClearAll,
+  onApply,
+  onCloseMobile,
 }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-
   return (
     <aside
       style={{
@@ -50,19 +50,42 @@ export default function SidebarFilters({
         <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>
           Filter Products
         </div>
-        <button
-          onClick={onClearAll}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#0056b3',
-            fontSize: '0.82rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
-        >
-          Clear All
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <button
+            onClick={onClearAll}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#0056b3',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Clear All
+          </button>
+          {onCloseMobile && (
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              aria-label="Close filters"
+              className="catalog-filter-close-btn"
+              style={{
+                background: '#f1f5f9',
+                border: 'none',
+                borderRadius: '8px',
+                width: '30px',
+                height: '30px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#334155',
+                cursor: 'pointer',
+              }}
+            >
+              <FiX size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filter Body */}
@@ -146,7 +169,7 @@ export default function SidebarFilters({
         {/* Apply Filters Button */}
         <div style={{ marginTop: '0.5rem' }}>
           <button
-            onClick={() => { }}
+            onClick={onApply}
             style={{
               width: '100%',
               backgroundColor: '#0056b3',

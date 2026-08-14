@@ -2280,6 +2280,10 @@ a {
   display: none;
 }
 
+.catalog-filter-close-btn {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .catalog-layout-grid {
     grid-template-columns: 1fr;
@@ -2293,8 +2297,42 @@ a {
     display: none;
   }
 
-  .catalog-sidebar-col.open {
-    display: block;
+  .catalog-filter-close-btn {
+    display: flex;
+  }
+}
+
+/* Mobile/tablet filter popup — a bottom-sheet, portaled to <body> (see
+   ProductCatalogPage.jsx) so it isn't affected by the page-transition
+   wrapper's transform, which would otherwise break position:fixed. */
+.catalog-filter-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.catalog-filter-modal-backdrop .catalog-sidebar-col-inner {
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: catalogSheetUp 0.2s ease-out;
+}
+
+.catalog-filter-modal-backdrop .catalog-sidebar-col-inner aside {
+  border-radius: 16px 16px 0 0;
+  border-bottom: none;
+}
+
+@keyframes catalogSheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 
