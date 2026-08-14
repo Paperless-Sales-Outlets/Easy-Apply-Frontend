@@ -273,12 +273,13 @@ export default function LocationChangeWizard() {
                   </div>
                   <span
                     style={{
-                      fontSize: '0.82rem',
+                      fontSize: 'clamp(0.68rem, 2.3vw, 0.82rem)',
                       fontWeight: isCurrent ? 800 : isDone ? 700 : 500,
                       color: isCurrent ? '#0056b3' : isDone ? '#10b981' : '#64748b',
                       textAlign: 'center',
-                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
                       maxWidth: '100%',
+                      lineHeight: 1.2,
                     }}
                   >
                     {st.label}
