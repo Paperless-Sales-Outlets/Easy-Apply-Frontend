@@ -274,7 +274,7 @@ const AnimatedRoutes = () => {
             </PageWrapper>
           }
         />
-        
+
         <Route
           path="/check-status"
           element={

@@ -82,6 +82,7 @@ export default function ServiceVacationWizard() {
   };
 
   return (
+
     <div className="mesh-gradient-bg" style={{ minHeight: 'calc(100vh - 80px)', padding: '2rem 1rem' }}>
       <style>{`
         .mesh-gradient-bg {
@@ -110,6 +111,7 @@ export default function ServiceVacationWizard() {
             {t('wizards.serviceVacation.subtitle')}
           </p>
         </div>
+
 
         <div style={{
           background: 'rgba(255, 255, 255, 0.75)',

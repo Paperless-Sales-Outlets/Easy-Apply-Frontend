@@ -7,12 +7,17 @@ import SLTLoader from '../../components/SLTLoader';
 import api from '../../utils/api';
 
 const FacilityCard = ({ id, icon, label, checked, onChange }) => (
-  <motion.label 
-    whileHover={{ scale: 1.02, y: -4, borderColor: 'rgba(15, 87, 168, 0.5)', boxShadow: '0 12px 28px rgba(15, 87, 168, 0.15)' }}
+  <motion.label
+    whileHover={{
+      scale: 1.02,
+      y: -4,
+      borderColor: 'rgba(15, 87, 168, 0.5)',
+      boxShadow: '0 12px 28px rgba(15, 87, 168, 0.15)',
+    }}
     whileTap={{ scale: 0.98 }}
-    style={{ 
-      display: 'flex', alignItems: 'center', gap: '1rem', 
-      padding: '1.25rem', borderRadius: '16px', 
+    style={{
+      display: 'flex', alignItems: 'center', gap: '1rem',
+      padding: '1.25rem', borderRadius: '16px',
       border: checked ? '2px solid var(--slt-blue)' : '1px solid rgba(0,0,0,0.06)',
       backgroundColor: checked ? 'rgba(15, 87, 168, 0.03)' : '#ffffff',
       boxShadow: checked ? '0 12px 24px rgba(15, 87, 168, 0.15)' : '0 4px 20px rgba(0,0,0,0.04)',
@@ -21,13 +26,13 @@ const FacilityCard = ({ id, icon, label, checked, onChange }) => (
     }}
   >
     <input type="checkbox" name={`facility_${id}`} style={{ display: 'none' }} checked={checked} onChange={() => onChange(id)} />
-    
+
     {/* Soft Circular Icon Background */}
-    <div style={{ 
-      width: '48px', height: '48px', borderRadius: '50%', display: 'grid', placeItems: 'center', 
-      backgroundColor: checked ? 'var(--slt-blue)' : 'rgba(15, 87, 168, 0.08)', 
-      color: checked ? '#ffffff' : 'var(--slt-blue)', 
-      transition: 'all 0.3s ease' 
+    <div style={{
+      width: '48px', height: '48px', borderRadius: '50%', display: 'grid', placeItems: 'center',
+      backgroundColor: checked ? 'var(--slt-blue)' : 'rgba(15, 87, 168, 0.08)',
+      color: checked ? '#ffffff' : 'var(--slt-blue)',
+      transition: 'all 0.3s ease'
     }}>
       <Icon name={icon} size={22} />
     </div>
@@ -35,7 +40,7 @@ const FacilityCard = ({ id, icon, label, checked, onChange }) => (
     <span style={{ fontWeight: 600, fontSize: '1.05rem', flex: 1, color: checked ? 'var(--slt-blue)' : 'var(--text-primary)', transition: 'color 0.3s' }}>
       {label}
     </span>
-    
+
     {/* Modern Circular Checkbox Indicator */}
     <div style={{
       width: '24px', height: '24px', borderRadius: '50%',
@@ -174,7 +179,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
       {/* Facilities — at least one required */}
       <div className="form-group">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-          
+
           <FacilityCard id="idd" icon="globe" label={t('wizards.reconnection.reconnectionDetails.idd')} checked={!!checkedFacilities['idd']} onChange={toggleFacility} />
           <FacilityCard id="peoTv" icon="tv" label={t('wizards.reconnection.reconnectionDetails.peoTv')} checked={!!checkedFacilities['peoTv']} onChange={toggleFacility} />
           <FacilityCard id="sltPlus" icon="plus-circle" label={t('wizards.reconnection.reconnectionDetails.sltPlus')} checked={!!checkedFacilities['sltPlus']} onChange={toggleFacility} />

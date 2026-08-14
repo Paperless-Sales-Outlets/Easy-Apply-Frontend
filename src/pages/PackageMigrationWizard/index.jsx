@@ -1,55 +1,161 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PackageDetailsStep from './PackageDetailsStep';
-import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
-import CustomerProfileSummary from '../../components/CustomerProfileSummary';
-import { getMockCustomerProfile } from '../../utils/mockCustomerProfile';
+import { useVerifiedContext } from '../../components/verification';
+import PackageDetailsStep from './PackageDetailsStep';
+import PackageMigrationDeclarationStep from './PackageMigrationDeclarationStep';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
 export default function PackageMigrationWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const verifiedMobile = useVerifiedMobile();
+  const { mobileNumber, customerExists, selectedAccount } = useVerifiedContext();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const formRef = useRef(null);
-  const totalSteps = 2;
-  const profile = useMemo(() => getMockCustomerProfile(verifiedMobile), [verifiedMobile]);
-  const profileFields = [
-    { name: 'telephone', label: t('wizards.packageMigration.profile.telephone'), value: profile.contactNo },
-    { name: 'fullName', label: t('wizards.packageMigration.profile.fullName'), value: profile.fullName },
-    { name: 'nic', label: t('wizards.packageMigration.profile.nic'), value: profile.nic },
-    { name: 'contactNo', label: t('wizards.packageMigration.profile.contactNo'), value: profile.contactNo },
-    { name: 'existingPackage', label: t('wizards.packageMigration.profile.existingPackage'), value: profile.existingPackage },
-  ];
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
-  const nextStep = () => {
-    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+  // Customer package state populated strictly from real database lookup
+  const [phone, setPhone] = useState(mobileNumber || '');
+  const [customerPackage, setCustomerPackage] = useState(selectedAccount || null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState('');
+
+  // Step 2: Migration Parameters State
+  const [requiredPackage, setRequiredPackage] = useState('');
+  const [effectiveDate, setEffectiveDate] = useState('');
+  const [remarks, setRemarks] = useState('');
+  const [nicFrontFile, setNicFrontFile] = useState(null);
+  const [nicBackFile, setNicBackFile] = useState(null);
+
+  // Step 3: Declaration & Signature State
+  const [declarationAccepted, setDeclarationAccepted] = useState(false);
+  const [signature, setSignature] = useState('');
+  const [signatureFile, setSignatureFile] = useState(null);
+
+  const totalSteps = 3;
+
+  useEffect(() => {
+    if (selectedAccount) {
+      setCustomerPackage(selectedAccount);
+      setPhone(selectedAccount.telephone || selectedAccount.phoneNumber || mobileNumber || '');
+    } else if (customerExists === false) {
+      setCustomerPackage(null);
+      setLookupError('');
+    }
+  }, [selectedAccount, customerExists, mobileNumber]);
+
+  const handleLookup = async (lookupPhone) => {
+    const targetPhone = lookupPhone || phone;
+    if (!targetPhone || targetPhone.replace(/\D/g, '').length < 8) {
+      setLookupError('Please enter a valid telephone number.');
+      return;
+    }
+
+    setLookupLoading(true);
+    setLookupError('');
+
+    try {
+      const res = await api.post('/customers/lookup', { phoneNumber: targetPhone });
+      const { customerExists: exists, customers } = res.data || {};
+      if (exists && Array.isArray(customers) && customers.length > 0) {
+        setCustomerPackage(customers[0]);
+        setLookupError('');
+      } else {
+        setCustomerPackage(null);
+        setLookupError('First you need to buy or activate a new product.');
+        setTimeout(() => {
+          navigate('/new-connection/products');
+        }, 2500);
+      }
+    } catch (err) {
+      setCustomerPackage(null);
+      setLookupError('First you need to buy or activate a new product.');
+      setTimeout(() => {
+        navigate('/new-connection/products');
+      }, 2500);
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  // Same Package Rejection Validation
+  const currentPkgName = (customerPackage?.packageName || customerPackage?.package || '').trim().toLowerCase();
+  const reqPkgName = (requiredPackage || '').trim().toLowerCase();
+  const isSamePackageError = Boolean(currentPkgName && reqPkgName && currentPkgName === reqPkgName);
+
+  // Step Validations
+  const isStep1Valid = Boolean(customerPackage);
+  const isStep2Valid = Boolean(requiredPackage) && !isSamePackageError && Boolean(effectiveDate) && Boolean(nicFrontFile) && Boolean(nicBackFile);
+  const isStep3Valid = declarationAccepted && (Boolean(signature) || Boolean(signatureFile));
+
+  const handleNext = () => {
+    if (currentStep === 1) {
+      if (!isStep1Valid) {
+        setLookupError('Please verify a valid customer account from the database before proceeding.');
+        return;
+      }
+    } else if (currentStep === 2) {
+      if (!isStep2Valid) {
+        setShowValidationErrors(true);
+        return;
+      }
+    }
+    setShowValidationErrors(false);
+    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);
   };
-  const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+
+  const handlePrev = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (currentStep < totalSteps) { nextStep(); return; }
 
-    const raw = new FormData(formRef.current);
-    const formData = Object.fromEntries(raw.entries());
+    if (currentStep < totalSteps) {
+      handleNext();
+      return;
+    }
+
+    if (!isStep3Valid) {
+      setShowValidationErrors(true);
+      return;
+    }
 
     setSubmitting(true);
     setSubmitError('');
+
     try {
-      const res = await api.post('/applications', {
-        serviceType: 'package-migration',
-        formData,
-        phone: verifiedMobile,
+      const payload = {
+        telephone: customerPackage?.telephone || phone,
+        accountNumber: customerPackage?.accountNumber,
+        customerName: customerPackage?.fullName || customerPackage?.customerName,
+        nic: customerPackage?.nic,
+        currentPackage: customerPackage?.packageName || customerPackage?.package,
+        requiredPackage,
+        effectiveDate,
+        remarks,
+        declarationAccepted,
+        signature: signature || null,
+      };
+
+      const fd = new FormData();
+      fd.append('serviceType', 'package-migration');
+      fd.append('phone', mobileNumber || phone);
+      fd.append('formData', JSON.stringify(payload));
+
+      if (nicFrontFile instanceof File) fd.append('nicFront', nicFrontFile);
+      if (nicBackFile instanceof File) fd.append('nicBack', nicBackFile);
+      if (signatureFile instanceof File) fd.append('signatureFile', signatureFile);
+
+      const res = await api.post('/applications', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
+
       navigate('/completion', {
         state: {
           referenceNumber: res.data.application.referenceNumber,
@@ -60,79 +166,164 @@ export default function PackageMigrationWizard() {
       if (!err.response) {
         navigate('/completion', {
           state: {
-            referenceNumber: `DEMO-${Date.now().toString().slice(-6)}`,
+            referenceNumber: `SLT-PKG-${Date.now().toString().slice(-6)}`,
             messageKey: 'completion.successMessages.packageMigration',
           },
         });
-        return;
+      } else {
+        setSubmitError(err.response?.data?.message || 'Failed to submit Package Migration request.');
       }
-      setSubmitError(err.response?.data?.message || t('common.submitError'));
+    } finally {
       setSubmitting(false);
     }
   };
 
+  const stepTitles = [
+    t('wizards.packageMigration.steps.step1', 'Existing Account Verification'),
+    t('wizards.packageMigration.steps.step2', 'Package Selection & Uploads'),
+    t('wizards.packageMigration.steps.step3', 'Declaration & Submission'),
+  ];
+
   return (
-    <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.packageMigration.title')}</h2>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('wizards.packageMigration.subtitle')}</p>
-
-      {/* Progress Bar */}
-      <div className="wizard-nav-wrapper">
-        <div className="wizard-steps-container" style={{ display: "flex", marginBottom: "2rem", position: "relative" }}>
-        <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
-        <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
-
-        {[1, 2].map(step => (
-          <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '50%',
-              backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
-              border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
-              color: step <= currentStep ? 'white' : 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
-            }}>
-              {step}
+    <div className="container" style={{ padding: '2rem 1rem', maxWidth: '1240px', margin: '0 auto' }}>
+      {/* Stepper Header */}
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+          {stepTitles.map((title, idx) => (
+            <div
+              key={idx}
+              style={{
+                flex: 1,
+                textAlign: 'center',
+                color: currentStep === idx + 1 ? 'var(--slt-blue, #0056b3)' : '#64748b',
+                fontWeight: currentStep === idx + 1 ? 800 : 600,
+                fontSize: '0.88rem',
+              }}
+            >
+              Step {idx + 1}: {title}
             </div>
-            <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.packageMigration.steps.s1') : t('wizards.packageMigration.steps.s2')}
-            </span>
-          </div>
-        ))}
-      </div>
-      </div>
-
-      <form ref={formRef} onSubmit={handleSubmit}>
-
-        <CustomerProfileSummary fields={profileFields} />
-
-        <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
-          <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <PackageDetailsStep isActive={currentStep === 1} />
-          </div>
-          <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <PaymentStep isActive={currentStep === 2} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
-          </div>
+          ))}
         </div>
+        <div style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
+          <div
+            style={{
+              width: `${(currentStep / totalSteps) * 100}%`,
+              backgroundColor: 'var(--slt-blue, #0056b3)',
+              transition: 'width 0.3s ease',
+            }}
+          />
+        </div>
+      </div>
 
-        {submitError && (
-          <p style={{ color: 'var(--danger, #dc3545)', marginBottom: '1rem', fontSize: '0.9rem' }}>
-            {submitError}
-          </p>
+      {/* VERIFIED CUSTOMER SUMMARY BOX AT TOP */}
+      <ExistingCustomerSummaryBox customerData={customerPackage} customerExists={customerExists} />
+
+      <form onSubmit={handleSubmit}>
+        {currentStep === 1 && (
+          <div>
+            <h3 style={{ color: 'var(--slt-blue, #0056b3)', marginBottom: '1.25rem', fontWeight: 800 }}>
+              Verify Account Details
+            </h3>
+
+            {!customerPackage && (
+              <div className="card" style={{ padding: '1.5rem', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: '0.5rem', color: '#0f172a' }}>
+                  Telephone / Account Number
+                </label>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. 0112345678"
+                    style={{ flex: 1 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleLookup()}
+                    className="btn btn-primary"
+                    disabled={lookupLoading}
+                  >
+                    {lookupLoading ? 'Searching...' : 'Lookup Database'}
+                  </button>
+                </div>
+                {lookupError && (
+                  <p style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.5rem', fontWeight: 600 }}>
+                    {lookupError}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {customerPackage && (
+              <div className="card" style={{ padding: '1.5rem', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
+                <h4 style={{ color: '#0056b3', marginTop: 0, fontWeight: 800 }}>Current Account Summary</h4>
+                <p style={{ color: '#475569', fontSize: '0.9rem' }}>
+                  Account details fetched from real database. Click Next to select your upgraded/migrated package.
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-          <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
-            {t('common.previous')}
-          </button>
-          {currentStep < totalSteps - 1 ? (
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
-              {t('common.nextStep')}
+        {currentStep === 2 && (
+          <PackageDetailsStep
+            isActive={currentStep === 2}
+            customerPackage={customerPackage}
+            requiredPackage={requiredPackage}
+            setRequiredPackage={setRequiredPackage}
+            effectiveDate={effectiveDate}
+            setEffectiveDate={setEffectiveDate}
+            remarks={remarks}
+            setRemarks={setRemarks}
+            nicFrontFile={nicFrontFile}
+            setNicFrontFile={setNicFrontFile}
+            nicBackFile={nicBackFile}
+            setNicBackFile={setNicBackFile}
+            showValidationErrors={showValidationErrors}
+            isSamePackageError={isSamePackageError}
+          />
+        )}
+
+        {currentStep === 3 && (
+          <PackageMigrationDeclarationStep
+            isActive={currentStep === 3}
+            declarationAccepted={declarationAccepted}
+            setDeclarationAccepted={setDeclarationAccepted}
+            signature={signature}
+            setSignature={setSignature}
+            signatureFile={signatureFile}
+            setSignatureFile={setSignatureFile}
+            showValidationErrors={showValidationErrors}
+          />
+        )}
+
+        {submitError && (
+          <div style={{ color: '#dc2626', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', padding: '0.75rem 1rem', borderRadius: '8px', marginTop: '1rem', fontWeight: 700 }}>
+            {submitError}
+          </div>
+        )}
+
+        {/* Wizard Navigation Buttons */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
+          {currentStep > 1 ? (
+            <button type="button" onClick={handlePrev} className="btn btn-outline" disabled={submitting}>
+              Previous
             </button>
-          ) : currentStep === totalSteps - 1 ? (
+          ) : (
+            <div />
+          )}
+
+          {currentStep < totalSteps ? (
+            <button type="button" onClick={handleNext} className="btn btn-primary">
+              Next Step →
+            </button>
+          ) : (
             <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting ? t('common.submitting') : t('common.submit')}
+              {submitting ? 'Submitting Application...' : 'Submit Package Migration'}
             </button>
-          ) : null}
+          )}
         </div>
       </form>
     </div>

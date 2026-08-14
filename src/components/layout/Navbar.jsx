@@ -1,25 +1,36 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import Icon from '../Icon';
+import { FiSearch, FiShoppingCart, FiGlobe, FiMenu, FiX } from 'react-icons/fi';
 import sltLogo from '../../assets/sltlogoOnly.png';
+import { useCart } from '../../context/CartContext';
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchCategory, setSearchCategory] = useState('All');
   const menuRef = useRef(null);
 
-  const isActive = (path) => {
-    return location.pathname === path ? 'active' : '';
-  };
+  let cartCount = 0;
+  try {
+    const { getCartItemCount } = useCart();
+    cartCount = getCartItemCount() || 0;
+  } catch (e) {
+    const storedCart = localStorage.getItem('cart') || sessionStorage.getItem('cart');
+    if (storedCart) {
+      try {
+        const parsed = JSON.parse(storedCart);
+        const items = parsed.items || parsed || [];
+        cartCount = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
+      } catch (err) {}
+    }
+  }
 
-  // Close menu when route changes
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -33,54 +44,126 @@ export default function Navbar() {
   }, [menuOpen]);
 
   return (
-    <nav className="top-navbar-wrapper" ref={menuRef}>
-      <div className="top-navbar-container">
+    <nav className="top-navbar-wrapper" ref={menuRef} style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 100 }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: 'clamp(0.4rem, 2vw, 0.65rem) clamp(0.5rem, 4vw, 1.5rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'clamp(0.5rem, 2vw, 1.25rem)' }}>
 
-        {/* Logo */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+        {/* ── Left: Logo ── */}
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', gap: '0.45rem', flexShrink: 0 }}>
           <img
             src={sltLogo}
             alt="SLTMobitel logo"
-            style={{ height: '36px', width: 'auto', objectFit: 'contain', marginRight: '8px' }}
+            style={{ height: '26px', width: 'auto', objectFit: 'contain' }}
           />
           <span
             style={{
               fontFamily: 'var(--font-head)',
-              fontSize: '1.2rem',
-              fontWeight: 700,
-              lineHeight: 1.1,
-              color: 'var(--navy)'
+              fontSize: '1.05rem',
+              fontWeight: 800,
+              color: '#191970',
+              letterSpacing: '-0.02em',
+              whiteSpace: 'nowrap',
+              display: 'inline-flex',
+              gap: '0.3rem',
             }}
           >
-            {t('nav.title')}
+            <span>SLTMobitel</span>
+            <span style={{ fontWeight: 700 }}>EasyApply</span>
           </span>
         </Link>
 
-        {/* Desktop Navigation Links */}
-        <div className="nav-links nav-links-desktop">
-          <Link to="/" className={`nav-link ${isActive('/')}`}>
-            <Icon name="home" size={18} />
-            Home
-          </Link>
-          <Link to="/check-status" className={`nav-link ${isActive('/check-status')}`}>
-            <Icon name="check-circle" size={18} />
-            Application Status
-          </Link>
-          <Link to="/help" className={`nav-link ${isActive('/help')}`}>
-            <Icon name="help-circle" size={18} />
-            Help &amp; Support
-          </Link>
-          <Link to="/profile" className={`nav-link ${isActive('/profile')}`}>
-            <Icon name="user" size={18} />
-            My Profile
-          </Link>
+        {/* ── Center Search Input Bar (Matching Image exact design) ── */}
+        <div style={{ flex: 1, maxWidth: '580px', display: 'flex', alignItems: 'center' }} className="nav-center-search">
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              backgroundColor: '#ffffff',
+              border: '1.5px solid #cbd5e1',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            }}
+          >
+            <FiSearch style={{ color: '#94a3b8', marginLeft: '0.75rem', flexShrink: 0 }} size={16} />
+            <input
+              type="text"
+              placeholder="Search packages, speeds, products..."
+              style={{
+                flex: 1,
+                padding: '0.5rem 0.75rem',
+                border: 'none',
+                outline: 'none',
+                fontSize: '0.85rem',
+                color: '#0f172a',
+                backgroundColor: 'transparent',
+              }}
+            />
+            <select
+              value={searchCategory}
+              onChange={(e) => setSearchCategory(e.target.value)}
+              style={{
+                border: 'none',
+                borderLeft: '1px solid #e2e8f0',
+                backgroundColor: '#transparent',
+                padding: '0.5rem 0.6rem',
+                fontSize: '0.8rem',
+                color: '#475569',
+                fontWeight: 600,
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="All">All</option>
+              <option value="Fibre">Fibre</option>
+              <option value="LTE">LTE</option>
+              <option value="PEO TV">PEO TV</option>
+              <option value="Voice">Voice</option>
+            </select>
+            <button
+              type="button"
+              style={{
+                backgroundColor: '#0056b3',
+                color: '#ffffff',
+                border: 'none',
+                padding: '0.55rem 1.1rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <FiSearch size={16} />
+            </button>
+          </div>
         </div>
 
-        {/* Right side: Language + Hamburger */}
-        <div className="navbar-right">
+        {/* ── Right: Links + Language + Cart ── */}
+        <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.35rem, 2vw, 1.25rem)', flexShrink: 0 }}>
+          {/* Desktop Nav Links */}
+          <div className="nav-links-desktop" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <Link
+              to="/"
+              style={{
+                color: '#0056b3',
+                textDecoration: 'none',
+                fontWeight: 800,
+                fontSize: '0.88rem',
+                position: 'relative',
+                paddingBottom: '0.25rem',
+                borderBottom: '2.5px solid #0056b3',
+              }}
+            >
+              Home
+            </Link>
+            <Link to="/check-status" style={{ color: '#334155', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}>Application Status</Link>
+            <Link to="/help" style={{ color: '#334155', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}>Help &amp; Support</Link>
+            <Link to="/profile" style={{ color: '#334155', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}>My Profile</Link>
+          </div>
+
           {/* Language Switcher */}
-          <div className="lang-switcher">
-            <Icon name="globe" size={16} style={{ color: 'var(--blue)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: '#f8fafc', padding: '0.35rem 0.65rem', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+            <FiGlobe style={{ color: '#0056b3' }} size={15} />
             <select
               value={i18n.language}
               onChange={(e) => i18n.changeLanguage(e.target.value)}
@@ -89,9 +172,9 @@ export default function Navbar() {
                 border: 'none',
                 backgroundColor: 'transparent',
                 outline: 'none',
-                fontSize: '0.85rem',
-                fontFamily: 'var(--font-body)',
-                color: 'var(--text)',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: '#334155',
                 cursor: 'pointer',
               }}
             >
@@ -101,41 +184,60 @@ export default function Navbar() {
             </select>
           </div>
 
-          {/* Hamburger Button — mobile only */}
+          <span style={{ color: '#cbd5e1' }}>|</span>
+
+          {/* Cart Button with Count Badge */}
+          <Link
+            to="/cart"
+            className="navbar-cart-link"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              color: '#334155',
+              textDecoration: 'none',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+            }}
+          >
+            <FiShoppingCart size={18} style={{ color: '#0056b3' }} />
+            <span>Cart</span>
+            {cartCount > 0 && (
+              <span
+                style={{
+                  backgroundColor: '#047857',
+                  color: '#ffffff',
+                  fontSize: '0.7rem',
+                  fontWeight: 900,
+                  borderRadius: '9999px',
+                  padding: '0.1rem 0.5rem',
+                }}
+              >
+                {cartCount}
+              </span>
+            )}
+          </Link>
+
+          {/* Mobile Hamburger */}
           <button
             className="hamburger-btn"
             onClick={() => setMenuOpen((prev) => !prev)}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={menuOpen}
+            style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem' }}
           >
-            <span className={`hamburger-icon ${menuOpen ? 'open' : ''}`}>
-              <span />
-              <span />
-              <span />
-            </span>
+            {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Dropdown Menu */}
-      <div className={`mobile-nav-menu ${menuOpen ? 'mobile-nav-menu--open' : ''}`}>
-        <Link to="/" className={`mobile-nav-link ${isActive('/')}`} onClick={() => setMenuOpen(false)}>
-          <Icon name="home" size={18} />
-          Home
-        </Link>
-        <Link to="/check-status" className={`mobile-nav-link ${isActive('/check-status')}`} onClick={() => setMenuOpen(false)}>
-          <Icon name="check-circle" size={18} />
-          Application Status
-        </Link>
-        <Link to="/help" className={`mobile-nav-link ${isActive('/help')}`} onClick={() => setMenuOpen(false)}>
-          <Icon name="help-circle" size={18} />
-          Help &amp; Support
-        </Link>
-        <Link to="/profile" className={`mobile-nav-link ${isActive('/profile')}`} onClick={() => setMenuOpen(false)}>
-          <Icon name="user" size={18} />
-          My Profile
-        </Link>
-      </div>
+      {/* Mobile Slide Menu */}
+      {menuOpen && (
+        <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', padding: '1rem' }}>
+          <Link to="/" style={{ display: 'block', padding: '0.6rem 0', color: '#0f172a', textDecoration: 'none', fontWeight: 600 }}>Home</Link>
+          <Link to="/check-status" style={{ display: 'block', padding: '0.6rem 0', color: '#0f172a', textDecoration: 'none', fontWeight: 600 }}>Application Status</Link>
+          <Link to="/help" style={{ display: 'block', padding: '0.6rem 0', color: '#0f172a', textDecoration: 'none', fontWeight: 600 }}>Help &amp; Support</Link>
+          <Link to="/profile" style={{ display: 'block', padding: '0.6rem 0', color: '#0f172a', textDecoration: 'none', fontWeight: 600 }}>My Profile</Link>
+        </div>
+      )}
     </nav>
   );
 }

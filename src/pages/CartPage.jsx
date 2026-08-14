@@ -110,15 +110,12 @@ export default function CartPage() {
     };
 
     sessionStorage.setItem('selectedProduct', JSON.stringify(selectedProductData));
-    sessionStorage.setItem('customerType', 'new');
 
-    // Navigate directly to New Connection Form Page
+    // Navigate to New Connection Form Page
     navigate('/new-connection', {
       state: {
         items,
         selectedProduct: selectedProductData,
-        customerType: 'new',
-        skipOtp: true,
       },
     });
   };
@@ -650,7 +647,7 @@ export default function CartPage() {
                       gap: '0.4rem',
                     }}
                   >
-                    <span style={{ fontSize: '0.9rem' }}>🏷️</span>
+                    <FiTag size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
                     <span>Installation fees are one-time charges payable during activation.</span>
                   </div>
 

@@ -7,7 +7,7 @@ export default function CustomerDetailsStep({ isActive }) {
   return (
     <div>
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.refundRequest.customerDetails.heading')}</h3>
-      
+
       <div className="form-group">
         <label className="form-label">{t('wizards.refundRequest.customerDetails.fullName')}</label>
         <input name="fullName" type="text" className="form-control" required={isActive} />

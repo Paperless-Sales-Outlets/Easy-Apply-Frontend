@@ -65,12 +65,14 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
 
   return (
     <div>
+
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.serviceVacation.generalInfo.connectionLookupTitle')}</h3>
       
       {loading ? (
         <div style={{ padding: '3rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
           <SLTLoader size={48} />
           <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Searching for your connections...</p>
+
         </div>
       ) : !vacationData && matchedConnections.length === 0 ? (
         <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#fafafa', borderRadius: '12px' }}>
@@ -131,7 +133,6 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
         )}
       </AnimatePresence>
 
-      {/* Multiple Connections Modal */}
       {/* Multiple Connections Modal */}
       {createPortal(
         <AnimatePresence>
