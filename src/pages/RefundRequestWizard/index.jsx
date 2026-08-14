@@ -4,12 +4,20 @@ import CustomerDetailsStep from './CustomerDetailsStep';
 import RefundDetailsStep from './RefundDetailsStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
+import CustomerProfileSummary from '../../components/CustomerProfileSummary';
 
 export default function RefundRequestWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { selectedAccount } = useVerifiedContext();
+  const profileFields = [
+    { name: 'telephone', label: t('wizards.refundRequest.customerDetails.telephone'), value: selectedAccount?.telephone || verifiedMobile || '' },
+    { name: 'fullName', label: t('wizards.refundRequest.customerDetails.fullName'), value: selectedAccount?.fullName || '' },
+    { name: 'nic', label: t('wizards.refundRequest.customerDetails.nicBrc'), value: selectedAccount?.nic || '' },
+    { name: 'contactNo', label: t('wizards.refundRequest.customerDetails.contactNo'), value: selectedAccount?.mobileNumber || verifiedMobile || '' },
+  ];
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -65,6 +73,8 @@ export default function RefundRequestWizard() {
     <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
       <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.refundRequest.title')}</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('wizards.refundRequest.subtitle')}</p>
+
+      <CustomerProfileSummary fields={profileFields} />
 
       {/* Progress Bar */}
       <div className="wizard-nav-wrapper">
