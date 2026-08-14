@@ -185,7 +185,7 @@ export default function PackageMigrationWizard() {
   ];
 
   return (
-    <div className="container" style={{ padding: '2rem 1rem', maxWidth: '1240px', margin: '0 auto' }}>
+    <div className="container" style={{ padding: '2rem 1rem', width: '100%', margin: '0 auto' }}>
       {/* Stepper Header */}
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
