@@ -27,8 +27,6 @@ export default function PackageMigrationWizard() {
   const [requiredPackage, setRequiredPackage] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
   const [remarks, setRemarks] = useState('');
-  const [nicFrontFile, setNicFrontFile] = useState(null);
-  const [nicBackFile, setNicBackFile] = useState(null);
 
   // Step 3: Declaration & Signature State
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
@@ -88,7 +86,7 @@ export default function PackageMigrationWizard() {
 
   // Step Validations
   const isStep1Valid = Boolean(customerPackage);
-  const isStep2Valid = Boolean(requiredPackage) && !isSamePackageError && Boolean(effectiveDate) && Boolean(nicFrontFile) && Boolean(nicBackFile);
+  const isStep2Valid = Boolean(requiredPackage) && !isSamePackageError && Boolean(effectiveDate);
   const isStep3Valid = declarationAccepted && (Boolean(signature) || Boolean(signatureFile));
 
   const handleNext = () => {
@@ -148,8 +146,6 @@ export default function PackageMigrationWizard() {
       fd.append('phone', mobileNumber || phone);
       fd.append('formData', JSON.stringify(payload));
 
-      if (nicFrontFile instanceof File) fd.append('nicFront', nicFrontFile);
-      if (nicBackFile instanceof File) fd.append('nicBack', nicBackFile);
       if (signatureFile instanceof File) fd.append('signatureFile', signatureFile);
 
       const res = await api.post('/applications', fd, {
@@ -277,10 +273,6 @@ export default function PackageMigrationWizard() {
             setEffectiveDate={setEffectiveDate}
             remarks={remarks}
             setRemarks={setRemarks}
-            nicFrontFile={nicFrontFile}
-            setNicFrontFile={setNicFrontFile}
-            nicBackFile={nicBackFile}
-            setNicBackFile={setNicBackFile}
             showValidationErrors={showValidationErrors}
             isSamePackageError={isSamePackageError}
           />

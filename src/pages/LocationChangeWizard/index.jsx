@@ -110,8 +110,6 @@ export default function LocationChangeWizard() {
         ['authorizationLetter', completePayload.authorizationLetter],
         ['brcFile', completePayload.brcFile],
         ['signatureFile', signatureFile],
-        ['nicFront', completePayload.nicFront],
-        ['nicBack', completePayload.nicBack],
       ];
 
       maybeFiles.forEach(([key, file]) => {

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiCheckCircle, FiUploadCloud, FiLock, FiFileText, FiUser, FiPhone, FiMail } from 'react-icons/fi';
+import { FiFileText, FiUser, FiPhone } from 'react-icons/fi';
 import api from '../../utils/api';
 import { useVerifiedContext } from '../../components/verification';
 import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
+import FileUploadField from '../../components/form/FileUploadField';
 
 export default function GeneralInfoStep({ isActive, formData, onChange, onValidationChange, showValidationErrors = false }) {
   const { t } = useTranslation();
@@ -93,83 +94,13 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
             <FiUser size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
-            1. Customer & Service Connection Details
+            1. Service Type
           </h4>
         </div>
 
-        {/* Telephone & Legal Owner Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
-          <div>
-            <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
-              {t('wizards.locationChange.generalInfo.telephone', 'Telephone Number')} <span style={{ color: '#dc2626' }}>*</span>
-            </label>
-
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <input
-                name="telephone"
-                type="tel"
-                value={customer.telephone}
-                readOnly
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  paddingRight: '110px',
-                  borderRadius: '10px',
-                  border: '1px solid #cbd5e1',
-                  backgroundColor: '#f8fafc',
-                  fontSize: '0.92rem',
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  outline: 'none',
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  right: '8px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  backgroundColor: '#dcfce7',
-                  color: '#15803d',
-                  padding: '0.35rem 0.7rem',
-                  borderRadius: '7px',
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                }}
-              >
-                <FiCheckCircle size={14} />
-                <span>Verified</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
-              {t('wizards.locationChange.generalInfo.legalOwner', 'Legal Owner Name')}
-            </label>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <input
-                name="legalOwner"
-                type="text"
-                value={customer.legalOwner || 'Autofilled upon verification'}
-                readOnly
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '10px',
-                  border: '1px solid #cbd5e1',
-                  backgroundColor: '#f8fafc',
-                  fontSize: '0.92rem',
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  outline: 'none',
-                }}
-              />
-              <FiLock style={{ position: 'absolute', right: '12px', color: '#94a3b8' }} size={16} />
-            </div>
-          </div>
-        </div>
+        {/* Hidden fields to keep the verified telephone/owner in the submitted form data */}
+        <input type="hidden" name="telephone" value={customer.telephone} />
+        <input type="hidden" name="legalOwner" value={customer.legalOwner} />
 
         {/* Service Type Selection */}
         <div>
@@ -217,9 +148,12 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
             <FiPhone size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
-            2. Verified Contact Details
+            2. Contact Details for This Request
           </h4>
         </div>
+
+        {/* Hidden field to keep the verified telephone in the submitted form data */}
+        <input type="hidden" name="tel" value={customer.tel} />
 
         {/* Contact Person */}
         <div style={{ marginBottom: '1.25rem' }}>
@@ -245,30 +179,8 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
           />
         </div>
 
-        {/* Tel, Mobile, Email Grid */}
+        {/* Mobile, Email Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-          <div>
-            <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
-              Telephone
-            </label>
-            <input
-              name="tel"
-              type="tel"
-              value={customer.tel}
-              readOnly
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                borderRadius: '10px',
-                border: '1px solid #cbd5e1',
-                backgroundColor: '#f8fafc',
-                fontSize: '0.9rem',
-                fontWeight: 700,
-                color: '#0f172a',
-              }}
-            />
-          </div>
-
           <div>
             <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
               Mobile Number
@@ -336,117 +248,37 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-          {/* NIC Front Upload Dropzone */}
-          <div>
-            <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.5rem' }}>
-              NIC Front (or Passport ID) <span style={{ color: '#dc2626' }}>*</span>
-            </label>
+          <FileUploadField
+            name="nicFront"
+            label="NIC Front (or Passport ID)"
+            accept=".pdf,.jpg,.jpeg,.png"
+            required={isActive}
+            value={nicFrontFile}
+            onChange={(_, fileData) => {
+              setNicFrontFile(fileData);
+              const next = { ...customer, nicFront: fileData };
+              setCustomer(next);
+              if (typeof onChange === 'function') onChange(next);
+            }}
+            error={showValidationErrors && !isNicFrontValid ? 'NIC Front file is required.' : undefined}
+          />
 
-            <label
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '1.5rem',
-                border: nicFrontFile ? '2px stroke #10b981' : '2px dashed #93c5fd',
-                borderRadius: '12px',
-                backgroundColor: nicFrontFile ? '#f0fdf4' : '#f8fafc',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  const f = e.target.files[0] || null;
-                  setNicFrontFile(f);
-                  const next = { ...customer, nicFront: f };
-                  setCustomer(next);
-                  if (typeof onChange === 'function') onChange(next);
-                }}
-              />
-              <FiUploadCloud size={30} style={{ color: nicFrontFile ? '#16a34a' : '#0056b3', marginBottom: '0.5rem' }} />
-              {nicFrontFile ? (
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#15803d', display: 'block' }}>
-                    {nicFrontFile.name}
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded</span>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0056b3', display: 'block' }}>
-                    Click to Upload NIC Front
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#64748b' }}>JPG, PNG, PDF up to 5MB</span>
-                </div>
-              )}
-            </label>
-            {showValidationErrors && !isNicFrontValid && (
-              <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.4rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                NIC Front file is required.
-              </div>
-            )}
-          </div>
-
-          {/* NIC Back Upload Dropzone */}
-          <div>
-            <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.5rem' }}>
-              NIC Back (or Supporting Document) <span style={{ color: '#dc2626' }}>*</span>
-            </label>
-
-            <label
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '1.5rem',
-                border: nicBackFile ? '2px stroke #10b981' : '2px dashed #93c5fd',
-                borderRadius: '12px',
-                backgroundColor: nicBackFile ? '#f0fdf4' : '#f8fafc',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  const f = e.target.files[0] || null;
-                  setNicBackFile(f);
-                  const next = { ...customer, nicBack: f };
-                  setCustomer(next);
-                  if (typeof onChange === 'function') onChange(next);
-                }}
-              />
-              <FiUploadCloud size={30} style={{ color: nicBackFile ? '#16a34a' : '#0056b3', marginBottom: '0.5rem' }} />
-              {nicBackFile ? (
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#15803d', display: 'block' }}>
-                    {nicBackFile.name}
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded</span>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0056b3', display: 'block' }}>
-                    Click to Upload NIC Back
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#64748b' }}>JPG, PNG, PDF up to 5MB</span>
-                </div>
-              )}
-            </label>
-            {showValidationErrors && !isNicBackValid && (
-              <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.4rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                NIC Back file is required.
-              </div>
-            )}
-          </div>
+          <FileUploadField
+            name="nicBack"
+            label="NIC Back (or Supporting Document)"
+            accept=".pdf,.jpg,.jpeg,.png"
+            required={isActive}
+            value={nicBackFile}
+            onChange={(_, fileData) => {
+              setNicBackFile(fileData);
+              const next = { ...customer, nicBack: fileData };
+              setCustomer(next);
+              if (typeof onChange === 'function') onChange(next);
+            }}
+            error={showValidationErrors && !isNicBackValid ? 'NIC Back file is required.' : undefined}
+          />
+          {nicFrontFile && <input type="hidden" name="nicFront" value={nicFrontFile.data} />}
+          {nicBackFile && <input type="hidden" name="nicBack" value={nicBackFile.data} />}
         </div>
       </div>
     </div>
