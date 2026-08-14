@@ -32,6 +32,7 @@ export default function ProductCard({
   onAddToCart,
   disabled = false,
   disabledReason = 'Category Limit Reached',
+  viewMode = 'grid',
 }) {
   const {
     _id,
@@ -45,6 +46,160 @@ export default function ProductCard({
   } = product;
 
   const cardGradient = CARD_GRADIENTS[name] || DEFAULT_GRADIENT;
+
+  if (viewMode === 'list') {
+    return (
+      <motion.div
+        whileHover={{ y: -2, boxShadow: '0 10px 28px rgba(0, 86, 179, 0.14)' }}
+        transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+        style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '14px',
+          border: isSelected ? '2px solid #0056b3' : '1px solid #e2e8f0',
+          overflow: 'hidden',
+          boxShadow: isSelected ? '0 8px 25px rgba(0,86,179,0.2)' : '0 2px 10px rgba(0,0,0,0.03)',
+          display: 'flex',
+          alignItems: 'stretch',
+          gap: '1rem',
+          padding: '0.85rem',
+        }}
+        className="catalog-product-list-row"
+      >
+        {/* Left gradient icon tile */}
+        <div
+          style={{
+            background: cardGradient,
+            borderRadius: '10px',
+            width: '92px',
+            minWidth: '92px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+          }}
+        >
+          <div style={{ width: '56px', height: '56px' }}>
+            <ProductDeviceGraphic name={name} category={category} />
+          </div>
+          {popular && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '0.35rem',
+                left: '0.35rem',
+                backgroundColor: '#047857',
+                color: '#ffffff',
+                fontSize: '0.55rem',
+                fontWeight: 900,
+                padding: '0.15rem 0.4rem',
+                borderRadius: '9999px',
+                letterSpacing: '0.03em',
+              }}
+            >
+              POPULAR
+            </span>
+          )}
+        </div>
+
+        {/* Middle: title + features */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.35rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>{name}</h3>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(_id || id);
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: isFavorite ? '#f87171' : '#cbd5e1',
+                display: 'flex',
+                flexShrink: 0,
+              }}
+            >
+              {isFavorite ? <FaHeart size={13} /> : <FiHeart size={13} />}
+            </button>
+          </div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexWrap: 'wrap', gap: '0.25rem 0.9rem' }}>
+            {features.slice(0, 3).map((feat, idx) => {
+              const cleanText = String(feat).replace(/^[✓✔]\s*/, '');
+              return (
+                <li key={idx} style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#64748b', fontWeight: 500 }}>
+                  <FiCheck size={12} style={{ color: '#16a34a', flexShrink: 0 }} />
+                  <span>{cleanText}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/* Right: price + actions */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            flexShrink: 0,
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+          }}
+          className="catalog-product-list-actions"
+        >
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>
+              Rs. {monthlyPrice ? monthlyPrice.toLocaleString() : '0'}
+              <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>/mo</span>
+            </div>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+              Installation: Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
+            </div>
+          </div>
+
+          <button
+            onClick={() => onSelect(product)}
+            style={{
+              backgroundColor: '#f8fafc',
+              color: '#0056b3',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '0.5rem 0.85rem',
+              fontWeight: 700,
+              fontSize: '0.78rem',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Details
+          </button>
+
+          <button
+            onClick={() => !disabled && !isInCart && onAddToCart(product)}
+            disabled={disabled || isInCart}
+            style={{
+              backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
+              color: isInCart ? '#ffffff' : disabled ? '#475569' : '#ffffff',
+              border: disabled ? '1px solid #cbd5e1' : 'none',
+              borderRadius: '8px',
+              padding: '0.5rem 0.9rem',
+              fontWeight: 800,
+              fontSize: '0.8rem',
+              cursor: disabled || isInCart ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.4rem',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {isInCart ? <FiCheck size={15} /> : <FiShoppingCart size={14} />}
+            <span>{isInCart ? 'In Cart' : disabled ? disabledReason : 'Add to Cart'}</span>
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
