@@ -170,8 +170,8 @@ export default function Navbar() {
 
         {/* ── Right: Links + Language + Cart ── */}
         <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.35rem, 2vw, 1.25rem)', flexShrink: 0 }}>
-          {/* Desktop Nav Links */}
-          <div className="nav-links-desktop" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          {/* Desktop Nav Links — display is controlled by the .nav-links-desktop media query, not inline, so it can collapse to the hamburger menu on mobile */}
+          <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '1.5rem' }}>
             <Link to="/" style={navLinkStyle('/')}>Home</Link>
             <Link to="/check-status" style={navLinkStyle('/check-status')}>Application Status</Link>
             <Link to="/help" style={navLinkStyle('/help')}>Help &amp; Support</Link>
@@ -179,7 +179,7 @@ export default function Navbar() {
           </div>
 
           {/* Language Switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: '#f8fafc', padding: '0.35rem 0.65rem', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+          <div className="lang-switcher" style={{ alignItems: 'center', gap: '0.35rem', backgroundColor: '#f8fafc', padding: '0.35rem 0.65rem', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
             <FiGlobe style={{ color: '#0056b3' }} size={15} />
             <select
               value={i18n.language}
@@ -235,11 +235,12 @@ export default function Navbar() {
             )}
           </Link>
 
-          {/* Mobile Hamburger */}
+          {/* Mobile Hamburger — display is controlled by the .hamburger-btn media query (hidden on desktop, shown ≤768px) */}
           <button
             className="hamburger-btn"
             onClick={() => setMenuOpen((prev) => !prev)}
-            style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem' }}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            style={{ cursor: 'pointer' }}
           >
             {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
