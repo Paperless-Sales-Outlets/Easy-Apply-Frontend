@@ -5,25 +5,26 @@ import ReasonStep from './ReasonStep';
 import AgreementStep from './AgreementStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
 import CustomerProfileSummary from '../../components/CustomerProfileSummary';
 
 export default function TerminationWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { selectedAccount } = useVerifiedContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
   const totalSteps = 3;
   const profileFields = [
-    { name: 'presentNumber', label: t('wizards.termination.profile.telephone'), value: verifiedMobile || '' },
-    { name: 'fullName', label: t('wizards.termination.profile.fullName'), value: '' },
-    { name: 'nic', label: t('wizards.termination.profile.nic'), value: '' },
-    { name: 'contactNo', label: t('wizards.termination.profile.mobile'), value: verifiedMobile || '' },
-    { name: 'fixedNo', label: t('wizards.termination.profile.fixed'), value: '' },
-    { name: 'email', label: t('wizards.termination.profile.email'), value: '' },
+    { name: 'presentNumber', label: t('wizards.termination.profile.telephone'), value: selectedAccount?.telephone || verifiedMobile || '' },
+    { name: 'fullName', label: t('wizards.termination.profile.fullName'), value: selectedAccount?.fullName || '' },
+    { name: 'nic', label: t('wizards.termination.profile.nic'), value: selectedAccount?.nic || '' },
+    { name: 'contactNo', label: t('wizards.termination.profile.mobile'), value: selectedAccount?.mobileNumber || verifiedMobile || '' },
+    { name: 'fixedNo', label: t('wizards.termination.profile.fixed'), value: selectedAccount?.fixedContactNumber || selectedAccount?.telephone || '' },
+    { name: 'email', label: t('wizards.termination.profile.email'), value: selectedAccount?.email || '' },
   ];
 
   const nextStep = () => {

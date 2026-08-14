@@ -2269,6 +2269,35 @@ a {
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
 
+/* Catalog page: sidebar filters + product listing.
+   On mobile the sidebar collapses behind a "Filters" toggle
+   instead of squeezing a fixed 260px column into the viewport. */
+.catalog-layout-grid {
+  grid-template-columns: 260px minmax(0, 1fr);
+}
+
+.catalog-filter-toggle-btn {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .catalog-layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-filter-toggle-btn {
+    display: flex;
+  }
+
+  .catalog-sidebar-col {
+    display: none;
+  }
+
+  .catalog-sidebar-col.open {
+    display: block;
+  }
+}
+
 @media (max-width: 576px) {
   .product-grid-container {
     grid-template-columns: 1fr;

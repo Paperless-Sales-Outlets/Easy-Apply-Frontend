@@ -6,23 +6,24 @@ import DocumentsStep from './DocumentsStep';
 import DeclarationStep from './DeclarationStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
 import CustomerProfileSummary from '../../components/CustomerProfileSummary';
 
 export default function OwnershipChangeWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { selectedAccount } = useVerifiedContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
   const totalSteps = 4;
   const profileFields = [
-    { name: 'currentTelephone', label: t('wizards.ownershipChange.profile.telephone'), value: verifiedMobile || '' },
-    { name: 'currentCustomerName', label: t('wizards.ownershipChange.profile.fullName'), value: '' },
-    { name: 'currentNic', label: t('wizards.ownershipChange.profile.nic'), value: '' },
-    { name: 'currentContactNo', label: t('wizards.ownershipChange.profile.contactNo'), value: verifiedMobile || '' },
+    { name: 'currentTelephone', label: t('wizards.ownershipChange.profile.telephone'), value: selectedAccount?.telephone || verifiedMobile || '' },
+    { name: 'currentCustomerName', label: t('wizards.ownershipChange.profile.fullName'), value: selectedAccount?.fullName || '' },
+    { name: 'currentNic', label: t('wizards.ownershipChange.profile.nic'), value: selectedAccount?.nic || '' },
+    { name: 'currentContactNo', label: t('wizards.ownershipChange.profile.contactNo'), value: selectedAccount?.mobileNumber || verifiedMobile || '' },
   ];
 
   const nextStep = () => {
