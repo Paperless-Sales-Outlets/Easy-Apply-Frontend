@@ -77,32 +77,18 @@ export default function CheckStatusPage() {
             'checkStatusPage.statusDescription',
             'Your application is currently under review by our technical team.'
           ),
-        customerName: data.customerName || 'Nimal Bandara',
-        telephone: data.telephone || '0774053185',
+        customerName: data.customerName || '',
+        telephone: data.telephone || '',
         notes: data.notes || '',
         actionedBy: data.actionedBy || null,
         actionedAt: data.actionedAt || null,
       });
     } catch (error) {
-      // Clean fallback object for demonstration if backend lookup is mock
-      const mockRef = refToSearch.trim();
-      if (mockRef.length >= 4) {
-        setResult({
-          status: 'pending',
-          serviceType: mockRef.toLowerCase().includes('pkg') ? 'package-migration' : 'relocation',
-          referenceNumber: mockRef,
-          createdAt: new Date().toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: 'numeric' }),
-          message: 'Application has been received and is under technical feasibility review.',
-          customerName: 'SLT Customer',
-          telephone: '0774053185',
-        });
-      } else {
-        setResult({
-          status: 'not-found',
-          referenceNumber: mockRef,
-          message: error.response?.data?.message || 'No application found with this reference number. Please verify and try again.',
-        });
-      }
+      setResult({
+        status: 'not-found',
+        referenceNumber: refToSearch.trim(),
+        message: error.response?.data?.message || 'No application found with this reference number. Please verify and try again.',
+      });
     } finally {
       setIsLoading(false);
     }

@@ -152,15 +152,15 @@ export default function AgreementStep({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', backgroundColor: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
             <div>
               <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>TELEPHONE NUMBER</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>{formData.telephone || '0774053185'}</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>{formData.telephone || '—'}</div>
             </div>
             <div>
               <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>LEGAL OWNER</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>{formData.legalOwner || 'Lionel Perera'}</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>{formData.legalOwner || '—'}</div>
             </div>
             <div>
               <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>SERVICE TYPE</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0056b3', marginTop: '0.15rem' }}>{formData.serviceType || 'Fibre Broadband'}</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0056b3', marginTop: '0.15rem' }}>{formData.serviceType || '—'}</div>
             </div>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function AgreementStep({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', backgroundColor: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
             <div>
               <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>CURRENT ADDRESS</div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', marginTop: '0.15rem' }}>{formData.currentAddress || 'No 45, Lotus Road, Colombo 01'}</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', marginTop: '0.15rem' }}>{formData.currentAddress || '—'}</div>
             </div>
             <div>
               <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>NEW RELOCATION ADDRESS</div>

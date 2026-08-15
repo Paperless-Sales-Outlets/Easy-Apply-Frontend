@@ -271,7 +271,9 @@ const AnimatedRoutes = () => {
           path="/profile"
           element={
             <PageWrapper>
-              <MyProfilePage />
+              <OtpProtectedForm>
+                <MyProfilePage />
+              </OtpProtectedForm>
             </PageWrapper>
           }
         />

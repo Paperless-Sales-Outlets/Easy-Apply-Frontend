@@ -23,41 +23,6 @@ import heroBanner from '../assets/HeroSLT.png';
 
 const RESEND_SECONDS = 30;
 
-/* ============================================================
- * TEMP DEV-ONLY BYPASS — REMOVE BEFORE OPENING THE PR
- * Set DEV_SKIP_OTP to false (or delete this block and the
- * "Skip verification" button below) once form review is done.
- * ============================================================ */
-const DEV_SKIP_OTP = true;
-// Mirrors the demo profile shown on My Profile (src/pages/MyProfilePage.jsx
-// DEFAULT_PROFILE), so the "existing customer" data looks the same everywhere
-// in the demo instead of a different invented identity per wizard.
-const DEV_TEST_ACCOUNT = {
-  telephone: '0701234567',
-  phoneNumber: '701234567',
-  mobileNumber: '701234567',
-  fullName: 'Janith Perera',
-  nic: '199012345678',
-  email: 'janithperera@email.com',
-  addressLine1: '42, Galle Road',
-  addressLine2: 'Colombo 03',
-  address: '42, Galle Road, Colombo 03',
-  city: 'Colombo',
-  district: 'Colombo',
-  province: 'Western',
-  accountNumber: 'SLT-2024-00847',
-  customerType: 'home',
-  status: 'active',
-  packageName: 'Fibre Broadband 100 Mbps',
-  package: 'Fibre Broadband 100 Mbps',
-  connectionType: 'FTTH (Fibre)',
-  speed: '100 Mbps',
-  monthlyPrice: 4490,
-  outstandingBalance: 0,
-  registeredDate: '2024-03-15',
-};
-/* ============================================================ */
-
 const formatNumber = (n) =>
   n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : `+94 ${n}`;
 
@@ -240,45 +205,6 @@ export default function OtpProtectedForm({ children, onVerified }) {
       }
     } catch (err) {
       setPhase('otp');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // TEMP DEV-ONLY — see DEV_SKIP_OTP above. Remove alongside it.
-  // Looks up the real seeded Mongo record for the demo phone number (see
-  // seed.js) so the bypass exercises the actual /customers/lookup endpoint
-  // instead of a hardcoded stub. Falls back to the stub only if the backend
-  // is unreachable, so testing isn't blocked either way.
-  const handleDevSkip = async () => {
-    setMobileNumber(DEV_TEST_ACCOUNT.mobileNumber);
-    setIsLoading(true);
-    try {
-      const res = await api.post('/customers/lookup', { phoneNumber: DEV_TEST_ACCOUNT.mobileNumber });
-      const { customerExists: exists, customers } = res.data || {};
-      if (exists && Array.isArray(customers) && customers.length > 0) {
-        const account = customers[0];
-        setCustomerExists(true);
-        setAccountsList(customers);
-        setSelectedAccount(account);
-        sessionStorage.setItem('verifiedPhone', DEV_TEST_ACCOUNT.mobileNumber);
-        sessionStorage.setItem('customerExists', 'true');
-        sessionStorage.setItem('selectedAccount', JSON.stringify(account));
-        sessionStorage.setItem('customerData', JSON.stringify(account));
-        setPhase('verified');
-        return;
-      }
-      throw new Error('No matching record in DB');
-    } catch (err) {
-      console.warn('Dev skip: real lookup unavailable, falling back to stub data:', err.message);
-      setCustomerExists(true);
-      setAccountsList([DEV_TEST_ACCOUNT]);
-      setSelectedAccount(DEV_TEST_ACCOUNT);
-      sessionStorage.setItem('verifiedPhone', DEV_TEST_ACCOUNT.mobileNumber);
-      sessionStorage.setItem('customerExists', 'true');
-      sessionStorage.setItem('selectedAccount', JSON.stringify(DEV_TEST_ACCOUNT));
-      sessionStorage.setItem('customerData', JSON.stringify(DEV_TEST_ACCOUNT));
-      setPhase('verified');
     } finally {
       setIsLoading(false);
     }
@@ -648,27 +574,6 @@ export default function OtpProtectedForm({ children, onVerified }) {
                     <span>{isLoading ? 'Sending Code...' : t('otp.sendCode', 'Send Verification Code')}</span>
                     {!isLoading && <FiArrowRight size={18} />}
                   </button>
-
-                  {DEV_SKIP_OTP && (
-                    <button
-                      type="button"
-                      onClick={handleDevSkip}
-                      style={{
-                        width: '100%',
-                        marginTop: '0.75rem',
-                        padding: '0.6rem 1rem',
-                        borderRadius: '10px',
-                        background: '#fffbeb',
-                        border: '1px dashed #f59e0b',
-                        color: '#b45309',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      ⚡ Skip verification (testing only — remove before PR)
-                    </button>
-                  )}
                 </form>
               </motion.div>
             )}
