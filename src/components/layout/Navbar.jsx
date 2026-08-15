@@ -115,9 +115,10 @@ export default function Navbar() {
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
-            <FiSearch style={{ color: '#94a3b8', marginLeft: '0.75rem', flexShrink: 0 }} size={16} />
+            <FiSearch style={{ color: '#94a3b8', marginLeft: '0.75rem', flexShrink: 0 }} size={16} aria-hidden="true" />
             <input
               type="text"
+              aria-label="Search packages, speeds, products"
               placeholder="Search packages, speeds, products..."
               style={{
                 flex: 1,
@@ -132,6 +133,7 @@ export default function Navbar() {
             <select
               value={searchCategory}
               onChange={(e) => setSearchCategory(e.target.value)}
+              aria-label="Filter search by category"
               style={{
                 border: 'none',
                 borderLeft: '1px solid #e2e8f0',
@@ -152,6 +154,7 @@ export default function Navbar() {
             </select>
             <button
               type="button"
+              aria-label="Search"
               style={{
                 backgroundColor: '#0056b3',
                 color: '#ffffff',
@@ -163,7 +166,7 @@ export default function Navbar() {
                 justifyContent: 'center',
               }}
             >
-              <FiSearch size={16} />
+              <FiSearch size={16} aria-hidden="true" />
             </button>
           </div>
         </div>

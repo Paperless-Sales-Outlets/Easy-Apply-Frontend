@@ -69,6 +69,16 @@
   padding: 0;
 }
 
+/* Accessibility: guaranteed visible keyboard-focus ring on every
+   interactive element, site-wide. Many components set `outline: none`
+   inline (higher specificity than any plain CSS rule) without an
+   alternate focus indicator, which fails WCAG 2.4.7 for keyboard users.
+   `!important` here is a deliberate, narrow override of exactly that. */
+:focus-visible {
+  outline: 2px solid var(--blue) !important;
+  outline-offset: 2px !important;
+}
+
 html, body {
   max-width: 100vw;
   overflow-x: hidden;

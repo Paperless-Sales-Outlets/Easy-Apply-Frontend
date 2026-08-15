@@ -428,7 +428,7 @@ export default function CheckStatusPage() {
                         <span style={{ display: 'block', fontSize: '0.75rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
                           Estimated SLA
                         </span>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#16a34a' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#047857' }}>
                           24 – 48 Hours
                         </span>
                       </div>
@@ -443,7 +443,7 @@ export default function CheckStatusPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {/* Step 1 */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ backgroundColor: '#10b981', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                          <div style={{ backgroundColor: '#047857', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
                             <FiCheck size={14} />
                           </div>
                           <div style={{ flex: 1 }}>

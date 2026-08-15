@@ -53,10 +53,11 @@ function accountToProfile(account, mobileNumber) {
 }
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
+// Colors chosen to pass WCAG AA (4.5:1) against their tinted `bg`.
 const statusConfig = {
-  approved: { label: 'Approved', color: '#059669', bg: '#ecfdf5', icon: <FiCheckCircle size={14} /> },
-  pending: { label: 'Pending', color: '#d97706', bg: '#fffbeb', icon: <FiClock size={14} /> },
-  rejected: { label: 'Rejected', color: '#dc2626', bg: '#fef2f2', icon: <FiAlertCircle size={14} /> },
+  approved: { label: 'Approved', color: '#047857', bg: '#ecfdf5', icon: <FiCheckCircle size={14} /> },
+  pending: { label: 'Pending', color: '#b45309', bg: '#fffbeb', icon: <FiClock size={14} /> },
+  rejected: { label: 'Rejected', color: '#b91c1c', bg: '#fef2f2', icon: <FiAlertCircle size={14} /> },
 };
 
 function InfoField({ label, value }) {
