@@ -66,7 +66,7 @@ export default function PackageDetailsStep({
           <label className="form-label" htmlFor="pm-effectiveDate" style={{ fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}>
             {t('wizards.packageMigration.packageDetails.effectiveDate', 'Effective Date')} <span style={{ color: 'red' }}>*</span>
           </label>
-          <div style={{ maxWidth: '280px' }}>
+          <div>
             <input
               id="pm-effectiveDate"
               name="effectiveDate"

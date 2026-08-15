@@ -269,7 +269,7 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
         </div>
 
         {paymentIntention === 'paid' && (
-          <div className="form-group mb-2" style={{ maxWidth: '400px' }}>
+          <div className="form-group mb-2">
             <FileInputWithClear
               label="Upload Payment Receipt (PDF/JPG/PNG)"
               name="paymentReceipt"
@@ -349,7 +349,7 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
             <input type="hidden" name="digitalSignatureBase64" value={signatureBase64} />
           </div>
         ) : (
-          <div style={{ maxWidth: '400px' }}>
+          <div>
             <FileInputWithClear
               label="Upload Signature (PDF/JPG/PNG)"
               name="signatureDoc"

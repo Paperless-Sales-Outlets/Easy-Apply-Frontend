@@ -128,7 +128,6 @@ export default function DocumentsStep({ isActive }) {
                 className="form-control"
                 value={nicFormat}
                 onChange={(e) => setNicFormat(e.target.value)}
-                style={{ maxWidth: '360px' }}
               >
                 <option value="pdf">{t('wizards.ownershipChange.documents.nicFormatPdf')}</option>
                 <option value="jpeg">{t('wizards.ownershipChange.documents.nicFormatJpeg')}</option>
