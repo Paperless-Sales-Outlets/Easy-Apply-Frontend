@@ -88,7 +88,35 @@ export default function OtpProtectedForm({ children, onVerified }) {
     return () => clearInterval(interval);
   }, [phase, navigate]);
 
+  // Restore a verification already completed earlier this browser session
+  // (e.g. on a different wizard) instead of asking for phone + OTP again.
   useEffect(() => {
+    const storedPhone = sessionStorage.getItem('verifiedPhone');
+    if (storedPhone) {
+      const storedExists = sessionStorage.getItem('customerExists') === 'true';
+      let storedAccount = null;
+      try {
+        const raw = sessionStorage.getItem('selectedAccount');
+        storedAccount = raw ? JSON.parse(raw) : null;
+      } catch (err) {
+        storedAccount = null;
+      }
+
+      setMobileNumber(storedPhone);
+      setCustomerExists(storedExists);
+      setSelectedAccount(storedAccount);
+      setAccountsList(storedAccount ? [storedAccount] : []);
+
+      if (!storedExists && requiresExistingAccount()) {
+        setPhase('new-customer-redirect');
+        setDone(false);
+      } else {
+        setPhase('verified');
+        setDone(true);
+      }
+      return;
+    }
+
     setPhase('mobile');
     setDone(false);
   }, [location.pathname]);
