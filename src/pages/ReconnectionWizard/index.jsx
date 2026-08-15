@@ -42,6 +42,12 @@ export default function ReconnectionWizard() {
   const [paymentIntention, setPaymentIntention] = useState('online');
   const [reconnectionData, setReconnectionData] = useState(null);
 
+  // The customer's account is already verified via OTP + real DB lookup
+  // before reaching this wizard — reuse it instead of asking/looking it up again.
+  useEffect(() => {
+    if (selectedAccount) setReconnectionData(selectedAccount);
+  }, [selectedAccount]);
+
   const formRef = useRef(null);
   const step2Ref = useRef(null);
   const step3Ref = useRef(null);
@@ -321,10 +327,6 @@ export default function ReconnectionWizard() {
               ref={step2Ref}
               isActive={currentStep === 1}
               reconnectionData={reconnectionData}
-              onVerifySuccess={(data) =>
-                setReconnectionData(data)
-              }
-              verifiedMobile={verifiedMobile}
             />
           </div>
 
