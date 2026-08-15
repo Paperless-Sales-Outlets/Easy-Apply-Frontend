@@ -357,6 +357,9 @@ export default function PackageMigrationWizard() {
         {currentStep === 3 && (
           <PackageMigrationDeclarationStep
             isActive={currentStep === 3}
+            customerPackage={customerPackage}
+            requiredPackage={requiredPackage}
+            effectiveDate={effectiveDate}
             declarationAccepted={declarationAccepted}
             setDeclarationAccepted={setDeclarationAccepted}
             signature={signature}
