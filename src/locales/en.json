@@ -331,7 +331,10 @@
       "subtitle": "Change your existing SLT package.",
       "steps": {
         "s1": "Package Details",
-        "s2": "Payment"
+        "s2": "Payment",
+        "step1": "Existing Account Verification",
+        "step2": "Migration Schedule",
+        "step3": "Declaration & Submission"
       },
       "profile": {
         "telephone": "Telephone / Account Number",
@@ -341,7 +344,7 @@
         "existingPackage": "Existing Package"
       },
       "packageDetails": {
-        "heading": "Required Package Change",
+        "heading": "Migration Schedule",
         "requiredPackage": "Required Package",
         "effectiveDate": "With effect from",
         "remarks": "Remarks",
@@ -354,7 +357,7 @@
       "title": "Service Vacation",
       "subtitle": "Apply for temporary service deactivation.",
       "steps": {
-        "s1": "General Information",
+        "s1": "Existing Account Verification",
         "s2": "Vacation Details",
         "s3": "Agreement",
         "s4": "Checkout & Auth"
@@ -397,7 +400,7 @@
       "title": "Refund Request",
       "subtitle": "Application for FTTH/PSTN/LTE Service refund.",
       "steps": {
-        "s1": "Customer Details",
+        "s1": "Existing Account Verification",
         "s2": "Refund Details"
       },
       "customerDetails": {
@@ -469,7 +472,7 @@
     "ownershipChange": {
       "title": "Application for Change of Customer",
       "steps": {
-        "s1": "Current Owner",
+        "s1": "Existing Account Verification",
         "s2": "New Applicant",
         "s3": "Documents",
         "s4": "Declaration"
@@ -629,7 +632,7 @@
       "title": "Application for Termination of Services",
       "subtitle": "Request permanent or temporary disconnection of SLT services and facilities.",
       "steps": {
-        "s1": "Service Info",
+        "s1": "Existing Account Verification",
         "s2": "Reason",
         "s3": "Agreement"
       },

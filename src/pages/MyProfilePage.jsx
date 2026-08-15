@@ -16,58 +16,48 @@ import {
   FiCheckCircle,
   FiAlertCircle,
   FiChevronRight,
+  FiUserPlus,
 } from 'react-icons/fi';
+import { useVerifiedContext } from '../components/verification';
+import api from '../utils/api';
 
-/* ── Demo data — persisted in localStorage ────────────────────────────────── */
-const STORAGE_KEY = 'slt_user_profile';
-
-const DEFAULT_PROFILE = {
-  fullName: 'Janith Perera',
-  email: 'janithperera@email.com',
-  phone: '+94 70 123 4567',
-  nic: '199012345678',
-  address: '42, Galle Road, Colombo 03',
-  city: 'Colombo',
-  district: 'Colombo',
-  province: 'Western',
-  accountNumber: 'SLT-2024-00847',
-  connectionType: 'FTTH (Fibre)',
-  packageName: 'Fibre Broadband 100 Mbps',
-  registeredDate: '2024-03-15',
+const SERVICE_TYPE_LABELS = {
+  'new-connection': 'New Connection',
+  'reconnection': 'Reconnection',
+  'relocation': 'Relocation',
+  'location-change': 'Relocation',
+  'termination': 'Termination',
+  'transfer': 'Ownership Transfer',
+  'ownership-change': 'Ownership Transfer',
+  'package-migration': 'Package Migration',
+  'service-vacation': 'Service Vacation',
+  'refund-request': 'Refund Request',
+  'customer-request-acceptance': 'Customer Request',
+  'internet-services': 'Internet Services',
 };
 
-const DEMO_APPLICATIONS = [
-  {
-    id: 'REF-20260801-001',
-    type: 'New Connection',
-    date: '2026-08-01',
-    status: 'approved',
-  },
-  {
-    id: 'REF-20260725-003',
-    type: 'Package Migration',
-    date: '2026-07-25',
-    status: 'pending',
-  },
-  {
-    id: 'REF-20260710-007',
-    type: 'Refund Request',
-    date: '2026-07-10',
-    status: 'rejected',
-  },
-  {
-    id: 'REF-20260615-012',
-    type: 'Reconnection',
-    date: '2026-06-15',
-    status: 'approved',
-  },
-];
+function accountToProfile(account, mobileNumber) {
+  return {
+    fullName: account?.fullName || account?.customerName || '',
+    email: account?.email || '',
+    phone: account?.mobileNumber || account?.phoneNumber || mobileNumber || '',
+    nic: account?.nic || '',
+    address: account?.address || account?.addressLine1 || '',
+    accountNumber: account?.accountNumber || '',
+    connectionType: account?.serviceType || account?.package || '',
+    packageName: account?.packageName || account?.package || '',
+    registeredDate: account?.registeredDate
+      ? new Date(account.registeredDate).toISOString().split('T')[0]
+      : '',
+  };
+}
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
+// Colors chosen to pass WCAG AA (4.5:1) against their tinted `bg`.
 const statusConfig = {
-  approved: { label: 'Approved', color: '#059669', bg: '#ecfdf5', icon: <FiCheckCircle size={14} /> },
-  pending: { label: 'Pending', color: '#d97706', bg: '#fffbeb', icon: <FiClock size={14} /> },
-  rejected: { label: 'Rejected', color: '#dc2626', bg: '#fef2f2', icon: <FiAlertCircle size={14} /> },
+  approved: { label: 'Approved', color: '#047857', bg: '#ecfdf5', icon: <FiCheckCircle size={14} /> },
+  pending: { label: 'Pending', color: '#b45309', bg: '#fffbeb', icon: <FiClock size={14} /> },
+  rejected: { label: 'Rejected', color: '#b91c1c', bg: '#fef2f2', icon: <FiAlertCircle size={14} /> },
 };
 
 function InfoField({ label, value }) {
@@ -142,23 +132,43 @@ function EditableField({ label, name, value, onChange, type = 'text' }) {
 /* ── Main Page ────────────────────────────────────────────────────────────── */
 export default function MyProfilePage() {
   const navigate = useNavigate();
+  const { mobileNumber, customerExists, selectedAccount } = useVerifiedContext();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState(DEFAULT_PROFILE);
-  const [editDraft, setEditDraft] = useState(DEFAULT_PROFILE);
+  const [profile, setProfile] = useState(() => accountToProfile(selectedAccount, mobileNumber));
+  const [editDraft, setEditDraft] = useState(() => accountToProfile(selectedAccount, mobileNumber));
+  const [applications, setApplications] = useState([]);
+  const [loadingApplications, setLoadingApplications] = useState(true);
 
-  // Load from localStorage on mount
+  // Re-sync from the verified account whenever it changes
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setProfile(parsed);
-        setEditDraft(parsed);
-      }
-    } catch {
-      // ignore parse errors
+    const mapped = accountToProfile(selectedAccount, mobileNumber);
+    setProfile(mapped);
+    setEditDraft(mapped);
+  }, [selectedAccount, mobileNumber]);
+
+  // Fetch real application history for the verified phone number
+  useEffect(() => {
+    let isSubscribed = true;
+    if (!mobileNumber) {
+      setLoadingApplications(false);
+      return;
     }
-  }, []);
+    setLoadingApplications(true);
+    api
+      .get(`/applications/by-phone?phone=${encodeURIComponent(mobileNumber)}`)
+      .then((res) => {
+        if (isSubscribed) setApplications(res.data?.applications || []);
+      })
+      .catch(() => {
+        if (isSubscribed) setApplications([]);
+      })
+      .finally(() => {
+        if (isSubscribed) setLoadingApplications(false);
+      });
+    return () => {
+      isSubscribed = false;
+    };
+  }, [mobileNumber]);
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
@@ -167,7 +177,6 @@ export default function MyProfilePage() {
 
   const handleSave = () => {
     setProfile(editDraft);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(editDraft));
     setIsEditing(false);
   };
 
@@ -175,6 +184,52 @@ export default function MyProfilePage() {
     setEditDraft(profile);
     setIsEditing(false);
   };
+
+  if (!customerExists) {
+    return (
+      <div style={{ backgroundColor: '#f4f7f9', minHeight: '100vh', paddingBottom: '4rem' }}>
+        <div style={{ maxWidth: '640px', margin: '0 auto', padding: '4rem 1.5rem', textAlign: 'center' }}>
+          <div
+            style={{
+              width: '72px',
+              height: '72px',
+              borderRadius: '50%',
+              background: '#eff6ff',
+              color: '#0056b3',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.5rem',
+            }}
+          >
+            <FiUserPlus size={32} />
+          </div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>
+            No SLT Account Found
+          </h1>
+          <p style={{ color: '#64748b', marginBottom: '2rem' }}>
+            We couldn't find an existing SLT connection registered to {mobileNumber ? `+94 ${mobileNumber}` : 'this number'}.
+            Get a new connection to start using SLTMobitel EasyApply.
+          </p>
+          <button
+            onClick={() => navigate('/new-connection/products')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '10px',
+              border: 'none',
+              background: '#0056b3',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+            }}
+          >
+            Browse Products & Get Connected
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: '#f4f7f9', minHeight: '100vh', paddingBottom: '4rem' }}>
@@ -352,11 +407,6 @@ export default function MyProfilePage() {
                 <EditableField label="Phone" name="phone" value={editDraft.phone} onChange={handleEditChange} type="tel" />
                 <EditableField label="NIC Number" name="nic" value={editDraft.nic} onChange={handleEditChange} />
                 <EditableField label="Address" name="address" value={editDraft.address} onChange={handleEditChange} />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))', gap: '0.75rem' }}>
-                  <EditableField label="City" name="city" value={editDraft.city} onChange={handleEditChange} />
-                  <EditableField label="District" name="district" value={editDraft.district} onChange={handleEditChange} />
-                </div>
-                <EditableField label="Province" name="province" value={editDraft.province} onChange={handleEditChange} />
               </>
             ) : (
               <>
@@ -367,12 +417,7 @@ export default function MyProfilePage() {
                   <InfoField label="NIC Number" value={profile.nic} />
                 </div>
                 <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: '0.5rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1rem 2rem' }}>
-                    <InfoField label="Address" value={profile.address} />
-                    <InfoField label="City" value={profile.city} />
-                    <InfoField label="District" value={profile.district} />
-                    <InfoField label="Province" value={profile.province} />
-                  </div>
+                  <InfoField label="Address" value={profile.address} />
                 </div>
               </>
             )}
@@ -562,11 +607,11 @@ export default function MyProfilePage() {
                 </tr>
               </thead>
               <tbody>
-                {DEMO_APPLICATIONS.map((app) => {
+                {applications.map((app) => {
                   const s = statusConfig[app.status] || statusConfig.pending;
                   return (
                     <tr
-                      key={app.id}
+                      key={app.referenceNumber}
                       style={{ borderBottom: '1px solid #f8fafc' }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = '#fafbfc';
@@ -576,13 +621,13 @@ export default function MyProfilePage() {
                       }}
                     >
                       <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: '#0056b3' }}>
-                        {app.id}
+                        {app.referenceNumber}
                       </td>
                       <td style={{ padding: '0.85rem 1rem', color: '#334155' }}>
-                        {app.type}
+                        {SERVICE_TYPE_LABELS[app.serviceType] || app.serviceType}
                       </td>
                       <td style={{ padding: '0.85rem 1rem', color: '#64748b' }}>
-                        {app.date}
+                        {app.createdAt ? new Date(app.createdAt).toISOString().split('T')[0] : ''}
                       </td>
                       <td style={{ padding: '0.85rem 1rem' }}>
                         <span
@@ -605,6 +650,13 @@ export default function MyProfilePage() {
                     </tr>
                   );
                 })}
+                {!loadingApplications && applications.length === 0 && (
+                  <tr>
+                    <td colSpan={4} style={{ padding: '1.5rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
+                      No applications submitted yet.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

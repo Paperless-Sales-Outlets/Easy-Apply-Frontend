@@ -280,7 +280,7 @@ const AgreementStep = forwardRef(function AgreementStep({ isActive, onPaymentInt
             <input type="hidden" name="digitalSignatureBase64" value={signatureBase64} />
           </div>
         ) : (
-          <div style={{ maxWidth: '400px' }}>
+          <div>
             <FileInputWithClear
               label="Upload Signature (PDF/JPG/PNG)"
               name="signatureDoc"

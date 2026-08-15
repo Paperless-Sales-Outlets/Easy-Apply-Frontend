@@ -63,7 +63,6 @@ export default function ServiceDetailsStep({ isActive }) {
             className="form-control"
             value={terminationType}
             onChange={(e) => setTerminationType(e.target.value)}
-            style={{ maxWidth: '280px' }}
           >
             <option value="permanent">{t('wizards.termination.serviceDetails.permanent')}</option>
             <option value="temporary">{t('wizards.termination.serviceDetails.temporary')}</option>
@@ -90,7 +89,7 @@ export default function ServiceDetailsStep({ isActive }) {
         {selectedWithUsername.length > 0 && (
           <div className="flex flex-col gap-4 mt-4">
             {selectedWithUsername.map((o) => (
-              <div key={o.usernameField} style={{ maxWidth: '400px' }}>
+              <div key={o.usernameField}>
                 <label className="form-label" htmlFor={`term-${o.usernameField}`}>
                   {t('wizards.termination.serviceDetails.usernameFor', { service: t(`wizards.termination.serviceDetails.${o.key}`) })}
                 </label>
@@ -108,7 +107,7 @@ export default function ServiceDetailsStep({ isActive }) {
 
       <div className="form-group mt-4">
         <label className="form-label" htmlFor="term-disconnectDate">{t('wizards.termination.serviceDetails.disconnectDate')}</label>
-        <div style={{ maxWidth: '200px' }}>
+        <div>
           <input id="term-disconnectDate" name="disconnectDate" type="date" className="form-control" required={isActive} />
         </div>
       </div>

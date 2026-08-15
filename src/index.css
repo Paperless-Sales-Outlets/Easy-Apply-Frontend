@@ -69,6 +69,16 @@
   padding: 0;
 }
 
+/* Accessibility: guaranteed visible keyboard-focus ring on every
+   interactive element, site-wide. Many components set `outline: none`
+   inline (higher specificity than any plain CSS rule) without an
+   alternate focus indicator, which fails WCAG 2.4.7 for keyboard users.
+   `!important` here is a deliberate, narrow override of exactly that. */
+:focus-visible {
+  outline: 2px solid var(--blue) !important;
+  outline-offset: 2px !important;
+}
+
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
@@ -175,6 +185,30 @@ a {
   margin: 0 auto;
   width: 100%;
   padding: clamp(1rem, 5vw, var(--s8)) clamp(0.75rem, 5vw, 5%);
+}
+
+/* Shared route-level width caps (see PageWrapper in App.jsx). General pages
+   cap at 90%, form/wizard pages at 80%, so nothing stretches edge-to-edge on
+   wide monitors. Mobile opts out of the percentage cap in favor of full width
+   with fixed padding, which reads better on narrow screens. */
+.page-shell {
+  width: 100%;
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+.page-shell--form {
+  width: 100%;
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .page-shell,
+  .page-shell--form {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
 }
 
 .scroll-target {
@@ -736,6 +770,7 @@ a {
 
 .otp-field {
   display: flex;
+  flex-wrap: nowrap;
   margin-bottom: var(--s5);
 }
 
@@ -749,11 +784,15 @@ a {
   border-radius: var(--radius) 0 0 var(--radius);
   font-weight: 600;
   color: var(--text);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .otp-field .form-control {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .otp-fieldset {
@@ -1189,6 +1228,8 @@ a {
 
 .input-prefixed {
   display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .input-prefixed .prefix {
@@ -1201,11 +1242,15 @@ a {
   border-radius: var(--radius) 0 0 var(--radius);
   font-weight: 600;
   color: var(--text);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .input-prefixed .form-control {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .field-group {
@@ -1434,6 +1479,13 @@ a {
   background-color: #f8fafc;
   border-radius: 8px;
   border: 1px solid var(--line);
+}
+
+/* Desktop nav links — hidden below 768px in favor of the hamburger menu */
+.nav-links-desktop {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 }
 
 /* Hamburger button — hidden on desktop */
@@ -2227,33 +2279,88 @@ a {
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
 
+/* Catalog page: sidebar filters + product listing.
+   On mobile the sidebar collapses behind a "Filters" toggle
+   instead of squeezing a fixed 260px column into the viewport. */
+.catalog-layout-grid {
+  grid-template-columns: 260px minmax(0, 1fr);
+}
+
+.catalog-filter-toggle-btn {
+  display: none;
+}
+
+.catalog-filter-close-btn {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .catalog-layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-filter-toggle-btn {
+    display: flex;
+  }
+
+  .catalog-sidebar-col {
+    display: none;
+  }
+
+  .catalog-filter-close-btn {
+    display: flex;
+  }
+}
+
+/* Mobile/tablet filter popup — a bottom-sheet, portaled to <body> (see
+   ProductCatalogPage.jsx) so it isn't affected by the page-transition
+   wrapper's transform, which would otherwise break position:fixed. */
+.catalog-filter-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.catalog-filter-modal-backdrop .catalog-sidebar-col-inner {
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: catalogSheetUp 0.2s ease-out;
+}
+
+.catalog-filter-modal-backdrop .catalog-sidebar-col-inner aside {
+  border-radius: 16px 16px 0 0;
+  border-bottom: none;
+}
+
+@keyframes catalogSheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 576px) {
   .product-grid-container {
     grid-template-columns: 1fr;
   }
 }
 
-.catalog-product-5-col-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-@media (max-width: 1300px) {
-  .catalog-product-5-col-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+@media (max-width: 768px) {
+  .catalog-product-list-row {
+    flex-direction: column;
+    align-items: flex-start !important;
   }
-}
 
-@media (max-width: 900px) {
-  .catalog-product-5-col-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 600px) {
-  .catalog-product-5-col-grid {
-    grid-template-columns: 1fr;
+  .catalog-product-list-actions {
+    justify-content: space-between !important;
+    width: 100%;
   }
 }
 

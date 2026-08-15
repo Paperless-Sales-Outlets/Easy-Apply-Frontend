@@ -77,32 +77,18 @@ export default function CheckStatusPage() {
             'checkStatusPage.statusDescription',
             'Your application is currently under review by our technical team.'
           ),
-        customerName: data.customerName || 'Nimal Bandara',
-        telephone: data.telephone || '0774053185',
+        customerName: data.customerName || '',
+        telephone: data.telephone || '',
         notes: data.notes || '',
         actionedBy: data.actionedBy || null,
         actionedAt: data.actionedAt || null,
       });
     } catch (error) {
-      // Clean fallback object for demonstration if backend lookup is mock
-      const mockRef = refToSearch.trim();
-      if (mockRef.length >= 4) {
-        setResult({
-          status: 'pending',
-          serviceType: mockRef.toLowerCase().includes('pkg') ? 'package-migration' : 'relocation',
-          referenceNumber: mockRef,
-          createdAt: new Date().toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: 'numeric' }),
-          message: 'Application has been received and is under technical feasibility review.',
-          customerName: 'SLT Customer',
-          telephone: '0774053185',
-        });
-      } else {
-        setResult({
-          status: 'not-found',
-          referenceNumber: mockRef,
-          message: error.response?.data?.message || 'No application found with this reference number. Please verify and try again.',
-        });
-      }
+      setResult({
+        status: 'not-found',
+        referenceNumber: refToSearch.trim(),
+        message: error.response?.data?.message || 'No application found with this reference number. Please verify and try again.',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -442,7 +428,7 @@ export default function CheckStatusPage() {
                         <span style={{ display: 'block', fontSize: '0.75rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
                           Estimated SLA
                         </span>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#16a34a' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#047857' }}>
                           24 – 48 Hours
                         </span>
                       </div>
@@ -457,7 +443,7 @@ export default function CheckStatusPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {/* Step 1 */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ backgroundColor: '#10b981', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                          <div style={{ backgroundColor: '#047857', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
                             <FiCheck size={14} />
                           </div>
                           <div style={{ flex: 1 }}>

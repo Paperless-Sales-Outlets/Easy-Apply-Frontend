@@ -6,24 +6,20 @@ import DocumentsStep from './DocumentsStep';
 import DeclarationStep from './DeclarationStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
-import CustomerProfileSummary from '../../components/CustomerProfileSummary';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
+import WizardStepper from '../../components/WizardStepper';
 
 export default function OwnershipChangeWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { customerExists, selectedAccount } = useVerifiedContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
   const totalSteps = 4;
-  const profileFields = [
-    { name: 'currentTelephone', label: t('wizards.ownershipChange.profile.telephone'), value: verifiedMobile || '' },
-    { name: 'currentCustomerName', label: t('wizards.ownershipChange.profile.fullName'), value: '' },
-    { name: 'currentNic', label: t('wizards.ownershipChange.profile.nic'), value: '' },
-    { name: 'currentContactNo', label: t('wizards.ownershipChange.profile.contactNo'), value: verifiedMobile || '' },
-  ];
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -75,33 +71,24 @@ export default function OwnershipChangeWizard() {
       <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.ownershipChange.title')}</h2>
 
       {/* Progress Bar */}
-      <div className="wizard-nav-wrapper">
-        <div className="wizard-steps-container" style={{ display: "flex", marginBottom: "2rem", position: "relative" }}>
-          <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
-          <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
+      <WizardStepper
+        currentStep={currentStep}
+        steps={[
+          t('wizards.ownershipChange.steps.s1'),
+          t('wizards.ownershipChange.steps.s2'),
+          t('wizards.ownershipChange.steps.s3'),
+          t('wizards.ownershipChange.steps.s4'),
+        ]}
+      />
 
-          {[1, 2, 3, 4].map(step => (
-            <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-              <div style={{
-                width: '34px', height: '34px', borderRadius: '50%',
-                backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
-                border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
-                color: step <= currentStep ? 'white' : 'var(--text-secondary)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
-              }}>
-                {step}
-              </div>
-              <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-                {step === 1 ? t('wizards.ownershipChange.steps.s1') : step === 2 ? t('wizards.ownershipChange.steps.s2') : step === 3 ? t('wizards.ownershipChange.steps.s3') : t('wizards.ownershipChange.steps.s4')}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form ref={formRef} onSubmit={handleSubmit}>
 
-        <CustomerProfileSummary fields={profileFields} />
+        <input type="hidden" name="currentTelephone" value={selectedAccount?.telephone || verifiedMobile || ''} />
+        <input type="hidden" name="currentCustomerName" value={selectedAccount?.fullName || ''} />
+        <input type="hidden" name="currentNic" value={selectedAccount?.nic || ''} />
+        <input type="hidden" name="currentContactNo" value={selectedAccount?.mobileNumber || verifiedMobile || ''} />
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>

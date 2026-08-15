@@ -167,6 +167,9 @@ export const saveLocalCart = (items) => {
   try {
     localStorage.setItem('easy_apply_cart', JSON.stringify(items));
   } catch (e) {}
+  // 'storage' only fires in OTHER tabs, so broadcast a same-tab event too
+  // (the navbar cart badge and any other listeners rely on this to update live).
+  window.dispatchEvent(new Event('easyapply:cart-updated'));
 };
 
 /**

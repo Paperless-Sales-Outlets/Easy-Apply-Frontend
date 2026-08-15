@@ -42,13 +42,14 @@ import OtpProtectedForm from './components/OtpProtectedForm';
 
 import { CartProvider } from './context/CartContext';
 
-const PageWrapper = ({ children, fullBleed = false }) => {
+const PageWrapper = ({ children, fullBleed = false, form = false }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.2 }}
+      className={fullBleed ? undefined : form ? 'page-shell--form' : 'page-shell'}
       style={{ width: '100%' }}
     >
       {children}
@@ -150,7 +151,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/new-connection"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <NewConnectionWizard />
               </OtpProtectedForm>
@@ -161,7 +162,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/reconnection"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <ReconnectionWizard />
               </OtpProtectedForm>
@@ -172,7 +173,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/ownership-change"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <OwnershipChangeWizard />
               </OtpProtectedForm>
@@ -183,7 +184,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/location-change"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <LocationChangeWizard />
               </OtpProtectedForm>
@@ -194,7 +195,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/termination"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <TerminationWizard />
               </OtpProtectedForm>
@@ -205,7 +206,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/package-migration"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <PackageMigrationWizard />
               </OtpProtectedForm>
@@ -216,7 +217,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/service-vacation"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <ServiceVacationWizard />
               </OtpProtectedForm>
@@ -227,7 +228,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/refund-request"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <RefundRequestWizard />
               </OtpProtectedForm>
@@ -238,7 +239,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/customer-request-acceptance"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <CustomerRequestAcceptanceWizard />
               </OtpProtectedForm>
@@ -249,7 +250,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/internet-services"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <InternetServicesWizard />
               </OtpProtectedForm>
@@ -270,7 +271,9 @@ const AnimatedRoutes = () => {
           path="/profile"
           element={
             <PageWrapper>
-              <MyProfilePage />
+              <OtpProtectedForm>
+                <MyProfilePage />
+              </OtpProtectedForm>
             </PageWrapper>
           }
         />

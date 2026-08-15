@@ -6,6 +6,7 @@ import { useVerifiedContext } from '../../components/verification';
 import PackageDetailsStep from './PackageDetailsStep';
 import PackageMigrationDeclarationStep from './PackageMigrationDeclarationStep';
 import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
+import WizardStepper from '../../components/WizardStepper';
 
 export default function PackageMigrationWizard() {
   const navigate = useNavigate();
@@ -27,8 +28,40 @@ export default function PackageMigrationWizard() {
   const [requiredPackage, setRequiredPackage] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
   const [remarks, setRemarks] = useState('');
-  const [nicFrontFile, setNicFrontFile] = useState(null);
-  const [nicBackFile, setNicBackFile] = useState(null);
+
+  // Available packages the customer can migrate to — fetched once, used by
+  // the product picker shown right on Step 1 (next to the verified account).
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  useEffect(() => {
+    let isSubscribed = true;
+    async function fetchProducts() {
+      try {
+        setLoadingProducts(true);
+        const res = await api.get('/products');
+        if (isSubscribed) {
+          const list = res.data?.data?.products || res.data?.data || res.data?.products || [];
+          setProducts(Array.isArray(list) ? list : []);
+        }
+      } catch (err) {
+        if (isSubscribed) {
+          setProducts([
+            { _id: '1', name: '300 Mbps Fibre Broadband', speed: '300 Mbps', monthlyPrice: 6990 },
+            { _id: '2', name: '500 Mbps Fibre Broadband', speed: '500 Mbps', monthlyPrice: 8990 },
+            { _id: '3', name: '1 Gbps Fibre Broadband', speed: '1 Gbps', monthlyPrice: 12990 },
+            { _id: '4', name: 'LTE Home 150 GB', speed: 'Up to 100 Mbps', monthlyPrice: 4490 },
+            { _id: '5', name: 'LTE Home 300 GB', speed: 'Up to 100 Mbps', monthlyPrice: 6490 },
+            { _id: '6', name: 'PEO TV Starter Pack', speed: 'HD Quality', monthlyPrice: 1999 },
+          ]);
+        }
+      } finally {
+        if (isSubscribed) setLoadingProducts(false);
+      }
+    }
+    fetchProducts();
+    return () => { isSubscribed = false; };
+  }, []);
 
   // Step 3: Declaration & Signature State
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
@@ -87,14 +120,18 @@ export default function PackageMigrationWizard() {
   const isSamePackageError = Boolean(currentPkgName && reqPkgName && currentPkgName === reqPkgName);
 
   // Step Validations
-  const isStep1Valid = Boolean(customerPackage);
-  const isStep2Valid = Boolean(requiredPackage) && !isSamePackageError && Boolean(effectiveDate) && Boolean(nicFrontFile) && Boolean(nicBackFile);
+  const isStep1Valid = Boolean(customerPackage) && Boolean(requiredPackage) && !isSamePackageError;
+  const isStep2Valid = Boolean(effectiveDate);
   const isStep3Valid = declarationAccepted && (Boolean(signature) || Boolean(signatureFile));
 
   const handleNext = () => {
     if (currentStep === 1) {
-      if (!isStep1Valid) {
+      if (!customerPackage) {
         setLookupError('Please verify a valid customer account from the database before proceeding.');
+        return;
+      }
+      if (!isStep1Valid) {
+        setShowValidationErrors(true);
         return;
       }
     } else if (currentStep === 2) {
@@ -148,8 +185,6 @@ export default function PackageMigrationWizard() {
       fd.append('phone', mobileNumber || phone);
       fd.append('formData', JSON.stringify(payload));
 
-      if (nicFrontFile instanceof File) fd.append('nicFront', nicFrontFile);
-      if (nicBackFile instanceof File) fd.append('nicBack', nicBackFile);
       if (signatureFile instanceof File) fd.append('signatureFile', signatureFile);
 
       const res = await api.post('/applications', fd, {
@@ -185,35 +220,9 @@ export default function PackageMigrationWizard() {
   ];
 
   return (
-    <div className="container" style={{ padding: '2rem 1rem', maxWidth: '1240px', margin: '0 auto' }}>
-      {/* Stepper Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-          {stepTitles.map((title, idx) => (
-            <div
-              key={idx}
-              style={{
-                flex: 1,
-                textAlign: 'center',
-                color: currentStep === idx + 1 ? 'var(--slt-blue, #0056b3)' : '#64748b',
-                fontWeight: currentStep === idx + 1 ? 800 : 600,
-                fontSize: '0.88rem',
-              }}
-            >
-              Step {idx + 1}: {title}
-            </div>
-          ))}
-        </div>
-        <div style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
-          <div
-            style={{
-              width: `${(currentStep / totalSteps) * 100}%`,
-              backgroundColor: 'var(--slt-blue, #0056b3)',
-              transition: 'width 0.3s ease',
-            }}
-          />
-        </div>
-      </div>
+    <div className="container" style={{ padding: '2rem 1rem', width: '100%', margin: '0 auto' }}>
+      {/* Progress Bar */}
+      <WizardStepper currentStep={currentStep} steps={stepTitles} />
 
       {/* VERIFIED CUSTOMER SUMMARY BOX AT TOP */}
       <ExistingCustomerSummaryBox customerData={customerPackage} customerExists={customerExists} />
@@ -258,10 +267,50 @@ export default function PackageMigrationWizard() {
 
             {customerPackage && (
               <div className="card" style={{ padding: '1.5rem', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
-                <h4 style={{ color: '#0056b3', marginTop: 0, fontWeight: 800 }}>Current Account Summary</h4>
-                <p style={{ color: '#475569', fontSize: '0.9rem' }}>
-                  Account details fetched from real database. Click Next to select your upgraded/migrated package.
+                <h4 style={{ color: '#0056b3', marginTop: 0, marginBottom: '0.35rem', fontWeight: 800 }}>Select Package to Migrate To</h4>
+                <p style={{ color: '#475569', fontSize: '0.85rem', marginTop: 0, marginBottom: '1rem' }}>
+                  Your current package is <strong>{customerPackage.packageName || customerPackage.package || 'N/A'}</strong>. Choose the package you'd like to move to.
                 </p>
+
+                <label className="form-label" htmlFor="pm-requiredPackage-step1" style={{ fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
+                  Required Package <span style={{ color: 'red' }}>*</span>
+                </label>
+                <select
+                  id="pm-requiredPackage-step1"
+                  name="requiredPackage"
+                  className="form-control"
+                  value={requiredPackage}
+                  onChange={(e) => setRequiredPackage(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem',
+                    borderRadius: '6px',
+                    border: isSamePackageError ? '1px solid #dc2626' : '1px solid #cbd5e1',
+                    backgroundColor: isSamePackageError ? '#fef2f2' : '#ffffff',
+                  }}
+                >
+                  <option value="">-- Select Requested Package --</option>
+                  {loadingProducts ? (
+                    <option disabled>Loading packages...</option>
+                  ) : (
+                    products.map((pkg) => (
+                      <option key={pkg._id || pkg.name} value={pkg.name}>
+                        {pkg.name} {pkg.speed ? `(${pkg.speed})` : ''} {pkg.monthlyPrice ? `- LKR ${pkg.monthlyPrice.toLocaleString()}/mo` : ''}
+                      </option>
+                    ))
+                  )}
+                </select>
+
+                {isSamePackageError && (
+                  <div style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.4rem', fontWeight: 500 }}>
+                    Requested package cannot be the same as your current package (BRD 5.6).
+                  </div>
+                )}
+                {showValidationErrors && !requiredPackage && !isSamePackageError && (
+                  <div style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.4rem' }}>
+                    Please select a requested package.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -272,23 +321,20 @@ export default function PackageMigrationWizard() {
             isActive={currentStep === 2}
             customerPackage={customerPackage}
             requiredPackage={requiredPackage}
-            setRequiredPackage={setRequiredPackage}
             effectiveDate={effectiveDate}
             setEffectiveDate={setEffectiveDate}
             remarks={remarks}
             setRemarks={setRemarks}
-            nicFrontFile={nicFrontFile}
-            setNicFrontFile={setNicFrontFile}
-            nicBackFile={nicBackFile}
-            setNicBackFile={setNicBackFile}
             showValidationErrors={showValidationErrors}
-            isSamePackageError={isSamePackageError}
           />
         )}
 
         {currentStep === 3 && (
           <PackageMigrationDeclarationStep
             isActive={currentStep === 3}
+            customerPackage={customerPackage}
+            requiredPackage={requiredPackage}
+            effectiveDate={effectiveDate}
             declarationAccepted={declarationAccepted}
             setDeclarationAccepted={setDeclarationAccepted}
             signature={signature}

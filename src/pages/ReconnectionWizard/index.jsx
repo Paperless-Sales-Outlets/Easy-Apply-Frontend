@@ -6,13 +6,15 @@ import WizardStepper from '../../components/WizardStepper';
 import DeclarationStep from './DeclarationStep';
 import PaymentStep from '../PaymentStep';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
 export default function ReconnectionWizard() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { customerExists, selectedAccount } = useVerifiedContext();
 
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -39,6 +41,12 @@ export default function ReconnectionWizard() {
   const [submitError, setSubmitError] = useState('');
   const [paymentIntention, setPaymentIntention] = useState('online');
   const [reconnectionData, setReconnectionData] = useState(null);
+
+  // The customer's account is already verified via OTP + real DB lookup
+  // before reaching this wizard — reuse it instead of asking/looking it up again.
+  useEffect(() => {
+    if (selectedAccount) setReconnectionData(selectedAccount);
+  }, [selectedAccount]);
 
   const formRef = useRef(null);
   const step2Ref = useRef(null);
@@ -204,6 +212,8 @@ export default function ReconnectionWizard() {
         {t('wizards.reconnection.title')}
       </h2>
 
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
+
       {selectedProduct && (
         <div
           style={{
@@ -288,7 +298,7 @@ export default function ReconnectionWizard() {
       <WizardStepper
         currentStep={currentStep}
         steps={[
-          'Select Services',
+          'Existing Account Verification',
           'Details & Documents',
           'Checkout & Auth',
         ]}
@@ -317,10 +327,6 @@ export default function ReconnectionWizard() {
               ref={step2Ref}
               isActive={currentStep === 1}
               reconnectionData={reconnectionData}
-              onVerifySuccess={(data) =>
-                setReconnectionData(data)
-              }
-              verifiedMobile={verifiedMobile}
             />
           </div>
 

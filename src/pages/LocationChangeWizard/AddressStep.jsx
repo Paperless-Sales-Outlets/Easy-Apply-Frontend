@@ -107,15 +107,15 @@ export default function AddressStep({
     let isSubscribed = true;
 
     async function fetchCurrentAddress() {
-      const telephone = formData?.telephone || formData?.tel || formData?.phone || '0112345678';
+      const telephone = formData?.telephone || formData?.tel || formData?.phone;
 
       if (!telephone) {
         if (isSubscribed) {
           setCurrentAddress({
-            address1: formData?.addressLine1 || formData?.address || "No 45, Lotus Road, Colombo 01",
+            address1: formData?.addressLine1 || formData?.address || "",
             address2: formData?.addressLine2 || "",
-            city: formData?.city || "Colombo",
-            district: formData?.district || "Colombo",
+            city: formData?.city || "",
+            district: formData?.district || "",
             postalCode: formData?.postalCode || "",
           });
           setLoadingCurrent(false);
@@ -130,10 +130,10 @@ export default function AddressStep({
           const cust = response.data.data;
           const currObj = (cust.currentAddress && typeof cust.currentAddress === 'object') ? cust.currentAddress : {};
 
-          const addr1 = currObj.address1 || currObj.addressLine1 || cust.addressLine1 || cust.address1 || cust.address || "No 45, Lotus Road, Colombo 01";
+          const addr1 = currObj.address1 || currObj.addressLine1 || cust.addressLine1 || cust.address1 || cust.address || "";
           const addr2 = currObj.address2 || currObj.addressLine2 || cust.addressLine2 || cust.address2 || "";
-          const city = currObj.city || cust.city || "Colombo";
-          const district = currObj.district || cust.district || "Colombo";
+          const city = currObj.city || cust.city || "";
+          const district = currObj.district || cust.district || "";
           const postalCode = currObj.postalCode || currObj.postal_code || cust.postalCode || cust.postal_code || "";
 
           if (isSubscribed) {
@@ -147,10 +147,10 @@ export default function AddressStep({
           }
         } else if (isSubscribed) {
           setCurrentAddress({
-            address1: formData?.addressLine1 || formData?.address || "No 45, Lotus Road, Colombo 01",
+            address1: formData?.addressLine1 || formData?.address || "",
             address2: formData?.addressLine2 || "",
-            city: formData?.city || "Colombo",
-            district: formData?.district || "Colombo",
+            city: formData?.city || "",
+            district: formData?.district || "",
             postalCode: formData?.postalCode || "",
           });
         }
@@ -158,10 +158,10 @@ export default function AddressStep({
         console.error("Failed to load customer current address:", err);
         if (isSubscribed) {
           setCurrentAddress({
-            address1: formData?.addressLine1 || formData?.address || "No 45, Lotus Road, Colombo 01",
+            address1: formData?.addressLine1 || formData?.address || "",
             address2: formData?.addressLine2 || "",
-            city: formData?.city || "Colombo",
-            district: formData?.district || "Colombo",
+            city: formData?.city || "",
+            district: formData?.district || "",
             postalCode: formData?.postalCode || "",
           });
         }

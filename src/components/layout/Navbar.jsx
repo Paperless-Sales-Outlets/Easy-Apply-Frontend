@@ -3,7 +3,15 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FiSearch, FiShoppingCart, FiGlobe, FiMenu, FiX } from 'react-icons/fi';
 import sltLogo from '../../assets/sltlogoOnly.png';
-import { useCart } from '../../context/CartContext';
+import { getLocalCart } from '../../services/productService';
+
+const countCartItems = () => {
+  try {
+    return getLocalCart().reduce((acc, item) => acc + (item.quantity || 1), 0);
+  } catch (e) {
+    return 0;
+  }
+};
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -12,20 +20,42 @@ export default function Navbar() {
   const [searchCategory, setSearchCategory] = useState('All');
   const menuRef = useRef(null);
 
-  let cartCount = 0;
-  try {
-    const { getCartItemCount } = useCart();
-    cartCount = getCartItemCount() || 0;
-  } catch (e) {
-    const storedCart = localStorage.getItem('cart') || sessionStorage.getItem('cart');
-    if (storedCart) {
-      try {
-        const parsed = JSON.parse(storedCart);
-        const items = parsed.items || parsed || [];
-        cartCount = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
-      } catch (err) {}
-    }
-  }
+  const [cartCount, setCartCount] = useState(countCartItems);
+
+  useEffect(() => {
+    const syncCartCount = () => setCartCount(countCartItems());
+    syncCartCount();
+    window.addEventListener('easyapply:cart-updated', syncCartCount);
+    window.addEventListener('storage', syncCartCount);
+    return () => {
+      window.removeEventListener('easyapply:cart-updated', syncCartCount);
+      window.removeEventListener('storage', syncCartCount);
+    };
+  }, []);
+
+  const isActivePath = (path) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
+  const navLinkStyle = (path) =>
+    isActivePath(path)
+      ? {
+          color: '#0056b3',
+          textDecoration: 'none',
+          fontWeight: 800,
+          fontSize: '0.88rem',
+          position: 'relative',
+          paddingBottom: '0.25rem',
+          borderBottom: '2.5px solid #0056b3',
+        }
+      : {
+          color: '#334155',
+          textDecoration: 'none',
+          fontWeight: 600,
+          fontSize: '0.88rem',
+          position: 'relative',
+          paddingBottom: '0.25rem',
+          borderBottom: '2.5px solid transparent',
+        };
 
   useEffect(() => {
     setMenuOpen(false);
@@ -85,9 +115,10 @@ export default function Navbar() {
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
-            <FiSearch style={{ color: '#94a3b8', marginLeft: '0.75rem', flexShrink: 0 }} size={16} />
+            <FiSearch style={{ color: '#94a3b8', marginLeft: '0.75rem', flexShrink: 0 }} size={16} aria-hidden="true" />
             <input
               type="text"
+              aria-label="Search packages, speeds, products"
               placeholder="Search packages, speeds, products..."
               style={{
                 flex: 1,
@@ -102,6 +133,7 @@ export default function Navbar() {
             <select
               value={searchCategory}
               onChange={(e) => setSearchCategory(e.target.value)}
+              aria-label="Filter search by category"
               style={{
                 border: 'none',
                 borderLeft: '1px solid #e2e8f0',
@@ -122,6 +154,7 @@ export default function Navbar() {
             </select>
             <button
               type="button"
+              aria-label="Search"
               style={{
                 backgroundColor: '#0056b3',
                 color: '#ffffff',
@@ -133,36 +166,23 @@ export default function Navbar() {
                 justifyContent: 'center',
               }}
             >
-              <FiSearch size={16} />
+              <FiSearch size={16} aria-hidden="true" />
             </button>
           </div>
         </div>
 
         {/* ── Right: Links + Language + Cart ── */}
         <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.35rem, 2vw, 1.25rem)', flexShrink: 0 }}>
-          {/* Desktop Nav Links */}
-          <div className="nav-links-desktop" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <Link
-              to="/"
-              style={{
-                color: '#0056b3',
-                textDecoration: 'none',
-                fontWeight: 800,
-                fontSize: '0.88rem',
-                position: 'relative',
-                paddingBottom: '0.25rem',
-                borderBottom: '2.5px solid #0056b3',
-              }}
-            >
-              Home
-            </Link>
-            <Link to="/check-status" style={{ color: '#334155', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}>Application Status</Link>
-            <Link to="/help" style={{ color: '#334155', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}>Help &amp; Support</Link>
-            <Link to="/profile" style={{ color: '#334155', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}>My Profile</Link>
+          {/* Desktop Nav Links — display is controlled by the .nav-links-desktop media query, not inline, so it can collapse to the hamburger menu on mobile */}
+          <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '1.5rem' }}>
+            <Link to="/" style={navLinkStyle('/')}>Home</Link>
+            <Link to="/check-status" style={navLinkStyle('/check-status')}>Application Status</Link>
+            <Link to="/help" style={navLinkStyle('/help')}>Help &amp; Support</Link>
+            <Link to="/profile" style={navLinkStyle('/profile')}>My Profile</Link>
           </div>
 
           {/* Language Switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', backgroundColor: '#f8fafc', padding: '0.35rem 0.65rem', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+          <div className="lang-switcher" style={{ alignItems: 'center', gap: '0.35rem', backgroundColor: '#f8fafc', padding: '0.35rem 0.65rem', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
             <FiGlobe style={{ color: '#0056b3' }} size={15} />
             <select
               value={i18n.language}
@@ -218,11 +238,12 @@ export default function Navbar() {
             )}
           </Link>
 
-          {/* Mobile Hamburger */}
+          {/* Mobile Hamburger — display is controlled by the .hamburger-btn media query (hidden on desktop, shown ≤768px) */}
           <button
             className="hamburger-btn"
             onClick={() => setMenuOpen((prev) => !prev)}
-            style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem' }}
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            style={{ cursor: 'pointer' }}
           >
             {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
@@ -232,10 +253,32 @@ export default function Navbar() {
       {/* Mobile Slide Menu */}
       {menuOpen && (
         <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', padding: '1rem' }}>
-          <Link to="/" style={{ display: 'block', padding: '0.6rem 0', color: '#0f172a', textDecoration: 'none', fontWeight: 600 }}>Home</Link>
-          <Link to="/check-status" style={{ display: 'block', padding: '0.6rem 0', color: '#0f172a', textDecoration: 'none', fontWeight: 600 }}>Application Status</Link>
-          <Link to="/help" style={{ display: 'block', padding: '0.6rem 0', color: '#0f172a', textDecoration: 'none', fontWeight: 600 }}>Help &amp; Support</Link>
-          <Link to="/profile" style={{ display: 'block', padding: '0.6rem 0', color: '#0f172a', textDecoration: 'none', fontWeight: 600 }}>My Profile</Link>
+          {[
+            { to: '/', label: 'Home' },
+            { to: '/check-status', label: 'Application Status' },
+            { to: '/help', label: 'Help & Support' },
+            { to: '/profile', label: 'My Profile' },
+          ].map(({ to, label }) => {
+            const active = isActivePath(to);
+            return (
+              <Link
+                key={to}
+                to={to}
+                style={{
+                  display: 'block',
+                  padding: '0.6rem 0.75rem',
+                  color: active ? '#0056b3' : '#0f172a',
+                  textDecoration: 'none',
+                  fontWeight: active ? 800 : 600,
+                  backgroundColor: active ? '#eff6ff' : 'transparent',
+                  borderRadius: '8px',
+                  borderLeft: active ? '3px solid #0056b3' : '3px solid transparent',
+                }}
+              >
+                {label}
+              </Link>
+            );
+          })}
         </div>
       )}
     </nav>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiAlertCircle, FiCheck } from 'react-icons/fi';
 import CategoryChips from '../components/catalog/CategoryChips';
@@ -8,7 +9,7 @@ import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
 import SkeletonCard from '../components/catalog/SkeletonCard';
 import Toast from '../components/common/Toast';
 import HeroBannerCarousel from '../components/catalog/HeroBannerCarousel';
-import { getProducts, addToCart, getCart } from '../services/productService';
+import { getProducts, addToCart, getLocalCart, clearCart } from '../services/productService';
 
 const DEFAULT_MOCKUP_PRODUCTS = [
   // ── 🌐 Broadband Category (5 Packages) ──
@@ -176,27 +177,19 @@ export default function ProductCatalogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('Popularity');
   const [viewMode, setViewMode] = useState('grid');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Cart Items State Sync
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const stored = localStorage.getItem('cart');
-      return stored ? JSON.parse(stored).items || [] : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  // Cart Items State Sync (reads the same local cart used by the Cart page & navbar badge)
+  const [cartItems, setCartItems] = useState(() => getLocalCart());
 
   useEffect(() => {
-    const syncCart = () => {
-      try {
-        const stored = localStorage.getItem('cart');
-        setCartItems(stored ? JSON.parse(stored).items || [] : []);
-      } catch (e) {}
-    };
-
+    const syncCart = () => setCartItems(getLocalCart());
+    window.addEventListener('easyapply:cart-updated', syncCart);
     window.addEventListener('storage', syncCart);
-    return () => window.removeEventListener('storage', syncCart);
+    return () => {
+      window.removeEventListener('easyapply:cart-updated', syncCart);
+      window.removeEventListener('storage', syncCart);
+    };
   }, []);
 
   // Favorites & Toast
@@ -275,10 +268,10 @@ export default function ProductCatalogPage() {
 
     cartItems.forEach((item) => {
       const p = item.product || item;
-      const id = String(p._id || p.id || item.productId || '');
+      const id = String(item.productId || p._id || p.id || '');
       if (id) selectedProdIds.add(id);
 
-      const cat = (p.category || p.name || '').toLowerCase();
+      const cat = (p.category || item.category || p.name || item.productName || '').toLowerCase();
       if (cat.includes('voice')) categoriesInCart.add('Voice');
       else if (cat.includes('peo')) categoriesInCart.add('PEO TV');
       else categoriesInCart.add('Broadband');
@@ -306,10 +299,7 @@ export default function ProductCatalogPage() {
 
     try {
       await addToCart(prod, qty);
-      const newItems = [...cartItems, { productId: prodId, quantity: qty, product: prod }];
-      setCartItems(newItems);
-      localStorage.setItem('cart', JSON.stringify({ items: newItems }));
-      window.dispatchEvent(new Event('storage'));
+      setCartItems(getLocalCart());
 
       if (group !== 'Voice' && !cartCategoryAnalysis.hasVoice) {
         showToast(`Added ${prod.name}! Remember: 1 Voice package is COMPULSORY to checkout.`, 'info');
@@ -321,10 +311,9 @@ export default function ProductCatalogPage() {
     }
   };
 
-  const handleClearCartSelection = () => {
+  const handleClearCartSelection = async () => {
+    await clearCart();
     setCartItems([]);
-    localStorage.removeItem('cart');
-    window.dispatchEvent(new Event('storage'));
     showToast('Selection reset. All packages are now unselected.', 'info');
   };
 
@@ -522,9 +511,9 @@ export default function ProductCatalogPage() {
         />
 
         {/* ── Main Catalog Body Layout (Sidebar Filters + Category-Wise Products) ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '260px minmax(0, 1fr)', gap: '1.5rem', marginTop: '1.5rem' }}>
-          {/* Left Sidebar Filter Column */}
-          <div>
+        <div className="catalog-layout-grid" style={{ display: 'grid', gap: '1.5rem', marginTop: '1.5rem' }}>
+          {/* Left Sidebar Filter Column — desktop only; hidden ≤900px in favor of the "Filters" popup below */}
+          <div className="catalog-sidebar-col">
             <SidebarFilters
               selectedTypes={selectedTypes}
               onTypeToggle={handleTypeToggle}
@@ -533,6 +522,31 @@ export default function ProductCatalogPage() {
               onClearAll={handleClearAll}
             />
           </div>
+
+          {/* Mobile/tablet filter popup. Portaled to <body> because position:fixed
+              breaks under the PageWrapper's animated (transformed) ancestor otherwise. */}
+          {showMobileFilters &&
+            createPortal(
+              <div
+                className="catalog-filter-modal-backdrop"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setShowMobileFilters(false);
+                }}
+              >
+                <div className="catalog-sidebar-col-inner">
+                  <SidebarFilters
+                    selectedTypes={selectedTypes}
+                    onTypeToggle={handleTypeToggle}
+                    selectedSpeeds={selectedSpeeds}
+                    onSpeedToggle={handleSpeedToggle}
+                    onClearAll={handleClearAll}
+                    onApply={() => setShowMobileFilters(false)}
+                    onCloseMobile={() => setShowMobileFilters(false)}
+                  />
+                </div>
+              </div>,
+              document.body
+            )}
 
           {/* Right Product Listing Area */}
           <div>
@@ -544,13 +558,36 @@ export default function ProductCatalogPage() {
                 alignItems: 'center',
                 marginBottom: '1.2rem',
                 width: '100%',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
               }}
             >
               <div style={{ fontSize: '0.92rem', color: '#475569', fontWeight: 600 }}>
                 Showing <strong style={{ color: '#0f172a' }}>{filteredProducts.length}</strong> total results across categories
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="catalog-filter-toggle-btn"
+                  onClick={() => setShowMobileFilters((prev) => !prev)}
+                  style={{
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: showMobileFilters ? '#0056b3' : '#ffffff',
+                    color: showMobileFilters ? '#ffffff' : '#0f172a',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <FiSliders size={14} />
+                  <span>Filters</span>
+                </button>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <span style={{ fontSize: '0.82rem', color: '#64748b' }}>Sort by:</span>
                   <select
@@ -577,6 +614,8 @@ export default function ProductCatalogPage() {
                 <div style={{ display: 'flex', gap: '2px', backgroundColor: '#f1f5f9', padding: '3px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                   <button
                     onClick={() => setViewMode('grid')}
+                    aria-label="Grid view"
+                    aria-pressed={viewMode === 'grid'}
                     style={{
                       border: 'none',
                       backgroundColor: viewMode === 'grid' ? '#0056b3' : 'transparent',
@@ -588,10 +627,12 @@ export default function ProductCatalogPage() {
                       alignItems: 'center',
                     }}
                   >
-                    <FiGrid size={15} />
+                    <FiGrid size={15} aria-hidden="true" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
+                    aria-label="List view"
+                    aria-pressed={viewMode === 'list'}
                     style={{
                       border: 'none',
                       backgroundColor: viewMode === 'list' ? '#0056b3' : 'transparent',
@@ -603,7 +644,7 @@ export default function ProductCatalogPage() {
                       alignItems: 'center',
                     }}
                   >
-                    <FiList size={15} />
+                    <FiList size={15} aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -650,12 +691,15 @@ export default function ProductCatalogPage() {
 
                       {/* Section Cards Grid */}
                       <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: `repeat(${Math.min(section.products.length, 5)}, minmax(0, 1fr))`,
-                          gap: '1rem',
-                        }}
-                        className="catalog-product-5-col-grid"
+                        style={
+                          viewMode === 'list'
+                            ? { display: 'flex', flexDirection: 'column', gap: '0.85rem' }
+                            : {
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+                                gap: '1rem',
+                              }
+                        }
                       >
                         {section.products.map((prod) => {
                           const prodId = String(prod._id || prod.id);
@@ -683,6 +727,7 @@ export default function ProductCatalogPage() {
                               onAddToCart={(p) => handleAddToCart(p, 1)}
                               disabled={isCategoryDisabled}
                               disabledReason={disabledReason}
+                              viewMode={viewMode}
                             />
                           );
                         })}
