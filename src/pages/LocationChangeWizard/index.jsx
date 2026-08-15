@@ -6,14 +6,15 @@ import PreferencesStep from './PreferencesStep';
 import AgreementStep from './AgreementStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
-import { FiArrowRight, FiArrowLeft, FiSend } from 'react-icons/fi';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
 import WizardStepper from '../../components/WizardStepper';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
 export default function LocationChangeWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { customerExists, selectedAccount } = useVerifiedContext();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -152,66 +153,19 @@ export default function LocationChangeWizard() {
   ];
 
   return (
-    <div
-      style={{
-        width: '100%',
-        margin: '0 auto',
-        padding: '2rem 1.5rem',
-      }}
-    >
-      {/* Top Header Card */}
-      <div
-        style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '20px',
-          padding: '2rem 2.5rem',
-          marginBottom: '2rem',
-          boxShadow: '0 8px 30px rgba(0, 86, 179, 0.08)',
-          border: '1px solid #e2e8f0',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '5px',
-            background: 'linear-gradient(90deg, #0056b3 0%, #003b73 50%, #10b981 100%)',
-          }}
-        />
+    <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
+      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.locationChange.title', 'Application for Location Change')}</h2>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+        {t('wizards.locationChange.subtitle', 'Relocate your Megaline, FTTH, or LTE connection to a new address seamlessly.')}
+      </p>
 
-        <div style={{ display: 'inline-block', backgroundColor: '#e0f2fe', color: '#0369a1', fontSize: '0.75rem', fontWeight: 800, padding: '0.25rem 0.75rem', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.65rem' }}>
-          SLTMobitel EasyApply Services
-        </div>
+      {/* Progress Bar */}
+      <WizardStepper currentStep={currentStep} steps={stepsInfo} />
 
-        <h2
-          style={{
-            margin: 0,
-            fontSize: '1.85rem',
-            fontWeight: 900,
-            color: '#0f172a',
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {t('wizards.locationChange.title', 'Application for Location Change')}
-        </h2>
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
-        <p style={{ color: '#64748b', fontSize: '0.95rem', fontWeight: 600, marginTop: '0.4rem', marginBottom: 0 }}>
-          {t('wizards.locationChange.subtitle', 'Relocate your Megaline, FTTH, or LTE connection to a new address seamlessly.')}
-        </p>
-
-        {/* Progress Bar */}
-        <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
-          <WizardStepper currentStep={currentStep} steps={stepsInfo} />
-        </div>
-      </div>
-
-      {/* Main Wizard Form Body */}
       <form ref={formRef} onSubmit={handleSubmit}>
-        <div style={{ minHeight: '320px', marginBottom: '2rem' }}>
+        <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           {currentStep === 1 && (
             <GeneralInfoStep
               isActive
@@ -259,108 +213,22 @@ export default function LocationChangeWizard() {
         </div>
 
         {submitError && (
-          <div
-            style={{
-              padding: '0.85rem 1.25rem',
-              marginBottom: '1.5rem',
-              backgroundColor: '#fef2f2',
-              border: '1.5px solid #fca5a5',
-              borderRadius: '12px',
-              color: '#dc2626',
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.55rem',
-            }}
-          >
-            <FiAlertCircle size={18} />
-            <span>{submitError}</span>
-          </div>
+          <p style={{ color: 'var(--danger, #dc3545)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+            {submitError}
+          </p>
         )}
 
-        {/* Bottom Wizard Navigation Control Bar */}
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            padding: '1.25rem 2rem',
-            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
-            border: '1px solid #e2e8f0',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginTop: '1.5rem',
-          }}
-        >
-          <button
-            type="button"
-            onClick={prevStep}
-            disabled={currentStep === 1 || submitting}
-            style={{
-              padding: '0.85rem 1.85rem',
-              borderRadius: '12px',
-              border: '1.5px solid #cbd5e1',
-              backgroundColor: currentStep === 1 ? '#f8fafc' : '#ffffff',
-              color: currentStep === 1 ? '#cbd5e1' : '#334155',
-              cursor: currentStep === 1 || submitting ? 'not-allowed' : 'pointer',
-              fontWeight: 800,
-              fontSize: '0.9rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <FiArrowLeft size={18} />
-            <span>Back</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+          <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
+            {t('common.previous')}
           </button>
-
           {currentStep < totalSteps ? (
-            <button
-              type="submit"
-              disabled={submitting}
-              style={{
-                padding: '0.85rem 2.25rem',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #0056b3 0%, #003b73 100%)',
-                color: '#ffffff',
-                border: 'none',
-                fontWeight: 800,
-                fontSize: '0.95rem',
-                cursor: submitting ? 'not-allowed' : 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.55rem',
-                boxShadow: '0 4px 16px rgba(0, 86, 179, 0.3)',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <span>Next Step</span>
-              <FiArrowRight size={18} />
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
+              {t('common.nextStep')}
             </button>
           ) : (
-            <button
-              type="submit"
-              disabled={submitting || !isStep4Valid}
-              style={{
-                padding: '0.85rem 2.5rem',
-                borderRadius: '12px',
-                background: isStep4Valid && !submitting ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#cbd5e1',
-                color: '#ffffff',
-                border: 'none',
-                fontWeight: 800,
-                fontSize: '0.95rem',
-                cursor: isStep4Valid && !submitting ? 'pointer' : 'not-allowed',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.55rem',
-                boxShadow: isStep4Valid && !submitting ? '0 4px 18px rgba(16, 185, 129, 0.35)' : 'none',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <FiSend size={18} />
-              <span>{submitting ? 'Submitting Application...' : 'Submit Relocation Application'}</span>
+            <button type="submit" className="btn btn-success" disabled={submitting || !isStep4Valid}>
+              {submitting ? t('common.submitting') : 'Submit Relocation Application'}
             </button>
           )}
         </div>

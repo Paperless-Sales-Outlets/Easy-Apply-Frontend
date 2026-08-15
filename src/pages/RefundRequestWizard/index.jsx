@@ -5,20 +5,14 @@ import RefundDetailsStep from './RefundDetailsStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
-import CustomerProfileSummary from '../../components/CustomerProfileSummary';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 import WizardStepper from '../../components/WizardStepper';
 
 export default function RefundRequestWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
-  const { selectedAccount } = useVerifiedContext();
-  const profileFields = [
-    { name: 'telephone', label: t('wizards.refundRequest.customerDetails.telephone'), value: selectedAccount?.telephone || verifiedMobile || '' },
-    { name: 'fullName', label: t('wizards.refundRequest.customerDetails.fullName'), value: selectedAccount?.fullName || '' },
-    { name: 'nic', label: t('wizards.refundRequest.customerDetails.nicBrc'), value: selectedAccount?.nic || '' },
-    { name: 'contactNo', label: t('wizards.refundRequest.customerDetails.contactNo'), value: selectedAccount?.mobileNumber || verifiedMobile || '' },
-  ];
+  const { customerExists, selectedAccount } = useVerifiedContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -81,9 +75,14 @@ export default function RefundRequestWizard() {
         steps={[t('wizards.refundRequest.steps.s1'), t('wizards.refundRequest.steps.s2')]}
       />
 
-      <CustomerProfileSummary fields={profileFields} />
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form ref={formRef} onSubmit={handleSubmit}>
+
+        <input type="hidden" name="telephone" value={selectedAccount?.telephone || verifiedMobile || ''} />
+        <input type="hidden" name="fullName" value={selectedAccount?.fullName || ''} />
+        <input type="hidden" name="nic" value={selectedAccount?.nic || ''} />
+        <input type="hidden" name="contactNo" value={selectedAccount?.mobileNumber || verifiedMobile || ''} />
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>

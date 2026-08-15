@@ -7,25 +7,19 @@ import DeclarationStep from './DeclarationStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
-import CustomerProfileSummary from '../../components/CustomerProfileSummary';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 import WizardStepper from '../../components/WizardStepper';
 
 export default function OwnershipChangeWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
-  const { selectedAccount } = useVerifiedContext();
+  const { customerExists, selectedAccount } = useVerifiedContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
   const totalSteps = 4;
-  const profileFields = [
-    { name: 'currentTelephone', label: t('wizards.ownershipChange.profile.telephone'), value: selectedAccount?.telephone || verifiedMobile || '' },
-    { name: 'currentCustomerName', label: t('wizards.ownershipChange.profile.fullName'), value: selectedAccount?.fullName || '' },
-    { name: 'currentNic', label: t('wizards.ownershipChange.profile.nic'), value: selectedAccount?.nic || '' },
-    { name: 'currentContactNo', label: t('wizards.ownershipChange.profile.contactNo'), value: selectedAccount?.mobileNumber || verifiedMobile || '' },
-  ];
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -87,9 +81,14 @@ export default function OwnershipChangeWizard() {
         ]}
       />
 
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
+
       <form ref={formRef} onSubmit={handleSubmit}>
 
-        <CustomerProfileSummary fields={profileFields} />
+        <input type="hidden" name="currentTelephone" value={selectedAccount?.telephone || verifiedMobile || ''} />
+        <input type="hidden" name="currentCustomerName" value={selectedAccount?.fullName || ''} />
+        <input type="hidden" name="currentNic" value={selectedAccount?.nic || ''} />
+        <input type="hidden" name="currentContactNo" value={selectedAccount?.mobileNumber || verifiedMobile || ''} />
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>

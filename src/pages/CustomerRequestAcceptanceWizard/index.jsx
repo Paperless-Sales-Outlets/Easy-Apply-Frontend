@@ -4,13 +4,15 @@ import { useTranslation } from 'react-i18next';
 import RequestDetailsStep from './RequestDetailsStep';
 import DeclarationStep from './DeclarationStep';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 import WizardStepper from '../../components/WizardStepper';
 
 export default function CustomerRequestAcceptanceWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { customerExists, selectedAccount } = useVerifiedContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -75,6 +77,8 @@ export default function CustomerRequestAcceptanceWizard() {
 
       {/* Progress Bar */}
       <WizardStepper currentStep={currentStep} steps={steps} />
+
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       {hintItems.length > 0 && (
         <div

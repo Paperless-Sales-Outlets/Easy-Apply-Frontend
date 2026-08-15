@@ -5,13 +5,15 @@ import ServiceDetailsStep from './ServiceDetailsStep';
 import AccountSetupStep from './AccountSetupStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
 import WizardStepper from '../../components/WizardStepper';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
 export default function InternetServicesWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { customerExists, selectedAccount } = useVerifiedContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -70,6 +72,8 @@ export default function InternetServicesWizard() {
           t('wizards.internetServices.steps.s3'),
         ]}
       />
+
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form ref={formRef} onSubmit={(e) => { e.preventDefault(); if (currentStep < totalSteps) { nextStep(); } else { handleSubmit(e); } }}>
         
