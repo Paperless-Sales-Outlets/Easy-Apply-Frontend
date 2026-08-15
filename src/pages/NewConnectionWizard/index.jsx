@@ -7,8 +7,9 @@ import ValueAddedServicesStep from './ValueAddedServicesStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
 import WizardStepper from '../../components/WizardStepper';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
 const formReducer = (state, action) => {
   switch (action.type) {
@@ -57,6 +58,7 @@ export default function NewConnectionWizard() {
   const location = useLocation();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { customerExists, selectedAccount } = useVerifiedContext();
 
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -255,6 +257,8 @@ export default function NewConnectionWizard() {
           'Payment',
         ]}
       />
+
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form onSubmit={handleSubmit}>
 

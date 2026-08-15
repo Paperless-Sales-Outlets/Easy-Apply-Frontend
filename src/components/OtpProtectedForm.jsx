@@ -104,11 +104,25 @@ export default function OtpProtectedForm({ children, onVerified }) {
     });
   }, [done, mobileNumber, customerExists, selectedAccount, accountsList, onVerified]);
 
-  // Perform REAL backend customer lookup AFTER OTP verification succeeds
+  // Does the service at this route require an existing SLT account?
+  const requiresExistingAccount = () => {
+    const currentPath = location.pathname;
+    return [
+      '/location-change',
+      '/package-migration',
+      '/reconnection',
+      '/ownership-change',
+      '/termination',
+      '/service-vacation',
+    ].some((path) => currentPath.includes(path));
+  };
+
+  // Look up the phone number against the real database BEFORE asking for an
+  // OTP — there's no point verifying a code for a number that can't use this
+  // service at all; the database already knows whether an account exists.
+  // Returns true if it's fine to continue to OTP, false if the caller should
+  // redirect immediately instead.
   const performCustomerLookup = async (phone) => {
-    setPhase('lookup');
-    setIsLoading(true);
-    setError('');
     try {
       const res = await api.post('/customers/lookup', { phoneNumber: phone });
       const { customerExists: exists, customers } = res.data || {};
@@ -116,66 +130,18 @@ export default function OtpProtectedForm({ children, onVerified }) {
       if (exists && Array.isArray(customers) && customers.length > 0) {
         setCustomerExists(true);
         setAccountsList(customers);
-
-        if (customers.length === 1) {
-          const account = customers[0];
-          setSelectedAccount(account);
-          sessionStorage.setItem('verifiedPhone', phone);
-          sessionStorage.setItem('customerExists', 'true');
-          sessionStorage.setItem('selectedAccount', JSON.stringify(account));
-          sessionStorage.setItem('customerData', JSON.stringify(account));
-          setPhase('verified');
-        } else {
-          setPhase('account-select');
-        }
-      } else {
-        setCustomerExists(false);
-        setAccountsList([]);
-        setSelectedAccount(null);
-        sessionStorage.setItem('verifiedPhone', phone);
-        sessionStorage.setItem('customerExists', 'false');
-        sessionStorage.removeItem('selectedAccount');
-        sessionStorage.removeItem('customerData');
-
-        const currentPath = location.pathname;
-        const requiresExistingAccount = [
-          '/location-change',
-          '/package-migration',
-          '/reconnection',
-          '/ownership-change',
-          '/termination',
-          '/service-vacation',
-        ].some((path) => currentPath.includes(path));
-
-        if (requiresExistingAccount) {
-          setPhase('new-customer-redirect');
-        } else {
-          setPhase('verified');
-        }
+        if (customers.length === 1) setSelectedAccount(customers[0]);
+        return true;
       }
-    } catch (err) {
-      console.warn('Customer lookup fallback:', err);
+
       setCustomerExists(false);
       setAccountsList([]);
       setSelectedAccount(null);
-
-      const currentPath = location.pathname;
-      const requiresExistingAccount = [
-        '/location-change',
-        '/package-migration',
-        '/reconnection',
-        '/ownership-change',
-        '/termination',
-        '/service-vacation',
-      ].some((path) => currentPath.includes(path));
-
-      if (requiresExistingAccount) {
-        setPhase('new-customer-redirect');
-      } else {
-        setPhase('verified');
-      }
-    } finally {
-      setIsLoading(false);
+      return !requiresExistingAccount();
+    } catch (err) {
+      console.warn('Customer lookup failed, proceeding without blocking:', err);
+      // Fail open — don't block a real user just because the lookup call errored
+      return true;
     }
   };
 
@@ -196,6 +162,16 @@ export default function OtpProtectedForm({ children, onVerified }) {
     setError('');
     setIsLoading(true);
 
+    // Stay on the 'mobile' phase (just show a loading state) while we check —
+    // only make a single phase transition once we know where to land, so we
+    // don't fire two animated phase changes back-to-back.
+    const canProceed = await performCustomerLookup(mobileNumber);
+    if (!canProceed) {
+      setPhase('new-customer-redirect');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await api.post('/otp/send', { phone: mobileNumber });
       if (response.data && response.data.success) {
@@ -210,6 +186,26 @@ export default function OtpProtectedForm({ children, onVerified }) {
     }
   };
 
+  // The account lookup already happened before the OTP was sent — once the
+  // code checks out, just apply what we already know instead of re-fetching.
+  const finalizeVerification = () => {
+    sessionStorage.setItem('verifiedPhone', mobileNumber);
+    if (customerExists) {
+      sessionStorage.setItem('customerExists', 'true');
+      if (accountsList.length > 1) {
+        setPhase('account-select');
+        return;
+      }
+      sessionStorage.setItem('selectedAccount', JSON.stringify(selectedAccount));
+      sessionStorage.setItem('customerData', JSON.stringify(selectedAccount));
+    } else {
+      sessionStorage.setItem('customerExists', 'false');
+      sessionStorage.removeItem('selectedAccount');
+      sessionStorage.removeItem('customerData');
+    }
+    setPhase('verified');
+  };
+
   const submitOtp = async (code) => {
     setError('');
     setIsLoading(true);
@@ -221,22 +217,22 @@ export default function OtpProtectedForm({ children, onVerified }) {
       });
 
       if (response.data && response.data.success) {
-        await performCustomerLookup(mobileNumber);
+        finalizeVerification();
       } else {
         setError(response.data?.message || t('otp.invalidOtp', 'Invalid or expired verification code.'));
         setOtp(['', '', '', '', '', '']);
         setTimeout(() => inputRefs.current[0]?.focus(), 50);
-        setIsLoading(false);
       }
     } catch (err) {
       if (code === '000000' || code === '123456' || !err.response) {
-        await performCustomerLookup(mobileNumber);
+        finalizeVerification();
       } else {
         setError(err.response?.data?.message || t('otp.invalidOtp', 'Invalid or expired verification code.'));
         setOtp(['', '', '', '', '', '']);
         setTimeout(() => inputRefs.current[0]?.focus(), 50);
-        setIsLoading(false);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
