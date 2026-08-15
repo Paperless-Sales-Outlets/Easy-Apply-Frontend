@@ -472,7 +472,7 @@
     "ownershipChange": {
       "title": "Application for Change of Customer",
       "steps": {
-        "s1": "Current Owner",
+        "s1": "Existing Account Verification",
         "s2": "New Applicant",
         "s3": "Documents",
         "s4": "Declaration"
@@ -632,7 +632,7 @@
       "title": "Application for Termination of Services",
       "subtitle": "Request permanent or temporary disconnection of SLT services and facilities.",
       "steps": {
-        "s1": "Service Info",
+        "s1": "Existing Account Verification",
         "s2": "Reason",
         "s3": "Agreement"
       },
