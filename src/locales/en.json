@@ -357,7 +357,7 @@
       "title": "Service Vacation",
       "subtitle": "Apply for temporary service deactivation.",
       "steps": {
-        "s1": "General Information",
+        "s1": "Existing Account Verification",
         "s2": "Vacation Details",
         "s3": "Agreement",
         "s4": "Checkout & Auth"
