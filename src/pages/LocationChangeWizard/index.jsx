@@ -7,7 +7,8 @@ import AgreementStep from './AgreementStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
-import { FiCheck, FiArrowRight, FiArrowLeft, FiSend } from 'react-icons/fi';
+import { FiArrowRight, FiArrowLeft, FiSend } from 'react-icons/fi';
+import WizardStepper from '../../components/WizardStepper';
 
 export default function LocationChangeWizard() {
   const navigate = useNavigate();
@@ -144,10 +145,10 @@ export default function LocationChangeWizard() {
   const isStep4Valid = agreed && (Boolean(signature) || Boolean(signatureFile));
 
   const stepsInfo = [
-    { num: 1, label: t('wizards.locationChange.steps.s1', 'General Info') },
-    { num: 2, label: t('wizards.locationChange.steps.s2', 'New Address') },
-    { num: 3, label: t('wizards.locationChange.steps.s3', 'Preferences') },
-    { num: 4, label: t('wizards.locationChange.steps.s4', 'Agreement') },
+    t('wizards.locationChange.steps.s1', 'Existing Account Verification'),
+    t('wizards.locationChange.steps.s2', 'New Address'),
+    t('wizards.locationChange.steps.s3', 'Preferences'),
+    t('wizards.locationChange.steps.s4', 'Agreement'),
   ];
 
   return (
@@ -202,92 +203,9 @@ export default function LocationChangeWizard() {
           {t('wizards.locationChange.subtitle', 'Relocate your Megaline, FTTH, or LTE connection to a new address seamlessly.')}
         </p>
 
-        {/* High-End Interactive Stepper Bar */}
+        {/* Progress Bar */}
         <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
-            {/* Connecting Line */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '20px',
-                left: '10%',
-                right: '10%',
-                height: '3px',
-                backgroundColor: '#e2e8f0',
-                zIndex: 0,
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                top: '20px',
-                left: '10%',
-                height: '3px',
-                backgroundColor: '#10b981',
-                zIndex: 0,
-                width: `${((currentStep - 1) / (totalSteps - 1)) * 80}%`,
-                transition: 'width 0.35s ease-in-out',
-              }}
-            />
-
-            {stepsInfo.map((st) => {
-              const isDone = st.num < currentStep;
-              const isCurrent = st.num === currentStep;
-
-              return (
-                <div
-                  key={st.num}
-                  style={{
-                    position: 'relative',
-                    zIndex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    flex: 1,
-                    minWidth: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: '50%',
-                      backgroundColor: isDone
-                        ? '#10b981'
-                        : isCurrent
-                        ? '#0056b3'
-                        : '#ffffff',
-                      border: `2.5px solid ${isDone ? '#10b981' : isCurrent ? '#0056b3' : '#cbd5e1'}`,
-                      color: isDone || isCurrent ? '#ffffff' : '#64748b',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 800,
-                      fontSize: '0.92rem',
-                      boxShadow: isCurrent ? '0 4px 14px rgba(0, 86, 179, 0.35)' : 'none',
-                      transition: 'all 0.25s ease',
-                    }}
-                  >
-                    {isDone ? <FiCheck size={18} /> : st.num}
-                  </div>
-                  <span
-                    style={{
-                      fontSize: 'clamp(0.68rem, 2.3vw, 0.82rem)',
-                      fontWeight: isCurrent ? 800 : isDone ? 700 : 500,
-                      color: isCurrent ? '#0056b3' : isDone ? '#10b981' : '#64748b',
-                      textAlign: 'center',
-                      overflowWrap: 'break-word',
-                      maxWidth: '100%',
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {st.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+          <WizardStepper currentStep={currentStep} steps={stepsInfo} />
         </div>
       </div>
 

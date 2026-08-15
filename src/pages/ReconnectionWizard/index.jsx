@@ -292,7 +292,7 @@ export default function ReconnectionWizard() {
       <WizardStepper
         currentStep={currentStep}
         steps={[
-          'Select Services',
+          'Existing Account Verification',
           'Details & Documents',
           'Checkout & Auth',
         ]}
