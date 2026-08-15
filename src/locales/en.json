@@ -400,7 +400,7 @@
       "title": "Refund Request",
       "subtitle": "Application for FTTH/PSTN/LTE Service refund.",
       "steps": {
-        "s1": "Customer Details",
+        "s1": "Existing Account Verification",
         "s2": "Refund Details"
       },
       "customerDetails": {

@@ -6,6 +6,7 @@ import { useVerifiedContext } from '../../components/verification';
 import PackageDetailsStep from './PackageDetailsStep';
 import PackageMigrationDeclarationStep from './PackageMigrationDeclarationStep';
 import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
+import WizardStepper from '../../components/WizardStepper';
 
 export default function PackageMigrationWizard() {
   const navigate = useNavigate();
@@ -220,34 +221,8 @@ export default function PackageMigrationWizard() {
 
   return (
     <div className="container" style={{ padding: '2rem 1rem', width: '100%', margin: '0 auto' }}>
-      {/* Stepper Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-          {stepTitles.map((title, idx) => (
-            <div
-              key={idx}
-              style={{
-                flex: 1,
-                textAlign: 'center',
-                color: currentStep === idx + 1 ? 'var(--slt-blue, #0056b3)' : '#64748b',
-                fontWeight: currentStep === idx + 1 ? 800 : 600,
-                fontSize: '0.88rem',
-              }}
-            >
-              Step {idx + 1}: {title}
-            </div>
-          ))}
-        </div>
-        <div style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
-          <div
-            style={{
-              width: `${(currentStep / totalSteps) * 100}%`,
-              backgroundColor: 'var(--slt-blue, #0056b3)',
-              transition: 'width 0.3s ease',
-            }}
-          />
-        </div>
-      </div>
+      {/* Progress Bar */}
+      <WizardStepper currentStep={currentStep} steps={stepTitles} />
 
       {/* VERIFIED CUSTOMER SUMMARY BOX AT TOP */}
       <ExistingCustomerSummaryBox customerData={customerPackage} customerExists={customerExists} />
