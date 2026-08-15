@@ -64,7 +64,7 @@ export default function PackageMigrationDeclarationStep({
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', fontSize: '0.9rem', color: '#334155' }}>
           <div><strong>Telephone:</strong> {customerPackage?.telephone || 'N/A'}</div>
-          <div><strong>Customer Name:</strong> {customerPackage?.customerName || 'N/A'}</div>
+          <div><strong>Customer Name:</strong> {customerPackage?.fullName || customerPackage?.customerName || 'N/A'}</div>
           <div><strong>Current Package:</strong> {customerPackage?.packageName || customerPackage?.currentPackage || 'N/A'}</div>
           <div><strong>Requested Package:</strong> <span style={{ color: '#0284c7', fontWeight: 'bold' }}>{requiredPackage || 'N/A'}</span></div>
           <div><strong>Effective Date:</strong> {effectiveDate || 'N/A'}</div>

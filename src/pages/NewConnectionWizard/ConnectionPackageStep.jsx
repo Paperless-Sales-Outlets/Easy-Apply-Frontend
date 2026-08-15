@@ -11,7 +11,7 @@ export default function ConnectionPackageStep({ formData, handleChange }) {
       <div className="form-group">
         <label className="form-label">{t('wizards.newConnection.connPkg.modeOfConnection')}</label>
         <div className="table-container">
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '1rem', textAlign: 'left' }}>
+          <table style={{ width: '100%', minWidth: '420px', borderCollapse: 'collapse', marginBottom: '1rem', textAlign: 'left' }}>
             <thead>
               <tr>
                 <th style={{ padding: '0.5rem', borderBottom: '1px solid var(--border-color)' }}></th>
