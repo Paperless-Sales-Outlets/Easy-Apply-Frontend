@@ -3,12 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { FiFileText, FiUser, FiPhone } from 'react-icons/fi';
 import api from '../../utils/api';
 import { useVerifiedContext } from '../../components/verification';
-import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 import FileUploadField from '../../components/form/FileUploadField';
 
 export default function GeneralInfoStep({ isActive, formData, onChange, onValidationChange, showValidationErrors = false }) {
   const { t } = useTranslation();
-  const { mobileNumber, customerExists, selectedAccount } = useVerifiedContext();
+  const { mobileNumber, selectedAccount } = useVerifiedContext();
 
   const onValidationChangeRef = useRef(onValidationChange);
   useEffect(() => {
@@ -75,9 +74,6 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
 
   return (
     <div style={{ width: '100%', margin: '0 auto' }}>
-      {/* VERIFIED CUSTOMER SUMMARY BOX AT TOP */}
-      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
-
       {/* SECTION 1: Customer Details */}
       <div
         style={{

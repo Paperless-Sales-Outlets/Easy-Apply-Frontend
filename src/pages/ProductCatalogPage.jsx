@@ -614,6 +614,8 @@ export default function ProductCatalogPage() {
                 <div style={{ display: 'flex', gap: '2px', backgroundColor: '#f1f5f9', padding: '3px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                   <button
                     onClick={() => setViewMode('grid')}
+                    aria-label="Grid view"
+                    aria-pressed={viewMode === 'grid'}
                     style={{
                       border: 'none',
                       backgroundColor: viewMode === 'grid' ? '#0056b3' : 'transparent',
@@ -625,10 +627,12 @@ export default function ProductCatalogPage() {
                       alignItems: 'center',
                     }}
                   >
-                    <FiGrid size={15} />
+                    <FiGrid size={15} aria-hidden="true" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
+                    aria-label="List view"
+                    aria-pressed={viewMode === 'list'}
                     style={{
                       border: 'none',
                       backgroundColor: viewMode === 'list' ? '#0056b3' : 'transparent',
@@ -640,7 +644,7 @@ export default function ProductCatalogPage() {
                       alignItems: 'center',
                     }}
                   >
-                    <FiList size={15} />
+                    <FiList size={15} aria-hidden="true" />
                   </button>
                 </div>
               </div>
