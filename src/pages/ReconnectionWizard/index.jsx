@@ -40,7 +40,15 @@ export default function ReconnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [paymentIntention, setPaymentIntention] = useState('online');
-  const [reconnectionData, setReconnectionData] = useState(null);
+  const [reconnectionData, setReconnectionData] = useState(() => {
+    const fromState = location.state?.selectedAccount || location.state?.customerData;
+    if (fromState) return fromState;
+    const stored = sessionStorage.getItem('selectedAccount');
+    if (stored) {
+      try { return JSON.parse(stored); } catch (e) { return null; }
+    }
+    return null;
+  });
 
   // The customer's account is already verified via OTP + real DB lookup
   // before reaching this wizard — reuse it instead of asking/looking it up again.
@@ -354,6 +362,11 @@ export default function ReconnectionWizard() {
                       'foreign'
                     ? 'Foreign'
                     : 'Residential'
+              }
+              amountText={
+                paymentIntention === 'later'
+                  ? 'Submit Reconnection Request'
+                  : `Proceed to Pay Rs. ${(reconnectionData?.outstandingBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
               }
             />
           </div>
