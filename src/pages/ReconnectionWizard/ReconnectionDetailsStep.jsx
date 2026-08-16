@@ -8,24 +8,24 @@ const FacilityCard = ({ id, icon, label, checked, onChange }) => (
   <motion.label
     whileHover={{
       scale: 1.02,
-      y: -4,
-      borderColor: 'rgba(15, 87, 168, 0.5)',
-      boxShadow: '0 12px 28px rgba(15, 87, 168, 0.15)',
+      y: -2,
+      borderColor: 'var(--slt-blue)',
+      boxShadow: '0 8px 24px rgba(15, 87, 168, 0.12)',
     }}
     whileTap={{ scale: 0.98 }}
     style={{
       display: 'flex', alignItems: 'center', gap: '1rem',
-      padding: '1.25rem', borderRadius: '16px',
+      padding: '1.25rem 1.5rem', borderRadius: '16px',
       border: checked ? '2px solid var(--slt-blue)' : '1px solid rgba(0,0,0,0.06)',
-      backgroundColor: checked ? 'rgba(15, 87, 168, 0.03)' : '#ffffff',
-      boxShadow: checked ? '0 12px 24px rgba(15, 87, 168, 0.15)' : '0 4px 20px rgba(0,0,0,0.04)',
+      backgroundColor: '#ffffff',
+      boxShadow: checked ? '0 12px 24px rgba(15, 87, 168, 0.15)' : '0 4px 12px rgba(0,0,0,0.03)',
       cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       position: 'relative', overflow: 'hidden'
     }}
   >
     <input type="checkbox" name={`facility_${id}`} style={{ display: 'none' }} checked={checked} onChange={() => onChange(id)} />
 
-    {/* Soft Circular Icon Background */}
+    {/* Soft Circular Icon Background - Matching Quick Actions */}
     <div style={{
       width: '48px', height: '48px', borderRadius: '50%', display: 'grid', placeItems: 'center',
       backgroundColor: checked ? 'var(--slt-blue)' : 'rgba(15, 87, 168, 0.08)',
@@ -83,9 +83,18 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
         toast.error(t('wizards.reconnection.reconnectionDetails.selectFacilityError', 'Please select at least one facility to reconnect'));
         return false;
       }
+      if (!reconnectionData) {
+        toast.error('Please select a connection to proceed.');
+        return false;
+      }
       return true;
     },
   }));
+
+  const customerTypeColors = {
+    bg: reconnectionData?.customerType === 'office' ? 'var(--purple, #6d28d9)' : 'var(--teal, #0e7490)',
+    iconBg: reconnectionData?.customerType === 'office' ? 'rgba(109, 40, 217, 0.2)' : 'rgba(14, 116, 144, 0.2)',
+  };
 
   return (
     <div>
@@ -93,8 +102,8 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
 
       {/* Facilities — at least one required */}
       <div className="form-group">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+          
           <FacilityCard id="idd" icon="globe" label={t('wizards.reconnection.reconnectionDetails.idd')} checked={!!checkedFacilities['idd']} onChange={toggleFacility} />
           <FacilityCard id="peoTv" icon="tv" label={t('wizards.reconnection.reconnectionDetails.peoTv')} checked={!!checkedFacilities['peoTv']} onChange={toggleFacility} />
           <FacilityCard id="sltPlus" icon="plus-circle" label={t('wizards.reconnection.reconnectionDetails.sltPlus')} checked={!!checkedFacilities['sltPlus']} onChange={toggleFacility} />
@@ -106,7 +115,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
               {checkedFacilities['broadband'] && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                   <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
-                    <input type="text" name="broadbandUsername" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Broadband Username *" defaultValue={reconnectionData?.broadbandUsername || ''} required={isActive && checkedFacilities['broadband']} />
+                    <input type="text" name="broadbandUsername" className="form-control" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px', padding: '1rem' }} placeholder="Broadband Username *" defaultValue={reconnectionData?.broadbandUsername || ''} required={isActive && checkedFacilities['broadband']} />
                   </div>
                 </motion.div>
               )}
@@ -119,7 +128,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
               {checkedFacilities['email'] && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                   <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
-                    <input type="text" name="emailUsername" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Email Username *" required={isActive && checkedFacilities['email']} />
+                    <input type="text" name="emailUsername" className="form-control" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px', padding: '1rem' }} placeholder="Email Username *" required={isActive && checkedFacilities['email']} />
                   </div>
                 </motion.div>
               )}
@@ -132,7 +141,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
               {checkedFacilities['dialUp'] && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                   <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
-                    <input type="text" name="dialUpUsername" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Dial-up Username *" required={isActive && checkedFacilities['dialUp']} />
+                    <input type="text" name="dialUpUsername" className="form-control" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px', padding: '1rem' }} placeholder="Dial-up Username *" required={isActive && checkedFacilities['dialUp']} />
                   </div>
                 </motion.div>
               )}
@@ -145,7 +154,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
               {checkedFacilities['other'] && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                   <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
-                    <input type="text" name="otherServiceText" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Please specify *" required={isActive && checkedFacilities['other']} />
+                    <input type="text" name="otherServiceText" className="form-control" style={{ backgroundColor: '#ffffff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px', padding: '1rem' }} placeholder="Please specify *" required={isActive && checkedFacilities['other']} />
                   </div>
                 </motion.div>
               )}
@@ -163,29 +172,95 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
       </div>
 
       {reconnectionData && (
-        <>
-          <hr style={{ margin: '3rem 0', borderColor: 'var(--line)' }} />
-
-          {/* Hidden fields to preserve form submission data */}
-          <input type="hidden" name="telephone" value={reconnectionData.telephone || ''} />
-          <input type="hidden" name="fullName" value={reconnectionData.fullName || ''} />
-          <input type="hidden" name="nic" value={reconnectionData.nic || ''} />
-          <input type="hidden" name="addressLine1" value={reconnectionData.addressLine1 || ''} />
-          <input type="hidden" name="addressLine2" value={reconnectionData.addressLine2 || ''} />
-          <input type="hidden" name="amountToPay" value={reconnectionData.outstandingBalance || 0} />
-
-          <div style={{ padding: '1.5rem', backgroundColor: 'rgba(0,166,80,0.05)', border: '1px solid rgba(0,166,80,0.2)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-            <div>
-              <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>Reconnection Cart</h4>
-              <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Pending dues for <strong>{reconnectionData.fullName}</strong></p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Total to Pay</p>
-              <h2 style={{ margin: 0, color: 'var(--slt-green)' }}>Rs. {(reconnectionData.outstandingBalance || 0).toLocaleString()}</h2>
-            </div>
-          </div>
-        </>
+        <hr style={{ margin: '3rem 0', borderColor: 'var(--line)' }} />
       )}
+
+      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>Review Dues</h3>
+
+      <div>
+        <AnimatePresence>
+          {reconnectionData && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              style={{ overflow: 'hidden' }}
+            >
+              {/* Hidden fields to preserve form submission data */}
+              <input type="hidden" name="telephone" value={reconnectionData.telephone || reconnectionData.accountNo || ''} />
+              <input type="hidden" name="fullName" value={reconnectionData.fullName} />
+              <input type="hidden" name="nic" value={reconnectionData.nic} />
+              <input type="hidden" name="addressLine1" value={reconnectionData.addressLine1} />
+              <input type="hidden" name="addressLine2" value={reconnectionData.addressLine2} />
+              <input type="hidden" name="amountToPay" value={reconnectionData.outstandingBalance} />
+
+              <div style={{
+                borderRadius: '16px',
+                overflow: 'hidden',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+                border: '1px solid rgba(0,0,0,0.05)',
+                maxWidth: '600px',
+                margin: '0 auto'
+              }}>
+                {/* Modern Solid Color Top Block */}
+                <div style={{ 
+                  backgroundColor: customerTypeColors.bg, 
+                  padding: '1.5rem 2rem', 
+                  color: '#ffffff',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <span style={{ 
+                      display: 'inline-block',
+                      backgroundColor: 'rgba(255,255,255,0.2)',
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '12px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginBottom: '0.5rem'
+                    }}>
+                      Reconnection Cart
+                    </span>
+                    <h4 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>{reconnectionData.fullName}</h4>
+                  </div>
+                  <div style={{ 
+                    width: '56px', height: '56px', borderRadius: '50%', display: 'grid', placeItems: 'center', 
+                    backgroundColor: 'rgba(255,255,255,0.15)', color: '#ffffff'
+                  }}>
+                    <Icon name={reconnectionData.customerType === 'office' ? 'briefcase' : 'home'} size={28} />
+                  </div>
+                </div>
+
+                {/* White Bottom Block with Dues */}
+                <div style={{ padding: '2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dashed #e2e8f0', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Icon name="check" size={20} color="var(--slt-green)" />
+                      <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Connection Verified</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Icon name="phone" size={18} color="var(--text-secondary)" />
+                      <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{reconnectionData.telephone}</span>
+                    </div>
+                  </div>
+                  
+                  <div style={{ textAlign: 'center' }}>
+                    <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600, letterSpacing: '0.5px' }}>Total Outstanding Dues</p>
+                    <h2 style={{ margin: 0, color: 'var(--danger, #ef4444)', fontSize: '2.5rem', fontWeight: 800 }}>
+                      Rs. {(reconnectionData.outstandingBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </h2>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
     </div>
   );
