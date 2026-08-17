@@ -2,7 +2,6 @@ import React, { useState, useReducer, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
-import ConnectionPackageStep from './ConnectionPackageStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
@@ -80,7 +79,7 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
-  const totalSteps = 5;
+  const totalSteps = 4;
 
   useEffect(() => {
     if (selectedProduct?.productName) {
@@ -136,50 +135,6 @@ export default function NewConnectionWizard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError('');
-
-    // Step 3 Validation: Checkbox groups require at least one selection each
-    if (currentStep === 3) {
-      // 4.0 — Connection Mode table: at least one must be ticked
-      const hasConnectionMode = [
-        'connectionModeFibreVoice', 'connectionModeFibreBroadband', 'connectionModeFibrePeoTv',
-        'connectionModeLTEVoice', 'connectionModeLTEBroadband', 'connectionModeLTEPeoTv',
-        'connectionModeCopperVoice', 'connectionModeCopperBroadband', 'connectionModeCopperPeoTv',
-      ].some(key => !!formData[key]);
-      if (!hasConnectionMode) {
-        setSubmitError('3.1 – Please select at least one Connection Mode from the table (Voice, Broadband, or PEO TV).');
-        return;
-      }
-
-      // 4.1.1 — Fixed voice packages: at least one must be ticked
-      const has411 = [
-        'fixedVoicePackageHomeMyPhone', 'fixedVoicePackageOffice', 'fixedVoicePackageUnlimited',
-      ].some(key => !!formData[key]);
-      if (!has411) {
-        setSubmitError('4.1.1 – Please select at least one Fixed Voice Package.');
-        return;
-      }
-
-      // 4.1.2 — 4G LTE Postpaid packages: at least one must be ticked
-      const has412 = [
-        'fixedVoicePackageLTEPalBasic', 'fixedVoicePackageLTEPalPremium',
-        'fixedVoicePackageHomeDoublePlay', 'fixedVoicePackageOfficeDoublePlay',
-      ].some(key => !!formData[key]);
-      if (!has412) {
-        setSubmitError('4.1.2 – Please select at least one 4G LTE Postpaid Package.');
-        return;
-      }
-
-      // 4.3 — PEO TV Package: at least one must be ticked
-      const peoTvPkgs = [
-        'PEO Titanium', 'PEO Platinum', 'PEO Entertainment', 'PEO Gold',
-        'PEO Silver Plus', 'PEO Silver', 'PEO Family', 'Other',
-      ];
-      const has43 = peoTvPkgs.some(pkg => !!formData[`peoTvPkg_${pkg.replace(/\s+/g, '')}`]);
-      if (!has43) {
-        setSubmitError('4.3 – Please select at least one PEO TV Package.');
-        return;
-      }
-    }
 
     if (currentStep < totalSteps) { nextStep(); return; }
 
@@ -253,7 +208,6 @@ export default function NewConnectionWizard() {
           t('wizards.newConnection.steps.s1'),
           t('wizards.newConnection.steps.s2'),
           t('wizards.newConnection.steps.s3'),
-          t('wizards.newConnection.steps.s4'),
           'Payment',
         ]}
       />
@@ -274,13 +228,10 @@ export default function NewConnectionWizard() {
             <ServiceInfoStep formData={formData} handleChange={handleChange} />
           )}
           {currentStep === 3 && (
-            <ConnectionPackageStep formData={formData} handleChange={handleChange} />
-          )}
-          {currentStep === 4 && (
             <ValueAddedServicesStep formData={formData} handleChange={handleChange} />
           )}
-          {currentStep === 5 && (
-            <PaymentStep isActive={currentStep === 5} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
+          {currentStep === 4 && (
+            <PaymentStep isActive={currentStep === 4} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
           )}
         </div>
 

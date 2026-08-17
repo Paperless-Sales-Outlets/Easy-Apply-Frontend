@@ -293,11 +293,15 @@ export default function PackageMigrationWizard() {
                   {loadingProducts ? (
                     <option disabled>Loading packages...</option>
                   ) : (
-                    products.map((pkg) => (
-                      <option key={pkg._id || pkg.name} value={pkg.name}>
-                        {pkg.name} {pkg.speed ? `(${pkg.speed})` : ''} {pkg.monthlyPrice ? `- LKR ${pkg.monthlyPrice.toLocaleString()}/mo` : ''}
-                      </option>
-                    ))
+                    products.map((pkg) => {
+                      const pkgName = pkg.productName || pkg.name;
+                      const pkgPrice = pkg.price ?? pkg.monthlyPrice;
+                      return (
+                        <option key={pkg._id || pkgName} value={pkgName}>
+                          {pkgName} {pkg.speed ? `(${pkg.speed})` : ''} {pkgPrice ? `- LKR ${pkgPrice.toLocaleString()}/mo` : ''}
+                        </option>
+                      );
+                    })
                   )}
                 </select>
 
