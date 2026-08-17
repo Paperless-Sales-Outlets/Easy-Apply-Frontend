@@ -306,6 +306,7 @@
         "disconnectedTo": "to",
         "amountToPay": "I would like to pay Rs. (Amount)",
         "facilitiesHeading": "Which services would you like to reactivate?",
+        "voice": "Voice (Telephone)",
         "broadband": "SLT Broadband Internet (ADSL/Wi-Max)",
         "peoTv": "PeoTV",
         "sltPlus": "SLT Plus",
