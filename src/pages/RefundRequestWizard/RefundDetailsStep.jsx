@@ -21,13 +21,7 @@ export default function RefundDetailsStep({ isActive }) {
           <textarea className="form-control" rows="3" required={isActive}></textarea>
         </div>
 
-        <div className="form-group mt-4">
-          <label className="form-label">{t('wizards.refundRequest.refundDetails.receiptUpload')}</label>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-            {t('wizards.refundRequest.refundDetails.receiptNote')}
-          </p>
-          <input type="file" className="form-control" accept="image/*,.pdf" required={isActive} />
-        </div>
+
       </div>
 
       <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)' }}>

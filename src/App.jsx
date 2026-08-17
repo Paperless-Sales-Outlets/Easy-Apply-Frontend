@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
-import Dashboard from './pages/Dashboard';
 import NewConnectionWizard from './pages/NewConnectionWizard';
 import ReconnectionWizard from './pages/ReconnectionWizard';
 import OwnershipChangeWizard from './pages/OwnershipChangeWizard';
@@ -38,9 +37,10 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {/* Main Dashboard & Wizard Routes */}
-        <Route path="/" element={<PageWrapper fullBleed><Dashboard /></PageWrapper>} />
-        <Route path="/new-connection" element={<PageWrapper><OtpProtectedForm><NewConnectionWizard /></OtpProtectedForm></PageWrapper>} />
+        {/* Main Landing & Wizard Routes */}
+        <Route path="/" element={<PageWrapper><NewConnectionWizard /></PageWrapper>} />
+        <Route path="/new-connection" element={<PageWrapper><NewConnectionWizard /></PageWrapper>} />
+        <Route path="/new-connection/products" element={<PageWrapper><NewConnectionWizard /></PageWrapper>} />
         <Route path="/reconnection" element={<PageWrapper><OtpProtectedForm><ReconnectionWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/ownership-change" element={<PageWrapper><OtpProtectedForm><OwnershipChangeWizard /></OtpProtectedForm></PageWrapper>} />
         <Route path="/location-change" element={<PageWrapper><OtpProtectedForm><LocationChangeWizard /></OtpProtectedForm></PageWrapper>} />

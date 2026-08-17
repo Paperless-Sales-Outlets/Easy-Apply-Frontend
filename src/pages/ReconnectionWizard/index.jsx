@@ -5,6 +5,7 @@ import CustomerDetailsStep from './CustomerDetailsStep';
 import ReconnectionDetailsStep from './ReconnectionDetailsStep';
 import DeclarationStep from './DeclarationStep';
 import PaymentStep from '../PaymentStep';
+import WizardProgressBar from '../../components/WizardProgressBar';
 import api from '../../utils/api';
 import { useVerifiedMobile } from '../../components/verification';
 
@@ -19,21 +20,26 @@ export default function ReconnectionWizard() {
   const step2Ref = useRef(null);
   const totalSteps = 4;
 
+  const steps = [
+    { number: 1, label: "Let's find your account" },
+    { number: 2, label: 'Service Preferences' },
+    { number: 3, label: 'Verify and sign in' },
+    { number: 4, label: 'Payment' },
+  ];
+
   const nextStep = () => {
-    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);
   };
   const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (currentStep < totalSteps) {
-      // validate step 2 facilities before advancing
       if (currentStep === 2 && step2Ref.current && !step2Ref.current.validate()) return;
-      // Step 4 is payment — handled by PaymentStep component itself, just advance
       nextStep();
       return;
     }
@@ -71,37 +77,16 @@ export default function ReconnectionWizard() {
   };
 
   return (
-    <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.reconnection.title')}</h2>
+    <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto', maxWidth: '1100px' }}>
+      <h2 style={{ marginBottom: '1.5rem', color: '#0B2D5B', fontWeight: '800' }}>
+        {t('wizards.reconnection.title')}
+      </h2>
 
-      {/* Progress Bar */}
-      <div className="wizard-nav-wrapper">
-        <div className="wizard-steps-container" style={{ display: "flex", marginBottom: "2rem", position: "relative" }}>
-        <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
-        <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
-
-        {[1, 2, 3, 4].map(step => (
-          <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '50%',
-              backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
-              border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
-              color: step <= currentStep ? 'white' : 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
-            }}>
-              {step}
-            </div>
-            <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.reconnection.steps.s1') : step === 2 ? t('wizards.reconnection.steps.s2') : step === 3 ? t('wizards.reconnection.steps.s3') : 'Payment'}
-            </span>
-          </div>
-        ))}
-      </div>
-      </div>
+      {/* Unified Progress Bar */}
+      <WizardProgressBar steps={steps} currentStep={currentStep} />
 
       <form ref={formRef} onSubmit={handleSubmit}>
-
-        <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
+        <div style={{ minHeight: '320px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
             <CustomerDetailsStep isActive={currentStep === 1} />
           </div>
@@ -112,11 +97,11 @@ export default function ReconnectionWizard() {
             <DeclarationStep isActive={currentStep === 3} />
           </div>
           <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
-            <PaymentStep 
-              isActive={currentStep === 4} 
-              verifiedPhone={verifiedMobile} 
-              amount={formRef.current ? new FormData(formRef.current).get('amountToPay') : null}
-              onSuccess={nextStep} 
+            <PaymentStep
+              isActive={currentStep === 4}
+              verifiedPhone={verifiedMobile}
+              amount={2500.5}
+              onSuccess={nextStep}
             />
           </div>
         </div>

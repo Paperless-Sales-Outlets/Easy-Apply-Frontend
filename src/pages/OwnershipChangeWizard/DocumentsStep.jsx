@@ -105,7 +105,7 @@ export default function DocumentsStep({ isActive }) {
         <ul style={{ listStyleType: 'none', padding: 0 }}>
           {getDocuments().map((doc, idx) => (
             <li key={idx} style={{ marginBottom: '1rem', display: 'flex', alignItems: 'flex-start', gap: '0.8rem' }}>
-              <input type="checkbox" className="checkbox-input" style={{ marginTop: '0.2rem' }} required={isActive} />
+              <input type="checkbox" className="checkbox-input" style={{ marginTop: '0.2rem' }} defaultChecked />
               <span style={{ color: 'var(--text-secondary)', lineHeight: '1.4' }}>{doc}</span>
             </li>
           ))}

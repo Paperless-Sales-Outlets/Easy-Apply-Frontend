@@ -24,13 +24,7 @@ export default function AddressStep({ isActive }) {
           </div>
         </div>
 
-        <div className="form-group mt-4">
-          <label className="form-label">{t('wizards.locationChange.address.routeDiagram')}</label>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-            {t('wizards.locationChange.address.routeDiagramNote')}
-          </p>
-          <input type="file" className="form-control" accept="image/*" />
-        </div>
+
 
         <div className="form-group flex flex-col-mobile gap-4 mt-4">
           <div style={{ flex: '1' }}>

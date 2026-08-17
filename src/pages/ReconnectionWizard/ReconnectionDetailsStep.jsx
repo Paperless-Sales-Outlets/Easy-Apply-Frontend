@@ -1,27 +1,44 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  FiWifi,
+  FiTv,
+  FiPlusCircle,
+  FiPhone,
+  FiGlobe,
+  FiMail,
+  FiMonitor,
+} from 'react-icons/fi';
+
+const SERVICES = [
+  { id: 'broadband', label: 'SLT Broadband Internet (ADSL/Wi-Max)', icon: FiWifi },
+  { id: 'peoTv', label: 'PeoTV', icon: FiTv },
+  { id: 'sltPlus', label: 'SLT Plus', icon: FiPlusCircle },
+  { id: 'cli', label: 'CLI', icon: FiPhone },
+  { id: 'idd', label: 'IDD', icon: FiGlobe },
+  { id: 'email', label: 'Email', icon: FiMail },
+  { id: 'dialUp', label: 'Dial-up Internet', icon: FiMonitor },
+];
 
 const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ isActive }, ref) {
   const { t } = useTranslation();
 
-  const [checkedFacilities, setCheckedFacilities] = useState({});
+  const [selectedServices, setSelectedServices] = useState(['broadband']);
   const [otherChecked, setOtherChecked] = useState(false);
+  const [otherRemarks, setOtherRemarks] = useState('');
   const [facilityError, setFacilityError] = useState(false);
 
-  const anyFacilityChecked = Object.values(checkedFacilities).some(Boolean);
-
-  const toggleFacility = (key) => {
-    setCheckedFacilities(prev => {
-      const next = { ...prev, [key]: !prev[key] };
-      if (Object.values(next).some(Boolean)) setFacilityError(false);
+  const toggleService = (id) => {
+    setSelectedServices((prev) => {
+      const next = prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id];
+      if (next.length > 0) setFacilityError(false);
       return next;
     });
   };
 
-  // Expose validate() so the parent wizard can call it before advancing
   useImperativeHandle(ref, () => ({
     validate: () => {
-      if (!anyFacilityChecked) {
+      if (selectedServices.length === 0 && !otherChecked) {
         setFacilityError(true);
         return false;
       }
@@ -31,115 +48,107 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
 
   return (
     <div>
-      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.reconnection.reconnectionDetails.heading')}</h3>
+      <h3 style={{ color: 'var(--slt-blue, #0F57A8)', marginBottom: '0.4rem', fontWeight: '800' }}>
+        2. Required Services
+      </h3>
+      <p style={{ color: '#64748B', fontSize: '0.95rem', marginBottom: '1.75rem', fontWeight: '600' }}>
+        Which services would you like to reactivate?
+      </p>
 
-      {/* Disconnection date range */}
-      <div className="form-group flex flex-col-mobile gap-4 items-center">
-        <label className="form-label" style={{ margin: 0, flexShrink: 0 }}>
-          {t('wizards.reconnection.reconnectionDetails.disconnectedFrom')}
-        </label>
-        <input type="date" className="form-control" style={{ flex: '1' }} required={isActive} />
-        <span style={{ padding: '0 0.5rem' }}>{t('wizards.reconnection.reconnectionDetails.disconnectedTo')}</span>
-        <input type="date" className="form-control" style={{ flex: '1' }} required={isActive} />
+      {/* Services Tiles Grid matching Screenshot 2 */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '1rem',
+          marginBottom: '1.75rem',
+        }}
+      >
+        {SERVICES.map((srv) => {
+          const IconComp = srv.icon;
+          const isSelected = selectedServices.includes(srv.id);
+
+          return (
+            <div
+              key={srv.id}
+              onClick={() => toggleService(srv.id)}
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                border: isSelected ? '2px solid #0F57A8' : '1px solid #E2E8F0',
+                padding: '1.25rem 1rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.85rem',
+                boxShadow: isSelected
+                  ? '0 6px 16px rgba(15, 87, 168, 0.15)'
+                  : '0 2px 8px rgba(0, 0, 0, 0.02)',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <div
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '12px',
+                  backgroundColor: isSelected ? '#EFF6FF' : '#F1F5F9',
+                  color: isSelected ? '#0F57A8' : '#64748B',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <IconComp size={20} />
+              </div>
+
+              <span
+                style={{
+                  fontSize: '0.88rem',
+                  fontWeight: isSelected ? '700' : '600',
+                  color: isSelected ? '#0F172A' : '#475569',
+                  lineHeight: '1.3',
+                }}
+              >
+                {srv.label}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Amount to pay */}
-      <div className="form-group flex gap-4 items-center">
-        <label className="form-label" style={{ margin: 0 }}>
-          {t('wizards.reconnection.reconnectionDetails.amountToPay')}
-        </label>
-        <input type="text" name="amountToPay" className="form-control" style={{ maxWidth: '200px' }} required={isActive} />
-      </div>
-
-      {/* Facilities — at least one required */}
-      <h4 style={{ marginTop: '2rem', marginBottom: '1rem', color: 'var(--text-primary)' }}>
-        {t('wizards.reconnection.reconnectionDetails.facilitiesHeading')}
-      </h4>
-
-      <div className="form-group">
-        {/* Single shared grid: Email under CLI, Dial-up below IDD */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem 1rem' }}>
-          {/* Broadband — col 1, row 1 */}
-          <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input"
-              checked={!!checkedFacilities['broadband']}
-              onChange={() => toggleFacility('broadband')}
-            /> {t('wizards.reconnection.reconnectionDetails.broadband')}
-          </label>
-          {/* PeoTV — col 2, row 1 */}
-          <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input"
-              checked={!!checkedFacilities['peoTv']}
-              onChange={() => toggleFacility('peoTv')}
-            /> {t('wizards.reconnection.reconnectionDetails.peoTv')}
-          </label>
-          {/* SLT+ — col 1, row 2 */}
-          <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input"
-              checked={!!checkedFacilities['sltPlus']}
-              onChange={() => toggleFacility('sltPlus')}
-            /> {t('wizards.reconnection.reconnectionDetails.sltPlus')}
-          </label>
-          {/* CLI — col 2, row 2 */}
-          <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input"
-              checked={!!checkedFacilities['cli']}
-              onChange={() => toggleFacility('cli')}
-            /> {t('wizards.reconnection.reconnectionDetails.cli')}
-          </label>
-          {/* IDD — col 1, row 3 */}
-          <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input"
-              checked={!!checkedFacilities['idd']}
-              onChange={() => toggleFacility('idd')}
-            /> {t('wizards.reconnection.reconnectionDetails.idd')}
-          </label>
-          {/* Email — col 2, row 3 — directly under CLI */}
-          <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input" />
-            {t('wizards.reconnection.reconnectionDetails.email')}
-          </label>
-          {/* Dial-up — col 1, row 4 */}
-          <label className="checkbox-label">
-            <input type="checkbox" className="checkbox-input" />
-            {t('wizards.reconnection.reconnectionDetails.dialUp')}
-          </label>
-          {/* col 2, row 4 — empty */}
-          <span />
-        </div>
-
-        {/* Inline error shown when user tries to advance without selecting */}
-        {facilityError && (
-          <p style={{ color: 'var(--danger, #dc3545)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-            {t('wizards.reconnection.reconnectionDetails.facilitiesRequired') || 'Please select at least one facility.'}
-          </p>
-        )}
-      </div>
-
-      {/* Other — specify field appears below when checked */}
-      <div className="form-group mt-4">
-        <label className="checkbox-label">
+      {/* Other Checkbox & Remarks */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontWeight: '600', fontSize: '0.92rem', color: '#1E293B' }}>
           <input
             type="checkbox"
-            className="checkbox-input"
             checked={otherChecked}
-            onChange={() => setOtherChecked(v => !v)}
-          /> {t('wizards.reconnection.reconnectionDetails.other')}
+            onChange={(e) => setOtherChecked(e.target.checked)}
+            style={{ width: '18px', height: '18px', accentColor: '#0F57A8' }}
+          />
+          <span>Other</span>
         </label>
+
         {otherChecked && (
-          <div className="form-group mt-2" style={{ marginLeft: '1.5rem' }}>
-            <label className="form-label">{t('wizards.reconnection.reconnectionDetails.specify')} <span style={{ color: 'var(--danger, #dc3545)' }}>*</span></label>
-            <input type="text" className="form-control" required={isActive && otherChecked} />
+          <div style={{ marginTop: '0.75rem' }}>
+            <label className="form-label">Other remarks:</label>
+            <textarea
+              className="form-control"
+              rows={3}
+              placeholder="Specify additional services or special requests..."
+              value={otherRemarks}
+              onChange={(e) => setOtherRemarks(e.target.value)}
+            />
           </div>
         )}
       </div>
 
-      {/* Remarks — optional */}
-      <div className="form-group mt-4">
-        <label className="form-label">{t('wizards.reconnection.reconnectionDetails.remarks')}</label>
-        <textarea className="form-control" rows="3"></textarea>
-      </div>
-
+      {facilityError && (
+        <p style={{ color: '#EF4444', fontSize: '0.88rem', fontWeight: '600', marginBottom: '1rem' }}>
+          Please select at least one service to reactivate.
+        </p>
+      )}
     </div>
   );
 });
