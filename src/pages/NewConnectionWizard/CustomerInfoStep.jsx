@@ -130,33 +130,17 @@ export default function CustomerInfoStep({ formData, handleChange, setFields }) 
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div>
-              <Label icon={FiCalendar}>{t('wizards.newConnection.customerInfo.dob')}</Label>
-              <InputWrapper icon={FiCalendar}>
-                <input
-                  name="dob"
-                  type="date"
-                  value={formData.dob || ''}
-                  onChange={handleChange}
-                  max={maxDob}
-                  style={getStyle()}
-                  required
-                />
-              </InputWrapper>
-            </div>
-            <div>
-              <Label icon={FiFileText}>{t('wizards.newConnection.customerInfo.taxExemption')}</Label>
-              <InputWrapper icon={FiFileText}>
-                <input
-                  name="taxExemption"
-                  type="text"
-                  value={formData.taxExemption || ''}
-                  onChange={handleChange}
-                  style={getStyle()}
-                />
-              </InputWrapper>
-            </div>
+          <div style={{ marginBottom: '2rem' }}>
+            <Label icon={FiFileText}>{t('wizards.newConnection.customerInfo.taxExemption')}</Label>
+            <InputWrapper icon={FiFileText}>
+              <input
+                name="taxExemption"
+                type="text"
+                value={formData.taxExemption || ''}
+                onChange={handleChange}
+                style={getStyle()}
+              />
+            </InputWrapper>
           </div>
 
           <AddressInputWithMap

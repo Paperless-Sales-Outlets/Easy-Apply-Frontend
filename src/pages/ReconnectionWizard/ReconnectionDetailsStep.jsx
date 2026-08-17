@@ -98,10 +98,8 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
       <div className="form-group">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
 
-          <FacilityCard id="idd" icon="globe" label={t('wizards.reconnection.reconnectionDetails.idd')} checked={!!checkedFacilities['idd']} onChange={toggleFacility} />
+          <FacilityCard id="voice" icon="phone" label={t('wizards.reconnection.reconnectionDetails.voice', 'Voice (Telephone)')} checked={!!checkedFacilities['voice']} onChange={toggleFacility} />
           <FacilityCard id="peoTv" icon="tv" label={t('wizards.reconnection.reconnectionDetails.peoTv')} checked={!!checkedFacilities['peoTv']} onChange={toggleFacility} />
-          <FacilityCard id="sltPlus" icon="plus-circle" label={t('wizards.reconnection.reconnectionDetails.sltPlus')} checked={!!checkedFacilities['sltPlus']} onChange={toggleFacility} />
-          <FacilityCard id="cli" icon="phone" label={t('wizards.reconnection.reconnectionDetails.cli')} checked={!!checkedFacilities['cli']} onChange={toggleFacility} />
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <FacilityCard id="broadband" icon="wifi" label={t('wizards.reconnection.reconnectionDetails.broadband')} checked={!!checkedFacilities['broadband']} onChange={toggleFacility} />
@@ -110,45 +108,6 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
                   <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
                     <input type="text" name="broadbandUsername" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Broadband Username *" defaultValue={reconnectionData?.broadbandUsername || ''} required={isActive && checkedFacilities['broadband']} />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <FacilityCard id="email" icon="mail" label={t('wizards.reconnection.reconnectionDetails.email')} checked={!!checkedFacilities['email']} onChange={toggleFacility} />
-            <AnimatePresence>
-              {checkedFacilities['email'] && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-                  <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
-                    <input type="text" name="emailUsername" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Email Username *" required={isActive && checkedFacilities['email']} />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <FacilityCard id="dialUp" icon="monitor" label={t('wizards.reconnection.reconnectionDetails.dialUp') || 'Dial-up Internet'} checked={!!checkedFacilities['dialUp']} onChange={toggleFacility} />
-            <AnimatePresence>
-              {checkedFacilities['dialUp'] && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-                  <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
-                    <input type="text" name="dialUpUsername" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Dial-up Username *" required={isActive && checkedFacilities['dialUp']} />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <FacilityCard id="other" icon="plus-circle" label={t('wizards.reconnection.reconnectionDetails.other') || 'Other'} checked={!!checkedFacilities['other']} onChange={toggleFacility} />
-            <AnimatePresence>
-              {checkedFacilities['other'] && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-                  <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
-                    <input type="text" name="otherServiceText" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Please specify *" required={isActive && checkedFacilities['other']} />
                   </div>
                 </motion.div>
               )}
