@@ -15,7 +15,7 @@ const FacilityCard = ({ id, icon, label, checked, onChange }) => (
     whileTap={{ scale: 0.98 }}
     style={{
       display: 'flex', alignItems: 'center', gap: '1rem',
-      padding: '1.25rem', borderRadius: '16px',
+      padding: '1.25rem', borderRadius: '16px', minHeight: '92px', boxSizing: 'border-box',
       border: checked ? '2px solid var(--slt-blue)' : '1px solid rgba(0,0,0,0.06)',
       backgroundColor: checked ? 'rgba(15, 87, 168, 0.03)' : '#ffffff',
       boxShadow: checked ? '0 12px 24px rgba(15, 87, 168, 0.15)' : '0 4px 20px rgba(0,0,0,0.04)',
@@ -35,7 +35,10 @@ const FacilityCard = ({ id, icon, label, checked, onChange }) => (
       <Icon name={icon} size={22} />
     </div>
 
-    <span style={{ fontWeight: 600, fontSize: '1.05rem', flex: 1, color: checked ? 'var(--slt-blue)' : 'var(--text-primary)', transition: 'color 0.3s' }}>
+    <span style={{
+      fontWeight: 600, fontSize: '1.05rem', flex: 1, color: checked ? 'var(--slt-blue)' : 'var(--text-primary)', transition: 'color 0.3s',
+      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+    }}>
       {label}
     </span>
 

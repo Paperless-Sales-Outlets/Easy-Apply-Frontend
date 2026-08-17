@@ -113,8 +113,7 @@
       "steps": {
         "s1": "Customer",
         "s2": "Service",
-        "s3": "Billing",
-        "s4": "Declaration"
+        "s3": "Additional Services"
       },
       "customerInfo": {
         "heading": "1. Customer Information",
@@ -472,25 +471,15 @@
     "ownershipChange": {
       "title": "Application for Change of Customer",
       "steps": {
-        "s1": "Existing Account Verification",
-        "s2": "New Applicant",
-        "s3": "Documents",
-        "s4": "Declaration"
+        "s1": "New Applicant",
+        "s2": "Documents",
+        "s3": "Declaration"
       },
       "profile": {
         "telephone": "Current Telephone Number",
         "fullName": "Current Customer Name",
         "nic": "Current NIC",
         "contactNo": "Current Contact Number"
-      },
-      "currentCustomer": {
-        "heading": "Form A - Current Customer Details",
-        "partnership": "Partnership / Sole Proprietorship Info",
-        "partnershipNote": "(If applicable, provide full names of all partners or the sole proprietor)",
-        "partnershipPlaceholder": "Partner 1\\nPartner 2...",
-        "transferTo": "Kindly transfer the above telephone to following person/Company",
-        "transferToPlaceholder": "Rev. / Mr. / Mrs. / Ms. / Company",
-        "remarks": "Remarks"
       },
       "newApplicant": {
         "heading": "Form B - New Applicant Details",
