@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
+import LoopCheckStep from './LoopCheckStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
@@ -79,7 +80,7 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   useEffect(() => {
     if (selectedProduct?.productName) {
@@ -132,12 +133,16 @@ export default function NewConnectionWizard() {
     window.scrollTo(0, 0);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitError('');
+    if (currentStep < totalSteps) nextStep();
+  };
 
-    if (currentStep < totalSteps) { nextStep(); return; }
-
+  // Real submission — fired either after payment succeeds (loop available)
+  // or immediately after the loop check comes back negative (no payment,
+  // just a pending request for an SLT rep to follow up on).
+  const submitApplication = async () => {
     setSubmitting(true);
     setSubmitError('');
     try {
@@ -208,6 +213,7 @@ export default function NewConnectionWizard() {
           t('wizards.newConnection.steps.s1'),
           t('wizards.newConnection.steps.s2'),
           t('wizards.newConnection.steps.s3'),
+          'Coverage Check',
           'Payment',
         ]}
       />
@@ -231,7 +237,15 @@ export default function NewConnectionWizard() {
             <ValueAddedServicesStep formData={formData} handleChange={handleChange} />
           )}
           {currentStep === 4 && (
-            <PaymentStep isActive={currentStep === 4} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
+            <LoopCheckStep
+              formData={formData}
+              submitting={submitting}
+              onAvailable={nextStep}
+              onUnavailable={submitApplication}
+            />
+          )}
+          {currentStep === 5 && (
+            <PaymentStep isActive={currentStep === 5} verifiedPhone={verifiedMobile} onSuccess={submitApplication} />
           )}
         </div>
 
@@ -245,15 +259,11 @@ export default function NewConnectionWizard() {
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
             {t('common.previous')}
           </button>
-          {currentStep < totalSteps - 1 ? (
+          {currentStep <= 3 && (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               {t('common.nextStep')}
             </button>
-          ) : currentStep === totalSteps - 1 ? (
-            <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting ? t('common.submitting') : t('common.submit')}
-            </button>
-          ) : null}
+          )}
         </div>
       </form>
     </div>

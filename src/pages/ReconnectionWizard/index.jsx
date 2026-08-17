@@ -39,7 +39,7 @@ export default function ReconnectionWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [paymentIntention, setPaymentIntention] = useState('online');
+  const [, setPaymentIntention] = useState('online');
   const [reconnectionData, setReconnectionData] = useState(null);
 
   // The customer's account is already verified via OTP + real DB lookup
@@ -429,30 +429,13 @@ export default function ReconnectionWizard() {
             {t('common.previous')}
           </button>
 
-          {currentStep < totalSteps - 1 ? (
+          {currentStep < totalSteps ? (
             <button
               type="submit"
               className="btn btn-primary"
               disabled={submitting}
             >
               {t('common.nextStep')}
-            </button>
-          ) : currentStep ===
-            totalSteps - 1 ? (
-            <button
-              type="submit"
-              className="btn btn-success"
-              disabled={submitting}
-            >
-              {submitting
-                ? t('common.submitting')
-                : paymentIntention === 'paid'
-                  ? 'Submit Reconnection Request'
-                  : `Proceed to Pay Rs. ${
-                      reconnectionData
-                        ?.outstandingBalance ||
-                      '0.00'
-                    }`}
             </button>
           ) : null}
         </div>

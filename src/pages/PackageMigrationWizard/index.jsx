@@ -220,7 +220,10 @@ export default function PackageMigrationWizard() {
   ];
 
   return (
-    <div className="container" style={{ padding: '2rem 1rem', width: '100%', margin: '0 auto' }}>
+    <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
+      <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.packageMigration.title')}</h2>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('wizards.packageMigration.subtitle')}</p>
+
       {/* Progress Bar */}
       <WizardStepper currentStep={currentStep} steps={stepTitles} />
 
@@ -228,6 +231,7 @@ export default function PackageMigrationWizard() {
       <ExistingCustomerSummaryBox customerData={customerPackage} customerExists={customerExists} />
 
       <form onSubmit={handleSubmit}>
+        <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
         {currentStep === 1 && (
           <div>
             <h3 style={{ color: 'var(--slt-blue, #0056b3)', marginBottom: '1.25rem', fontWeight: 800 }}>
@@ -348,30 +352,26 @@ export default function PackageMigrationWizard() {
             showValidationErrors={showValidationErrors}
           />
         )}
+        </div>
 
         {submitError && (
-          <div style={{ color: '#dc2626', backgroundColor: '#fef2f2', border: '1px solid #fca5a5', padding: '0.75rem 1rem', borderRadius: '8px', marginTop: '1rem', fontWeight: 700 }}>
+          <p style={{ color: 'var(--danger, #dc3545)', marginBottom: '1rem', fontSize: '0.9rem' }}>
             {submitError}
-          </div>
+          </p>
         )}
 
-        {/* Wizard Navigation Buttons */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
-          {currentStep > 1 ? (
-            <button type="button" onClick={handlePrev} className="btn btn-outline" disabled={submitting}>
-              Previous
-            </button>
-          ) : (
-            <div />
-          )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+          <button type="button" className="btn btn-secondary" onClick={handlePrev} disabled={currentStep === 1 || submitting}>
+            {t('common.previous')}
+          </button>
 
           {currentStep < totalSteps ? (
-            <button type="button" onClick={handleNext} className="btn btn-primary">
-              Next Step →
+            <button type="button" onClick={handleNext} className="btn btn-primary" disabled={submitting}>
+              {t('common.nextStep')}
             </button>
           ) : (
             <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting ? 'Submitting Application...' : 'Submit Package Migration'}
+              {submitting ? t('common.submitting') : 'Submit Package Migration'}
             </button>
           )}
         </div>
