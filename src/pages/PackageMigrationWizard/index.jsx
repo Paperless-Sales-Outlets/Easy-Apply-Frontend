@@ -5,8 +5,10 @@ import api from '../../utils/api';
 import { useVerifiedContext } from '../../components/verification';
 import PackageDetailsStep from './PackageDetailsStep';
 import PackageMigrationDeclarationStep from './PackageMigrationDeclarationStep';
+import LoopCheckStep from './LoopCheckStep';
 import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 import WizardStepper from '../../components/WizardStepper';
+import { isPackageUpgrade, needsLoopCheck } from '../../utils/technology';
 
 export default function PackageMigrationWizard() {
   const navigate = useNavigate();
@@ -63,12 +65,14 @@ export default function PackageMigrationWizard() {
     return () => { isSubscribed = false; };
   }, []);
 
-  // Step 3: Declaration & Signature State
+  // Declaration & Signature State
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [signature, setSignature] = useState('');
   const [signatureFile, setSignatureFile] = useState(null);
 
-  const totalSteps = 3;
+  // Fibre loop feasibility check — only relevant when the upgrade moves the
+  // customer onto Fibre from a different technology (Copper/LTE).
+  const [loopAvailable, setLoopAvailable] = useState(null);
 
   useEffect(() => {
     if (selectedAccount) {
@@ -119,13 +123,73 @@ export default function PackageMigrationWizard() {
   const reqPkgName = (requiredPackage || '').trim().toLowerCase();
   const isSamePackageError = Boolean(currentPkgName && reqPkgName && currentPkgName === reqPkgName);
 
+  // Package migration is upgrade-only — build comparable "current" / "candidate"
+  // descriptors and only offer products in the picker that are a real upgrade.
+  const currentPackageInfo = {
+    name: customerPackage?.packageName || customerPackage?.package || '',
+    speed: customerPackage?.speed || '',
+    monthlyPrice: customerPackage?.monthlyPrice || 0,
+  };
+
+  // Only real connectivity packages belong in the migration-target picker —
+  // accessories, devices, PEO TV, voice-only and bundles aren't a "package"
+  // in the copper/LTE/fibre sense this upgrade check cares about. Products
+  // that don't carry a category at all (e.g. the offline fallback list)
+  // fall through to the name-based technology classification below instead.
+  const BROADBAND_CATEGORIES = ['broadband', 'fibre broadband', 'lte home'];
+  const upgradeCandidates = products.filter((p) => {
+    const category = (p.category || p.serviceType || '').toLowerCase();
+    if (category && !BROADBAND_CATEGORIES.includes(category)) return false;
+
+    const label = `${p.category || ''} ${p.serviceType || ''} ${p.productName || p.name || ''}`;
+    return isPackageUpgrade(currentPackageInfo, {
+      name: label,
+      speed: p.speed,
+      monthlyPrice: p.price ?? p.monthlyPrice,
+    });
+  });
+
+  const requiredProduct = upgradeCandidates.find((p) => (p.productName || p.name) === requiredPackage) || null;
+  const candidatePackageInfo = requiredProduct
+    ? {
+        name: `${requiredProduct.category || ''} ${requiredProduct.serviceType || ''} ${requiredProduct.productName || requiredProduct.name || ''}`,
+        speed: requiredProduct.speed || '',
+        monthlyPrice: requiredProduct.price ?? requiredProduct.monthlyPrice ?? 0,
+      }
+    : null;
+
+  // Fibre needs a physical loop/port — only gate the flow on it when the
+  // customer is actually moving onto Fibre from Copper/LTE.
+  const needsLoop = Boolean(customerPackage && candidatePackageInfo && needsLoopCheck(currentPackageInfo, candidatePackageInfo));
+
+  const registeredAddress =
+    customerPackage?.address || [customerPackage?.addressLine1, customerPackage?.addressLine2].filter(Boolean).join(', ');
+
+  const stepKeys = needsLoop ? ['account', 'loop', 'schedule', 'declaration'] : ['account', 'schedule', 'declaration'];
+  const totalSteps = stepKeys.length;
+  const currentKey = stepKeys[currentStep - 1];
+
+  // Reset feasibility state and restart past account verification whenever the
+  // target package changes — the loop-check requirement and step numbering can
+  // both shift depending on which package is selected.
+  useEffect(() => {
+    setLoopAvailable(null);
+    setCurrentStep((prev) => (prev > 1 ? 1 : prev));
+  }, [requiredPackage]);
+
   // Step Validations
   const isStep1Valid = Boolean(customerPackage) && Boolean(requiredPackage) && !isSamePackageError;
   const isStep2Valid = Boolean(effectiveDate);
   const isStep3Valid = declarationAccepted && (Boolean(signature) || Boolean(signatureFile));
 
+  const handleLoopContinue = (available) => {
+    setLoopAvailable(available);
+    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+    window.scrollTo(0, 0);
+  };
+
   const handleNext = () => {
-    if (currentStep === 1) {
+    if (currentKey === 'account') {
       if (!customerPackage) {
         setLookupError('Please verify a valid customer account from the database before proceeding.');
         return;
@@ -134,7 +198,7 @@ export default function PackageMigrationWizard() {
         setShowValidationErrors(true);
         return;
       }
-    } else if (currentStep === 2) {
+    } else if (currentKey === 'schedule') {
       if (!isStep2Valid) {
         setShowValidationErrors(true);
         return;
@@ -178,6 +242,13 @@ export default function PackageMigrationWizard() {
         remarks,
         declarationAccepted,
         signature: signature || null,
+        ...(needsLoop
+          ? {
+              loopCheckPerformed: true,
+              loopAvailable: Boolean(loopAvailable),
+              requiresSiteSurvey: loopAvailable === false,
+            }
+          : {}),
       };
 
       const fd = new FormData();
@@ -213,11 +284,18 @@ export default function PackageMigrationWizard() {
     }
   };
 
-  const stepTitles = [
-    t('wizards.packageMigration.steps.step1', 'Existing Account Verification'),
-    t('wizards.packageMigration.steps.step2', 'Package Selection & Uploads'),
-    t('wizards.packageMigration.steps.step3', 'Declaration & Submission'),
-  ];
+  const stepTitles = needsLoop
+    ? [
+        t('wizards.packageMigration.steps.step1', 'Existing Account Verification'),
+        'Fibre Feasibility Check',
+        t('wizards.packageMigration.steps.step2', 'Migration Schedule'),
+        t('wizards.packageMigration.steps.step3', 'Declaration & Submission'),
+      ]
+    : [
+        t('wizards.packageMigration.steps.step1', 'Existing Account Verification'),
+        t('wizards.packageMigration.steps.step2', 'Migration Schedule'),
+        t('wizards.packageMigration.steps.step3', 'Declaration & Submission'),
+      ];
 
   return (
     <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
@@ -232,7 +310,7 @@ export default function PackageMigrationWizard() {
 
       <form onSubmit={handleSubmit}>
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
-        {currentStep === 1 && (
+        {currentKey === 'account' && (
           <div>
             <h3 style={{ color: 'var(--slt-blue, #0056b3)', marginBottom: '1.25rem', fontWeight: 800 }}>
               Verify Account Details
@@ -271,9 +349,9 @@ export default function PackageMigrationWizard() {
 
             {customerPackage && (
               <div className="card" style={{ padding: '1.5rem', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
-                <h4 style={{ color: '#0056b3', marginTop: 0, marginBottom: '0.35rem', fontWeight: 800 }}>Select Package to Migrate To</h4>
+                <h4 style={{ color: '#0056b3', marginTop: 0, marginBottom: '0.35rem', fontWeight: 800 }}>Select Package to Upgrade To</h4>
                 <p style={{ color: '#475569', fontSize: '0.85rem', marginTop: 0, marginBottom: '1rem' }}>
-                  Your current package is <strong>{customerPackage.packageName || customerPackage.package || 'N/A'}</strong>. Choose the package you'd like to move to.
+                  Your current package is <strong>{customerPackage.packageName || customerPackage.package || 'N/A'}</strong>. Package migration only supports upgrades — choose a higher package below.
                 </p>
 
                 <label className="form-label" htmlFor="pm-requiredPackage-step1" style={{ fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
@@ -285,6 +363,7 @@ export default function PackageMigrationWizard() {
                   className="form-control"
                   value={requiredPackage}
                   onChange={(e) => setRequiredPackage(e.target.value)}
+                  disabled={!loadingProducts && upgradeCandidates.length === 0}
                   style={{
                     width: '100%',
                     padding: '0.6rem',
@@ -297,7 +376,7 @@ export default function PackageMigrationWizard() {
                   {loadingProducts ? (
                     <option disabled>Loading packages...</option>
                   ) : (
-                    products.map((pkg) => {
+                    upgradeCandidates.map((pkg) => {
                       const pkgName = pkg.productName || pkg.name;
                       const pkgPrice = pkg.price ?? pkg.monthlyPrice;
                       return (
@@ -309,6 +388,11 @@ export default function PackageMigrationWizard() {
                   )}
                 </select>
 
+                {!loadingProducts && upgradeCandidates.length === 0 && (
+                  <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.4rem', fontWeight: 500 }}>
+                    You're already on our best available package for your current technology — there's nothing higher to migrate to right now.
+                  </div>
+                )}
                 {isSamePackageError && (
                   <div style={{ color: '#dc2626', fontSize: '0.85rem', marginTop: '0.4rem', fontWeight: 500 }}>
                     Requested package cannot be the same as your current package (BRD 5.6).
@@ -324,9 +408,13 @@ export default function PackageMigrationWizard() {
           </div>
         )}
 
-        {currentStep === 2 && (
+        {currentKey === 'loop' && (
+          <LoopCheckStep address={registeredAddress} onContinue={handleLoopContinue} />
+        )}
+
+        {currentKey === 'schedule' && (
           <PackageDetailsStep
-            isActive={currentStep === 2}
+            isActive={currentKey === 'schedule'}
             customerPackage={customerPackage}
             requiredPackage={requiredPackage}
             effectiveDate={effectiveDate}
@@ -337,9 +425,9 @@ export default function PackageMigrationWizard() {
           />
         )}
 
-        {currentStep === 3 && (
+        {currentKey === 'declaration' && (
           <PackageMigrationDeclarationStep
-            isActive={currentStep === 3}
+            isActive={currentKey === 'declaration'}
             customerPackage={customerPackage}
             requiredPackage={requiredPackage}
             effectiveDate={effectiveDate}
@@ -365,7 +453,7 @@ export default function PackageMigrationWizard() {
             {t('common.previous')}
           </button>
 
-          {currentStep < totalSteps ? (
+          {currentKey === 'loop' ? null : currentStep < totalSteps ? (
             <button type="button" onClick={handleNext} className="btn btn-primary" disabled={submitting}>
               {t('common.nextStep')}
             </button>
