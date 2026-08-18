@@ -43,8 +43,6 @@ export default function PreferencesStep({
   const [callForwarding, setCallForwarding] = useState('no');
   const [forwardingDuration, setForwardingDuration] = useState('');
 
-  const [isRepresentative, setIsRepresentative] = useState('no');
-  const [authLetter, setAuthLetter] = useState(null);
   const [brcFile, setBrcFile] = useState(null);
 
   // Minimum date selection for preferred relocation date (Today onwards)
@@ -54,12 +52,11 @@ export default function PreferencesStep({
     setKeptServices((prev) => ({ ...prev, [serviceKey]: !prev[serviceKey] }));
   };
 
-  const isAuthLetterValid = isRepresentative !== 'yes' || Boolean(authLetter);
   const isBrcValid = customerType !== 'business' || Boolean(brcFile);
   const isRelocationDateValid = Boolean(relocationDate);
   const isDisconnectDateValid = Boolean(disconnectDate);
 
-  const isStepValid = isRelocationDateValid && isDisconnectDateValid && isAuthLetterValid && isBrcValid;
+  const isStepValid = isRelocationDateValid && isDisconnectDateValid && isBrcValid;
 
   useEffect(() => {
     if (onValidationChangeRef.current) {
@@ -76,12 +73,10 @@ export default function PreferencesStep({
         keptServices,
         callForwarding,
         forwardingDuration,
-        isRepresentative,
-        authLetter,
         brcFile,
       });
     }
-  }, [relocationDate, disconnectDate, disconnectAction, keptServices, callForwarding, forwardingDuration, isRepresentative, authLetter, brcFile]);
+  }, [relocationDate, disconnectDate, disconnectAction, keptServices, callForwarding, forwardingDuration, brcFile]);
 
   return (
     <div style={{ width: '100%', margin: '0 auto', fontFamily: 'inherit' }}>
@@ -395,163 +390,75 @@ export default function PreferencesStep({
       </div>
 
       {/* ────────────────────────────────────────────────────────── */}
-      {/* 5. Legal Ownership & Representative Authorization Card */}
+      {/* 5. Business Registration Card (business customers only) */}
       {/* ────────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '16px',
-          padding: '1.75rem 2rem',
-          marginBottom: '1.75rem',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
-          <div style={{ backgroundColor: '#f0fdf4', color: '#16a34a', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <FiUserCheck size={18} />
+      {customerType === 'business' && (
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            padding: '1.75rem 2rem',
+            marginBottom: '1.75rem',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
+            <div style={{ backgroundColor: '#f0fdf4', color: '#16a34a', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <FiUserCheck size={18} />
+            </div>
+            <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
+              5. Business Registration
+            </h4>
           </div>
-          <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
-            5. Legal Ownership & Representative Declaration
-          </h4>
-        </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ fontWeight: 700, fontSize: '0.88rem', color: '#334155', display: 'block', marginBottom: '0.75rem' }}>
-            Are you applying on behalf of the Legal Owner?
+          <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.5rem' }}>
+            Business Registration Certificate (BRC) <span style={{ color: '#dc2626' }}>*</span>
           </label>
 
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            {['yes', 'no'].map((opt) => (
-              <div
-                key={opt}
-                onClick={() => setIsRepresentative(opt)}
-                style={{
-                  flex: 1,
-                  padding: '0.85rem 1.25rem',
-                  borderRadius: '12px',
-                  border: isRepresentative === opt ? '2px solid #0056b3' : '1.5px solid #cbd5e1',
-                  backgroundColor: isRepresentative === opt ? '#eff6ff' : '#ffffff',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.65rem',
-                  fontWeight: 800,
-                  fontSize: '0.9rem',
-                  color: isRepresentative === opt ? '#0056b3' : '#334155',
-                }}
-              >
-                <input
-                  type="radio"
-                  name="isRepresentative"
-                  value={opt}
-                  checked={isRepresentative === opt}
-                  onChange={() => setIsRepresentative(opt)}
-                  style={{ cursor: 'pointer' }}
-                />
-                <span>{opt === 'yes' ? 'Yes, I am an Authorized Representative' : 'No, I am the Legal Owner'}</span>
+          <label
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1.5rem',
+              border: brcFile ? '2px stroke #10b981' : '2px dashed #93c5fd',
+              borderRadius: '12px',
+              backgroundColor: brcFile ? '#f0fdf4' : '#f8fafc',
+              cursor: 'pointer',
+            }}
+          >
+            <input
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg"
+              style={{ display: 'none' }}
+              onChange={(e) => setBrcFile(e.target.files[0])}
+            />
+            <FiUploadCloud size={30} style={{ color: brcFile ? '#16a34a' : '#0056b3', marginBottom: '0.5rem' }} />
+            {brcFile ? (
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#15803d', display: 'block' }}>
+                  {brcFile.name}
+                </span>
+                <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded</span>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Authorization Letter Upload */}
-        {isRepresentative === 'yes' && (
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.5rem' }}>
-              Authorization Letter <span style={{ color: '#dc2626' }}>*</span>
-            </label>
-
-            <label
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '1.5rem',
-                border: authLetter ? '2px stroke #10b981' : '2px dashed #93c5fd',
-                borderRadius: '12px',
-                backgroundColor: authLetter ? '#f0fdf4' : '#f8fafc',
-                cursor: 'pointer',
-              }}
-            >
-              <input
-                type="file"
-                accept=".pdf,.png,.jpg,.jpeg"
-                style={{ display: 'none' }}
-                onChange={(e) => setAuthLetter(e.target.files[0])}
-              />
-              <FiUploadCloud size={30} style={{ color: authLetter ? '#16a34a' : '#0056b3', marginBottom: '0.5rem' }} />
-              {authLetter ? (
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#15803d', display: 'block' }}>
-                    {authLetter.name}
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded</span>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0056b3', display: 'block' }}>
-                    Upload Signed Authorization Letter
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Letter signed by legal owner (PDF, JPG up to 5MB)</span>
-                </div>
-              )}
-            </label>
-          </div>
-        )}
-
-        {/* BRC Upload for Business Type */}
-        {customerType === 'business' && (
-          <div>
-            <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.5rem' }}>
-              Business Registration Certificate (BRC) <span style={{ color: '#dc2626' }}>*</span>
-            </label>
-
-            <label
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '1.5rem',
-                border: brcFile ? '2px stroke #10b981' : '2px dashed #93c5fd',
-                borderRadius: '12px',
-                backgroundColor: brcFile ? '#f0fdf4' : '#f8fafc',
-                cursor: 'pointer',
-              }}
-            >
-              <input
-                type="file"
-                accept=".pdf,.png,.jpg,.jpeg"
-                style={{ display: 'none' }}
-                onChange={(e) => setBrcFile(e.target.files[0])}
-              />
-              <FiUploadCloud size={30} style={{ color: brcFile ? '#16a34a' : '#0056b3', marginBottom: '0.5rem' }} />
-              {brcFile ? (
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#15803d', display: 'block' }}>
-                    {brcFile.name}
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 600 }}>File Uploaded</span>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0056b3', display: 'block' }}>
-                    Upload Business Registration Certificate (BRC)
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Official BRC Document (PDF, JPG up to 5MB)</span>
-                </div>
-              )}
-            </label>
-            {showValidationErrors && customerType === 'business' && !brcFile && (
-              <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '4px', display: 'block', fontWeight: 700 }}>
-                Business Registration Certificate is required.
-              </span>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0056b3', display: 'block' }}>
+                  Upload Business Registration Certificate (BRC)
+                </span>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Official BRC Document (PDF, JPG up to 5MB)</span>
+              </div>
             )}
-          </div>
-        )}
-      </div>
+          </label>
+          {showValidationErrors && !brcFile && (
+            <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '4px', display: 'block', fontWeight: 700 }}>
+              Business Registration Certificate is required.
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
