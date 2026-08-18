@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiLock, FiUser, FiMapPin, FiPhone, FiMail, FiCalendar, FiFileText } from 'react-icons/fi';
 import AddressInputWithMap from '../../components/form/AddressInputWithMap';
+import FileUploadField from '../../components/form/FileUploadField';
 import { useVerifiedContext } from '../../components/verification';
 import { motion } from 'framer-motion';
 
@@ -47,7 +48,7 @@ const InputWrapper = ({ children, icon: Icon, isReadOnly }) => (
   </div>
 );
 
-export default function CustomerInfoStep({ formData, handleChange, setFields }) {
+export default function CustomerInfoStep({ formData, handleChange, setFields, handleFileChange }) {
   const { t } = useTranslation();
   const { mobileNumber, customerExists, selectedAccount } = useVerifiedContext();
 
@@ -130,33 +131,17 @@ export default function CustomerInfoStep({ formData, handleChange, setFields }) 
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div>
-              <Label icon={FiCalendar}>{t('wizards.newConnection.customerInfo.dob')}</Label>
-              <InputWrapper icon={FiCalendar}>
-                <input
-                  name="dob"
-                  type="date"
-                  value={formData.dob || ''}
-                  onChange={handleChange}
-                  max={maxDob}
-                  style={getStyle()}
-                  required
-                />
-              </InputWrapper>
-            </div>
-            <div>
-              <Label icon={FiFileText}>{t('wizards.newConnection.customerInfo.taxExemption')}</Label>
-              <InputWrapper icon={FiFileText}>
-                <input
-                  name="taxExemption"
-                  type="text"
-                  value={formData.taxExemption || ''}
-                  onChange={handleChange}
-                  style={getStyle()}
-                />
-              </InputWrapper>
-            </div>
+          <div style={{ marginBottom: '2rem' }}>
+            <Label icon={FiFileText}>{t('wizards.newConnection.customerInfo.taxExemption')}</Label>
+            <InputWrapper icon={FiFileText}>
+              <input
+                name="taxExemption"
+                type="text"
+                value={formData.taxExemption || ''}
+                onChange={handleChange}
+                style={getStyle()}
+              />
+            </InputWrapper>
           </div>
 
           <AddressInputWithMap
@@ -385,6 +370,33 @@ export default function CustomerInfoStep({ formData, handleChange, setFields }) 
         <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <FiMail size={14} /> {t('wizards.newConnection.customerInfo.mobileNote')}
         </p>
+
+        <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
+          <h4 style={{ margin: '0 0 0.35rem 0', fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FiFileText color="#0056b3" /> Identity Documents
+          </h4>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: 0, marginBottom: '1.25rem' }}>
+            Upload both sides of your NIC so we can verify your identity (BRD 5.1.3).
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+            <FileUploadField
+              name="nicFront"
+              label="NIC Front"
+              required
+              value={formData.nicFront}
+              onChange={handleFileChange}
+              helpText="Upload front side of NIC (PDF, JPG, PNG)"
+            />
+            <FileUploadField
+              name="nicBack"
+              label="NIC Back"
+              required
+              value={formData.nicBack}
+              onChange={handleFileChange}
+              helpText="Upload back side of NIC (PDF, JPG, PNG)"
+            />
+          </div>
+        </div>
 
       </div>
     </motion.div>

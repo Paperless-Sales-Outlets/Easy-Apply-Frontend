@@ -1,9 +1,10 @@
-import React, { useState, useReducer, useEffect } from 'react';
+import React, { useState, useReducer, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
-import ConnectionPackageStep from './ConnectionPackageStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
+import LoopCheckStep from './LoopCheckStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
@@ -51,11 +52,10 @@ const initialState = {
   broadbandPackage: '',
   otherBroadbandPackage: '',
   staticIP: 'no',
-  agreement: true,
-  declarationAccepted: true,
-  signature: 'SIGNED_BY_CUSTOMER',
-  nicFront: 'DOC_ATTACHED',
-  nicBack: 'DOC_ATTACHED',
+  declarationAccepted: false,
+  signature: '',
+  nicFront: null,
+  nicBack: null,
 };
 
 export default function NewConnectionWizard() {
@@ -85,6 +85,7 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
+  const vasStepRef = useRef(null);
   const totalSteps = 5;
 
   useEffect(() => {
@@ -129,6 +130,10 @@ export default function NewConnectionWizard() {
     });
   };
 
+  const handleFileChange = (name, fileData) => {
+    dispatch({ type: 'UPDATE_FIELD', payload: { name, value: fileData } });
+  };
+
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);
@@ -138,72 +143,30 @@ export default function NewConnectionWizard() {
     window.scrollTo(0, 0);
   };
 
-  const handleSubmit = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (submitting) return;
+  const handleSubmit = (e) => {
+    e.preventDefault();
     setSubmitError('');
-
-    // Step 3 Validation: Checkbox groups require at least one selection each
-    if (currentStep === 3) {
-      // 4.0 — Connection Mode table: at least one must be ticked
-      const hasConnectionMode = [
-        'connectionModeFibreVoice', 'connectionModeFibreBroadband', 'connectionModeFibrePeoTv',
-        'connectionModeLTEVoice', 'connectionModeLTEBroadband', 'connectionModeLTEPeoTv',
-        'connectionModeCopperVoice', 'connectionModeCopperBroadband', 'connectionModeCopperPeoTv',
-      ].some(key => !!formData[key]);
-      if (!hasConnectionMode) {
-        setSubmitError('3.1 – Please select at least one Connection Mode from the table (Voice, Broadband, or PEO TV).');
-        return;
-      }
-
-      // 4.1.1 — Fixed voice packages: at least one must be ticked
-      const has411 = [
-        'fixedVoicePackageHomeMyPhone', 'fixedVoicePackageOffice', 'fixedVoicePackageUnlimited',
-      ].some(key => !!formData[key]);
-      if (!has411) {
-        setSubmitError('4.1.1 – Please select at least one Fixed Voice Package.');
-        return;
-      }
-
-      // 4.1.2 — 4G LTE Postpaid packages: at least one must be ticked
-      const has412 = [
-        'fixedVoicePackageLTEPalBasic', 'fixedVoicePackageLTEPalPremium',
-        'fixedVoicePackageHomeDoublePlay', 'fixedVoicePackageOfficeDoublePlay',
-      ].some(key => !!formData[key]);
-      if (!has412) {
-        setSubmitError('4.1.2 – Please select at least one 4G LTE Postpaid Package.');
-        return;
-      }
-
-      // 4.3 — PEO TV Package: at least one must be ticked
-      const peoTvPkgs = [
-        'PEO Titanium', 'PEO Platinum', 'PEO Entertainment', 'PEO Gold',
-        'PEO Silver Plus', 'PEO Silver', 'PEO Family', 'Other',
-      ];
-      const has43 = peoTvPkgs.some(pkg => !!formData[`peoTvPkg_${pkg.replace(/\s+/g, '')}`]);
-      if (!has43) {
-        setSubmitError('4.3 – Please select at least one PEO TV Package.');
-        return;
-      }
+    // Existing customers already have identity documents on file — only new
+    // customers (no verified account) need to upload their NIC (BRD 5.1.3).
+    if (currentStep === 1 && !selectedAccount && (!formData.nicFront || !formData.nicBack)) {
+      toast.error('Please upload both sides of your NIC to continue');
+      return;
     }
+    if (currentStep === 3 && vasStepRef.current && !vasStepRef.current.validate()) return;
+    if (currentStep < totalSteps) nextStep();
+  };
 
-    if (currentStep < totalSteps) { nextStep(); return; }
-
+  // Real submission — fired either after payment succeeds (loop available)
+  // or immediately after the loop check comes back negative (no payment,
+  // just a pending request for an SLT rep to follow up on).
+  const submitApplication = async () => {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const payloadFormData = {
-        ...formData,
-        declarationAccepted: formData.declarationAccepted ?? formData.agreement ?? true,
-        signature: formData.signature || formData.digitalSignatureBase64 || 'SIGNED_BY_CUSTOMER',
-        nicFront: formData.nicFront || 'DOC_ATTACHED',
-        nicBack: formData.nicBack || 'DOC_ATTACHED',
-      };
-
       const res = await api.post('/applications', {
         serviceType: 'new-connection',
-        formData: payloadFormData,
-        phone: verifiedMobile || formData.mobileNumber || '',
+        formData,
+        phone: verifiedMobile,
       });
       navigate('/completion', {
         state: {
@@ -267,7 +230,7 @@ export default function NewConnectionWizard() {
           t('wizards.newConnection.steps.s1'),
           t('wizards.newConnection.steps.s2'),
           t('wizards.newConnection.steps.s3'),
-          t('wizards.newConnection.steps.s4'),
+          'Coverage Check',
           'Payment',
         ]}
       />
@@ -281,6 +244,7 @@ export default function NewConnectionWizard() {
             <CustomerInfoStep
               formData={formData}
               handleChange={handleChange}
+              handleFileChange={handleFileChange}
               setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
             />
           )}
@@ -288,17 +252,27 @@ export default function NewConnectionWizard() {
             <ServiceInfoStep formData={formData} handleChange={handleChange} />
           )}
           {currentStep === 3 && (
-            <ConnectionPackageStep formData={formData} handleChange={handleChange} />
+            <ValueAddedServicesStep
+              ref={vasStepRef}
+              isActive={currentStep === 3}
+              formData={formData}
+              handleChange={handleChange}
+            />
           )}
           {currentStep === 4 && (
-            <ValueAddedServicesStep formData={formData} handleChange={handleChange} />
+            <LoopCheckStep
+              formData={formData}
+              submitting={submitting}
+              onAvailable={nextStep}
+              onUnavailable={submitApplication}
+            />
           )}
           {currentStep === 5 && (
             <PaymentStep
               isActive={currentStep === 5}
-              verifiedPhone={verifiedMobile || formData.mobileNumber}
+              verifiedPhone={verifiedMobile}
               amount={selectedProduct?.installationFee || 2500}
-              onSuccess={() => handleSubmit()}
+              onSuccess={submitApplication}
             />
           )}
         </div>
@@ -313,15 +287,11 @@ export default function NewConnectionWizard() {
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
             {t('common.previous')}
           </button>
-          {currentStep < totalSteps - 1 ? (
+          {currentStep <= 3 && (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               {t('common.nextStep')}
             </button>
-          ) : currentStep === totalSteps - 1 ? (
-            <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting ? t('common.submitting') : t('common.submit')}
-            </button>
-          ) : null}
+          )}
         </div>
       </form>
     </div>

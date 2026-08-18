@@ -180,6 +180,7 @@ export default function LocationChangeWizard() {
             <AddressStep
               isActive
               formData={formData}
+              selectedAccount={selectedAccount}
               onDataChange={updateFormData}
               onValidationChange={setIsAddressStepValid}
               showValidationErrors={showValidationErrors}

@@ -37,6 +37,7 @@ import MyProfilePage from './pages/MyProfilePage';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import FloatingCartButton from './components/layout/FloatingCartButton';
 import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
 
@@ -61,7 +62,7 @@ const VerifyPhonePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const targetRoute = location.state?.redirectTo || '/reconnection';
+  const targetRoute = location.state?.redirectTo || '/profile';
 
   return (
     <OtpProtectedForm
@@ -374,6 +375,7 @@ const NavigationLayout = ({ children }) => {
       </main>
 
       <Footer />
+      <FloatingCartButton />
     </div>
   );
 };

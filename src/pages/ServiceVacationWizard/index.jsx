@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
@@ -13,7 +13,6 @@ import PaymentStep from '../PaymentStep';
 
 export default function ServiceVacationWizard() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
   const { customerExists, selectedAccount } = useVerifiedContext();
@@ -22,15 +21,7 @@ export default function ServiceVacationWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   
-  const [vacationData, setVacationData] = useState(() => {
-    const fromState = location.state?.selectedAccount || location.state?.customerData;
-    if (fromState) return fromState;
-    const stored = sessionStorage.getItem('selectedAccount');
-    if (stored) {
-      try { return JSON.parse(stored); } catch (e) { return null; }
-    }
-    return null;
-  });
+  const [vacationData, setVacationData] = useState(null);
   const [paymentIntention, setPaymentIntention] = useState('later'); // 'later', 'paid', 'gateway'
   
   const formRef = useRef(null);

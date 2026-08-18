@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CurrentCustomerStep from './CurrentCustomerStep';
 import NewApplicantStep from './NewApplicantStep';
 import DocumentsStep from './DocumentsStep';
 import DeclarationStep from './DeclarationStep';
@@ -19,7 +18,8 @@ export default function OwnershipChangeWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
-  const totalSteps = 4;
+  const newApplicantStepRef = useRef(null);
+  const totalSteps = 3;
 
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
@@ -32,7 +32,11 @@ export default function OwnershipChangeWizard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (currentStep < totalSteps) { nextStep(); return; }
+    if (currentStep < totalSteps) {
+      if (currentStep === 1 && newApplicantStepRef.current && !newApplicantStepRef.current.validate()) return;
+      nextStep();
+      return;
+    }
 
     const raw = new FormData(formRef.current);
     const formData = Object.fromEntries(raw.entries());
@@ -77,7 +81,6 @@ export default function OwnershipChangeWizard() {
           t('wizards.ownershipChange.steps.s1'),
           t('wizards.ownershipChange.steps.s2'),
           t('wizards.ownershipChange.steps.s3'),
-          t('wizards.ownershipChange.steps.s4'),
         ]}
       />
 
@@ -92,16 +95,13 @@ export default function OwnershipChangeWizard() {
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <CurrentCustomerStep isActive={currentStep === 1} />
+            <NewApplicantStep ref={newApplicantStepRef} isActive={currentStep === 1} />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <NewApplicantStep isActive={currentStep === 2} />
+            <DocumentsStep isActive={currentStep === 2} />
           </div>
           <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-            <DocumentsStep isActive={currentStep === 3} />
-          </div>
-          <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
-            <DeclarationStep isActive={currentStep === 4} />
+            <DeclarationStep isActive={currentStep === 3} />
           </div>
         </div>
 

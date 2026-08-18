@@ -9,8 +9,8 @@
   --navy: #0b2d5b;
   --blue: #0f57a8;
   --blue-deep: #0a3f7e;
-  --green: #57b531;
-  --green-deep: #3e8f1f;
+  --green: #50b748;
+  --green-deep: #3a9636;
   --paper: #f3f6fb;
   --surface: #ffffff;
   --line: #d9e2ef;
@@ -2005,7 +2005,7 @@ a {
 }
 
 @media (max-width: 380px) {
-  .navbar-cart-link > span:first-of-type {
+  .navbar-auth-phone {
     display: none;
   }
   .nav-center-search select {

@@ -30,6 +30,7 @@ export default function ProductCard({
   onSelect,
   onToggleFavorite,
   onAddToCart,
+  onRemoveFromCart,
   disabled = false,
   disabledReason = 'Category Limit Reached',
   viewMode = 'grid',
@@ -175,8 +176,13 @@ export default function ProductCard({
           </button>
 
           <button
-            onClick={() => !disabled && !isInCart && onAddToCart(product)}
-            disabled={disabled || isInCart}
+            onClick={() => {
+              if (disabled) return;
+              if (isInCart) onRemoveFromCart(product);
+              else onAddToCart(product);
+            }}
+            disabled={disabled}
+            title={isInCart ? 'Remove from cart' : undefined}
             style={{
               backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
               color: isInCart ? '#ffffff' : disabled ? '#475569' : '#ffffff',
@@ -185,7 +191,7 @@ export default function ProductCard({
               padding: '0.5rem 0.9rem',
               fontWeight: 800,
               fontSize: '0.8rem',
-              cursor: disabled || isInCart ? 'not-allowed' : 'pointer',
+              cursor: disabled ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -343,8 +349,13 @@ export default function ProductCard({
 
         <div style={{ marginTop: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
           <button
-            onClick={() => !disabled && !isInCart && onAddToCart(product)}
-            disabled={disabled || isInCart}
+            onClick={() => {
+              if (disabled) return;
+              if (isInCart) onRemoveFromCart(product);
+              else onAddToCart(product);
+            }}
+            disabled={disabled}
+            title={isInCart ? 'Remove from cart' : undefined}
             style={{
               width: '100%',
               backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
@@ -354,12 +365,12 @@ export default function ProductCard({
               padding: '0.55rem 0.75rem',
               fontWeight: 800,
               fontSize: '0.82rem',
-              cursor: disabled || isInCart ? 'not-allowed' : 'pointer',
+              cursor: disabled ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.45rem',
-              boxShadow: disabled || isInCart ? 'none' : '0 3px 10px rgba(0,86,179,0.25)',
+              boxShadow: disabled ? 'none' : '0 3px 10px rgba(0,86,179,0.25)',
               transition: 'all 0.15s ease',
             }}
           >

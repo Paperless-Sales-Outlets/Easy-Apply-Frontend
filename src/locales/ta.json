@@ -21,7 +21,16 @@
     "loginLink": "உள்நுழைக"
   },
   "nav": {
-    "title": "SLTMobitel EasyApply"
+    "title": "SLTMobitel EasyApply",
+    "home": "முகப்பு",
+    "applicationStatus": "விண்ணப்ப நிலை",
+    "help": "உதவி",
+    "myProfile": "எனது சுயவிவரம்",
+    "login": "உள்நுழைய",
+    "logout": "வெளியேறு",
+    "cart": "கூடை",
+    "verifiedNumber": "சரிபார்க்கப்பட்ட எண்",
+    "goToProfile": "எனது சுயவிவரத்திற்குச் செல்ல"
   },
   "hero": {
     "eyebrow": "SLTMobitel இணையவழி சேவைகள்",
@@ -534,6 +543,7 @@
         "disconnectedTo": "முதல்",
         "amountToPay": "நான் ரூ. (தொகை) செலுத்த விரும்புகிறேன்",
         "facilitiesHeading": "தயவுசெய்து இணைப்பை மீண்டும் இணைத்து பின்வரும் வசதிகளையும் வழங்கவும்:",
+        "voice": "குரல் (தொலைபேசி)",
         "broadband": "SLT Broadband Internet (ADSL/Wi-Max)",
         "peoTv": "PeoTV",
         "sltPlus": "SLT Plus",
