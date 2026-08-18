@@ -18,6 +18,7 @@ export default function OwnershipChangeWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
+  const newApplicantStepRef = useRef(null);
   const totalSteps = 3;
 
   const nextStep = () => {
@@ -31,7 +32,11 @@ export default function OwnershipChangeWizard() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (currentStep < totalSteps) { nextStep(); return; }
+    if (currentStep < totalSteps) {
+      if (currentStep === 1 && newApplicantStepRef.current && !newApplicantStepRef.current.validate()) return;
+      nextStep();
+      return;
+    }
 
     const raw = new FormData(formRef.current);
     const formData = Object.fromEntries(raw.entries());
@@ -90,7 +95,7 @@ export default function OwnershipChangeWizard() {
 
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <NewApplicantStep isActive={currentStep === 1} />
+            <NewApplicantStep ref={newApplicantStepRef} isActive={currentStep === 1} />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
             <DocumentsStep isActive={currentStep === 2} />

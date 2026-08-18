@@ -131,15 +131,15 @@ export default function PackageMigrationWizard() {
     monthlyPrice: customerPackage?.monthlyPrice || 0,
   };
 
-  // Only real connectivity packages belong in the migration-target picker —
-  // accessories, devices, PEO TV, voice-only and bundles aren't a "package"
-  // in the copper/LTE/fibre sense this upgrade check cares about. Products
-  // that don't carry a category at all (e.g. the offline fallback list)
-  // fall through to the name-based technology classification below instead.
-  const BROADBAND_CATEGORIES = ['broadband', 'fibre broadband', 'lte home'];
+  // Migration only covers Voice, Broadband and Internet (LTE/Fibre) packages
+  // — accessories, devices, PEO TV, and bundles aren't a "package" in the
+  // sense this upgrade check cares about. Products that don't carry a
+  // category at all (e.g. the offline fallback list) fall through to the
+  // name-based technology classification below instead.
+  const ELIGIBLE_CATEGORIES = ['broadband', 'fibre broadband', 'lte home', 'voice'];
   const upgradeCandidates = products.filter((p) => {
     const category = (p.category || p.serviceType || '').toLowerCase();
-    if (category && !BROADBAND_CATEGORIES.includes(category)) return false;
+    if (category && !ELIGIBLE_CATEGORIES.includes(category)) return false;
 
     const label = `${p.category || ''} ${p.serviceType || ''} ${p.productName || p.name || ''}`;
     return isPackageUpgrade(currentPackageInfo, {
