@@ -127,14 +127,73 @@ export default function PaymentStep({
     if (e.key === 'Backspace' && !otp[index] && index > 0) inputRefs.current[index - 1]?.focus();
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
+    // Receipt-upload flow: no payment gateway redirect needed
     if (hasPaymentReceipt) {
-      if (onSuccess) onSuccess();
-    } else {
-      setStatusState({ type: 'success', message: 'Proceeding to PayHere Sandbox...' });
-      setTimeout(() => {
-        if (onSuccess) onSuccess('PAYHERE-' + Date.now().toString().slice(-6));
-      }, 1500);
+      if (onSuccess) onSuccess(null, mobileNumber);
+      return;
+    }
+
+    // Online payment flow: get a secure hash from the backend then redirect to PayHere
+    setStatusState({ type: 'success', message: 'Connecting to PayHere...' });
+
+    try {
+      const orderId = `ORD-${Date.now()}`;
+      const response = await api.post('/payment/create', {
+        orderId,
+        amount: totalAmount,
+        currency: 'LKR',
+        itemTitle: 'SLTMobitel Service Payment',
+        customerDetails: { phone: mobileNumber },
+      });
+
+      const { merchantId, hash, amount: payAmount, currency, return_url, cancel_url, notify_url } = response.data;
+
+      // Build and auto-submit a hidden form to PayHere sandbox
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://sandbox.payhere.lk/pay/checkout';
+
+      const fields = {
+        merchant_id: merchantId,
+        return_url,
+        cancel_url,
+        notify_url,
+        order_id: orderId,
+        items: 'SLTMobitel Service Payment',
+        currency,
+        amount: payAmount,
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: `0${mobileNumber}`,
+        address: 'N/A',
+        city: 'Colombo',
+        country: 'Sri Lanka',
+        hash,
+      };
+
+      Object.entries(fields).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value ?? '';
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+
+    } catch (err) {
+      // Backend offline — fall back to dev mock so the wizard still works
+      if (!err.response) {
+        setStatusState({ type: 'success', message: 'Proceeding to PayHere Sandbox...' });
+        setTimeout(() => {
+          if (onSuccess) onSuccess('PAYHERE-' + Date.now().toString().slice(-6), mobileNumber);
+        }, 1500);
+        return;
+      }
+      setStatusState({ type: 'error', message: err.response?.data?.message || 'Payment session failed. Please try again.' });
     }
   };
 

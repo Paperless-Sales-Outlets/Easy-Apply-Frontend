@@ -25,6 +25,8 @@ import InternetServicesWizard from './pages/InternetServicesWizard';
 import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
 import ThankYouPage from './pages/ThankYouPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentCancelPage from './pages/PaymentCancelPage';
 import AdminDashboard from './pages/Admin';
 import AddToCartPage from './pages/AddToCartPage';
 import ServicesPage from './pages/ServicesPage';
@@ -302,6 +304,24 @@ const AnimatedRoutes = () => {
           element={
             <PageWrapper>
               <ThankYouPage />
+            </PageWrapper>
+          }
+        />
+
+        {/* PayHere Return URLs */}
+        <Route
+          path="/payment/success"
+          element={
+            <PageWrapper>
+              <PaymentSuccessPage />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/payment/cancel"
+          element={
+            <PageWrapper>
+              <PaymentCancelPage />
             </PageWrapper>
           }
         />

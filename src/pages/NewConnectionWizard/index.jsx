@@ -159,14 +159,15 @@ export default function NewConnectionWizard() {
   // Real submission — fired either after payment succeeds (loop available)
   // or immediately after the loop check comes back negative (no payment,
   // just a pending request for an SLT rep to follow up on).
-  const submitApplication = async () => {
+  const submitApplication = async (paymentRef, phoneOverride) => {
+    const phone = phoneOverride || verifiedMobile || formData.mobileNumber;
     setSubmitting(true);
     setSubmitError('');
     try {
       const res = await api.post('/applications', {
         serviceType: 'new-connection',
         formData,
-        phone: verifiedMobile,
+        phone,
       });
       navigate('/completion', {
         state: {
