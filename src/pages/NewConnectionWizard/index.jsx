@@ -268,7 +268,12 @@ export default function NewConnectionWizard() {
             />
           )}
           {currentStep === 5 && (
-            <PaymentStep isActive={currentStep === 5} verifiedPhone={verifiedMobile} onSuccess={submitApplication} />
+            <PaymentStep
+              isActive={currentStep === 5}
+              verifiedPhone={verifiedMobile}
+              amount={selectedProduct?.installationFee || 2500}
+              onSuccess={submitApplication}
+            />
           )}
         </div>
 
