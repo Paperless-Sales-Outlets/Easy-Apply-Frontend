@@ -37,6 +37,7 @@ const MAX_FILE_SIZE_MB = 5;
 export default function AddressStep({
   isActive = true,
   formData,
+  selectedAccount,
   onValidationChange,
   onDataChange,
   showValidationErrors = false

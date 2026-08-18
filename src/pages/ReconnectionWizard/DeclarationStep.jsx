@@ -191,36 +191,6 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
 
   return (
     <div>
-      {reconnectionData && (
-        <div style={{ marginBottom: '2.5rem' }}>
-          <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>Customer Details</h3>
-          <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', display: 'grid', placeItems: 'center', color: 'var(--slt-blue)' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              </div>
-              <div>
-                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>{reconnectionData.fullName}</h4>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Account Holder</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-              <div style={{ color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-              </div>
-              <div>
-                <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: '1.5' }}>
-                  <strong>Service Address:</strong><br />
-                  {[reconnectionData.addressLine1, reconnectionData.addressLine2].filter(Boolean).join(', ')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-
-
       <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: 'rgba(15, 87, 168, 0.05)', borderRadius: '12px', border: '1px solid rgba(15, 87, 168, 0.2)' }}>
         <h4 style={{ color: 'var(--slt-blue)', marginBottom: '1rem', fontSize: '1.1rem' }}>Pending Balance Settlement</h4>
         <div 
