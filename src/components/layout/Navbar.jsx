@@ -195,9 +195,9 @@ export default function Navbar() {
         <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.35rem, 2vw, 1.25rem)', flexShrink: 0 }}>
           {/* Desktop Nav Links — display is controlled by the .nav-links-desktop media query, not inline, so it can collapse to the hamburger menu on mobile */}
           <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '1.5rem' }}>
-            <Link to="/" style={navLinkStyle('/')}>Home</Link>
-            <Link to="/check-status" style={navLinkStyle('/check-status')}>Application Status</Link>
-            <Link to="/help" style={navLinkStyle('/help')}>Help &amp; Support</Link>
+            <Link to="/" style={navLinkStyle('/')}>{t('nav.home', 'Home')}</Link>
+            <Link to="/check-status" style={navLinkStyle('/check-status')}>{t('nav.applicationStatus', 'Application Status')}</Link>
+            <Link to="/help" style={navLinkStyle('/help')}>{t('nav.help', 'Help & Support')}</Link>
           </div>
 
           {/* Language Switcher */}
@@ -244,7 +244,7 @@ export default function Navbar() {
                   backgroundColor: isActivePath('/profile') ? '#eff6ff' : '#f8fafc',
                   border: `1px solid ${isActivePath('/profile') ? '#bfdbfe' : '#e2e8f0'}`,
                 }}
-                title="Go to My Profile"
+                title={t('nav.goToProfile', 'Go to My Profile')}
               >
                 <FiUser size={15} style={{ color: '#50b748' }} />
                 {formatPhone(verifiedPhone)}
@@ -266,7 +266,7 @@ export default function Navbar() {
                 }}
               >
                 <FiLogOut size={15} />
-                <span>Logout</span>
+                <span>{t('nav.logout', 'Logout')}</span>
               </button>
             </div>
           ) : (
@@ -287,7 +287,7 @@ export default function Navbar() {
               }}
             >
               <FiUser size={16} />
-              <span>Login</span>
+              <span>{t('nav.login', 'Login')}</span>
             </button>
           )}
 
@@ -307,9 +307,9 @@ export default function Navbar() {
       {menuOpen && (
         <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', padding: '1rem' }}>
           {[
-            { to: '/', label: 'Home' },
-            { to: '/check-status', label: 'Application Status' },
-            { to: '/help', label: 'Help & Support' },
+            { to: '/', label: t('nav.home', 'Home') },
+            { to: '/check-status', label: t('nav.applicationStatus', 'Application Status') },
+            { to: '/help', label: t('nav.help', 'Help & Support') },
           ].map(({ to, label }) => {
             const active = isActivePath(to);
             return (
@@ -348,7 +348,7 @@ export default function Navbar() {
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
                 >
                   <FiLogOut size={16} />
-                  <span>Logout</span>
+                  <span>{t('nav.logout', 'Logout')}</span>
                 </button>
               </>
             ) : (
@@ -358,7 +358,7 @@ export default function Navbar() {
                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#0056b3', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
               >
                 <FiUser size={16} />
-                <span>Login</span>
+                <span>{t('nav.login', 'Login')}</span>
               </button>
             )}
           </div>
