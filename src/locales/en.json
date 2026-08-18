@@ -21,7 +21,16 @@
     "loginLink": "Sign In"
   },
   "nav": {
-    "title": "SLTMobitel EasyApply"
+    "title": "SLTMobitel EasyApply",
+    "home": "Home",
+    "applicationStatus": "Application Status",
+    "help": "Help & Support",
+    "myProfile": "My Profile",
+    "login": "Login",
+    "logout": "Logout",
+    "cart": "Cart",
+    "verifiedNumber": "Verified number",
+    "goToProfile": "Go to My Profile"
   },
   "hero": {
     "eyebrow": "SLTMobitel online services",
