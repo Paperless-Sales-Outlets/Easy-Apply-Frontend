@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut } from 'react-icons/fi';
@@ -6,6 +6,11 @@ import sltLogo from '../../assets/sltlogoOnly.png';
 import { getVerifiedPhone, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../utils/authSession';
 
 const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : n ? `+94 ${n}` : '');
+
+// A little extra breathing room below the fixed nav so page content never
+// feels flush against it, even before the exact height is measured.
+const NAV_HEIGHT_ESTIMATE = 88;
+const NAV_SPACER_BUFFER = 16;
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -15,8 +20,11 @@ export default function Navbar() {
   const [searchCategory, setSearchCategory] = useState('All');
   const menuRef = useRef(null);
 
-  const [navHeight, setNavHeight] = useState(0);
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so the spacer is sized before the browser
+  // paints — otherwise content briefly renders behind the fixed nav on first
+  // load. Seeded with a sane estimate so there's no gap even before that.
+  const [navHeight, setNavHeight] = useState(NAV_HEIGHT_ESTIMATE);
+  useLayoutEffect(() => {
     const el = menuRef.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
     const update = () => setNavHeight(el.offsetHeight);
@@ -357,8 +365,8 @@ export default function Navbar() {
         </div>
       )}
     </nav>
-    {/* Spacer so fixed-position nav doesn't cover page content; height tracks the nav's own (responsive) height */}
-    <div style={{ height: navHeight }} aria-hidden="true" />
+    {/* Spacer so fixed-position nav doesn't cover page content; height tracks the nav's own (responsive) height, plus a little breathing room */}
+    <div style={{ height: navHeight + NAV_SPACER_BUFFER }} aria-hidden="true" />
     </>
   );
 }
