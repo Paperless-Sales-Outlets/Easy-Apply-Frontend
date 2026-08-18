@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { FiMapPin, FiHome, FiUploadCloud, FiCheckCircle, FiNavigation, FiFileText, FiCheck, FiX } from "react-icons/fi";
-import api from "../../utils/api";
 import AddressInputWithMap from "../../components/form/AddressInputWithMap";
 
 // Fix default Leaflet marker icon paths in React environments
@@ -103,82 +102,21 @@ export default function AddressStep({
   const [noResultsFound, setNoResultsFound] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
-  // Fetch Current Address from backend API using verified telephone number
+  // The customer's account (with their registered address) is already
+  // verified via OTP + real DB lookup before reaching this wizard — reuse it
+  // directly instead of re-fetching from an endpoint that returns a
+  // different response shape than this component expects.
   useEffect(() => {
-    let isSubscribed = true;
-
-    async function fetchCurrentAddress() {
-      const telephone = formData?.telephone || formData?.tel || formData?.phone;
-
-      if (!telephone) {
-        if (isSubscribed) {
-          setCurrentAddress({
-            address1: formData?.addressLine1 || formData?.address || "",
-            address2: formData?.addressLine2 || "",
-            city: formData?.city || "",
-            district: formData?.district || "",
-            postalCode: formData?.postalCode || "",
-          });
-          setLoadingCurrent(false);
-        }
-        return;
-      }
-
-      try {
-        setLoadingCurrent(true);
-        const response = await api.get(`/customers/${telephone}`);
-        if (response.data && response.data.success && response.data.data) {
-          const cust = response.data.data;
-          const currObj = (cust.currentAddress && typeof cust.currentAddress === 'object') ? cust.currentAddress : {};
-
-          const addr1 = currObj.address1 || currObj.addressLine1 || cust.addressLine1 || cust.address1 || cust.address || "";
-          const addr2 = currObj.address2 || currObj.addressLine2 || cust.addressLine2 || cust.address2 || "";
-          const city = currObj.city || cust.city || "";
-          const district = currObj.district || cust.district || "";
-          const postalCode = currObj.postalCode || currObj.postal_code || cust.postalCode || cust.postal_code || "";
-
-          if (isSubscribed) {
-            setCurrentAddress({
-              address1: addr1,
-              address2: addr2,
-              city,
-              district,
-              postalCode,
-            });
-          }
-        } else if (isSubscribed) {
-          setCurrentAddress({
-            address1: formData?.addressLine1 || formData?.address || "",
-            address2: formData?.addressLine2 || "",
-            city: formData?.city || "",
-            district: formData?.district || "",
-            postalCode: formData?.postalCode || "",
-          });
-        }
-      } catch (err) {
-        console.error("Failed to load customer current address:", err);
-        if (isSubscribed) {
-          setCurrentAddress({
-            address1: formData?.addressLine1 || formData?.address || "",
-            address2: formData?.addressLine2 || "",
-            city: formData?.city || "",
-            district: formData?.district || "",
-            postalCode: formData?.postalCode || "",
-          });
-        }
-      } finally {
-        if (isSubscribed) {
-          setLoadingCurrent(false);
-        }
-      }
-    }
-
-    fetchCurrentAddress();
-
-    return () => {
-      isSubscribed = false;
-    };
-  }, [formData?.telephone, formData?.tel]);
+    const source = selectedAccount || formData;
+    setCurrentAddress({
+      address1: source?.addressLine1 || source?.address1 || source?.address || "",
+      address2: source?.addressLine2 || source?.address2 || "",
+      city: source?.city || "",
+      district: source?.district || "",
+      postalCode: source?.postalCode || "",
+    });
+    setLoadingCurrent(false);
+  }, [selectedAccount, formData?.addressLine1, formData?.address]);
 
   // Handle outside click for search suggestions dropdown
   useEffect(() => {
