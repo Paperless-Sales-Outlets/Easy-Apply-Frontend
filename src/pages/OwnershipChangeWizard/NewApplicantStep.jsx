@@ -159,7 +159,7 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                 disabled={verified}
                 placeholder="7X XXX XXXX"
                 required={isActive}
-                style={verified ? { paddingRight: '2.25rem', backgroundColor: '#f0fdf4', borderColor: '#86efac' } : undefined}
+                style={verified ? { paddingRight: '2.25rem' } : undefined}
               />
               {verified && (
                 <FiCheckCircle
