@@ -87,7 +87,7 @@ export default function Navbar() {
   return (
     <>
     <nav className="top-navbar-wrapper" ref={menuRef} style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
-      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: 'clamp(0.4rem, 2vw, 0.65rem) clamp(0.5rem, 4vw, 1.5rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'clamp(0.5rem, 2vw, 1.25rem)' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: 'clamp(0.75rem, 2.5vw, 1.15rem) clamp(0.5rem, 4vw, 1.5rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'clamp(0.5rem, 2vw, 1.25rem)' }}>
 
         {/* ── Left: Logo ── */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', gap: '0.45rem', flexShrink: 0 }}>
@@ -190,7 +190,6 @@ export default function Navbar() {
             <Link to="/" style={navLinkStyle('/')}>Home</Link>
             <Link to="/check-status" style={navLinkStyle('/check-status')}>Application Status</Link>
             <Link to="/help" style={navLinkStyle('/help')}>Help &amp; Support</Link>
-            <Link to="/profile" style={navLinkStyle('/profile')}>My Profile</Link>
           </div>
 
           {/* Language Switcher */}
@@ -221,14 +220,27 @@ export default function Navbar() {
           {/* Login / Logout — reflects the OTP-verified phone session shared across wizards */}
           {verifiedPhone ? (
             <div className="navbar-auth" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <span
+              <Link
+                to="/profile"
                 className="navbar-auth-phone"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#334155', fontWeight: 700, fontSize: '0.85rem' }}
-                title="Verified number"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  color: '#334155',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  textDecoration: 'none',
+                  padding: '0.4rem 0.75rem',
+                  borderRadius: '9999px',
+                  backgroundColor: isActivePath('/profile') ? '#eff6ff' : '#f8fafc',
+                  border: `1px solid ${isActivePath('/profile') ? '#bfdbfe' : '#e2e8f0'}`,
+                }}
+                title="Go to My Profile"
               >
                 <FiUser size={15} style={{ color: '#50b748' }} />
                 {formatPhone(verifiedPhone)}
-              </span>
+              </Link>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -290,7 +302,6 @@ export default function Navbar() {
             { to: '/', label: 'Home' },
             { to: '/check-status', label: 'Application Status' },
             { to: '/help', label: 'Help & Support' },
-            { to: '/profile', label: 'My Profile' },
           ].map(({ to, label }) => {
             const active = isActivePath(to);
             return (
@@ -315,14 +326,23 @@ export default function Navbar() {
 
           <div style={{ borderTop: '1px solid #e2e8f0', margin: '0.5rem 0', paddingTop: '0.5rem' }}>
             {verifiedPhone ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
-              >
-                <FiLogOut size={16} />
-                <span>Logout ({formatPhone(verifiedPhone)})</span>
-              </button>
+              <>
+                <Link
+                  to="/profile"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', color: isActivePath('/profile') ? '#0056b3' : '#0f172a', textDecoration: 'none', fontWeight: isActivePath('/profile') ? 800 : 600, fontSize: '0.95rem', backgroundColor: isActivePath('/profile') ? '#eff6ff' : 'transparent', borderRadius: '8px', borderLeft: isActivePath('/profile') ? '3px solid #0056b3' : '3px solid transparent' }}
+                >
+                  <FiUser size={16} style={{ color: '#50b748' }} />
+                  <span>{formatPhone(verifiedPhone)}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
+                >
+                  <FiLogOut size={16} />
+                  <span>Logout</span>
+                </button>
+              </>
             ) : (
               <button
                 type="button"
