@@ -1,4 +1,4 @@
-import React, { useState, useReducer, useEffect } from 'react';
+import React, { useState, useReducer, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
@@ -51,6 +51,8 @@ const initialState = {
   broadbandPackage: '',
   otherBroadbandPackage: '',
   staticIP: 'no',
+  declarationAccepted: false,
+  signature: '',
 };
 
 export default function NewConnectionWizard() {
@@ -80,6 +82,7 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
+  const vasStepRef = useRef(null);
   const totalSteps = 5;
 
   useEffect(() => {
@@ -136,6 +139,7 @@ export default function NewConnectionWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitError('');
+    if (currentStep === 3 && vasStepRef.current && !vasStepRef.current.validate()) return;
     if (currentStep < totalSteps) nextStep();
   };
 
@@ -234,7 +238,12 @@ export default function NewConnectionWizard() {
             <ServiceInfoStep formData={formData} handleChange={handleChange} />
           )}
           {currentStep === 3 && (
-            <ValueAddedServicesStep formData={formData} handleChange={handleChange} />
+            <ValueAddedServicesStep
+              ref={vasStepRef}
+              isActive={currentStep === 3}
+              formData={formData}
+              handleChange={handleChange}
+            />
           )}
           {currentStep === 4 && (
             <LoopCheckStep
