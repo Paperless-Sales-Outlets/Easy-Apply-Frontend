@@ -47,19 +47,19 @@ export default function FloatingCartButton() {
         zIndex: 90,
         display: 'flex',
         alignItems: 'center',
-        gap: '0.6rem',
+        gap: '0.75rem',
         backgroundColor: '#0f172a',
         color: '#ffffff',
         border: 'none',
         borderRadius: '9999px',
-        padding: '0.9rem 1.5rem',
-        fontSize: '0.95rem',
+        padding: '1.15rem 2rem',
+        fontSize: '1.1rem',
         fontWeight: 700,
         cursor: 'pointer',
-        boxShadow: '0 12px 28px rgba(15, 23, 42, 0.35)',
+        boxShadow: '0 14px 32px rgba(15, 23, 42, 0.35)',
       }}
     >
-      <FiShoppingCart size={18} />
+      <FiShoppingCart size={22} />
       <span>View cart &bull; {cartCount}</span>
     </button>
   );
