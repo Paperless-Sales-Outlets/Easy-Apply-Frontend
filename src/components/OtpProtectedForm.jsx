@@ -18,6 +18,7 @@ import {
   FiShoppingCart,
 } from 'react-icons/fi';
 import { VerificationContext } from './verification';
+import { notifyAuthUpdated } from '../utils/authSession';
 import api from '../utils/api';
 import heroBanner from '../assets/HeroSLT.png';
 
@@ -177,6 +178,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
   useEffect(() => {
     if (phase !== 'verified') return;
     if (mobileNumber) sessionStorage.setItem('verifiedPhone', mobileNumber);
+    notifyAuthUpdated();
     const id = setTimeout(() => setDone(true), 700);
     return () => clearTimeout(id);
   }, [phase, mobileNumber]);

@@ -1,37 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiSearch, FiShoppingCart, FiGlobe, FiMenu, FiX } from 'react-icons/fi';
+import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut } from 'react-icons/fi';
 import sltLogo from '../../assets/sltlogoOnly.png';
-import { getLocalCart } from '../../services/productService';
+import { getVerifiedPhone, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../utils/authSession';
 
-const countCartItems = () => {
-  try {
-    return getLocalCart().reduce((acc, item) => acc + (item.quantity || 1), 0);
-  } catch (e) {
-    return 0;
-  }
-};
+const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : n ? `+94 ${n}` : '');
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchCategory, setSearchCategory] = useState('All');
   const menuRef = useRef(null);
 
-  const [cartCount, setCartCount] = useState(countCartItems);
+  const [navHeight, setNavHeight] = useState(0);
+  useEffect(() => {
+    const el = menuRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const update = () => setNavHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const [verifiedPhone, setVerifiedPhone] = useState(getVerifiedPhone);
 
   useEffect(() => {
-    const syncCartCount = () => setCartCount(countCartItems());
-    syncCartCount();
-    window.addEventListener('easyapply:cart-updated', syncCartCount);
-    window.addEventListener('storage', syncCartCount);
+    const syncAuth = () => setVerifiedPhone(getVerifiedPhone());
+    syncAuth();
+    window.addEventListener(AUTH_UPDATED_EVENT, syncAuth);
+    window.addEventListener('storage', syncAuth);
     return () => {
-      window.removeEventListener('easyapply:cart-updated', syncCartCount);
-      window.removeEventListener('storage', syncCartCount);
+      window.removeEventListener(AUTH_UPDATED_EVENT, syncAuth);
+      window.removeEventListener('storage', syncAuth);
     };
-  }, []);
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    logoutVerifiedSession();
+    navigate('/');
+  };
 
   const isActivePath = (path) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -74,7 +85,8 @@ export default function Navbar() {
   }, [menuOpen]);
 
   return (
-    <nav className="top-navbar-wrapper" ref={menuRef} style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'sticky', top: 0, zIndex: 100 }}>
+    <>
+    <nav className="top-navbar-wrapper" ref={menuRef} style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
       <div style={{ maxWidth: '1600px', margin: '0 auto', padding: 'clamp(0.4rem, 2vw, 0.65rem) clamp(0.5rem, 4vw, 1.5rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'clamp(0.5rem, 2vw, 1.25rem)' }}>
 
         {/* ── Left: Logo ── */}
@@ -206,37 +218,58 @@ export default function Navbar() {
 
           <span style={{ color: '#cbd5e1' }}>|</span>
 
-          {/* Cart Button with Count Badge */}
-          <Link
-            to="/cart"
-            className="navbar-cart-link"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              color: '#334155',
-              textDecoration: 'none',
-              fontWeight: 700,
-              fontSize: '0.88rem',
-            }}
-          >
-            <FiShoppingCart size={18} style={{ color: '#0056b3' }} />
-            <span>Cart</span>
-            {cartCount > 0 && (
+          {/* Login / Logout — reflects the OTP-verified phone session shared across wizards */}
+          {verifiedPhone ? (
+            <div className="navbar-auth" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <span
+                className="navbar-auth-phone"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#334155', fontWeight: 700, fontSize: '0.85rem' }}
+                title="Verified number"
+              >
+                <FiUser size={15} style={{ color: '#50b748' }} />
+                {formatPhone(verifiedPhone)}
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
                 style={{
-                  backgroundColor: '#047857',
-                  color: '#ffffff',
-                  fontSize: '0.7rem',
-                  fontWeight: 900,
-                  borderRadius: '9999px',
-                  padding: '0.1rem 0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  background: 'none',
+                  border: 'none',
+                  color: '#dc2626',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  padding: 0,
                 }}
               >
-                {cartCount}
-              </span>
-            )}
-          </Link>
+                <FiLogOut size={15} />
+                <span>Logout</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate('/verify-phone', { state: { redirectTo: '/profile' } })}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                background: 'none',
+                border: 'none',
+                color: '#0056b3',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              <FiUser size={16} />
+              <span>Login</span>
+            </button>
+          )}
 
           {/* Mobile Hamburger — display is controlled by the .hamburger-btn media query (hidden on desktop, shown ≤768px) */}
           <button
@@ -279,8 +312,33 @@ export default function Navbar() {
               </Link>
             );
           })}
+
+          <div style={{ borderTop: '1px solid #e2e8f0', margin: '0.5rem 0', paddingTop: '0.5rem' }}>
+            {verifiedPhone ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <FiLogOut size={16} />
+                <span>Logout ({formatPhone(verifiedPhone)})</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigate('/verify-phone', { state: { redirectTo: '/profile' } })}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#0056b3', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <FiUser size={16} />
+                <span>Login</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
     </nav>
+    {/* Spacer so fixed-position nav doesn't cover page content; height tracks the nav's own (responsive) height */}
+    <div style={{ height: navHeight }} aria-hidden="true" />
+    </>
   );
 }
