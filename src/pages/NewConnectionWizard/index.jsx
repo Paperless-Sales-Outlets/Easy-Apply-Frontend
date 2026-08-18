@@ -1,5 +1,6 @@
 import React, { useState, useReducer, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
@@ -53,6 +54,8 @@ const initialState = {
   staticIP: 'no',
   declarationAccepted: false,
   signature: '',
+  nicFront: null,
+  nicBack: null,
 };
 
 export default function NewConnectionWizard() {
@@ -127,6 +130,10 @@ export default function NewConnectionWizard() {
     });
   };
 
+  const handleFileChange = (name, fileData) => {
+    dispatch({ type: 'UPDATE_FIELD', payload: { name, value: fileData } });
+  };
+
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);
@@ -139,6 +146,12 @@ export default function NewConnectionWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitError('');
+    // Existing customers already have identity documents on file — only new
+    // customers (no verified account) need to upload their NIC (BRD 5.1.3).
+    if (currentStep === 1 && !selectedAccount && (!formData.nicFront || !formData.nicBack)) {
+      toast.error('Please upload both sides of your NIC to continue');
+      return;
+    }
     if (currentStep === 3 && vasStepRef.current && !vasStepRef.current.validate()) return;
     if (currentStep < totalSteps) nextStep();
   };
@@ -231,6 +244,7 @@ export default function NewConnectionWizard() {
             <CustomerInfoStep
               formData={formData}
               handleChange={handleChange}
+              handleFileChange={handleFileChange}
               setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
             />
           )}
