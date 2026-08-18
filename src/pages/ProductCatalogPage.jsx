@@ -9,7 +9,7 @@ import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
 import SkeletonCard from '../components/catalog/SkeletonCard';
 import Toast from '../components/common/Toast';
 import HeroBannerCarousel from '../components/catalog/HeroBannerCarousel';
-import { getProducts, addToCart, getLocalCart, clearCart } from '../services/productService';
+import { getProducts, addToCart, removeFromCart, getLocalCart, clearCart } from '../services/productService';
 
 const DEFAULT_MOCKUP_PRODUCTS = [
   // ── 🌐 Broadband Category (5 Packages) ──
@@ -308,6 +308,17 @@ export default function ProductCatalogPage() {
       }
     } catch (err) {
       showToast(`${prod.name} added to cart!`, 'success');
+    }
+  };
+
+  const handleRemoveFromCart = async (prod) => {
+    const prodId = String(prod._id || prod.id);
+    try {
+      await removeFromCart(prodId);
+      setCartItems(getLocalCart());
+      showToast(`${prod.name} removed from cart.`, 'info');
+    } catch (err) {
+      setCartItems(getLocalCart());
     }
   };
 
@@ -725,6 +736,7 @@ export default function ProductCatalogPage() {
                               onSelect={(p) => setSelectedProduct(p)}
                               onToggleFavorite={handleToggleFavorite}
                               onAddToCart={(p) => handleAddToCart(p, 1)}
+                              onRemoveFromCart={handleRemoveFromCart}
                               disabled={isCategoryDisabled}
                               disabledReason={disabledReason}
                               viewMode={viewMode}
