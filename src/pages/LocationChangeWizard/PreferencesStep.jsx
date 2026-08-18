@@ -43,57 +43,23 @@ export default function PreferencesStep({
   const [callForwarding, setCallForwarding] = useState('no');
   const [forwardingDuration, setForwardingDuration] = useState('');
 
-  const [sltNumber1, setSltNumber1] = useState('');
-  const [sltNumber2, setSltNumber2] = useState('');
-
   const [isRepresentative, setIsRepresentative] = useState('no');
   const [authLetter, setAuthLetter] = useState(null);
   const [brcFile, setBrcFile] = useState(null);
 
-  // Errors state
-  const [errors, setErrors] = useState({});
-
   // Minimum date selection for preferred relocation date (Today onwards)
   const today = new Date().toISOString().split('T')[0];
-
-  const validatePhoneNumber = (value) => {
-    return /^\d{10}$/.test(value);
-  };
-
-  const handlePhone1Change = (e) => {
-    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-    setSltNumber1(val);
-    if (val && !validatePhoneNumber(val)) {
-      setErrors((prev) => ({ ...prev, sltNumber1: 'Must be exactly 10 digits' }));
-    } else {
-      setErrors((prev) => ({ ...prev, sltNumber1: null }));
-    }
-  };
-
-  const handlePhone2Change = (e) => {
-    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-    setSltNumber2(val);
-    if (val && !validatePhoneNumber(val)) {
-      setErrors((prev) => ({ ...prev, sltNumber2: 'Must be exactly 10 digits' }));
-    } else {
-      setErrors((prev) => ({ ...prev, sltNumber2: null }));
-    }
-  };
 
   const handleCheckboxChange = (serviceKey) => {
     setKeptServices((prev) => ({ ...prev, [serviceKey]: !prev[serviceKey] }));
   };
 
-  const isFTTHOrMegaline = ['FTTH', 'Megaline'].includes(selectedServiceType);
   const isAuthLetterValid = isRepresentative !== 'yes' || Boolean(authLetter);
   const isBrcValid = customerType !== 'business' || Boolean(brcFile);
-  const isSltNumber1Valid = !isFTTHOrMegaline || validatePhoneNumber(sltNumber1);
-  const isSltNumber2Valid = !sltNumber2 || validatePhoneNumber(sltNumber2);
-  const isSltNumbersValid = isSltNumber1Valid && isSltNumber2Valid;
   const isRelocationDateValid = Boolean(relocationDate);
   const isDisconnectDateValid = Boolean(disconnectDate);
 
-  const isStepValid = isRelocationDateValid && isDisconnectDateValid && isSltNumbersValid && isAuthLetterValid && isBrcValid;
+  const isStepValid = isRelocationDateValid && isDisconnectDateValid && isAuthLetterValid && isBrcValid;
 
   useEffect(() => {
     if (onValidationChangeRef.current) {
@@ -110,14 +76,12 @@ export default function PreferencesStep({
         keptServices,
         callForwarding,
         forwardingDuration,
-        sltNumber1,
-        sltNumber2,
         isRepresentative,
         authLetter,
         brcFile,
       });
     }
-  }, [relocationDate, disconnectDate, disconnectAction, keptServices, callForwarding, forwardingDuration, sltNumber1, sltNumber2, isRepresentative, authLetter, brcFile]);
+  }, [relocationDate, disconnectDate, disconnectAction, keptServices, callForwarding, forwardingDuration, isRepresentative, authLetter, brcFile]);
 
   return (
     <div style={{ width: '100%', margin: '0 auto', fontFamily: 'inherit' }}>
@@ -429,90 +393,6 @@ export default function PreferencesStep({
           </div>
         )}
       </div>
-
-      {/* ────────────────────────────────────────────────────────── */}
-      {/* 4. Nearest SLT Connection Lines Card */}
-      {/* ────────────────────────────────────────────────────────── */}
-      {isFTTHOrMegaline && (
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            padding: '1.75rem 2rem',
-            marginBottom: '1.75rem',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <FiPhoneCall size={18} />
-            </div>
-            <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
-              4. Nearest SLT Telephone Connection Lines (DP Feasibility)
-            </h4>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
-            <div>
-              <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
-                Nearest SLT Telephone Number 1 <span style={{ color: '#dc2626' }}>*</span>
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., 0112345678"
-                value={sltNumber1}
-                onChange={handlePhone1Change}
-                required={isActive && isFTTHOrMegaline}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '10px',
-                  border: errors.sltNumber1 ? '1.5px solid #dc2626' : '1px solid #cbd5e1',
-                  backgroundColor: errors.sltNumber1 ? '#fef2f2' : '#ffffff',
-                  fontSize: '0.9rem',
-                  fontWeight: 700,
-                  color: '#0f172a',
-                  outline: 'none',
-                }}
-              />
-              {errors.sltNumber1 && (
-                <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '4px', display: 'block', fontWeight: 700 }}>
-                  ⚠️ {errors.sltNumber1}
-                </span>
-              )}
-            </div>
-
-            <div>
-              <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
-                Nearest SLT Telephone Number 2 <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.8rem' }}>(Optional)</span>
-              </label>
-              <input
-                type="text"
-                placeholder="e.g., 0112345679"
-                value={sltNumber2}
-                onChange={handlePhone2Change}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  borderRadius: '10px',
-                  border: errors.sltNumber2 ? '1.5px solid #dc2626' : '1px solid #cbd5e1',
-                  backgroundColor: errors.sltNumber2 ? '#fef2f2' : '#ffffff',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  color: '#0f172a',
-                  outline: 'none',
-                }}
-              />
-              {errors.sltNumber2 && (
-                <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '4px', display: 'block', fontWeight: 700 }}>
-                  ⚠️ {errors.sltNumber2}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ────────────────────────────────────────────────────────── */}
       {/* 5. Legal Ownership & Representative Authorization Card */}

@@ -1,8 +1,25 @@
-import React from 'react';
+import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
+import DigitalSignatureCanvas from '../../components/DigitalSignatureCanvas';
 
-export default function ValueAddedServicesStep({ formData, handleChange }) {
+const ValueAddedServicesStep = forwardRef(function ValueAddedServicesStep({ formData, handleChange, isActive }, ref) {
   const { t } = useTranslation();
+  const [signatureError, setSignatureError] = useState(false);
+
+  // Expose validate() so the parent wizard can confirm a signature was
+  // provided before advancing — the backend rejects submissions without one
+  // (BRD 5.1.4) regardless of which path (payment or no-loop) is taken next.
+  useImperativeHandle(ref, () => ({
+    validate: () => {
+      if (!formData.signature) {
+        setSignatureError(true);
+        toast.error('Please provide your digital signature to proceed');
+        return false;
+      }
+      return true;
+    },
+  }));
 
   return (
     <div>
@@ -64,17 +81,35 @@ export default function ValueAddedServicesStep({ formData, handleChange }) {
           {t('wizards.newConnection.vas.agreementText')}
         </p>
         <label className="checkbox-label" style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
-          <input 
-            name="agreement" 
-            type="checkbox" 
-            className="checkbox-input" 
-            checked={!!formData.agreement} 
-            onChange={handleChange} 
-            required 
+          <input
+            name="declarationAccepted"
+            type="checkbox"
+            className="checkbox-input"
+            checked={!!formData.declarationAccepted}
+            onChange={handleChange}
+            required
           /> {t('wizards.newConnection.vas.agreeLabel')}
         </label>
       </div>
-      
+
+      <div className="mt-4" style={{ marginTop: '1.5rem' }}>
+        <DigitalSignatureCanvas
+          isActive={isActive}
+          required
+          onChange={(base64) => {
+            handleChange({ target: { name: 'signature', value: base64 } });
+            if (base64) setSignatureError(false);
+          }}
+        />
+        {signatureError && (
+          <p style={{ color: 'var(--danger, #dc3545)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+            Please provide your digital signature to proceed.
+          </p>
+        )}
+      </div>
+
     </div>
   );
-}
+});
+
+export default ValueAddedServicesStep;
