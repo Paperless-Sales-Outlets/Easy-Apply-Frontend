@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ReconnectionDetailsStep from './ReconnectionDetailsStep';
 import WizardStepper from '../../components/WizardStepper';
@@ -11,30 +11,9 @@ import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummary
 
 export default function ReconnectionWizard() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
   const { customerExists, selectedAccount } = useVerifiedContext();
-
-  const [selectedProduct, setSelectedProduct] = useState(null);
-
-  useEffect(() => {
-    const fromState = location.state?.selectedProduct;
-
-    if (fromState) {
-      setSelectedProduct(fromState);
-    } else {
-      const stored = sessionStorage.getItem('selectedProduct');
-
-      if (stored) {
-        try {
-          setSelectedProduct(JSON.parse(stored));
-        } catch (e) {
-          console.warn('Failed to parse selected product from sessionStorage:', e);
-        }
-      }
-    }
-  }, [location.state]);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -202,98 +181,11 @@ export default function ReconnectionWizard() {
         margin: '0 auto',
       }}
     >
-      <h2
-        style={{
-          marginBottom: selectedProduct
-            ? '0.75rem'
-            : '1.5rem',
-        }}
-      >
+      <h2 style={{ marginBottom: '1.5rem' }}>
         {t('wizards.reconnection.title')}
       </h2>
 
       <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
-
-      {selectedProduct && (
-        <div
-          style={{
-            backgroundColor: '#eff6ff',
-            border: '1.5px solid #bfdbfe',
-            borderRadius: '12px',
-            padding: '0.85rem 1.25rem',
-            marginBottom: '1.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '0.75rem',
-          }}
-        >
-          <div>
-            <span
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: '#0284c7',
-                textTransform: 'uppercase',
-              }}
-            >
-              Selected Product
-            </span>
-
-            <h4
-              style={{
-                margin: '0.1rem 0 0 0',
-                fontSize: '1.05rem',
-                fontWeight: 800,
-                color: '#0f172a',
-              }}
-            >
-              {selectedProduct.productName}
-            </h4>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              gap: '1.25rem',
-              fontSize: '0.88rem',
-              color: '#334155',
-              flexWrap: 'wrap',
-            }}
-          >
-            <span>
-              Monthly:{' '}
-              <strong style={{ color: '#0056b3' }}>
-                Rs.{' '}
-                {(
-                  selectedProduct.monthlyPrice || 0
-                ).toLocaleString()}
-              </strong>
-            </span>
-
-            <span>
-              Installation:{' '}
-              <strong>
-                Rs.{' '}
-                {(
-                  selectedProduct.installationFee ||
-                  2500
-                ).toLocaleString()}
-              </strong>
-            </span>
-
-            {selectedProduct.quantity > 1 && (
-              <span>
-                Qty:{' '}
-                <strong>
-                  {selectedProduct.quantity}
-                </strong>
-              </span>
-            )}
-          </div>
-        </div>
-      )}
 
       <WizardStepper
         currentStep={currentStep}
