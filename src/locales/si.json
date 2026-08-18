@@ -21,7 +21,16 @@
     "loginLink": "ඇතුල් වන්න"
   },
   "nav": {
-    "title": "SLTMobitel EasyApply"
+    "title": "SLTMobitel EasyApply",
+    "home": "මුල් පිටුව",
+    "applicationStatus": "අයදුම්පත් තත්ත්වය",
+    "help": "සහාය",
+    "myProfile": "මගේ පැතිකඩ",
+    "login": "පිවිසෙන්න",
+    "logout": "ඉවත් වන්න",
+    "cart": "කරත්තය",
+    "verifiedNumber": "තහවුරු කළ අංකය",
+    "goToProfile": "මගේ පැතිකඩට යන්න"
   },
   "hero": {
     "eyebrow": "SLTMobitel මාර්ගගත සේවා",

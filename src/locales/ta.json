@@ -21,7 +21,16 @@
     "loginLink": "உள்நுழைக"
   },
   "nav": {
-    "title": "SLTMobitel EasyApply"
+    "title": "SLTMobitel EasyApply",
+    "home": "முகப்பு",
+    "applicationStatus": "விண்ணப்ப நிலை",
+    "help": "உதவி",
+    "myProfile": "எனது சுயவிவரம்",
+    "login": "உள்நுழைய",
+    "logout": "வெளியேறு",
+    "cart": "கூடை",
+    "verifiedNumber": "சரிபார்க்கப்பட்ட எண்",
+    "goToProfile": "எனது சுயவிவரத்திற்குச் செல்ல"
   },
   "hero": {
     "eyebrow": "SLTMobitel இணையவழி சேவைகள்",
