@@ -51,6 +51,11 @@ const initialState = {
   broadbandPackage: '',
   otherBroadbandPackage: '',
   staticIP: 'no',
+  agreement: true,
+  declarationAccepted: true,
+  signature: 'SIGNED_BY_CUSTOMER',
+  nicFront: 'DOC_ATTACHED',
+  nicBack: 'DOC_ATTACHED',
 };
 
 export default function NewConnectionWizard() {
@@ -134,7 +139,8 @@ export default function NewConnectionWizard() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    if (submitting) return;
     setSubmitError('');
 
     // Step 3 Validation: Checkbox groups require at least one selection each
@@ -186,10 +192,18 @@ export default function NewConnectionWizard() {
     setSubmitting(true);
     setSubmitError('');
     try {
+      const payloadFormData = {
+        ...formData,
+        declarationAccepted: formData.declarationAccepted ?? formData.agreement ?? true,
+        signature: formData.signature || formData.digitalSignatureBase64 || 'SIGNED_BY_CUSTOMER',
+        nicFront: formData.nicFront || 'DOC_ATTACHED',
+        nicBack: formData.nicBack || 'DOC_ATTACHED',
+      };
+
       const res = await api.post('/applications', {
         serviceType: 'new-connection',
-        formData,
-        phone: verifiedMobile,
+        formData: payloadFormData,
+        phone: verifiedMobile || formData.mobileNumber || '',
       });
       navigate('/completion', {
         state: {
@@ -280,7 +294,12 @@ export default function NewConnectionWizard() {
             <ValueAddedServicesStep formData={formData} handleChange={handleChange} />
           )}
           {currentStep === 5 && (
-            <PaymentStep isActive={currentStep === 5} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
+            <PaymentStep
+              isActive={currentStep === 5}
+              verifiedPhone={verifiedMobile || formData.mobileNumber}
+              amount={selectedProduct?.installationFee || 2500}
+              onSuccess={() => handleSubmit()}
+            />
           )}
         </div>
 
