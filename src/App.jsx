@@ -61,7 +61,7 @@ const VerifyPhonePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const targetRoute = location.state?.redirectTo || '/reconnection';
+  const targetRoute = location.state?.redirectTo || '/profile';
 
   return (
     <OtpProtectedForm
