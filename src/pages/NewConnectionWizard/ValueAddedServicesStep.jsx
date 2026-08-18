@@ -68,8 +68,11 @@ export default function ValueAddedServicesStep({ formData, handleChange }) {
             name="agreement" 
             type="checkbox" 
             className="checkbox-input" 
-            checked={!!formData.agreement} 
-            onChange={handleChange} 
+            checked={formData.agreement !== false && formData.declarationAccepted !== false} 
+            onChange={(e) => {
+              handleChange(e);
+              handleChange({ target: { name: 'declarationAccepted', value: e.target.checked, type: 'checkbox', checked: e.target.checked } });
+            }} 
             required 
           /> {t('wizards.newConnection.vas.agreeLabel')}
         </label>
