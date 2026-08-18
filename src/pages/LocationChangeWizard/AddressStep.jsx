@@ -509,14 +509,18 @@ export default function AddressStep({
                 <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#0f172a", marginTop: "0.15rem" }}>{currentAddress.address2}</div>
               </div>
             )}
-            <div>
-              <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>City & District</div>
-              <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#0f172a", marginTop: "0.15rem" }}>{currentAddress.city ? `${currentAddress.city}, ${currentAddress.district}` : "—"}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>Postal Code</div>
-              <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#0056b3", marginTop: "0.15rem" }}>{currentAddress.postalCode || "—"}</div>
-            </div>
+            {currentAddress.city && (
+              <div>
+                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>City & District</div>
+                <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#0f172a", marginTop: "0.15rem" }}>{currentAddress.city}{currentAddress.district ? `, ${currentAddress.district}` : ''}</div>
+              </div>
+            )}
+            {currentAddress.postalCode && (
+              <div>
+                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 700, textTransform: "uppercase" }}>Postal Code</div>
+                <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#0056b3", marginTop: "0.15rem" }}>{currentAddress.postalCode}</div>
+              </div>
+            )}
           </div>
         )}
       </div>
