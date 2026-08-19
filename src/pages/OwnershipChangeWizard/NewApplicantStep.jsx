@@ -46,8 +46,8 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
   }));
 
   const sendOtp = async () => {
-    if (!/^\d{9,10}$/.test(contactNo.replace(/\D/g, ''))) {
-      toast.error('Please enter a valid mobile number first');
+    if (contactNo.length !== 9) {
+      toast.error('Please enter a valid 9-digit mobile number first');
       return;
     }
     setSending(true);
@@ -125,7 +125,9 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
   };
 
   const handleContactNoChange = (e) => {
-    setContactNo(e.target.value.replace(/\D/g, '').slice(0, 10));
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.startsWith('0')) val = val.substring(1);
+    setContactNo(val.slice(0, 9));
     setVerified(false);
   };
 
@@ -145,8 +147,27 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
         </div>
         <div style={{ flex: '1', minWidth: 0 }}>
           <label className="form-label" htmlFor="na-contactNo">{t('wizards.ownershipChange.newApplicant.contactNo')}</label>
-          <div style={{ position: 'relative', display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
-            <div style={{ position: 'relative', flex: 1 }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+            <div style={{ position: 'relative', flex: 1, display: 'flex', flexWrap: 'nowrap' }}>
+              <div
+                style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1.5px solid #cbd5e1',
+                  borderRight: 'none',
+                  borderRadius: '12px 0 0 12px',
+                  padding: '0.85rem 0.75rem',
+                  fontWeight: 800,
+                  color: verified ? '#94a3b8' : '#0f172a',
+                  fontSize: '0.95rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span>🇱🇰 +94</span>
+              </div>
               <input
                 id="na-contactNo"
                 name="contactNo"
@@ -158,8 +179,14 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                 readOnly={verified}
                 disabled={verified}
                 placeholder="7X XXX XXXX"
+                maxLength={9}
                 required={isActive}
-                style={verified ? { paddingRight: '2.25rem' } : undefined}
+                style={{
+                  flex: '1 1 auto',
+                  minWidth: 0,
+                  borderRadius: '0 12px 12px 0',
+                  paddingRight: verified ? '2.25rem' : undefined,
+                }}
               />
               {verified && (
                 <FiCheckCircle
@@ -182,7 +209,7 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
               <button
                 type="button"
                 onClick={sendOtp}
-                disabled={sending || !contactNo}
+                disabled={sending || contactNo.length !== 9}
                 className="btn btn-primary"
                 style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
               >
