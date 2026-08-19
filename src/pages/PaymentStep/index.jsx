@@ -128,6 +128,7 @@ export default function PaymentStep({
   };
 
   // Dynamically load the PayHere JS SDK (sandbox or production)
+  // Resolves immediately if already loaded via the <script> tag in index.html
   const loadPayHereScript = (isSandbox) =>
     new Promise((resolve, reject) => {
       if (window.payhere) { resolve(); return; }
@@ -136,7 +137,7 @@ export default function PaymentStep({
         ? 'https://sandbox.payhere.lk/lib/payhere.js'
         : 'https://www.payhere.lk/lib/payhere.js';
       script.onload = resolve;
-      script.onerror = () => reject(new Error('Failed to load PayHere SDK'));
+      script.onerror = () => reject(new Error('SDK_LOAD_FAILED'));
       document.body.appendChild(script);
     });
 
@@ -150,6 +151,8 @@ export default function PaymentStep({
     // Show loading spinner on the button while we fetch the hash
     setStatusState({ type: 'loading', message: 'Connecting to PayHere...' });
 
+    // ── Step 1: get secure hash from backend ──────────────────────────
+    let paymentData;
     try {
       const orderId = `ORD-${Date.now()}`;
       const response = await api.post('/payment/create', {
@@ -159,77 +162,76 @@ export default function PaymentStep({
         itemTitle: 'SLTMobitel Service Payment',
         customerDetails: { phone: mobileNumber },
       });
-
-      const {
-        merchantId,
-        hash,
-        amount: payAmount,
-        currency,
-        notify_url,
-        sandbox: isSandbox,
-      } = response.data;
-
-      // Load the correct SDK version (sandbox vs live)
-      await loadPayHereScript(isSandbox !== false);
-
-      // ── PayHere SDK callbacks ──────────────────────────────────────────
-      window.payhere.onCompleted = (completedOrderId) => {
-        // Payment successful — look up real reference number then go to completion
-        setStatusState({ type: 'success', message: 'Payment confirmed!' });
-        if (onSuccess) onSuccess(completedOrderId || orderId, mobileNumber);
-      };
-
-      window.payhere.onDismissed = () => {
-        // User closed the popup — reset so they can try again
-        setStatusState({ type: null, message: '' });
-      };
-
-      window.payhere.onError = (error) => {
-        setStatusState({
-          type: 'error',
-          message: error || 'Payment failed. Please try again.',
-        });
-      };
-      // ──────────────────────────────────────────────────────────────────
-
-      // Open the PayHere popup — no page redirect needed
-      window.payhere.startPayment({
-        sandbox: isSandbox !== false,
-        merchant_id: merchantId,
-        return_url: undefined,   // SDK uses onCompleted callback instead
-        cancel_url: undefined,   // SDK uses onDismissed callback instead
-        notify_url,
-        order_id: orderId,
-        items: 'SLTMobitel Service Payment',
-        amount: payAmount,
-        currency,
-        hash,
-        first_name: 'Customer',
-        last_name: 'Name',
-        email: 'test@example.com',
-        phone: `0${mobileNumber}`,
-        address: 'N/A',
-        city: 'Colombo',
-        country: 'Sri Lanka',
-      });
-
-      // Reset button to normal after popup opens — user can dismiss and retry
-      setStatusState({ type: null, message: '' });
-
+      paymentData = { ...response.data, orderId };
     } catch (err) {
-      // Backend offline — fall back to dev mock so the wizard still works
-      if (!err.response) {
-        setStatusState({ type: 'success', message: 'Proceeding (offline mode)...' });
-        setTimeout(() => {
-          if (onSuccess) onSuccess('PAYHERE-' + Date.now().toString().slice(-6), mobileNumber);
-        }, 1500);
-        return;
-      }
       setStatusState({
         type: 'error',
-        message: err.response?.data?.message || 'Payment session failed. Please try again.',
+        message: err.response?.data?.message || 'Could not reach payment server. Please try again.',
       });
+      return;
     }
+
+    const {
+      orderId,
+      merchantId,
+      hash,
+      amount: payAmount,
+      currency,
+      notify_url,
+      sandbox: isSandbox,
+    } = paymentData;
+
+    // ── Step 2: ensure PayHere SDK is available ───────────────────────
+    try {
+      await loadPayHereScript(isSandbox !== false);
+    } catch {
+      setStatusState({
+        type: 'error',
+        message: 'Could not load payment SDK. Check your internet connection and try again.',
+      });
+      return;
+    }
+
+    // ── Step 3: open PayHere popup ────────────────────────────────────
+    window.payhere.onCompleted = (completedOrderId) => {
+      setStatusState({ type: 'success', message: 'Payment confirmed!' });
+      if (onSuccess) onSuccess(completedOrderId || orderId, mobileNumber);
+    };
+
+    window.payhere.onDismissed = () => {
+      // User closed popup — reset so they can try again
+      setStatusState({ type: null, message: '' });
+    };
+
+    window.payhere.onError = (error) => {
+      setStatusState({
+        type: 'error',
+        message: error || 'Payment failed. Please try again.',
+      });
+    };
+
+    window.payhere.startPayment({
+      sandbox: isSandbox !== false,
+      merchant_id: merchantId,
+      return_url: undefined,
+      cancel_url: undefined,
+      notify_url,
+      order_id: orderId,
+      items: 'SLTMobitel Service Payment',
+      amount: payAmount,
+      currency,
+      hash,
+      first_name: 'Customer',
+      last_name: 'Name',
+      email: 'test@example.com',
+      phone: `0${mobileNumber}`,
+      address: 'N/A',
+      city: 'Colombo',
+      country: 'Sri Lanka',
+    });
+
+    // Reset button once popup is open — user can dismiss and retry
+    setStatusState({ type: null, message: '' });
   };
 
   return (
