@@ -273,6 +273,7 @@ export default function NewConnectionWizard() {
               isActive={currentStep === 5}
               verifiedPhone={verifiedMobile}
               amount={selectedProduct?.installationFee || 2500}
+              amountLabel="Total Amount"
               onSuccess={submitApplication}
             />
           )}

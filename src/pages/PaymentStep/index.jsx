@@ -11,6 +11,7 @@ const RESEND_SECONDS = 30;
 export default function PaymentStep({
   isActive = true,
   amount = 1000,
+  amountLabel = 'Pending Dues Balance',
   hasPaymentReceipt = false,
   verifiedPhone,
   onSuccess,
@@ -288,7 +289,7 @@ export default function PaymentStep({
               </div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: parsedFee > 0 ? 'none' : '2px dashed rgba(0,0,0,0.15)', marginBottom: parsedFee > 0 ? '0.5rem' : '1rem' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Pending Dues Balance</span>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{amountLabel}</span>
                 <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Rs. {formattedPending}</span>
               </div>
               
