@@ -127,15 +127,28 @@ export default function PaymentStep({
     if (e.key === 'Backspace' && !otp[index] && index > 0) inputRefs.current[index - 1]?.focus();
   };
 
+  // Dynamically load the PayHere JS SDK (sandbox or production)
+  const loadPayHereScript = (isSandbox) =>
+    new Promise((resolve, reject) => {
+      if (window.payhere) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = isSandbox
+        ? 'https://sandbox.payhere.lk/lib/payhere.js'
+        : 'https://www.payhere.lk/lib/payhere.js';
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('Failed to load PayHere SDK'));
+      document.body.appendChild(script);
+    });
+
   const handlePlaceOrder = async () => {
-    // Receipt-upload flow: no payment gateway redirect needed
+    // Receipt-upload flow: no payment gateway needed
     if (hasPaymentReceipt) {
       if (onSuccess) onSuccess(null, mobileNumber);
       return;
     }
 
-    // Online payment flow: get a secure hash from the backend then redirect to PayHere
-    setStatusState({ type: 'success', message: 'Connecting to PayHere...' });
+    // Show loading spinner on the button while we fetch the hash
+    setStatusState({ type: 'loading', message: 'Connecting to PayHere...' });
 
     try {
       const orderId = `ORD-${Date.now()}`;
@@ -147,22 +160,50 @@ export default function PaymentStep({
         customerDetails: { phone: mobileNumber },
       });
 
-      const { merchantId, hash, amount: payAmount, currency, return_url, cancel_url, notify_url } = response.data;
+      const {
+        merchantId,
+        hash,
+        amount: payAmount,
+        currency,
+        notify_url,
+        sandbox: isSandbox,
+      } = response.data;
 
-      // Build and auto-submit a hidden form to PayHere sandbox
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = 'https://sandbox.payhere.lk/pay/checkout';
+      // Load the correct SDK version (sandbox vs live)
+      await loadPayHereScript(isSandbox !== false);
 
-      const fields = {
+      // ── PayHere SDK callbacks ──────────────────────────────────────────
+      window.payhere.onCompleted = (completedOrderId) => {
+        // Payment successful — look up real reference number then go to completion
+        setStatusState({ type: 'success', message: 'Payment confirmed!' });
+        if (onSuccess) onSuccess(completedOrderId || orderId, mobileNumber);
+      };
+
+      window.payhere.onDismissed = () => {
+        // User closed the popup — reset so they can try again
+        setStatusState({ type: null, message: '' });
+      };
+
+      window.payhere.onError = (error) => {
+        setStatusState({
+          type: 'error',
+          message: error || 'Payment failed. Please try again.',
+        });
+      };
+      // ──────────────────────────────────────────────────────────────────
+
+      // Open the PayHere popup — no page redirect needed
+      window.payhere.startPayment({
+        sandbox: isSandbox !== false,
         merchant_id: merchantId,
-        return_url,
-        cancel_url,
+        return_url: undefined,   // SDK uses onCompleted callback instead
+        cancel_url: undefined,   // SDK uses onDismissed callback instead
         notify_url,
         order_id: orderId,
         items: 'SLTMobitel Service Payment',
-        currency,
         amount: payAmount,
+        currency,
+        hash,
         first_name: 'Customer',
         last_name: 'Name',
         email: 'test@example.com',
@@ -170,30 +211,24 @@ export default function PaymentStep({
         address: 'N/A',
         city: 'Colombo',
         country: 'Sri Lanka',
-        hash,
-      };
-
-      Object.entries(fields).forEach(([key, value]) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value ?? '';
-        form.appendChild(input);
       });
 
-      document.body.appendChild(form);
-      form.submit();
+      // Reset button to normal after popup opens — user can dismiss and retry
+      setStatusState({ type: null, message: '' });
 
     } catch (err) {
       // Backend offline — fall back to dev mock so the wizard still works
       if (!err.response) {
-        setStatusState({ type: 'success', message: 'Proceeding to PayHere Sandbox...' });
+        setStatusState({ type: 'success', message: 'Proceeding (offline mode)...' });
         setTimeout(() => {
           if (onSuccess) onSuccess('PAYHERE-' + Date.now().toString().slice(-6), mobileNumber);
         }, 1500);
         return;
       }
-      setStatusState({ type: 'error', message: err.response?.data?.message || 'Payment session failed. Please try again.' });
+      setStatusState({
+        type: 'error',
+        message: err.response?.data?.message || 'Payment session failed. Please try again.',
+      });
     }
   };
 
