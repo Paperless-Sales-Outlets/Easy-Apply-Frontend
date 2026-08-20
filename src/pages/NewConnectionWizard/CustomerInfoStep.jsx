@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import AddressInputWithMap from '../../components/form/AddressInputWithMap';
+import FileUploadField from '../../components/form/FileUploadField';
 import {
   FiCheckCircle,
   FiUser,
@@ -10,6 +11,7 @@ import {
   FiRefreshCw,
   FiShield,
   FiAlertCircle,
+  FiFileText,
 } from 'react-icons/fi';
 
 export default function CustomerInfoStep({ formData, handleChange, handleSetFields }) {
@@ -34,8 +36,12 @@ export default function CustomerInfoStep({ formData, handleChange, handleSetFiel
     return d.toISOString().split('T')[0];
   })();
 
-  const isBusiness = formData.customerType === 'business';
-  const isForeign = formData.customerType === 'foreign';
+  const customerType = formData.customerType || 'home';
+  const isBusiness = customerType === 'business';
+  const isForeign = customerType === 'foreign';
+  const isGov = customerType === 'government';
+  const isOffice = customerType === 'office';
+  const isHomeOrStandard = ['home', 'office', 'religious', 'government'].includes(customerType);
 
   // Handle Existing Customer radio toggle
   const handleExistingToggle = (val) => {
@@ -46,6 +52,16 @@ export default function CustomerInfoStep({ formData, handleChange, handleSetFiel
     setVerified(false);
     setOtpCode('');
     setErrorMsg('');
+  };
+
+  // Generic File Upload handler for FileUploadField
+  const handleFileUpload = (fieldName, fileData) => {
+    handleChange({
+      target: {
+        name: fieldName,
+        value: fileData,
+      },
+    });
   };
 
   // Send OTP handler
@@ -382,7 +398,7 @@ export default function CustomerInfoStep({ formData, handleChange, handleSetFiel
 
       {/* Customer Information Form Fields */}
       <h4 style={{ marginBottom: '1.25rem', color: '#0F172A', fontWeight: '700' }}>
-        Personal Details {isExisting && verified ? '(Auto-populated from SLT Profile)' : ''}
+        Personal & Organization Details {isExisting && verified ? '(Auto-populated from SLT Profile)' : ''}
       </h4>
 
       {/* 1.1 Customer Type */}
@@ -444,7 +460,22 @@ export default function CustomerInfoStep({ formData, handleChange, handleSetFiel
         </div>
       </div>
 
-      {/* DOB, NIC / Passport, Tax Exemption */}
+      {/* Designation (BRD 5.1.5) */}
+      <div className="form-group flex flex-col-mobile gap-4">
+        <div style={{ flex: '1' }}>
+          <label className="form-label">Designation / Title in Organization</label>
+          <input
+            name="designation"
+            type="text"
+            className="form-control"
+            placeholder="e.g. Director, Manager, Proprietor, Officer"
+            value={formData.designation || ''}
+            onChange={handleChange}
+          />
+        </div>
+      </div>
+
+      {/* DOB, NIC / Passport */}
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.dob')}</label>
@@ -459,12 +490,15 @@ export default function CustomerInfoStep({ formData, handleChange, handleSetFiel
           />
         </div>
         <div style={{ flex: '1' }}>
-          <label className="form-label">{t('wizards.newConnection.customerInfo.nic')}</label>
+          <label className="form-label">
+            {isForeign ? 'Passport Number' : isBusiness ? 'BR Number / NIC' : 'NIC Number'}
+            <span style={{ color: 'var(--danger)' }}> *</span>
+          </label>
           <input
             name="nic"
             type="text"
             className="form-control"
-            placeholder={isForeign ? 'Passport Number' : 'NIC / BR Number'}
+            placeholder={isForeign ? 'e.g. N1234567' : isBusiness ? 'e.g. PV-12345 or 881401234V' : 'e.g. 199012345678 or 881401234V'}
             value={formData.nic || ''}
             onChange={handleChange}
             required
@@ -472,12 +506,12 @@ export default function CustomerInfoStep({ formData, handleChange, handleSetFiel
         </div>
       </div>
 
-      {/* Conditional VAT Registration Number */}
+      {/* Conditional VAT Registration Number (BRD 5.1.5) */}
       {isBusiness && (
-        <div className="form-group flex flex-col-mobile gap-4" style={{ marginTop: '1rem' }}>
+        <div className="form-group flex flex-col-mobile gap-4" style={{ marginTop: '0.5rem' }}>
           <div style={{ flex: '1' }}>
             <label className="form-label">
-              {t('wizards.newConnection.customerInfo.vat')} <span style={{ color: 'var(--danger)' }}>*</span>
+              VAT Registration Number <span style={{ color: 'var(--danger)' }}>*</span>
             </label>
             <input
               name="vatNumber"
@@ -526,6 +560,7 @@ export default function CustomerInfoStep({ formData, handleChange, handleSetFiel
             name="fixedNumber"
             type="tel"
             className="form-control"
+            placeholder="e.g. 0112345678"
             value={formData.fixedNumber || ''}
             onChange={handleChange}
           />
@@ -539,23 +574,131 @@ export default function CustomerInfoStep({ formData, handleChange, handleSetFiel
             name="mobileNumber"
             type="tel"
             className="form-control"
+            placeholder="e.g. 0771234567"
             value={formData.mobileNumber || ''}
             onChange={handleChange}
             required
           />
         </div>
         <div style={{ flex: '1' }}>
+          <label className="form-label">Fax Number (BRD 5.1.5)</label>
+          <input
+            name="faxNumber"
+            type="tel"
+            className="form-control"
+            placeholder="e.g. 0112345679"
+            value={formData.faxNumber || ''}
+            onChange={handleChange}
+          />
+        </div>
+      </div>
+
+      <div className="form-group flex flex-col-mobile gap-4">
+        <div style={{ flex: '1' }}>
           <label className="form-label">{t('wizards.newConnection.customerInfo.email')}</label>
           <input
             name="email"
             type="email"
             className="form-control"
+            placeholder="e.g. name@domain.com"
             value={formData.email || ''}
             onChange={handleChange}
             required
           />
         </div>
       </div>
+
+      {/* Document Uploads Section (BRD 5.1.5) */}
+      <div
+        style={{
+          marginTop: '2rem',
+          padding: '1.5rem',
+          backgroundColor: '#F8FAFC',
+          border: '1px solid #E2E8F0',
+          borderRadius: '16px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+          <FiFileText size={20} style={{ color: '#0F57A8' }} />
+          <h4 style={{ margin: 0, color: '#0F172A', fontSize: '1.05rem', fontWeight: '700' }}>
+            Identification & Verification Documents
+          </h4>
+        </div>
+        <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.5rem' }}>
+          Upload clear copies of required verification documents (PDF, JPG, or PNG, max 5MB each).
+        </p>
+
+        {/* Standard / Home / Office / Govt / Religious: NIC Front & Back */}
+        {isHomeOrStandard && (
+          <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+            <FileUploadField
+              name="nicFront"
+              label="National Identity Card (NIC) — Front"
+              required
+              value={formData.nicFront}
+              onChange={handleFileUpload}
+              helpText="Upload front side of your NIC"
+            />
+            <FileUploadField
+              name="nicBack"
+              label="National Identity Card (NIC) — Back"
+              required
+              value={formData.nicBack}
+              onChange={handleFileUpload}
+              helpText="Upload reverse side of your NIC"
+            />
+          </div>
+        )}
+
+        {/* Foreign Customer: Passport Upload */}
+        {isForeign && (
+          <div style={{ marginBottom: '1rem' }}>
+            <FileUploadField
+              name="passportDoc"
+              label="Passport Bio/Photo Page"
+              required
+              value={formData.passportDoc}
+              onChange={handleFileUpload}
+              helpText="Upload clear scan/photo of passport biometric identification page"
+            />
+          </div>
+        )}
+
+        {/* Business Customer: BRC & VAT Certificate Uploads */}
+        {isBusiness && (
+          <div className="responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1rem' }}>
+            <FileUploadField
+              name="brcDoc"
+              label="Business Registration Certificate (BRC)"
+              required
+              value={formData.brcDoc}
+              onChange={handleFileUpload}
+              helpText="Upload certified copy of Business Registration Certificate"
+            />
+            <FileUploadField
+              name="vatDoc"
+              label="VAT Registration Certificate"
+              required
+              value={formData.vatDoc}
+              onChange={handleFileUpload}
+              helpText="Upload VAT Registration Document / Certificate"
+            />
+          </div>
+        )}
+
+        {/* Optional Tax Exemption Document Slot */}
+        <div style={{ marginTop: '1rem' }}>
+          <FileUploadField
+            name="taxExemptionDoc"
+            label="Tax Exemption Certificate (If applicable)"
+            required={false}
+            value={formData.taxExemptionDoc}
+            onChange={handleFileUpload}
+            helpText="Upload official Tax Exemption Certificate if seeking tax relief"
+          />
+        </div>
+      </div>
     </div>
   );
 }
+

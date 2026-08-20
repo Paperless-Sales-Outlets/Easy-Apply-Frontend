@@ -57,10 +57,36 @@ const initialState = {
   selectedProduct: null,
   otpVerified: false,
   feasibilityStatus: null,
-  // Voice connection mode & package are mandatory
-  connectionModeFibreVoice: true,
-  connectionModeLTEVoice: true,
-  fixedVoicePackageHomeMyPhone: true,
+  nicFront: null,
+  nicBack: null,
+  passportDoc: null,
+  brcDoc: null,
+  vatDoc: null,
+  taxExemptionDoc: null,
+};
+
+// Helper to convert base64 data URL object or string to a File object for multipart upload
+const base64ToFile = (fileObj, defaultName) => {
+  if (!fileObj) return null;
+  const dataUrl = typeof fileObj === 'string' ? fileObj : fileObj.data;
+  const fileName = fileObj.name || defaultName || 'document.png';
+  if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return null;
+
+  try {
+    const arr = dataUrl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/png';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], fileName, { type: mime });
+  } catch (e) {
+    console.error('Failed to convert base64 to file:', e);
+    return null;
+  }
 };
 
 export default function NewConnectionWizard() {
@@ -159,7 +185,9 @@ export default function NewConnectionWizard() {
     e.preventDefault();
     setSubmitError('');
 
-    // Step 1 Validation: OTP Verification & Mandatory Fields
+    const customerType = formData.customerType || 'home';
+
+    // Step 1 Validation: OTP Verification & Customer Type Mandatory Fields
     if (currentStep === 1) {
       if (!formData.otpVerified) {
         setSubmitError('Please complete OTP verification before proceeding.');
@@ -167,10 +195,6 @@ export default function NewConnectionWizard() {
       }
       if (!formData.nameFull?.trim()) {
         setSubmitError('Full Name is required.');
-        return;
-      }
-      if (!formData.nic?.trim()) {
-        setSubmitError('NIC / Passport / BR Number is required.');
         return;
       }
       if (!formData.mobileNumber?.trim()) {
@@ -181,9 +205,39 @@ export default function NewConnectionWizard() {
         setSubmitError('Permanent Address is required.');
         return;
       }
+
+      // Customer Type conditional validations (BRD 5.1.5)
+      if (customerType === 'business') {
+        if (!formData.vatNumber?.trim()) {
+          setSubmitError('VAT Registration Number is mandatory for Business customers.');
+          return;
+        }
+        if (!formData.brcDoc) {
+          setSubmitError('Business Registration Certificate (BRC) upload is mandatory for Business customers.');
+          return;
+        }
+      } else if (customerType === 'foreign') {
+        if (!formData.nic?.trim()) {
+          setSubmitError('Passport Number is mandatory for foreign customers.');
+          return;
+        }
+        if (!formData.passportDoc) {
+          setSubmitError('Passport upload is mandatory for foreign customers.');
+          return;
+        }
+      } else {
+        if (!formData.nic?.trim()) {
+          setSubmitError('NIC Number is mandatory.');
+          return;
+        }
+        if (!formData.nicFront || !formData.nicBack) {
+          setSubmitError('NIC Front and NIC Back document uploads are mandatory.');
+          return;
+        }
+      }
     }
 
-    // Step 2 Validation: Feasibility Check Approved
+    // Step 2 Validation: Feasibility Check Approved & Broadband Package Rule (BRD 5.1.6)
     if (currentStep === 2) {
       const targetAddress = formData.isExistingCustomer === 'yes' ? formData.address : formData.installAddress;
       if (!targetAddress || targetAddress.trim().length < 5) {
@@ -192,6 +246,15 @@ export default function NewConnectionWizard() {
       }
       if (!formData.feasibilityStatus) {
         setSubmitError('Please run the Network Connectivity & Feasibility Check before proceeding.');
+        return;
+      }
+
+      // BRD 5.1.6: Broadband package is mandatory (PEO TV and Voice are optional)
+      const hasBroadbandCart = cartItems.length > 0;
+      const hasBroadbandField = !!formData.broadbandPackage?.trim() || !!formData.otherBroadbandPackage?.trim();
+
+      if (!hasBroadbandCart && !hasBroadbandField) {
+        setSubmitError('At least one Broadband package must be selected (BRD 5.1.6).');
         return;
       }
     }
@@ -213,18 +276,38 @@ export default function NewConnectionWizard() {
       return;
     }
 
-    // Submit Application to POST /api/applications
+    // Prepare Multipart Form Submission to POST /api/applications
     setSubmitting(true);
     setSubmitError('');
 
     try {
-      const res = await api.post('/applications', {
-        serviceType: 'new-connection',
-        formData: {
-          ...formData,
-          cartItems,
+      const multipartPayload = new FormData();
+      multipartPayload.append('serviceType', 'new-connection');
+      multipartPayload.append('phone', verifiedMobile || formData.mobileNumber);
+
+      // Extract file objects from formData and convert to binary Files for multer
+      const docFields = ['nicFront', 'nicBack', 'passportDoc', 'brcDoc', 'vatDoc', 'taxExemptionDoc'];
+      const sanitizedFormData = { ...formData, cartItems };
+
+      docFields.forEach((fieldName) => {
+        if (formData[fieldName]) {
+          const fileObj = base64ToFile(formData[fieldName], `${fieldName}.png`);
+          if (fileObj) {
+            multipartPayload.append('documents', fileObj);
+          }
+          // Store document metadata without sending giant base64 strings in JSON
+          sanitizedFormData[fieldName] = typeof formData[fieldName] === 'object'
+            ? { name: formData[fieldName].name, size: formData[fieldName].size, type: formData[fieldName].type }
+            : fieldName;
+        }
+      });
+
+      multipartPayload.append('formData', JSON.stringify(sanitizedFormData));
+
+      const res = await api.post('/applications', multipartPayload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
         },
-        phone: verifiedMobile || formData.mobileNumber,
       });
 
       navigate('/completion', {
@@ -237,21 +320,25 @@ export default function NewConnectionWizard() {
         },
       });
     } catch (err) {
-      // Fallback for offline mode
-      if (!err.response) {
-        navigate('/completion', {
-          state: {
-            referenceNumber: `DEMO-${Date.now().toString().slice(-6)}`,
-            messageKey: 'completion.successMessages.newConnection',
-            formData,
-            cartItems,
-            selectedProduct: cartItems[0] || null,
-          },
-        });
+      console.error('Application submission error:', err);
+
+      // Display actual server error response message in UI if available
+      if (err.response) {
+        setSubmitError(err.response.data?.message || t('common.submitError'));
+        setSubmitting(false);
         return;
       }
-      setSubmitError(err.response?.data?.message || t('common.submitError'));
-      setSubmitting(false);
+
+      // Fallback for offline network disconnection ONLY
+      navigate('/completion', {
+        state: {
+          referenceNumber: `DEMO-${Date.now().toString().slice(-6)}`,
+          messageKey: 'completion.successMessages.newConnection',
+          formData,
+          cartItems,
+          selectedProduct: cartItems[0] || null,
+        },
+      });
     }
   };
 
