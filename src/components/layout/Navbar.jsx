@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut } from 'react-icons/fi';
+import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut, FiGrid, FiChevronDown } from 'react-icons/fi';
 import sltLogo from '../../assets/sltlogoOnly.png';
 import { getVerifiedPhone, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../utils/authSession';
+import { QUICK_SERVICES } from '../../data/quickServices';
 
 const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : n ? `+94 ${n}` : '');
 
@@ -17,8 +18,10 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
   const [searchCategory, setSearchCategory] = useState('All');
   const menuRef = useRef(null);
+  const servicesRef = useRef(null);
 
   // useLayoutEffect (not useEffect) so the spacer is sized before the browser
   // paints — otherwise content briefly renders behind the fixed nav on first
@@ -78,6 +81,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setServicesOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -91,6 +95,18 @@ export default function Navbar() {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
+
+  useEffect(() => {
+    const handleClickOutsideServices = (e) => {
+      if (servicesRef.current && !servicesRef.current.contains(e.target)) {
+        setServicesOpen(false);
+      }
+    };
+    if (servicesOpen) {
+      document.addEventListener('mousedown', handleClickOutsideServices);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutsideServices);
+  }, [servicesOpen]);
 
   return (
     <>
@@ -198,6 +214,103 @@ export default function Navbar() {
             <Link to="/" style={navLinkStyle('/')}>{t('nav.home', 'Home')}</Link>
             <Link to="/check-status" style={navLinkStyle('/check-status')}>{t('nav.applicationStatus', 'Application Status')}</Link>
             <Link to="/help" style={navLinkStyle('/help')}>{t('nav.help', 'Help & Support')}</Link>
+          </div>
+
+          {/* Services quick-access dropdown — only shown ≤1024px (see .navbar-services
+              in index.css), matching the breakpoint where the landing page's quick-service
+              tiles stack below the hero banner instead of sitting next to it. Above that
+              width the tiles are already visible, so this would just be a duplicate. */}
+          <div className="navbar-services" ref={servicesRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setServicesOpen((prev) => !prev)}
+              aria-haspopup="true"
+              aria-expanded={servicesOpen}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                backgroundColor: servicesOpen ? '#eff6ff' : '#f8fafc',
+                border: `1px solid ${servicesOpen ? '#bfdbfe' : '#e2e8f0'}`,
+                borderRadius: '6px',
+                padding: '0.4rem 0.65rem',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#0056b3',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <FiGrid size={15} />
+              <span>Services</span>
+              <FiChevronDown
+                size={13}
+                style={{ transform: servicesOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}
+              />
+            </button>
+
+            {servicesOpen && (
+              <div
+                role="menu"
+                aria-label="Services"
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 0.5rem)',
+                  left: 0,
+                  width: 'min(320px, 88vw)',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  boxShadow: '0 12px 30px rgba(15, 23, 42, 0.14)',
+                  padding: '0.5rem',
+                  zIndex: 200,
+                  maxHeight: '70vh',
+                  overflowY: 'auto',
+                }}
+              >
+                {QUICK_SERVICES.map((srv) => {
+                  const IconComp = srv.icon;
+                  return (
+                    <Link
+                      key={srv.id}
+                      to={srv.route}
+                      role="menuitem"
+                      className="navbar-services-item"
+                      onClick={() => setServicesOpen(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.65rem',
+                        padding: '0.55rem 0.6rem',
+                        borderRadius: '8px',
+                        textDecoration: 'none',
+                        color: '#0f172a',
+                      }}
+                    >
+                      <div
+                        style={{
+                          backgroundColor: srv.bgColor,
+                          color: srv.iconColor,
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <IconComp size={15} />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{srv.title}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.1rem' }}>{srv.desc}</div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Language Switcher */}
