@@ -206,7 +206,8 @@ export default function CartPage() {
               {/* SLTMobitel Badge */}
               <span
                 style={{
-                  display: 'inline-flex',
+                  display: 'flex',
+                  width: 'fit-content',
                   alignItems: 'center',
                   gap: '0.35rem',
                   backgroundColor: '#eff6ff',
@@ -217,31 +218,28 @@ export default function CartPage() {
                   borderRadius: '9999px',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
-                  marginBottom: '1.5rem',
+                  margin: '0 auto 1.5rem auto',
                 }}
               >
                 <FiZap size={13} /> SLTMobitel EasyApply
               </span>
 
-              {/* Animated Empty Cart Icon Ring */}
-              <motion.div
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              {/* Empty Cart Icon */}
+              <div
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  display: 'flex',
                   width: '124px',
                   height: '124px',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                  backgroundColor: '#eff6ff',
                   color: '#0056b3',
-                  marginBottom: '1.75rem',
-                  boxShadow: '0 12px 28px rgba(0, 86, 179, 0.12)',
+                  margin: '0 auto 1.75rem auto',
                 }}
               >
                 <FiShoppingCart size={54} />
-              </motion.div>
+              </div>
 
               <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.6rem', letterSpacing: '-0.02em' }}>
                 Your cart is currently empty

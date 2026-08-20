@@ -422,7 +422,11 @@ export default function ProductCatalogPage() {
       {/* Main Container */}
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem' }}>
         {/* ── Top Hero Banner & Quick Actions Section ── */}
-        <HeroBannerCarousel onShopNow={() => {}} />
+        <HeroBannerCarousel
+          onShopNow={() => {
+            document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+        />
 
         {/* ── Voice Compulsory & Bundle Rules Status Bar ── */}
         <div
@@ -516,10 +520,12 @@ export default function ProductCatalogPage() {
         </div>
 
         {/* ── Horizontal Category Pill Chips Bar ── */}
-        <CategoryChips
-          activeCategory={activeCategory}
-          onSelectCategory={(cat) => setActiveCategory(cat)}
-        />
+        <div id="products-section" className="scroll-target">
+          <CategoryChips
+            activeCategory={activeCategory}
+            onSelectCategory={(cat) => setActiveCategory(cat)}
+          />
+        </div>
 
         {/* ── Main Catalog Body Layout (Sidebar Filters + Category-Wise Products) ── */}
         <div className="catalog-layout-grid" style={{ display: 'grid', gap: '1.5rem', marginTop: '1.5rem' }}>
