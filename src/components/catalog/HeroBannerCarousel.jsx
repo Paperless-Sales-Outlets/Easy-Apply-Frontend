@@ -442,6 +442,15 @@ export default function HeroBannerCarousel({ onShopNow }) {
             <div
               key={srv.id}
               onClick={() => navigate(srv.route)}
+              role="button"
+              tabIndex={0}
+              aria-label={`${srv.title}: ${srv.desc}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(srv.route);
+                }
+              }}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: '10px',

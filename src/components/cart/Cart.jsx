@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import CartItem from './CartItem';
@@ -9,6 +9,15 @@ const Cart = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { cart, loading, updateItemQuantity, removeItem, clearCartItems, getCartItemCount, getCartTotal } = useCart();
   const [showPayHere, setShowPayHere] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
