@@ -246,32 +246,36 @@ export default function HeroBannerCarousel({ onShopNow }) {
           </span>
         </div>
 
-        {/* Main Headline */}
-        <h1
-          style={{
-            fontSize: 'clamp(2.2rem, 4.5vw, 3.2rem)',
-            fontWeight: 900,
-            lineHeight: 1.05,
-            margin: 0,
-            color: '#ffffff',
-            letterSpacing: '-0.02em',
-            fontFamily: 'var(--font-head)',
-          }}
-        >
-          MEGA DEALS
-        </h1>
+        {/* Text block gets a reserved right-hand gutter so the "UP TO 35% OFF"
+            badge (absolutely positioned, doesn't participate in text flow)
+            never overlaps the headline on narrow screens. */}
+        <div style={{ paddingRight: '110px' }}>
+          <h1
+            style={{
+              fontSize: 'clamp(1.8rem, 4.5vw, 3.2rem)',
+              fontWeight: 900,
+              lineHeight: 1.05,
+              margin: 0,
+              color: '#ffffff',
+              letterSpacing: '-0.02em',
+              fontFamily: 'var(--font-head)',
+            }}
+          >
+            MEGA DEALS
+          </h1>
 
-        <p
-          style={{
-            fontSize: '1.15rem',
-            fontWeight: 700,
-            color: '#ffffff',
-            marginTop: '0.35rem',
-            marginBottom: '1.25rem',
-          }}
-        >
-          Biggest Deals. Best Prices.
-        </p>
+          <p
+            style={{
+              fontSize: '1.15rem',
+              fontWeight: 700,
+              color: '#ffffff',
+              marginTop: '0.35rem',
+              marginBottom: '1.25rem',
+            }}
+          >
+            Biggest Deals. Best Prices.
+          </p>
+        </div>
 
         {/* Promo Features Badges */}
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
@@ -369,7 +373,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
 
         {/* UP TO 35% OFF Badge */}
         <div
-          className="animate-pulse-badge"
+          className="animate-pulse-badge hero-promo-badge"
           style={{
             position: 'absolute',
             right: '2rem',
