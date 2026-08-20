@@ -2391,3 +2391,36 @@ a {
     top: 1rem !important;
   }
 }
+
+/* OTP / phone-verification card (OtpProtectedForm) — two columns on desktop,
+   stacked on mobile so the brand copy doesn't crush into an unreadable strip
+   and the actual input field is immediately visible. */
+.otp-card {
+  flex-direction: row;
+}
+.otp-card-left {
+  flex: 1 1 45%;
+  max-width: 45%;
+  padding: 2.5rem 2rem;
+}
+.otp-card-right {
+  flex: 1 1 55%;
+  max-width: 55%;
+  padding: 3rem 2.5rem;
+}
+@media (max-width: 768px) {
+  .otp-card {
+    flex-direction: column;
+  }
+  .otp-card-left,
+  .otp-card-right {
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+  .otp-card-left {
+    padding: 1.75rem 1.5rem;
+  }
+  .otp-card-right {
+    padding: 2rem 1.5rem;
+  }
+}

@@ -403,6 +403,15 @@ export default function HelpSupportPage() {
               <div
                 key={link.path}
                 onClick={() => navigate(link.path)}
+                role="button"
+                tabIndex={0}
+                aria-label={`${link.label}: ${link.desc}`}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(link.path);
+                  }
+                }}
                 style={{
                   backgroundColor: '#fff',
                   borderRadius: '12px',
