@@ -2386,6 +2386,24 @@ a {
   }
 }
 
+/* Navbar "Services" quick-access dropdown — hidden by default (desktop
+   already shows the quick-service tiles next to the hero banner) and
+   shown only ≤1024px, matching the .hero-top-grid breakpoint above where
+   those tiles stack below the banner instead. */
+.navbar-services {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .navbar-services {
+    display: block;
+  }
+}
+
+.navbar-services-item:hover {
+  background-color: #f8fafc;
+}
+
 @media (max-width: 480px) {
   .hero-promo-badge {
     width: 68px !important;
