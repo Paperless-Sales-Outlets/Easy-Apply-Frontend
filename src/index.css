@@ -35,8 +35,9 @@
   --s12: 48px;
 
   /* Type */
-  --font-head: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Matches slt.lk: Raleway for headings, Inter for body copy */
+  --font-head: 'Raleway', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   /* Brand slash gradient (dual-tone, hard break) */
   --slash-gradient: linear-gradient(104deg, var(--blue) 0 62%, var(--green) 62% 100%);
@@ -2379,5 +2380,14 @@ a {
 @media (max-width: 1024px) {
   .hero-top-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-promo-badge {
+    width: 68px !important;
+    height: 68px !important;
+    right: 1rem !important;
+    top: 1rem !important;
   }
 }
