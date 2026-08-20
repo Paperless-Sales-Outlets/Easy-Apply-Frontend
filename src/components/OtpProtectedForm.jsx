@@ -824,8 +824,6 @@ export default function OtpProtectedForm({ children, onVerified }) {
                         transition: 'all 0.2s ease',
                         boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
                       }}
-                      onFocus={(e) => { e.currentTarget.style.outline = '2px solid #0056b3'; e.currentTarget.style.outlineOffset = '2px'; }}
-                      onBlur={(e) => { e.currentTarget.style.outline = 'none'; }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                         <span style={{ fontSize: '0.98rem', fontWeight: 900, color: '#0056b3', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
