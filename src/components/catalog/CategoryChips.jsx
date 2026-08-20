@@ -18,14 +18,15 @@ export default function CategoryChips({ activeCategory, onSelectCategory }) {
         borderBottom: '1px solid #f1f5f9',
         display: 'flex',
         justifyContent: 'flex-start',
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        scrollbarWidth: 'none',
       }}
     >
+      {/* Wraps to multiple lines instead of scrolling horizontally — a
+          swipeable row with no visible affordance can hide options
+          entirely for users who don't discover the gesture. */}
       <div
         style={{
           display: 'flex',
+          flexWrap: 'wrap',
           gap: '0.85rem',
           maxWidth: '1600px',
           margin: '0 auto',
