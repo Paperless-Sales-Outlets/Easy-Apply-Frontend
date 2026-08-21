@@ -3,6 +3,101 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../../components/Icon';
 import toast from 'react-hot-toast';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+
+const DatePickerStyles = () => (
+  <style>{`
+    .modern-calendar-wrapper {
+      position: relative;
+    }
+    .modern-calendar-wrapper .datepicker-full-width {
+      width: 100%;
+      display: block;
+    }
+    .modern-calendar-wrapper .modern-datepicker-input {
+      height: 56px;
+      font-size: 1.1rem;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(31, 38, 135, 0.05);
+      width: 100%;
+      padding: 0.375rem 1rem;
+      color: var(--text-primary);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .modern-calendar-wrapper .modern-datepicker-input:focus {
+      border-color: var(--slt-blue);
+      box-shadow: 0 0 0 4px rgba(15, 87, 168, 0.1);
+      outline: none;
+      background: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Calendar Popup UI */
+    .modern-calendar-wrapper .react-datepicker {
+      font-family: inherit;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 16px 40px rgba(0, 84, 166, 0.15), inset 0 4px 10px rgba(255,255,255,1);
+      padding: 1.5rem;
+      border-top-left-radius: 4px; /* Slight tip to indicate popover */
+    }
+    .modern-calendar-wrapper .react-datepicker__header {
+      background: transparent;
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.75rem;
+    }
+    .modern-calendar-wrapper .react-datepicker__current-month {
+      color: var(--slt-blue);
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .modern-calendar-wrapper .react-datepicker__day-name {
+      color: var(--text-secondary);
+      font-weight: 600;
+      width: 2.5rem;
+      margin: 0.2rem;
+    }
+    .modern-calendar-wrapper .react-datepicker__day {
+      width: 2.5rem;
+      line-height: 2.5rem;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      color: var(--text-primary);
+      font-weight: 500;
+      margin: 0.2rem;
+    }
+    .modern-calendar-wrapper .react-datepicker__day:hover:not(.react-datepicker__day--disabled) {
+      background: rgba(0, 174, 239, 0.15);
+      color: var(--slt-blue);
+      border-radius: 50%;
+    }
+    .modern-calendar-wrapper .react-datepicker__day--selected,
+    .modern-calendar-wrapper .react-datepicker__day--keyboard-selected {
+      background: linear-gradient(135deg, var(--slt-blue), #00AEEF) !important;
+      color: white !important;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0, 174, 239, 0.3);
+    }
+    .modern-calendar-wrapper .react-datepicker__day--disabled {
+      color: rgba(0,0,0,0.25);
+    }
+    .modern-calendar-wrapper .react-datepicker__navigation-icon::before {
+      border-color: var(--slt-blue);
+      border-width: 2.5px 2.5px 0 0;
+    }
+    .modern-calendar-wrapper .react-datepicker__triangle {
+      display: none;
+    }
+  `}</style>
+);
 
 const FacilityCard = ({ id, icon, label, checked, onChange, disabled, disabledMessage }) => (
   <motion.label 
@@ -79,8 +174,8 @@ const ServiceInfoStep = forwardRef(({ isActive }, ref) => {
     peotv: false,
   });
 
-  const [deactivationDate, setDeactivationDate] = useState('');
-  const [resumeDate, setResumeDate] = useState('');
+  const [deactivationDate, setDeactivationDate] = useState(null);
+  const [resumeDate, setResumeDate] = useState(null);
   const [dateError, setDateError] = useState('');
 
   const toggleFacility = (key) => {
@@ -190,47 +285,48 @@ const ServiceInfoStep = forwardRef(({ isActive }, ref) => {
           <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Note: Service deactivation period shall not exceed 4 months.</span>
         </div>
 
-        <div className="form-group flex flex-col-mobile gap-4">
+        <div className="form-group flex flex-col-mobile gap-4 modern-calendar-wrapper">
+          <DatePickerStyles />
           <div style={{ flex: '1' }}>
             <label className="form-label" style={{ fontWeight: 600 }}>Deactivation Date</label>
+            <DatePicker 
+              selected={deactivationDate}
+              onChange={(date) => {
+                setDeactivationDate(date);
+                validateDates(date, resumeDate);
+              }}
+              minDate={new Date(minDeactivationDate)}
+              dateFormat="MMMM d, yyyy"
+              placeholderText="Select deactivation date"
+              className="modern-datepicker-input"
+              wrapperClassName="datepicker-full-width"
+              required={isActive}
+            />
             <input 
-              type="date" 
-              name="deactivationDate"
-              className="form-control" 
-              style={{ 
-                height: '56px', fontSize: '1.1rem', 
-                background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(8px)', 
-                border: '1px solid rgba(255, 255, 255, 0.6)', borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(31, 38, 135, 0.05)'
-              }}
-              min={minDeactivationDate}
-              value={deactivationDate}
-              onChange={(e) => {
-                setDeactivationDate(e.target.value);
-                validateDates(e.target.value, resumeDate);
-              }}
-              required={isActive} 
+              type="hidden" 
+              name="deactivationDate" 
+              value={deactivationDate ? deactivationDate.toLocaleDateString('en-CA') : ''} 
             />
           </div>
           <div style={{ flex: '1' }}>
             <label className="form-label" style={{ fontWeight: 600 }}>Resume Date</label>
+            <DatePicker 
+              selected={resumeDate}
+              onChange={(date) => {
+                setResumeDate(date);
+                validateDates(deactivationDate, date);
+              }}
+              minDate={deactivationDate || new Date(minDeactivationDate)}
+              dateFormat="MMMM d, yyyy"
+              placeholderText="Select resume date"
+              className="modern-datepicker-input"
+              wrapperClassName="datepicker-full-width"
+              required={isActive}
+            />
             <input 
-              type="date" 
-              name="resumeDate"
-              className="form-control" 
-              style={{ 
-                height: '56px', fontSize: '1.1rem', 
-                background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(8px)', 
-                border: '1px solid rgba(255, 255, 255, 0.6)', borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(31, 38, 135, 0.05)'
-              }}
-              min={deactivationDate || minDeactivationDate}
-              value={resumeDate}
-              onChange={(e) => {
-                setResumeDate(e.target.value);
-                validateDates(deactivationDate, e.target.value);
-              }}
-              required={isActive} 
+              type="hidden" 
+              name="resumeDate" 
+              value={resumeDate ? resumeDate.toLocaleDateString('en-CA') : ''} 
             />
           </div>
         </div>

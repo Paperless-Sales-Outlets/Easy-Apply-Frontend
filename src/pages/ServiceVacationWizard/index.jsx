@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
@@ -21,8 +21,14 @@ export default function ServiceVacationWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   
-  const [vacationData, setVacationData] = useState(null);
+  const [vacationData, setVacationData] = useState(selectedAccount || null);
   const [paymentIntention, setPaymentIntention] = useState('later'); // 'later', 'paid', 'gateway'
+
+  // The customer's account is already verified via OTP + real DB lookup
+  // before reaching this wizard — reuse it instead of asking/looking it up again.
+  useEffect(() => {
+    if (selectedAccount) setVacationData(selectedAccount);
+  }, [selectedAccount]);
   
   const formRef = useRef(null);
   const step1Ref = useRef(null);
