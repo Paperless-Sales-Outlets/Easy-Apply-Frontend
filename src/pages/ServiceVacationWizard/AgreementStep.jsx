@@ -109,7 +109,7 @@ const FileInputWithClear = forwardRef(function FileInputWithClear({ name, label,
 });
 
 
-const AgreementStep = forwardRef(function AgreementStep({ isActive, onPaymentIntentionChange }, ref) {
+const AgreementStep = forwardRef(function AgreementStep({ isActive, onPaymentIntentionChange, hidePaymentIntention }, ref) {
   const { t } = useTranslation();
   
   const [signatureBase64, setSignatureBase64] = useState('');
@@ -148,7 +148,8 @@ const AgreementStep = forwardRef(function AgreementStep({ isActive, onPaymentInt
 
   return (
     <div>
-      <div style={{ marginBottom: '2.5rem', padding: '1.5rem', backgroundColor: 'rgba(15, 87, 168, 0.05)', borderRadius: '12px', border: '1px solid rgba(15, 87, 168, 0.2)' }}>
+      {!hidePaymentIntention && (
+        <div style={{ marginBottom: '2.5rem', padding: '1.5rem', backgroundColor: 'rgba(15, 87, 168, 0.05)', borderRadius: '12px', border: '1px solid rgba(15, 87, 168, 0.2)' }}>
         <h4 style={{ color: 'var(--slt-blue)', marginBottom: '1rem', fontSize: '1.1rem' }}>Pending Balance Settlement</h4>
         <div style={{ display: 'flex', backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: '12px', padding: '0.25rem', marginBottom: '1.5rem', position: 'relative' }}>
           <div style={{
@@ -198,6 +199,7 @@ const AgreementStep = forwardRef(function AgreementStep({ isActive, onPaymentInt
           </div>
         )}
       </div>
+      )}
 
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem', marginTop: '2.5rem' }}>{t('wizards.serviceVacation.agreement.heading')}</h3>
 
