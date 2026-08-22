@@ -43,33 +43,35 @@ const getSessionId = () => {
 /**
  * Clear the cart after a successful application submission or payment.
  *
- * Steps:
- *   1. Call DELETE /api/cart/clear so the MongoDB cart document is wiped.
- *   2. Remove the localStorage session ID so the next page load gets a
- *      brand-new session (and therefore an empty cart).
+ * There are two cart stores that must both be cleared:
+ *   1. localStorage key "easy_apply_cart"  — productService local cart
+ *   2. localStorage key "slt_session_id"   — backend session ID for MongoDB cart
  *
  * Both steps are attempted independently so a backend failure does not
  * block the localStorage clean-up.
  */
 export const clearSessionCart = async () => {
-  // 1. Tell the backend to empty the cart for this session
+  // 1. Tell the backend to empty the MongoDB cart for this session
   try {
     await api.delete('/cart/clear');
   } catch (err) {
-    // Non-fatal — the TTL index will eventually clean up the DB document
+    // Non-fatal — the 7-day TTL index will eventually clean up the DB document
     console.warn('Could not clear cart on server:', err?.response?.data?.message || err.message);
   }
 
-  // 2. Drop the session ID from localStorage so the next visit is clean
-  localStorage.removeItem('slt_session_id');
-
-  // Also clear the local product-service cart if it exists
+  // 2. Wipe the local cart stored in localStorage by productService.js
   try {
-    localStorage.removeItem('slt_local_cart');
-    sessionStorage.removeItem('selectedProduct');
+    localStorage.removeItem('easy_apply_cart');   // ← the actual key used by productService
+    localStorage.removeItem('slt_session_id');    // ← backend session ID (starts a fresh cart session)
+    sessionStorage.removeItem('selectedProduct'); // ← product carried into the checkout form
   } catch (_) {
-    // ignore storage errors
+    // ignore storage errors in sandboxed environments
   }
+
+  // 3. Tell all listeners (navbar badge, FloatingCartButton, etc.) the cart is now empty
+  try {
+    window.dispatchEvent(new Event('easyapply:cart-updated'));
+  } catch (_) {}
 };
 
 // Request Interceptor: Attach in-memory admin accessToken & session ID
