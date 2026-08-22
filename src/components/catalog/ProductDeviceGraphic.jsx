@@ -5,8 +5,8 @@ import React from 'react';
 /* ── Fibre Broadband Router ── */
 function RouterGraphic() {
   return (
-    <svg width="108" height="90" viewBox="0 0 130 108" fill="none" xmlns="http://www.w3.org/2000/svg"
-      style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.5))' }}>
+    <svg width="100%" height="100%" viewBox="0 0 130 108" fill="none" xmlns="http://www.w3.org/2000/svg"
+      style={{ display: 'block', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.5))' }}>
       <defs>
         <linearGradient id="rb" x1="0" y1="0" x2="0" y2="1">
           <stop stopColor="#2d3748" /><stop offset="1" stopColor="#1a202c" />
@@ -59,8 +59,8 @@ function RouterGraphic() {
 /* ── LTE Home Unit ── */
 function LTEGraphic() {
   return (
-    <svg width="100" height="95" viewBox="0 0 115 115" fill="none" xmlns="http://www.w3.org/2000/svg"
-      style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.45))' }}>
+    <svg width="100%" height="100%" viewBox="0 0 115 115" fill="none" xmlns="http://www.w3.org/2000/svg"
+      style={{ display: 'block', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.45))' }}>
       <defs>
         <linearGradient id="lb" x1="0" y1="0" x2="1" y2="1">
           <stop stopColor="#f0f4f8" /><stop offset="1" stopColor="#d9e2ec" />
@@ -126,8 +126,8 @@ function LTEGraphic() {
 /* ── PEO TV ── */
 function PEOTVGraphic() {
   return (
-    <svg width="108" height="95" viewBox="0 0 120 110" fill="none" xmlns="http://www.w3.org/2000/svg"
-      style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.45))' }}>
+    <svg width="100%" height="100%" viewBox="0 0 120 110" fill="none" xmlns="http://www.w3.org/2000/svg"
+      style={{ display: 'block', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.45))' }}>
       <defs>
         <linearGradient id="ts" x1="0" y1="0" x2="0" y2="1">
           <stop stopColor="#1e293b" /><stop offset="1" stopColor="#0f172a" />
@@ -169,8 +169,8 @@ function PEOTVGraphic() {
 /* ── Voice Home Phone ── */
 function VoicePhoneGraphic() {
   return (
-    <svg width="108" height="95" viewBox="0 0 120 108" fill="none" xmlns="http://www.w3.org/2000/svg"
-      style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.45))' }}>
+    <svg width="100%" height="100%" viewBox="0 0 120 108" fill="none" xmlns="http://www.w3.org/2000/svg"
+      style={{ display: 'block', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.45))' }}>
       <defs>
         <linearGradient id="pb" x1="0" y1="0" x2="0" y2="1">
           <stop stopColor="#2d3748" /><stop offset="1" stopColor="#1a202c" />
@@ -216,8 +216,8 @@ function VoicePhoneGraphic() {
 /* ── Add-on Static IP ── */
 function StaticIPGraphic() {
   return (
-    <svg width="100" height="100" viewBox="0 0 115 115" fill="none" xmlns="http://www.w3.org/2000/svg"
-      style={{ filter: 'drop-shadow(0 6px 16px rgba(124,58,237,0.55))' }}>
+    <svg width="100%" height="100%" viewBox="0 0 115 115" fill="none" xmlns="http://www.w3.org/2000/svg"
+      style={{ display: 'block', filter: 'drop-shadow(0 6px 16px rgba(124,58,237,0.55))' }}>
       <defs>
         <linearGradient id="so" x1="18" y1="8" x2="97" y2="106" gradientUnits="userSpaceOnUse">
           <stop stopColor="#a78bfa" /><stop offset="0.5" stopColor="#7c3aed" /><stop offset="1" stopColor="#4c1d95" />

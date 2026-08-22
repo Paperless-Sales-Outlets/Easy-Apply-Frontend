@@ -690,18 +690,21 @@ export default function ProductCatalogPage() {
                   if (section.products.length === 0) return null;
                   return (
                     <div key={section.id} style={{ backgroundColor: '#ffffff', borderRadius: '18px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-                      {/* Section Header */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '2px solid #f1f5f9' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <div style={{ backgroundColor: section.bgColor, color: section.iconColor, width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 900 }}>
+                      {/* Section Header — flexWrap lets the "Packages Available" badge
+                          drop to its own line on narrow screens instead of being
+                          squeezed into a sliver of a column and wrapping into an
+                          illegible multi-line blob. */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', rowGap: '0.65rem', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '2px solid #f1f5f9' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                          <div style={{ backgroundColor: section.bgColor, color: section.iconColor, width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 900, flexShrink: 0 }}>
                             {section.icon}
                           </div>
-                          <div>
+                          <div style={{ minWidth: 0 }}>
                             <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>{section.title}</h3>
                             <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{section.subtitle}</span>
                           </div>
                         </div>
-                        <span style={{ backgroundColor: '#f1f5f9', color: '#0056b3', padding: '0.3rem 0.85rem', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800 }}>
+                        <span style={{ backgroundColor: '#f1f5f9', color: '#0056b3', padding: '0.3rem 0.85rem', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0 }}>
                           {section.products.length} Packages Available
                         </span>
                       </div>
