@@ -207,8 +207,13 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* ── Right: Links + Language + Cart ── */}
-        <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.35rem, 2vw, 1.25rem)', flexShrink: 0 }}>
+        {/* ── Right: Links + Language + Cart ──
+            flexWrap lets this group drop onto a second line on narrow
+            screens instead of overflowing/clipping — with the Services
+            button added, everything no longer fits on one line at
+            phone widths. Harmless on desktop since it never has to wrap
+            there. */}
+        <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 'clamp(0.35rem, 2vw, 1.25rem)', rowGap: '0.5rem' }}>
           {/* Desktop Nav Links — display is controlled by the .nav-links-desktop media query, not inline, so it can collapse to the hamburger menu on mobile */}
           <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '1.5rem' }}>
             <Link to="/" style={navLinkStyle('/')}>{t('nav.home', 'Home')}</Link>
@@ -336,11 +341,12 @@ export default function Navbar() {
             </select>
           </div>
 
-          <span style={{ color: '#cbd5e1' }}>|</span>
-
-          {/* Login / Logout — reflects the OTP-verified phone session shared across wizards */}
+          {/* Login / Logout — reflects the OTP-verified phone session shared across wizards.
+              The divider lives on this group (borderLeft) instead of as a standalone "|"
+              character, so it never ends up dangling alone if this group wraps to its own
+              line on narrow screens. */}
           {verifiedPhone ? (
-            <div className="navbar-auth" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div className="navbar-auth" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', borderLeft: '1px solid #cbd5e1', paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)' }}>
               <Link
                 to="/profile"
                 className="navbar-auth-phone"
@@ -392,11 +398,12 @@ export default function Navbar() {
                 gap: '0.4rem',
                 background: 'none',
                 border: 'none',
+                borderLeft: '1px solid #cbd5e1',
+                paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)',
                 color: '#0056b3',
                 fontWeight: 700,
                 fontSize: '0.88rem',
                 cursor: 'pointer',
-                padding: 0,
               }}
             >
               <FiUser size={16} />

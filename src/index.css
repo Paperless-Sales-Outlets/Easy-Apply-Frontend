@@ -2006,12 +2006,6 @@ a {
 }
 
 @media (max-width: 380px) {
-  /* The Link itself carries an inline display:flex (Navbar.jsx), which
-     otherwise always beats an external stylesheet rule regardless of
-     media query — !important is required to actually hide it here. */
-  .navbar-auth-phone {
-    display: none !important;
-  }
   .nav-center-search select {
     display: none;
   }
