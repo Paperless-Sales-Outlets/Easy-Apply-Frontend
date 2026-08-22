@@ -20,14 +20,14 @@ export default function CompletionPage() {
   const { t } = useTranslation();
 
   // Read the real reference number returned by the API (passed via router state)
-  const refNumber = location.state?.referenceNumber || 'SLT-REQ-883912';
+  const referenceNumber = location.state?.referenceNumber || 'SLT-REQ-883912';
   const [copied, setCopied] = useState(false);
 
   const messageKey = location.state?.messageKey || 'completion.defaultMessage';
   const message = t(messageKey, 'Your application has been received and logged successfully.');
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(refNumber);
+    navigator.clipboard.writeText(referenceNumber);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -51,7 +51,7 @@ export default function CompletionPage() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>SLTMobitel EasyApply - Application ${refNumber}</title>
+        <title>SLTMobitel EasyApply - Application ${referenceNumber}</title>
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1e293b; background: #fff; }
           .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0056b3; padding-bottom: 20px; margin-bottom: 30px; }
@@ -82,13 +82,13 @@ export default function CompletionPage() {
 
         <div class="ref-box">
           <div class="ref-label">Application Reference Number</div>
-          <div class="ref-val">${refNumber}</div>
+          <div class="ref-val">${referenceNumber}</div>
         </div>
 
         <table class="info-table">
           <tr>
             <td class="label">Reference Number</td>
-            <td><strong>${refNumber}</strong></td>
+            <td><strong>${referenceNumber}</strong></td>
           </tr>
           <tr>
             <td class="label">Submission Date & Time</td>
@@ -111,7 +111,7 @@ export default function CompletionPage() {
         <div class="notice">
           <strong>Important Information:</strong>
           <br/>
-          - Please quote reference number <strong>${refNumber}</strong> for all future inquiries regarding this application.
+          - Please quote reference number <strong>${referenceNumber}</strong> for all future inquiries regarding this application.
           <br/>
           - You will receive an SMS notification once your application is reviewed and processed by SLTMobitel.
           <br/>
@@ -136,11 +136,7 @@ export default function CompletionPage() {
   };
 
   const handleTrackStatus = () => {
-    if (refNumber && refNumber !== '—') {
-      navigate(`/check-status?ref=${encodeURIComponent(refNumber)}`);
-    } else {
-      navigate('/check-status');
-    }
+    navigate('/check-status', { state: { ref: referenceNumber } });
   };
 
   return (
@@ -233,7 +229,7 @@ export default function CompletionPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
                 <span style={{ fontSize: '1.65rem', fontWeight: 900, color: '#0056b3', letterSpacing: '1px' }}>
-                  {refNumber}
+                  {referenceNumber}
                 </span>
 
                 <button

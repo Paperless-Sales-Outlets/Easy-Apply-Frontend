@@ -2,7 +2,7 @@ import React, { useState, forwardRef, useImperativeHandle, useRef } from 'react'
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import DigitalSignatureCanvas from '../../components/DigitalSignatureCanvas';
+import DigitalSignatureCanvas from '../../components/form/DigitalSignatureCanvas';
 
 // A reusable file input wrapper that adds a clear (✕) button and Drag-and-Drop zone
 const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange }, ref) => {

@@ -2,7 +2,7 @@ import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } f
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import DigitalSignatureCanvas from '../../components/DigitalSignatureCanvas';
+import DigitalSignatureCanvas from '../../components/form/DigitalSignatureCanvas';
 
 const FileInputWithClear = forwardRef(function FileInputWithClear({ name, label, accept, onChange }, ref) {
   const [hasFile, setHasFile] = useState(false);
