@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -13,11 +13,18 @@ import {
   FiFileText,
 } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
+import { clearSessionCart } from '../utils/api';
 
 export default function CompletionPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  // Clear the cart + session on every successful completion so the user
+  // always sees an empty cart when they browse again.
+  useEffect(() => {
+    clearSessionCart();
+  }, []);
 
   // Read the real reference number returned by the API (passed via router state)
   const referenceNumber = location.state?.referenceNumber || 'SLT-REQ-883912';
