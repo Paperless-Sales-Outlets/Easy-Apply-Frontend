@@ -202,6 +202,9 @@ a {
   width: 100%;
   max-width: 80%;
   margin: 0 auto;
+  /* Wizard steps end in a Back/Next Step footer that's the last thing in
+     the page — without this the site Footer sits flush against it. */
+  padding-bottom: 3rem;
 }
 
 @media (max-width: 640px) {
@@ -209,6 +212,10 @@ a {
   .page-shell--form {
     max-width: 100%;
     padding: 0 1rem;
+  }
+
+  .page-shell--form {
+    padding-bottom: 2rem;
   }
 }
 
@@ -2368,6 +2375,29 @@ a {
   box-shadow: 0 4px 14px rgba(0, 86, 179, 0.12) !important;
 }
 
+.category-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .category-chips-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
+  }
+
+  /* !important needed: the button also carries an inline
+     whiteSpace:'nowrap', which otherwise always wins over this rule
+     regardless of the media query. */
+  .category-chip {
+    width: 100%;
+    white-space: normal !important;
+    text-align: center;
+  }
+}
+
 .quick-services-single-col {
   display: flex;
   flex-direction: column;
@@ -2378,12 +2408,22 @@ a {
   .hero-top-grid {
     grid-template-columns: 1fr !important;
   }
+
+  /* Below this width the navbar's own "Services" dropdown (see
+     .navbar-services) covers this exact list, so showing the tiles here
+     too would just duplicate it under the banner. !important is needed
+     because the element also carries an inline display:flex, which
+     otherwise always wins over a plain stylesheet rule regardless of
+     the media query. */
+  .quick-services-single-col {
+    display: none !important;
+  }
 }
 
 /* Navbar "Services" quick-access dropdown — hidden by default (desktop
    already shows the quick-service tiles next to the hero banner) and
    shown only ≤1024px, matching the .hero-top-grid breakpoint above where
-   those tiles stack below the banner instead. */
+   those tiles would otherwise stack below the banner instead. */
 .navbar-services {
   display: none;
 }
