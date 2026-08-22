@@ -7,6 +7,7 @@ export const VerificationContext = createContext({
   customerData: null,
   selectedAccount: null,
   accountsList: [],
+  switchAccount: () => {},
 });
 
 export const useVerifiedContext = () => useContext(VerificationContext);

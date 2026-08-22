@@ -95,18 +95,21 @@ export default function OtpProtectedForm({ children, onVerified }) {
     const storedPhone = sessionStorage.getItem('verifiedPhone');
     if (storedPhone) {
       const storedExists = sessionStorage.getItem('customerExists') === 'true';
-      let storedAccount = null;
-      try {
-        const raw = sessionStorage.getItem('selectedAccount');
-        storedAccount = raw ? JSON.parse(raw) : null;
-      } catch (err) {
-        storedAccount = null;
-      }
+        let storedAccount = null;
+        let storedAccountsList = [];
+        try {
+          const raw = sessionStorage.getItem('selectedAccount');
+          storedAccount = raw ? JSON.parse(raw) : null;
+          const rawList = sessionStorage.getItem('accountsList');
+          storedAccountsList = rawList ? JSON.parse(rawList) : [];
+        } catch (err) {
+          storedAccount = null;
+        }
 
-      setMobileNumber(storedPhone);
-      setCustomerExists(storedExists);
-      setSelectedAccount(storedAccount);
-      setAccountsList(storedAccount ? [storedAccount] : []);
+        setMobileNumber(storedPhone);
+        setCustomerExists(storedExists);
+        setSelectedAccount(storedAccount);
+        setAccountsList(storedAccountsList.length > 0 ? storedAccountsList : (storedAccount ? [storedAccount] : []));
 
       if (!storedExists && requiresExistingAccount()) {
         setPhase('new-customer-redirect');
@@ -222,6 +225,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
     sessionStorage.setItem('verifiedPhone', mobileNumber);
     if (customerExists) {
       sessionStorage.setItem('customerExists', 'true');
+      sessionStorage.setItem('accountsList', JSON.stringify(accountsList));
       if (accountsList.length > 1) {
         setPhase('account-select');
         return;
@@ -346,6 +350,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
           customerData: selectedAccount,
           selectedAccount,
           accountsList,
+          switchAccount: handleSelectAccount,
         }}
       >
         {children}
