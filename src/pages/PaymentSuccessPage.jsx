@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import SLTLoader from '../components/SLTLoader';
-import api from '../utils/api';
+import api, { clearSessionCart } from '../utils/api';
 
 /**
  * PayHere redirects the user back to this page after a successful payment.
@@ -20,7 +20,11 @@ export default function PaymentSuccessPage() {
 
     const orderId = searchParams.get('order_id');
 
-    const finish = (referenceNumber) => {
+    const finish = async (referenceNumber) => {
+      // Cart is no longer needed — clear it from the backend and localStorage
+      // so the user starts fresh if they come back to the product catalogue.
+      await clearSessionCart();
+
       navigate('/completion', {
         replace: true,
         state: {

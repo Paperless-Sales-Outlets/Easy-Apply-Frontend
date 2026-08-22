@@ -40,6 +40,38 @@ const getSessionId = () => {
   return sid;
 };
 
+/**
+ * Clear the cart after a successful application submission or payment.
+ *
+ * Steps:
+ *   1. Call DELETE /api/cart/clear so the MongoDB cart document is wiped.
+ *   2. Remove the localStorage session ID so the next page load gets a
+ *      brand-new session (and therefore an empty cart).
+ *
+ * Both steps are attempted independently so a backend failure does not
+ * block the localStorage clean-up.
+ */
+export const clearSessionCart = async () => {
+  // 1. Tell the backend to empty the cart for this session
+  try {
+    await api.delete('/cart/clear');
+  } catch (err) {
+    // Non-fatal — the TTL index will eventually clean up the DB document
+    console.warn('Could not clear cart on server:', err?.response?.data?.message || err.message);
+  }
+
+  // 2. Drop the session ID from localStorage so the next visit is clean
+  localStorage.removeItem('slt_session_id');
+
+  // Also clear the local product-service cart if it exists
+  try {
+    localStorage.removeItem('slt_local_cart');
+    sessionStorage.removeItem('selectedProduct');
+  } catch (_) {
+    // ignore storage errors
+  }
+};
+
 // Request Interceptor: Attach in-memory admin accessToken & session ID
 api.interceptors.request.use(
   (config) => {
