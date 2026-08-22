@@ -2375,6 +2375,21 @@ a {
   box-shadow: 0 4px 14px rgba(0, 86, 179, 0.12) !important;
 }
 
+/* CartPage's non-empty layout — cart items (span 8) + Order Summary (span 4)
+   side by side on a 12-col grid. Below 900px the "span 4" column doesn't have
+   enough room and overflows/gets clipped instead of stacking, so collapse to
+   a single column and let both spans go full-width. */
+@media (max-width: 900px) {
+  .cart-layout-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .cart-layout-items,
+  .cart-layout-summary {
+    grid-column: 1 / -1 !important;
+  }
+}
+
 .category-chips-row {
   display: flex;
   flex-wrap: wrap;

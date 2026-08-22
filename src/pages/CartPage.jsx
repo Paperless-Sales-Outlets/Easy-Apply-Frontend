@@ -364,10 +364,10 @@ export default function CartPage() {
         ) : (
           /* ── NON-EMPTY CART VIEW (Matches Image 3 Exactly) ── */
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.75rem', alignItems: 'start', marginBottom: '2.5rem' }}>
+            <div className="cart-layout-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.75rem', alignItems: 'start', marginBottom: '2.5rem' }}>
 
               {/* Left Column: Cart Items List (8 cols) */}
-              <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="cart-layout-items" style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem' }}>
                   <FiShoppingCart color="#0056b3" size={20} />
@@ -586,7 +586,7 @@ export default function CartPage() {
               </div>
 
               {/* Right Column: Order Summary (4 cols) */}
-              <div style={{ gridColumn: 'span 4' }}>
+              <div className="cart-layout-summary" style={{ gridColumn: 'span 4' }}>
                 <div
                   style={{
                     backgroundColor: '#ffffff',

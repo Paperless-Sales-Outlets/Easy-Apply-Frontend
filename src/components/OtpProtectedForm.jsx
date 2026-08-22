@@ -55,8 +55,6 @@ export default function OtpProtectedForm({ children, onVerified }) {
   const [accountsList, setAccountsList] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-  console.log('[TRACE] render, phase=', phase, 'pathname=', location.pathname);
-
   // Focus the first code box and restart countdown on entry
   useEffect(() => {
     if (phase !== 'otp') return;
@@ -209,15 +207,12 @@ export default function OtpProtectedForm({ children, onVerified }) {
 
     try {
       const response = await api.post('/otp/send', { phone: mobileNumber });
-      console.log('[TRACE] otp/send response:', response.data);
       if (response.data && response.data.success) {
-        console.log('[TRACE] calling setPhase(otp)');
         setPhase('otp');
       } else {
         setError(response.data?.message || 'Failed to send verification code');
       }
     } catch (err) {
-      console.log('[TRACE] otp/send threw:', err);
       setPhase('otp');
     } finally {
       setIsLoading(false);
