@@ -259,10 +259,16 @@ export default function Navbar() {
                 role="menu"
                 aria-label="Services"
                 style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 0.5rem)',
-                  left: 0,
-                  width: 'min(320px, 88vw)',
+                  // Anchored to the viewport (fixed + right edge) rather than
+                  // to the button — the button's own x-position shifts with
+                  // screen width and language pill width, so a button-relative
+                  // anchor could push this dropdown past the right edge of
+                  // the screen on some devices, clipping it. Anchoring to a
+                  // stable screen edge instead means it's never off-screen.
+                  position: 'fixed',
+                  top: navHeight + 8,
+                  right: '1rem',
+                  width: 'min(320px, calc(100vw - 2rem))',
                   backgroundColor: '#ffffff',
                   border: '1px solid #e2e8f0',
                   borderRadius: '12px',
