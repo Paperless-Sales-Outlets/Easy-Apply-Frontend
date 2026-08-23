@@ -854,6 +854,9 @@
     "saveForLater": "Save for Later",
     "weAccept": "We Accept",
     "secure": "Secure & Hassle-Free",
-    "secureText": "Your information is safe with us. We use OTP verification to ensure a secure application process."
+    "secureText": "Your information is safe with us. We use OTP verification to ensure a secure application process.",
+    "subtotalWithCount_one": "Subtotal ({{count}} item)",
+    "subtotalWithCount_other": "Subtotal ({{count}} items)",
+    "savedToast": "Cart saved for later!"
   }
 }
