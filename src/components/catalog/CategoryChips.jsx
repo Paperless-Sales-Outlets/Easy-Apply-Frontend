@@ -1,14 +1,19 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiGrid, FiPhoneCall, FiWifi, FiTv } from 'react-icons/fi';
 
+// `name` stays the stable English identifier the filtering logic elsewhere
+// keys off (ProductCatalogPage compares activeCategory against these exact
+// strings) — only `labelKey` (the displayed text) is translated.
 const CATEGORIES = [
-  { name: 'All Products', icon: FiGrid },
-  { name: 'Voice', icon: FiPhoneCall },
-  { name: 'Fibre Broadband', icon: FiWifi },
-  { name: 'PEO TV', icon: FiTv },
+  { name: 'All Products', labelKey: 'catalog.categories.allProducts', icon: FiGrid },
+  { name: 'Voice', labelKey: 'catalog.categories.voice', icon: FiPhoneCall },
+  { name: 'Fibre Broadband', labelKey: 'catalog.categories.fibreBroadband', icon: FiWifi },
+  { name: 'PEO TV', labelKey: 'catalog.categories.peoTv', icon: FiTv },
 ];
 
 export default function CategoryChips({ activeCategory, onSelectCategory }) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -65,7 +70,7 @@ export default function CategoryChips({ activeCategory, onSelectCategory }) {
               }}
             >
               <IconComp size={16} style={{ color: isActive ? '#ffffff' : '#475569' }} />
-              <span>{cat.name}</span>
+              <span>{t(cat.labelKey, cat.name)}</span>
             </button>
           );
         })}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiAlertCircle, FiCheck } from 'react-icons/fi';
 import CategoryChips from '../components/catalog/CategoryChips';
 import SidebarFilters from '../components/catalog/SidebarFilters';
@@ -163,6 +164,7 @@ const DEFAULT_MOCKUP_PRODUCTS = [
 ];
 
 export default function ProductCatalogPage() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
@@ -379,8 +381,8 @@ export default function ProductCatalogPage() {
     if (activeCategory === 'All Products' || activeCategory === 'Voice') {
       sections.push({
         id: 'voice-section',
-        title: 'Voice Packages (Compulsory - Max 1)',
-        subtitle: '1 Voice package is required for all connection bundles',
+        title: t('catalog.sections.voiceTitle', 'Voice Packages (Compulsory - Max 1)'),
+        subtitle: t('catalog.sections.voiceSubtitle', '1 Voice package is required for all connection bundles'),
         icon: <FiPhone />,
         bgColor: '#e0f2fe',
         iconColor: '#0284c7',
@@ -391,8 +393,8 @@ export default function ProductCatalogPage() {
     if (activeCategory === 'All Products' || activeCategory === 'Fibre Broadband' || activeCategory === 'LTE Home') {
       sections.push({
         id: 'broadband-section',
-        title: 'Broadband Packages (Fibre & LTE - Max 1)',
-        subtitle: 'High-speed internet for home, gaming & business',
+        title: t('catalog.sections.broadbandTitle', 'Broadband Packages (Fibre & LTE - Max 1)'),
+        subtitle: t('catalog.sections.broadbandSubtitle', 'High-speed internet for home, gaming & business'),
         icon: <FiGlobe />,
         bgColor: '#e6f4ea',
         iconColor: '#137333',
@@ -403,8 +405,8 @@ export default function ProductCatalogPage() {
     if (activeCategory === 'All Products' || activeCategory === 'PEO TV') {
       sections.push({
         id: 'peotv-section',
-        title: 'PEO TV Packages (Max 1)',
-        subtitle: 'Live HD channels, catch-up TV & 4K entertainment',
+        title: t('catalog.sections.peoTvTitle', 'PEO TV Packages (Max 1)'),
+        subtitle: t('catalog.sections.peoTvSubtitle', 'Live HD channels, catch-up TV & 4K entertainment'),
         icon: <FiTv />,
         bgColor: '#fef3c7',
         iconColor: '#d97706',
@@ -413,7 +415,7 @@ export default function ProductCatalogPage() {
     }
 
     return sections;
-  }, [filteredProducts, activeCategory]);
+  }, [filteredProducts, activeCategory, t, i18n.language]);
 
   return (
     <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', paddingBottom: '3rem' }}>
@@ -451,10 +453,10 @@ export default function ProductCatalogPage() {
             </span>
             <div>
               <div style={{ fontWeight: 800, fontSize: '0.88rem', color: cartCategoryAnalysis.hasVoice ? '#14532d' : '#1e40af' }}>
-                {cartCategoryAnalysis.hasVoice ? 'Voice Package Selected' : 'Voice Package Required (Compulsory)'}
+                {cartCategoryAnalysis.hasVoice ? t('catalog.bundleRules.selected', 'Voice Package Selected') : t('catalog.bundleRules.required', 'Voice Package Required (Compulsory)')}
               </div>
               <div style={{ fontSize: '0.78rem', color: cartCategoryAnalysis.hasVoice ? '#15803d' : '#1e3a8a', fontWeight: 600 }}>
-                Allowed bundles: <strong>Voice Only</strong> • <strong>Voice + Broadband</strong> • <strong>Voice + Broadband + PEO TV</strong> (Max 1 package per category)
+                {t('catalog.bundleRules.allowedBundles', 'Allowed bundles:')} <strong>{t('catalog.bundleRules.voiceOnly', 'Voice Only')}</strong> • <strong>{t('catalog.bundleRules.voiceBroadband', 'Voice + Broadband')}</strong> • <strong>{t('catalog.bundleRules.voiceBroadbandPeoTv', 'Voice + Broadband + PEO TV')}</strong> {t('catalog.bundleRules.maxOne', '(Max 1 package per category)')}
               </div>
             </div>
           </div>
@@ -470,7 +472,7 @@ export default function ProductCatalogPage() {
                 color: cartCategoryAnalysis.hasVoice ? '#15803d' : '#1d4ed8',
               }}
             >
-              Voice: {cartCategoryAnalysis.hasVoice ? 'Selected (1/1)' : 'Required (0/1)'}
+              {t('catalog.bundleRules.voiceLabel', 'Voice:')} {cartCategoryAnalysis.hasVoice ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.requiredCount', 'Required (0/1)')}
             </span>
             <span
               style={{
@@ -482,7 +484,7 @@ export default function ProductCatalogPage() {
                 color: cartCategoryAnalysis.hasBroadband ? '#15803d' : '#64748b',
               }}
             >
-              Broadband: {cartCategoryAnalysis.hasBroadband ? 'Selected (1/1)' : 'Optional (0/1)'}
+              {t('catalog.bundleRules.broadbandLabel', 'Broadband:')} {cartCategoryAnalysis.hasBroadband ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.optionalCount', 'Optional (0/1)')}
             </span>
             <span
               style={{
@@ -494,7 +496,7 @@ export default function ProductCatalogPage() {
                 color: cartCategoryAnalysis.hasPeoTv ? '#15803d' : '#64748b',
               }}
             >
-              PEO TV: {cartCategoryAnalysis.hasPeoTv ? 'Selected (1/1)' : 'Optional (0/1)'}
+              {t('catalog.bundleRules.peoTvLabel', 'PEO TV:')} {cartCategoryAnalysis.hasPeoTv ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.optionalCount', 'Optional (0/1)')}
             </span>
 
             {cartItems.length > 0 && (
@@ -513,7 +515,7 @@ export default function ProductCatalogPage() {
                   transition: 'all 0.15s ease',
                 }}
               >
-                Reset Selection ↺
+                {t('catalog.bundleRules.resetSelection', 'Reset Selection')} ↺
               </button>
             )}
           </div>
@@ -580,7 +582,7 @@ export default function ProductCatalogPage() {
               }}
             >
               <div style={{ fontSize: '0.92rem', color: '#475569', fontWeight: 600 }}>
-                Showing <strong style={{ color: '#0f172a' }}>{filteredProducts.length}</strong> total results across categories
+                {t('catalog.controls.showingResults', { count: filteredProducts.length, defaultValue: 'Showing {{count}} total results across categories' })}
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -602,11 +604,11 @@ export default function ProductCatalogPage() {
                   }}
                 >
                   <FiSliders size={14} />
-                  <span>Filters</span>
+                  <span>{t('catalog.controls.filters', 'Filters')}</span>
                 </button>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>Sort by:</span>
+                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>{t('catalog.controls.sortBy', 'Sort by:')}</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
@@ -622,9 +624,9 @@ export default function ProductCatalogPage() {
                       outline: 'none',
                     }}
                   >
-                    <option value="Popularity">Popularity</option>
-                    <option value="Price Low to High">Price: Low → High</option>
-                    <option value="Price High to Low">Price: High → Low</option>
+                    <option value="Popularity">{t('catalog.controls.popularity', 'Popularity')}</option>
+                    <option value="Price Low to High">{t('catalog.controls.priceLowHigh', 'Price: Low → High')}</option>
+                    <option value="Price High to Low">{t('catalog.controls.priceHighLow', 'Price: High → Low')}</option>
                   </select>
                 </div>
 
@@ -678,10 +680,10 @@ export default function ProductCatalogPage() {
               </div>
             ) : filteredProducts.length === 0 ? (
               <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '3rem 1.5rem', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>No Products Found</h3>
-                <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' }}>Try adjusting your filters or search keywords.</p>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>{t('catalog.empty.title', 'No Products Found')}</h3>
+                <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' }}>{t('catalog.empty.subtitle', 'Try adjusting your filters or search keywords.')}</p>
                 <button onClick={handleClearAll} style={{ backgroundColor: '#0056b3', color: '#fff', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
-                  Reset Filters
+                  {t('catalog.empty.resetFilters', 'Reset Filters')}
                 </button>
               </div>
             ) : (

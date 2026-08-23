@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { QUICK_SERVICES } from '../../data/quickServices';
 import {
   FiTag,
@@ -94,6 +95,7 @@ function MegaCardPedestalRouterGraphic() {
 }
 
 export default function HeroBannerCarousel({ onShopNow }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeDot, setActiveDot] = useState(0);
 
@@ -160,7 +162,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
               textTransform: 'uppercase',
             }}
           >
-            8.8 GREAT 8 SALE
+            {t('catalog.hero.saleTag', '8.8 GREAT 8 SALE')}
           </span>
         </div>
 
@@ -179,7 +181,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
               fontFamily: 'var(--font-head)',
             }}
           >
-            MEGA DEALS
+            {t('catalog.hero.headline', 'MEGA DEALS')}
           </h1>
 
           <p
@@ -191,7 +193,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
               marginBottom: '1.25rem',
             }}
           >
-            Biggest Deals. Best Prices.
+            {t('catalog.hero.subheadline', 'Biggest Deals. Best Prices.')}
           </p>
         </div>
 
@@ -211,7 +213,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
             }}
           >
             <FiTag style={{ color: '#34d399' }} />
-            <span>Discount Vouchers</span>
+            <span>{t('catalog.hero.discountVouchers', 'Discount Vouchers')}</span>
           </div>
 
           <div
@@ -228,7 +230,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
             }}
           >
             <FiTruck style={{ color: '#34d399' }} />
-            <span>FREE Delivery</span>
+            <span>{t('catalog.hero.freeDelivery', 'FREE Delivery')}</span>
           </div>
 
           <div
@@ -245,7 +247,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
             }}
           >
             <FiShield style={{ color: '#34d399' }} />
-            <span>Trusted Connection</span>
+            <span>{t('catalog.hero.trustedConnection', 'Trusted Connection')}</span>
           </div>
         </div>
 
@@ -269,7 +271,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
               boxShadow: '0 4px 18px rgba(4, 120, 87, 0.45)',
             }}
           >
-            <span>Shop Now</span>
+            <span>{t('catalog.hero.shopNow', 'Shop Now')}</span>
             <FiArrowRight size={16} />
           </button>
         </div>
@@ -310,9 +312,9 @@ export default function HeroBannerCarousel({ onShopNow }) {
             zIndex: 3,
           }}
         >
-          <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', color: '#064e3b' }}>UP TO</span>
+          <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', color: '#064e3b' }}>{t('catalog.hero.upTo', 'UP TO')}</span>
           <span style={{ fontSize: '1.65rem', fontWeight: 900, lineHeight: 1, color: '#064e3b' }}>35%</span>
-          <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#064e3b' }}>OFF</span>
+          <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#064e3b' }}>{t('catalog.hero.off', 'OFF')}</span>
         </div>
 
         {/* Slider Pagination Dots */}
