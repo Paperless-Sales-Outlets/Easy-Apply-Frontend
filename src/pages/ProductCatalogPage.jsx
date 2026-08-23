@@ -707,7 +707,7 @@ export default function ProductCatalogPage() {
                           </div>
                         </div>
                         <span style={{ backgroundColor: '#f1f5f9', color: '#0056b3', padding: '0.3rem 0.85rem', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                          {section.products.length} Packages Available
+                          {t('catalog.sections.packagesAvailable', { count: section.products.length, defaultValue: '{{count}} Packages Available' })}
                         </span>
                       </div>
 
