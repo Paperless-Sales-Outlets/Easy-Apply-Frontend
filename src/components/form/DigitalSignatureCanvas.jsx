@@ -96,6 +96,26 @@ export default function DigitalSignatureCanvas({
     }
   };
 
+  // Attach touch listeners as NON-PASSIVE so that preventDefault() works.
+  // React 17+ registers synthetic touch events as passive by default,
+  // which silently ignores preventDefault() and causes console warnings.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const opts = { passive: false };
+    canvas.addEventListener('touchstart', startDrawing, opts);
+    canvas.addEventListener('touchmove', draw, opts);
+    canvas.addEventListener('touchend', stopDrawing, opts);
+
+    return () => {
+      canvas.removeEventListener('touchstart', startDrawing, opts);
+      canvas.removeEventListener('touchmove', draw, opts);
+      canvas.removeEventListener('touchend', stopDrawing, opts);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDrawing]);
+
   const handleClear = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -130,9 +150,10 @@ export default function DigitalSignatureCanvas({
           onMouseMove={draw}
           onMouseUp={stopDrawing}
           onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
+          // Touch events are handled via native addEventListener with { passive: false }
+          // in the useEffect above. Do NOT add onTouchStart/onTouchMove/onTouchEnd here
+          // because React registers synthetic touch handlers as passive, which makes
+          // preventDefault() a no-op and generates console warnings.
           style={{
             width: '100%',
             height: '160px',
