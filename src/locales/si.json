@@ -918,7 +918,8 @@
       "allProducts": "සියලුම නිෂ්පාදන",
       "voice": "හඬ",
       "fibreBroadband": "ෆයිබර් බ්‍රෝඩ්බෑන්ඩ්",
-      "peoTv": "PEO TV"
+      "peoTv": "PEO TV",
+      "broadband": "බ්‍රෝඩ්බෑන්ඩ්"
     },
     "bundleRules": {
       "selected": "හඬ පැකේජය තෝරාගන්නා ලදී",
@@ -957,7 +958,9 @@
       "popular": "ජනප්‍රියයි",
       "installation": "ස්ථාපනය:",
       "perMonth": "/මාසයට",
-      "perMo": "/මා"
+      "perMo": "/මා",
+      "removeFromCart": "කරත්තයෙන් ඉවත් කරන්න",
+      "categorySelectedReason": "{{group}} 1ක් තෝරාගෙන ඇත"
     },
     "sections": {
       "packagesAvailable": "පැකේජ {{count}}ක් ලබා ගත හැක",

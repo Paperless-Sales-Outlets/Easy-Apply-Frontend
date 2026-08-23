@@ -753,7 +753,8 @@
       "allProducts": "அனைத்து பொருட்களும்",
       "voice": "குரல்",
       "fibreBroadband": "ஃபைபர் பிராட்பேண்ட்",
-      "peoTv": "PEO TV"
+      "peoTv": "PEO TV",
+      "broadband": "பிராட்பேண்ட்"
     },
     "bundleRules": {
       "selected": "குரல் தொகுப்பு தேர்ந்தெடுக்கப்பட்டது",
@@ -792,7 +793,9 @@
       "popular": "பிரபலமானது",
       "installation": "நிறுவல்:",
       "perMonth": "/மாதம்",
-      "perMo": "/மா"
+      "perMo": "/மா",
+      "removeFromCart": "கார்ட்டிலிருந்து அகற்று",
+      "categorySelectedReason": "1 {{group}} தேர்ந்தெடுக்கப்பட்டது"
     },
     "sections": {
       "packagesAvailable": "{{count}} தொகுப்புகள் கிடைக்கின்றன",

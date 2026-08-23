@@ -782,7 +782,8 @@
       "allProducts": "All Products",
       "voice": "Voice",
       "fibreBroadband": "Fibre Broadband",
-      "peoTv": "PEO TV"
+      "peoTv": "PEO TV",
+      "broadband": "Broadband"
     },
     "bundleRules": {
       "selected": "Voice Package Selected",
@@ -821,7 +822,9 @@
       "popular": "POPULAR",
       "installation": "Installation:",
       "perMonth": "/month",
-      "perMo": "/mo"
+      "perMo": "/mo",
+      "removeFromCart": "Remove from cart",
+      "categorySelectedReason": "1 {{group}} Selected"
     },
     "sections": {
       "packagesAvailable": "{{count}} Packages Available",
