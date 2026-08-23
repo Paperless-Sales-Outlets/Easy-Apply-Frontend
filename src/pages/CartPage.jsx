@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   FiTrash2,
@@ -25,6 +26,7 @@ import { getCart, removeFromCart, addToCart, getProducts, getLocalCart } from '.
 import Toast from '../components/common/Toast';
 
 export default function CartPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [cart, setCart] = useState(null);

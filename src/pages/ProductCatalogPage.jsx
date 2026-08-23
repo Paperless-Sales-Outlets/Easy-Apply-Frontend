@@ -735,7 +735,12 @@ export default function ProductCatalogPage() {
 
                           // Rule: Max 1 package per category -> disable other packages in same category once selected
                           const isCategoryDisabled = isGroupTaken && !isInCart;
-                          const disabledReason = `1 ${prodGroup} Selected`;
+                          const groupLabel = prodGroup === 'Voice'
+                            ? t('catalog.categories.voice', 'Voice')
+                            : prodGroup === 'PEO TV'
+                              ? t('catalog.categories.peoTv', 'PEO TV')
+                              : t('catalog.categories.broadband', 'Broadband');
+                          const disabledReason = t('catalog.card.categorySelectedReason', { group: groupLabel, defaultValue: '1 {{group}} Selected' });
 
                           return (
                             <ProductCard
