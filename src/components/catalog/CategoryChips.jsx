@@ -1,14 +1,19 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiGrid, FiPhoneCall, FiWifi, FiTv } from 'react-icons/fi';
 
+// `name` stays the stable English identifier the filtering logic elsewhere
+// keys off (ProductCatalogPage compares activeCategory against these exact
+// strings) — only `labelKey` (the displayed text) is translated.
 const CATEGORIES = [
-  { name: 'All Products', icon: FiGrid },
-  { name: 'Voice', icon: FiPhoneCall },
-  { name: 'Fibre Broadband', icon: FiWifi },
-  { name: 'PEO TV', icon: FiTv },
+  { name: 'All Products', labelKey: 'catalog.categories.allProducts', icon: FiGrid },
+  { name: 'Voice', labelKey: 'catalog.categories.voice', icon: FiPhoneCall },
+  { name: 'Fibre Broadband', labelKey: 'catalog.categories.fibreBroadband', icon: FiWifi },
+  { name: 'PEO TV', labelKey: 'catalog.categories.peoTv', icon: FiTv },
 ];
 
 export default function CategoryChips({ activeCategory, onSelectCategory }) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -18,15 +23,19 @@ export default function CategoryChips({ activeCategory, onSelectCategory }) {
         borderBottom: '1px solid #f1f5f9',
         display: 'flex',
         justifyContent: 'flex-start',
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        scrollbarWidth: 'none',
       }}
     >
+      {/* Wraps to multiple lines instead of scrolling horizontally — a
+          swipeable row with no visible affordance can hide options
+          entirely for users who don't discover the gesture. Below 640px
+          this becomes a uniform 2-column grid (see .category-chips-row
+          in index.css) instead of a flex-wrap row, since content-width
+          chips wrap unevenly (e.g. 2 fit on one line, then 1, then 1) —
+          a fixed grid keeps every row the same shape regardless of label
+          length. */}
       <div
+        className="category-chips-row"
         style={{
-          display: 'flex',
-          gap: '0.85rem',
           maxWidth: '1600px',
           margin: '0 auto',
           width: '100%',
@@ -38,6 +47,7 @@ export default function CategoryChips({ activeCategory, onSelectCategory }) {
           return (
             <button
               key={cat.name}
+              className="category-chip"
               onClick={() => onSelectCategory(cat.name)}
               style={{
                 padding: '0.55rem 1.25rem',
@@ -51,6 +61,7 @@ export default function CategoryChips({ activeCategory, onSelectCategory }) {
                 whiteSpace: 'nowrap',
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '0.5rem',
                 boxShadow: isActive
                   ? '0 4px 12px rgba(0,86,179,0.25)'
@@ -59,7 +70,7 @@ export default function CategoryChips({ activeCategory, onSelectCategory }) {
               }}
             >
               <IconComp size={16} style={{ color: isActive ? '#ffffff' : '#475569' }} />
-              <span>{cat.name}</span>
+              <span>{t(cat.labelKey, cat.name)}</span>
             </button>
           );
         })}

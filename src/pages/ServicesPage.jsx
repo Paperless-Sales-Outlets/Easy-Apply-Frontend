@@ -125,6 +125,15 @@ export default function ServicesPage() {
             <div
               key={service.id}
               onClick={() => navigate(service.route)}
+              role="button"
+              tabIndex={0}
+              aria-label={`${service.title}: ${service.description}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(service.route);
+                }
+              }}
               style={{
                 backgroundColor: 'white',
                 borderRadius: '12px',

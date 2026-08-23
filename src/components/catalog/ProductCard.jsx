@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { FiCheck, FiHeart, FiShoppingCart } from 'react-icons/fi';
 import { FaHeart } from 'react-icons/fa';
@@ -35,6 +36,7 @@ export default function ProductCard({
   disabledReason = 'Category Limit Reached',
   viewMode = 'grid',
 }) {
+  const { t } = useTranslation();
   const {
     _id,
     id,
@@ -97,7 +99,7 @@ export default function ProductCard({
                 letterSpacing: '0.03em',
               }}
             >
-              POPULAR
+              {t('catalog.card.popular', 'POPULAR')}
             </span>
           )}
         </div>
@@ -151,10 +153,10 @@ export default function ProductCard({
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>
               Rs. {monthlyPrice ? monthlyPrice.toLocaleString() : '0'}
-              <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>/mo</span>
+              <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.card.perMo', '/mo')}</span>
             </div>
             <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-              Installation: Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
+              {t('catalog.card.installation', 'Installation:')} Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
             </div>
           </div>
 
@@ -172,7 +174,7 @@ export default function ProductCard({
               whiteSpace: 'nowrap',
             }}
           >
-            Details
+            {t('catalog.card.details', 'Details')}
           </button>
 
           <button
@@ -182,7 +184,7 @@ export default function ProductCard({
               else onAddToCart(product);
             }}
             disabled={disabled}
-            title={isInCart ? 'Remove from cart' : undefined}
+            title={isInCart ? t('catalog.card.removeFromCart', 'Remove from cart') : undefined}
             style={{
               backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
               color: isInCart ? '#ffffff' : disabled ? '#475569' : '#ffffff',
@@ -200,7 +202,7 @@ export default function ProductCard({
             }}
           >
             {isInCart ? <FiCheck size={15} /> : <FiShoppingCart size={14} />}
-            <span>{isInCart ? 'In Cart' : disabled ? disabledReason : 'Add to Cart'}</span>
+            <span>{isInCart ? t('catalog.card.inCart', 'In Cart') : disabled ? disabledReason : t('catalog.card.addToCart', 'Add to Cart')}</span>
           </button>
         </div>
       </motion.div>
@@ -250,7 +252,7 @@ export default function ProductCard({
                 textTransform: 'uppercase',
               }}
             >
-              POPULAR
+              {t('catalog.card.popular', 'POPULAR')}
             </span>
           ) : (
             <span />
@@ -340,10 +342,10 @@ export default function ProductCard({
             <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>
               Rs. {monthlyPrice ? monthlyPrice.toLocaleString() : '0'}
             </span>
-            <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>/month</span>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.card.perMonth', '/month')}</span>
           </div>
           <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.5rem' }}>
-            Installation: Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
+            {t('catalog.card.installation', 'Installation:')} Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
           </div>
         </div>
 
@@ -355,7 +357,7 @@ export default function ProductCard({
               else onAddToCart(product);
             }}
             disabled={disabled}
-            title={isInCart ? 'Remove from cart' : undefined}
+            title={isInCart ? t('catalog.card.removeFromCart', 'Remove from cart') : undefined}
             style={{
               width: '100%',
               backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
@@ -375,7 +377,7 @@ export default function ProductCard({
             }}
           >
             {isInCart ? <FiCheck size={16} /> : <FiShoppingCart size={15} />}
-            <span>{isInCart ? 'In Cart ✓' : disabled ? disabledReason : 'Add to Cart'}</span>
+            <span>{isInCart ? `${t('catalog.card.inCart', 'In Cart')} ✓` : disabled ? disabledReason : t('catalog.card.addToCart', 'Add to Cart')}</span>
           </button>
 
           <button
@@ -397,7 +399,7 @@ export default function ProductCard({
               transition: 'all 0.15s ease',
             }}
           >
-            View Details
+            {t('catalog.card.viewDetails', 'View Details')}
           </button>
         </div>
       </div>

@@ -481,18 +481,13 @@ export default function AddressStep({
           boxShadow: "0 8px 30px rgba(0, 0, 0, 0.04)",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", borderBottom: "1px solid #f1f5f9", paddingBottom: "0.75rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
-            <div style={{ backgroundColor: "#eff6ff", color: "#0056b3", width: "34px", height: "34px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <FiMapPin size={18} />
-            </div>
-            <h4 style={{ margin: 0, color: "#0f172a", fontSize: "1.1rem", fontWeight: 800 }}>
-              Current Registered Service Address
-            </h4>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "1rem", borderBottom: "1px solid #f1f5f9", paddingBottom: "0.75rem" }}>
+          <div style={{ backgroundColor: "#eff6ff", color: "#0056b3", width: "34px", height: "34px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <FiMapPin size={18} />
           </div>
-          <span style={{ fontSize: "0.75rem", backgroundColor: "#f1f5f9", color: "#475569", padding: "0.3rem 0.75rem", borderRadius: "9999px", fontWeight: 800 }}>
-            Read-Only (Verified from DB)
-          </span>
+          <h4 style={{ margin: 0, color: "#0f172a", fontSize: "1.1rem", fontWeight: 800 }}>
+            Current Registered Service Address
+          </h4>
         </div>
 
         {loadingCurrent ? (

@@ -35,8 +35,9 @@
   --s12: 48px;
 
   /* Type */
-  --font-head: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Matches slt.lk: Raleway for headings, Inter for body copy */
+  --font-head: 'Raleway', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   /* Brand slash gradient (dual-tone, hard break) */
   --slash-gradient: linear-gradient(104deg, var(--blue) 0 62%, var(--green) 62% 100%);
@@ -201,6 +202,9 @@ a {
   width: 100%;
   max-width: 80%;
   margin: 0 auto;
+  /* Wizard steps end in a Back/Next Step footer that's the last thing in
+     the page — without this the site Footer sits flush against it. */
+  padding-bottom: 3rem;
 }
 
 @media (max-width: 640px) {
@@ -208,6 +212,10 @@ a {
   .page-shell--form {
     max-width: 100%;
     padding: 0 1rem;
+  }
+
+  .page-shell--form {
+    padding-bottom: 2rem;
   }
 }
 
@@ -2005,9 +2013,6 @@ a {
 }
 
 @media (max-width: 380px) {
-  .navbar-auth-phone {
-    display: none;
-  }
   .nav-center-search select {
     display: none;
   }
@@ -2370,6 +2375,44 @@ a {
   box-shadow: 0 4px 14px rgba(0, 86, 179, 0.12) !important;
 }
 
+/* CartPage's non-empty layout — cart items (span 8) + Order Summary (span 4)
+   side by side on a 12-col grid. Below 900px the "span 4" column doesn't have
+   enough room and overflows/gets clipped instead of stacking, so collapse to
+   a single column and let both spans go full-width. */
+@media (max-width: 900px) {
+  .cart-layout-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .cart-layout-items,
+  .cart-layout-summary {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+.category-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .category-chips-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
+  }
+
+  /* !important needed: the button also carries an inline
+     whiteSpace:'nowrap', which otherwise always wins over this rule
+     regardless of the media query. */
+  .category-chip {
+    width: 100%;
+    white-space: normal !important;
+    text-align: center;
+  }
+}
+
 .quick-services-single-col {
   display: flex;
   flex-direction: column;
@@ -2379,5 +2422,75 @@ a {
 @media (max-width: 1024px) {
   .hero-top-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  /* Below this width the navbar's own "Services" dropdown (see
+     .navbar-services) covers this exact list, so showing the tiles here
+     too would just duplicate it under the banner. !important is needed
+     because the element also carries an inline display:flex, which
+     otherwise always wins over a plain stylesheet rule regardless of
+     the media query. */
+  .quick-services-single-col {
+    display: none !important;
+  }
+}
+
+/* Navbar "Services" quick-access dropdown — hidden by default (desktop
+   already shows the quick-service tiles next to the hero banner) and
+   shown only ≤1024px, matching the .hero-top-grid breakpoint above where
+   those tiles would otherwise stack below the banner instead. */
+.navbar-services {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .navbar-services {
+    display: block;
+  }
+}
+
+.navbar-services-item:hover {
+  background-color: #f8fafc;
+}
+
+@media (max-width: 480px) {
+  .hero-promo-badge {
+    width: 68px !important;
+    height: 68px !important;
+    right: 1rem !important;
+    top: 1rem !important;
+  }
+}
+
+/* OTP / phone-verification card (OtpProtectedForm) — two columns on desktop,
+   stacked on mobile so the brand copy doesn't crush into an unreadable strip
+   and the actual input field is immediately visible. */
+.otp-card {
+  flex-direction: row;
+}
+.otp-card-left {
+  flex: 1 1 45%;
+  max-width: 45%;
+  padding: 2.5rem 2rem;
+}
+.otp-card-right {
+  flex: 1 1 55%;
+  max-width: 55%;
+  padding: 3rem 2.5rem;
+}
+@media (max-width: 768px) {
+  .otp-card {
+    flex-direction: column;
+  }
+  .otp-card-left,
+  .otp-card-right {
+    max-width: 100%;
+    flex: 1 1 auto;
+  }
+  .otp-card-left {
+    padding: 1.75rem 1.5rem;
+  }
+  .otp-card-right {
+    padding: 2rem 1.5rem;
   }
 }

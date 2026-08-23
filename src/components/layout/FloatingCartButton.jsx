@@ -30,8 +30,11 @@ export default function FloatingCartButton() {
     };
   }, []);
 
-  // Don't show on the cart page itself, or in the admin section.
-  if (cartCount <= 0 || location.pathname.startsWith('/cart') || location.pathname.startsWith('/admin')) {
+  // Only surface the floating button on the landing page, Help & Support,
+  // and My Profile — everywhere else (wizards, cart, catalog, admin) it
+  // would just be noise on top of a page that already has its own flow.
+  const isAllowedPage = location.pathname === '/' || location.pathname.startsWith('/help') || location.pathname.startsWith('/profile');
+  if (cartCount <= 0 || !isAllowedPage) {
     return null;
   }
 

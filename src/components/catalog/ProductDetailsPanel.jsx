@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   FiHeart,
@@ -49,6 +49,15 @@ export default function ProductDetailsPanel({
 }) {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('Overview');
+
+  useEffect(() => {
+    if (!product || !onClose) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [product, onClose]);
 
   if (!product) return null;
 

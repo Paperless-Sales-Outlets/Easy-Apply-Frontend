@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut } from 'react-icons/fi';
+import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut, FiGrid, FiChevronDown } from 'react-icons/fi';
 import sltLogo from '../../assets/sltlogoOnly.png';
 import { getVerifiedPhone, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../utils/authSession';
+import { QUICK_SERVICES } from '../../data/quickServices';
 
 const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : n ? `+94 ${n}` : '');
 
@@ -17,8 +18,10 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
   const [searchCategory, setSearchCategory] = useState('All');
   const menuRef = useRef(null);
+  const servicesRef = useRef(null);
 
   // useLayoutEffect (not useEffect) so the spacer is sized before the browser
   // paints — otherwise content briefly renders behind the fixed nav on first
@@ -78,6 +81,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setServicesOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -91,6 +95,18 @@ export default function Navbar() {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
+
+  useEffect(() => {
+    const handleClickOutsideServices = (e) => {
+      if (servicesRef.current && !servicesRef.current.contains(e.target)) {
+        setServicesOpen(false);
+      }
+    };
+    if (servicesOpen) {
+      document.addEventListener('mousedown', handleClickOutsideServices);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutsideServices);
+  }, [servicesOpen]);
 
   return (
     <>
@@ -191,13 +207,121 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* ── Right: Links + Language + Cart ── */}
-        <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.35rem, 2vw, 1.25rem)', flexShrink: 0 }}>
+        {/* ── Right: Links + Language + Cart ──
+            flexWrap lets this group drop onto a second line on narrow
+            screens instead of overflowing/clipping — with the Services
+            button added, everything no longer fits on one line at
+            phone widths. Harmless on desktop since it never has to wrap
+            there. */}
+        <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 'clamp(0.35rem, 2vw, 1.25rem)', rowGap: '0.5rem' }}>
           {/* Desktop Nav Links — display is controlled by the .nav-links-desktop media query, not inline, so it can collapse to the hamburger menu on mobile */}
           <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '1.5rem' }}>
             <Link to="/" style={navLinkStyle('/')}>{t('nav.home', 'Home')}</Link>
             <Link to="/check-status" style={navLinkStyle('/check-status')}>{t('nav.applicationStatus', 'Application Status')}</Link>
             <Link to="/help" style={navLinkStyle('/help')}>{t('nav.help', 'Help & Support')}</Link>
+          </div>
+
+          {/* Services quick-access dropdown — only shown ≤1024px (see .navbar-services
+              in index.css), matching the breakpoint where the landing page's quick-service
+              tiles stack below the hero banner instead of sitting next to it. Above that
+              width the tiles are already visible, so this would just be a duplicate. */}
+          <div className="navbar-services" ref={servicesRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setServicesOpen((prev) => !prev)}
+              aria-haspopup="true"
+              aria-expanded={servicesOpen}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                backgroundColor: servicesOpen ? '#eff6ff' : '#f8fafc',
+                border: `1px solid ${servicesOpen ? '#bfdbfe' : '#e2e8f0'}`,
+                borderRadius: '6px',
+                padding: '0.4rem 0.65rem',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#0056b3',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <FiGrid size={15} />
+              <span>Services</span>
+              <FiChevronDown
+                size={13}
+                style={{ transform: servicesOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}
+              />
+            </button>
+
+            {servicesOpen && (
+              <div
+                role="menu"
+                aria-label="Services"
+                style={{
+                  // Anchored to the viewport (fixed + right edge) rather than
+                  // to the button — the button's own x-position shifts with
+                  // screen width and language pill width, so a button-relative
+                  // anchor could push this dropdown past the right edge of
+                  // the screen on some devices, clipping it. Anchoring to a
+                  // stable screen edge instead means it's never off-screen.
+                  position: 'fixed',
+                  top: navHeight + 8,
+                  right: '1rem',
+                  width: 'min(320px, calc(100vw - 2rem))',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  boxShadow: '0 12px 30px rgba(15, 23, 42, 0.14)',
+                  padding: '0.5rem',
+                  zIndex: 200,
+                  maxHeight: '70vh',
+                  overflowY: 'auto',
+                }}
+              >
+                {QUICK_SERVICES.map((srv) => {
+                  const IconComp = srv.icon;
+                  return (
+                    <Link
+                      key={srv.id}
+                      to={srv.route}
+                      role="menuitem"
+                      className="navbar-services-item"
+                      onClick={() => setServicesOpen(false)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.65rem',
+                        padding: '0.55rem 0.6rem',
+                        borderRadius: '8px',
+                        textDecoration: 'none',
+                        color: '#0f172a',
+                      }}
+                    >
+                      <div
+                        style={{
+                          backgroundColor: srv.bgColor,
+                          color: srv.iconColor,
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <IconComp size={15} />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{srv.title}</div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.1rem' }}>{srv.desc}</div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Language Switcher */}
@@ -223,11 +347,12 @@ export default function Navbar() {
             </select>
           </div>
 
-          <span style={{ color: '#cbd5e1' }}>|</span>
-
-          {/* Login / Logout — reflects the OTP-verified phone session shared across wizards */}
+          {/* Login / Logout — reflects the OTP-verified phone session shared across wizards.
+              The divider lives on this group (borderLeft) instead of as a standalone "|"
+              character, so it never ends up dangling alone if this group wraps to its own
+              line on narrow screens. */}
           {verifiedPhone ? (
-            <div className="navbar-auth" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div className="navbar-auth" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', borderLeft: '1px solid #cbd5e1', paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)' }}>
               <Link
                 to="/profile"
                 className="navbar-auth-phone"
@@ -279,11 +404,12 @@ export default function Navbar() {
                 gap: '0.4rem',
                 background: 'none',
                 border: 'none',
+                borderLeft: '1px solid #cbd5e1',
+                paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)',
                 color: '#0056b3',
                 fontWeight: 700,
                 fontSize: '0.88rem',
                 cursor: 'pointer',
-                padding: 0,
               }}
             >
               <FiUser size={16} />

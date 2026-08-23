@@ -197,6 +197,15 @@ export default function FileUploadField({
           onDragOver={handleDrag}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label={`Upload ${label || 'file'}`}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
           style={{
             border: `2px dashed ${dragActive ? 'var(--slt-blue, #0056b3)' : error ? 'var(--danger, #dc3545)' : 'var(--border-color, #ccc)'}`,
             borderRadius: '8px',
