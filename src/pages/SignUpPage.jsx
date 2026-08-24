@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './SignUpPage.css';
-import signupBgImage from '../assets/image copy.png';
+import signupBgImage from '../assets/team_laptop.jpg';
 
 /* ── SVG icons (inline, zero dependencies) ─────────────────────── */
 const IconUser = () => (
@@ -181,7 +181,14 @@ export default function SignUpPage() {
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
   const set = (field) => (e) => {
-    setForm(f => ({ ...f, [field]: e.target.value }));
+    let value = e.target.value;
+    if (field === 'phone' || field === 'contactNumber') {
+      value = value.replace(/\D/g, '').slice(0, 10);
+    }
+    if (field === 'nic') {
+      value = value.slice(0, 12);
+    }
+    setForm(f => ({ ...f, [field]: value }));
     setFieldErrors(fe => ({ ...fe, [field]: undefined }));
     setError('');
   };
@@ -302,14 +309,13 @@ export default function SignUpPage() {
         <div 
           className="signup-sidebar" 
           style={{ 
-            backgroundImage: `linear-gradient(160deg, rgba(15, 87, 168, 0.85) 0%, rgba(0, 118, 170, 0.85) 40%, rgba(4, 147, 96, 0.85) 100%), url(${signupBgImage})`,
+            backgroundImage: `linear-gradient(160deg, rgba(6, 40, 110, 0.95) 0%, rgba(6, 40, 110, 0.88) 40%, rgba(3, 70, 50, 0.95) 100%), url(${signupBgImage})`,
             backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundPosition: 'center bottom',
             backgroundRepeat: 'no-repeat'
           }}
         >
           <div className="signup-sidebar-inner">
-            <SLTLogo />
             <div className="signup-badge">
               <IconLock /> Secure &amp; Trusted
             </div>
@@ -492,7 +498,7 @@ export default function SignUpPage() {
                     <label className="signup-label">NIC / Passport / BR Number <span className="signup-required">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.nic ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconCard /></span>
-                      <input type="text" className="signup-input" placeholder="e.g. 199012345678" value={form.nic} onChange={set('nic')} />
+                      <input type="text" className="signup-input" placeholder="e.g. 199012345678" value={form.nic} onChange={set('nic')} maxLength="12" />
                     </div>
                     {fieldErrors.nic ? <p className="signup-field-error">{fieldErrors.nic}</p> : <p className="signup-field-help">Enter your National Identity Card, Passport or Birth Registration number</p>}
                   </div>
@@ -514,7 +520,7 @@ export default function SignUpPage() {
                     <label className="signup-label">Contact Number (Optional)</label>
                     <div className="signup-input-wrap">
                       <span className="signup-input-icon"><IconPhone /></span>
-                      <input type="tel" className="signup-input" placeholder="011 2 345 678" value={form.contactNumber} onChange={set('contactNumber')} />
+                      <input type="tel" className="signup-input" placeholder="011 2 345 678" value={form.contactNumber} onChange={set('contactNumber')} maxLength="10" />
                     </div>
                   </div>
                   <div></div>

@@ -55,13 +55,15 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 0.4rem 1.2rem;
-  border-radius: 20px;
+  background: #1157b2;
+  color: #ffffff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
   font-size: 0.85rem;
   font-weight: 500;
-  margin-top: 3rem;
+  margin-top: 0;
+  margin-bottom: 2rem;
   width: max-content;
 }
 
@@ -97,14 +99,14 @@
 }
 
 .signup-feature-icon {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #0a5ca6 0%, #038d72 100%);
   color: #ffffff;
 }
 
@@ -112,12 +114,13 @@
   margin: 0 0 0.2rem;
   font-size: 1rem;
   font-weight: 600;
+  color: #ffffff;
 }
 
 .signup-feature-item p {
   margin: 0;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* ── Split Layout: Form Section ──────────────────────────────── */
