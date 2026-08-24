@@ -36,6 +36,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import HelpSupportPage from './pages/HelpSupportPage';
 import MyProfilePage from './pages/MyProfilePage';
+import SignUpPage from './pages/SignUpPage';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -261,6 +262,12 @@ const AnimatedRoutes = () => {
           }
         />
 
+        {/* Auth */}
+        <Route
+          path="/signup"
+          element={<SignUpPage />}
+        />
+
         {/* General Pages */}
         <Route
           path="/help"
@@ -348,7 +355,8 @@ const AnimatedRoutes = () => {
 
 const NavigationLayout = ({ children }) => {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
+  const isAdmin  = location.pathname.startsWith('/admin');
+  const isSignup = location.pathname === '/signup';
 
   if (isAdmin) {
     return (

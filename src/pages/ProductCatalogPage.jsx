@@ -422,7 +422,7 @@ export default function ProductCatalogPage() {
       {/* Main Container */}
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem' }}>
         {/* ── Top Hero Banner & Quick Actions Section ── */}
-        <HeroBannerCarousel onShopNow={() => {}} />
+        <HeroBannerCarousel onShopNow={() => { }} />
 
         {/* ── Voice Compulsory & Bundle Rules Status Bar ── */}
         <div
@@ -706,16 +706,16 @@ export default function ProductCatalogPage() {
                           viewMode === 'list'
                             ? { display: 'flex', flexDirection: 'column', gap: '0.85rem' }
                             : {
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
-                                gap: '1rem',
-                              }
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+                              gap: '1rem',
+                            }
                         }
                       >
                         {section.products.map((prod) => {
                           const prodId = String(prod._id || prod.id);
                           const isSelected = selectedProduct && String(selectedProduct._id || selectedProduct.id) === prodId;
-                          
+
                           const catName = (prod.category || prod.name || '').toLowerCase();
                           const prodGroup = catName.includes('voice') ? 'Voice' : catName.includes('peo') ? 'PEO TV' : 'Broadband';
 
