@@ -89,75 +89,78 @@ function FormDetailBarChart({ daily }) {
   };
 
   return (
-    <>
-      <div className="form-detail-chart-wrap">
-        <div className="form-detail-yaxis">
-          {ticks.map(tick => (
-            <span
-              key={tick}
-              className="form-detail-tick"
-              style={{ bottom: `${(tick / maxBar) * 100}%` }}
-            >
-              {tick}
-            </span>
-          ))}
-        </div>
-        <div className="form-detail-chart" ref={chartRef}>
-          <div className="form-detail-grid">
+    <div className="form-detail-scroll">
+      {/* one shared-width wrapper — chart columns and day labels can never drift apart */}
+      <div className="form-detail-aligner">
+        <div className="form-detail-chart-wrap">
+          <div className="form-detail-yaxis">
             {ticks.map(tick => (
-              <div
+              <span
                 key={tick}
-                className="form-detail-gridline"
+                className="form-detail-tick"
                 style={{ bottom: `${(tick / maxBar) * 100}%` }}
-              />
+              >
+                {tick}
+              </span>
             ))}
           </div>
-          <div className="form-detail-bars-row">
-            {daily.map((d, index) => {
-              const subH = (d.submitted / maxBar) * 100;
-              const comH = (d.completed / maxBar) * 100;
-              return (
-                <div className="form-detail-col" key={d.date}>
-                  <div className="form-detail-bars">
-                    <div
-                      className="form-weekly-bar completed clickable"
-                      style={{ height: `${comH}%` }}
-                      title={`Completed ${d.date}: ${d.completed}`}
-                      onClick={event => handleBarClick(index, 'completed', event)}
-                    />
-                    <div
-                      className="form-weekly-bar submitted clickable"
-                      style={{ height: `${subH}%` }}
-                      title={`Submitted ${d.date}: ${d.submitted}`}
-                      onClick={event => handleBarClick(index, 'submitted', event)}
-                    />
+          <div className="form-detail-chart" ref={chartRef}>
+            <div className="form-detail-grid">
+              {ticks.map(tick => (
+                <div
+                  key={tick}
+                  className="form-detail-gridline"
+                  style={{ bottom: `${(tick / maxBar) * 100}%` }}
+                />
+              ))}
+            </div>
+            <div className="form-detail-bars-row">
+              {daily.map((d, index) => {
+                const subH = (d.submitted / maxBar) * 100;
+                const comH = (d.completed / maxBar) * 100;
+                return (
+                  <div className="form-detail-col" key={d.date}>
+                    <div className="form-detail-bars">
+                      <div
+                        className="form-weekly-bar completed clickable"
+                        style={{ height: `${comH}%` }}
+                        title={`Completed ${d.date}: ${d.completed}`}
+                        onClick={event => handleBarClick(index, 'completed', event)}
+                      />
+                      <div
+                        className="form-weekly-bar submitted clickable"
+                        style={{ height: `${subH}%` }}
+                        title={`Submitted ${d.date}: ${d.submitted}`}
+                        onClick={event => handleBarClick(index, 'submitted', event)}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {popup && (
+              <div className="pie-chart-popup" style={{ left: popup.x, top: popup.y }}>
+                <span className="pie-chart-popup-swatch" style={{ background: popup.which === 'completed' ? 'var(--green)' : 'var(--blue)' }} />
+                <div>
+                  <div className="pie-chart-popup-count">
+                    {popup.which === 'completed' ? daily[popup.index].completed : daily[popup.index].submitted}
+                  </div>
+                  <div className="pie-chart-popup-label">
+                    {popup.which === 'completed' ? 'Completed' : 'Submitted'} —{' '}
+                    {daily[popup.index].day}, {new Date(`${daily[popup.index].date}T00:00:00`).getFullYear()}
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
         </div>
-      </div>
-      <div className="form-detail-day-row">
-        {daily.map(d => (
-          <div className="form-detail-day" key={d.date}>{d.day}</div>
-        ))}
-      </div>
-      {popup && (
-        <div className="pie-chart-popup" style={{ left: popup.x, top: popup.y }}>
-          <span className="pie-chart-popup-swatch" style={{ background: popup.which === 'completed' ? 'var(--green)' : 'var(--blue)' }} />
-          <div>
-            <div className="pie-chart-popup-count">
-              {popup.which === 'completed' ? daily[popup.index].completed : daily[popup.index].submitted}
-            </div>
-            <div className="pie-chart-popup-label">
-              {popup.which === 'completed' ? 'Completed' : 'Submitted'} —{' '}
-              {daily[popup.index].day}, {new Date(`${daily[popup.index].date}T00:00:00`).getFullYear()}
-            </div>
-          </div>
+        <div className="form-detail-day-row">
+          {daily.map(d => (
+            <div className="form-detail-day" key={d.date}>{d.day}</div>
+          ))}
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }
 

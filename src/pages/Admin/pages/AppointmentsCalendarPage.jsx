@@ -1,58 +1,96 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import {
-  DUMMY_APPOINTMENTS,
-  DUMMY_TECHNICIANS,
-} from '../data/dummyData';
+  getAppointments,
+  getTechnicians,
+  assignTechnician,
+} from '../services/adminService';
 
 const SERVICE_LABELS = {
-  'new-connection':    'New Connection',
-  'reconnection':      'Reconnection',
-  'termination':       'Termination',
+  'new-connection': 'New Connection',
+  'reconnection': 'Reconnection',
+  'relocation': 'Relocation',
+  'termination': 'Termination',
+  'transfer': 'Transfer',
   'package-migration': 'Package Migration',
-  'ownership-change':  'Ownership Change',
-  'location-change':   'Location Change',
-  'refund-request':    'Refund Request',
+  'service-vacation': 'Service Vacation',
+  'refund-request': 'Refund Request',
+  'customer-request-acceptance': 'Customer Request',
+  'internet-services': 'Internet Services',
 };
 
+const STATUS_COLORS = {
+  scheduled: 'var(--blue)',
+  'in-progress': '#d97706',
+  completed: 'var(--green)',
+  cancelled: '#c4372c',
+};
+
+function toDateString(date) {
+  return date.toISOString().split('T')[0];
+}
+
+function formatDateDisplay(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 export default function AppointmentsCalendarPage() {
-  const [appointments, setAppointments] = useState(DUMMY_APPOINTMENTS);
-  const [selectedDate, setSelectedDate] = useState('2026-07-20'); // Hardcoded demo anchor date matching dummyData
+  const today = toDateString(new Date());
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [appointments, setAppointments] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const todaysAppointments = appointments.filter(apt =>
-    apt.scheduledAt.startsWith(selectedDate)
-  );
+  const fetchAppointments = useCallback(async (date) => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await getAppointments({ date });
+      setAppointments(res.appointments || []);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load appointments');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const handleAssignTechnician = (aptId, techId) => {
-    const tech = DUMMY_TECHNICIANS.find(t => t.id === techId);
-    setAppointments(prev =>
-      prev.map(apt => {
-        if (apt.id === aptId) {
-          return {
-            ...apt,
-            technicianId: techId || null,
-            technicianName: tech ? tech.name : null,
-          };
-        }
-        return apt;
-      })
-    );
-  };
+  useEffect(() => {
+    fetchAppointments(selectedDate);
+  }, [selectedDate, fetchAppointments]);
 
-  const formatDateDisplay = (dateStr) => {
-    const dateObj = new Date(dateStr);
-    return dateObj.toLocaleDateString('en-GB', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
+  useEffect(() => {
+    getTechnicians()
+      .then(res => setTechnicians(res.technicians || []))
+      .catch(() => {});
+  }, []);
 
   const handleDateChange = (daysOffset) => {
     const current = new Date(selectedDate);
     current.setDate(current.getDate() + daysOffset);
-    const newDateStr = current.toISOString().split('T')[0];
-    setSelectedDate(newDateStr);
+    setSelectedDate(toDateString(current));
+  };
+
+  const handleAssignTechnician = async (aptId, techId) => {
+    try {
+      const res = await assignTechnician(aptId, techId || null);
+      setAppointments(prev =>
+        prev.map(apt =>
+          apt.id === aptId
+            ? { ...apt, technicianId: res.appointment.technicianId, technicianName: res.appointment.technicianName }
+            : apt
+        )
+      );
+      toast.success(techId ? 'Technician assigned' : 'Technician unassigned');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to assign technician');
+    }
   };
 
   return (
@@ -64,109 +102,108 @@ export default function AppointmentsCalendarPage() {
         </p>
       </div>
 
-      {/* ── Calendar / Date Nav ── */}
-      <div className="apt-calendar-header card" style={{ padding: '1rem 1.5rem', backgroundColor: 'var(--surface)', border: '1px solid var(--line)', marginBottom: '1.5rem' }}>
+      {error && <div className="admin-error-banner">{error}</div>}
+
+      {/* ── Date Navigation ── */}
+      <div className="apt-calendar-header card" style={{ padding: '1rem 1.25rem', backgroundColor: 'var(--surface)', border: '1px solid var(--line)', marginBottom: '1.5rem' }}>
         <div className="apt-date-nav">
-          <button
-            className="admin-btn ghost"
-            onClick={() => handleDateChange(-1)}
-          >
-            ◀ Previous Day
+          <button className="admin-btn ghost" onClick={() => handleDateChange(-1)}>
+            &larr; Prev
           </button>
           <div className="apt-date-label">
             {formatDateDisplay(selectedDate)}
           </div>
-          <button
-            className="admin-btn ghost"
-            onClick={() => handleDateChange(1)}
-          >
-            Next Day ▶
+          <button className="admin-btn ghost" onClick={() => handleDateChange(1)}>
+            Next &rarr;
           </button>
         </div>
-
-        <button
-          className="admin-btn ghost"
-          onClick={() => setSelectedDate('2026-07-20')}
-        >
+        <button className="admin-btn ghost" onClick={() => setSelectedDate(today)}>
           Today
         </button>
       </div>
 
       {/* ── Appointments List ── */}
-      <div className="apt-list">
-        {todaysAppointments.length === 0 ? (
-          <div className="admin-empty card" style={{ padding: '3rem 1rem' }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
-            </svg>
-            <p>No appointments scheduled for this day.</p>
-          </div>
-        ) : (
-          todaysAppointments.map(apt => {
+      {loading ? (
+        <div className="admin-loading">Loading appointments…</div>
+      ) : appointments.length === 0 ? (
+        <div className="admin-empty card" style={{ padding: '3rem 1rem' }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '1rem' }}>
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <p>No appointments scheduled for this day.</p>
+        </div>
+      ) : (
+        <div className="apt-list">
+          {appointments.map(apt => {
             const timeObj = new Date(apt.scheduledAt);
             const hour = timeObj.getHours().toString().padStart(2, '0');
             const min = timeObj.getMinutes().toString().padStart(2, '0');
 
             return (
               <div className="apt-card" key={apt.id}>
-                {/* Time Indicator */}
+                {/* Time block */}
                 <div className="apt-time-block">
                   <span className="apt-time-hour">{hour}:{min}</span>
                   <span className="apt-time-min">HRS</span>
                 </div>
 
-                {/* Appointment Info */}
+                {/* Info */}
                 <div className="apt-info">
-                  <h4>{apt.customer}</h4>
-                  <p style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-                    {apt.address}
-                  </p>
-                  <p style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.1rem' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                    {apt.phone} | <span style={{ fontFamily: 'monospace' }}>{apt.referenceNumber}</span>
-                  </p>
+                  <h4>{apt.customer || 'Unknown'}</h4>
+                  <p>{apt.address || 'No address'}</p>
+                  <p>{apt.phone} &middot; {apt.referenceNumber}</p>
                   {apt.notes && (
-                    <p style={{ fontStyle: 'italic', fontSize: '0.78rem', marginTop: '0.3rem', color: 'var(--muted)' }}>
-                      Note: "{apt.notes}"
+                    <p style={{ marginTop: '0.3rem', fontStyle: 'italic', fontSize: '0.78rem' }}>
+                      &ldquo;{apt.notes}&rdquo;
                     </p>
                   )}
                 </div>
 
-                {/* Service Type & Status Badge */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--blue)' }}>
+                {/* Service + Status */}
+                <div className="apt-meta">
+                  <span className="apt-service-name">
                     {SERVICE_LABELS[apt.serviceType] || apt.serviceType}
                   </span>
-                  <span className={`admin-badge ${apt.status}`}>
-                    {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
+                  <span
+                    className="apt-status-badge"
+                    style={{
+                      background: `${STATUS_COLORS[apt.status] || '#999'}18`,
+                      color: STATUS_COLORS[apt.status] || '#999',
+                    }}
+                  >
+                    {apt.status}
                   </span>
                 </div>
 
-                {/* Dispatch dropdown */}
-                <div>
-                  <label className="form-label" style={{ fontSize: '0.72rem', textTransform: 'uppercase', marginBottom: '0.2rem' }}>
-                    Assign Technician
-                  </label>
+                {/* Technician dropdown */}
+                <div className="apt-tech">
+                  <label className="apt-tech-label">Technician</label>
                   <select
-                    className="apt-assign-select"
+                    className="apt-tech-select"
                     value={apt.technicianId || ''}
-                    onChange={e => handleAssignTechnician(apt.id, e.target.value)}
-                    aria-label={`Assign technician for ${apt.customer}`}
+                    onChange={(e) => handleAssignTechnician(apt.id, e.target.value)}
                   >
                     <option value="">-- Unassigned --</option>
-                    {DUMMY_TECHNICIANS.map(tech => (
-                      <option key={tech.id} value={tech.id}>
-                        {tech.name} ({tech.zone})
+                    {technicians.map(tech => (
+                      <option key={tech._id} value={tech._id}>
+                        {tech.name}
                       </option>
                     ))}
                   </select>
+                  {apt.technicianName && (
+                    <div className="apt-tech-assigned">
+                      Assigned: {apt.technicianName}
+                    </div>
+                  )}
                 </div>
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </>
   );
 }

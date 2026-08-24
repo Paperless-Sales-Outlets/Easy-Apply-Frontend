@@ -75,6 +75,7 @@ function shortFormLabel(label) {
 export default function AdminLayout({ activePage, setActivePage, children, onSelectForm, activeFormId }) {
   const { admin, logout } = useAdminAuth();
   const [openForms, setOpenForms] = useState(activePage === 'forms');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const visibleNav = NAV_ITEMS.filter(item =>
     item.roles.includes(admin?.role || 'Admin')
@@ -87,6 +88,17 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
     }
     setActivePage(item.key);
     setOpenForms(false);
+    setMobileNavOpen(false);
+  };
+
+  const handleFormSelect = (formId) => {
+    onSelectForm?.(formId);
+    setMobileNavOpen(false);
+  };
+
+  const handleSignOut = () => {
+    setMobileNavOpen(false);
+    logout();
   };
 
   const initials = admin?.name
@@ -102,13 +114,41 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
 
   return (
     <div className="admin-shell">
+      {/* ── Mobile hamburger ── */}
+      <button
+        type="button"
+        className="admin-mobile-toggle"
+        aria-label={mobileNavOpen ? 'Close navigation' : 'Open navigation'}
+        aria-expanded={mobileNavOpen}
+        onClick={() => setMobileNavOpen(open => !open)}
+      >
+        {mobileNavOpen ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        )}
+      </button>
+
+      {/* ── Mobile overlay ── */}
+      {mobileNavOpen && (
+        <div
+          className="admin-sidebar-overlay"
+          onClick={() => setMobileNavOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* ── Sidebar ── */}
-      <aside className="admin-sidebar" aria-label="Admin Navigation">
+      <aside className={`admin-sidebar${mobileNavOpen ? ' open' : ''}`} aria-label="Admin Navigation">
         <div className="admin-sidebar-logo">
           <img src={sltLogo} alt="SLTMobitel" style={{ height: 32, width: 'auto' }} />
           <span>
-            SLTMobitel EasyApply
-            <small>Admin Portal</small>
+            SLTMobitel EasyApply Admin Portal
+           
           </span>
         </div>
 
@@ -131,7 +171,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
                     <button
                       key={form.id}
                       className={`admin-nav-submenu-item${activeFormId === form.id ? ' active' : ''}`}
-                      onClick={() => onSelectForm?.(form.id)}
+                      onClick={() => handleFormSelect(form.id)}
                     >
                       {shortFormLabel(form.label)}
                     </button>
@@ -150,7 +190,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
               <div className="admin-user-role">{roleLabel}</div>
             </div>
           </div>
-          <button className="admin-signout-btn" onClick={logout}>
+          <button className="admin-signout-btn" onClick={handleSignOut}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
@@ -164,7 +204,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Main Content ── */}
       <div className="admin-main">
         <div className="admin-topbar" />
-        <div className={`admin-page${activePage === 'forms' || activePage === 'dashboard' ? ' admin-page-wide' : ''}`}>
+        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges'].includes(activePage) ? ' admin-page-wide' : ''}`}>
           {children}
         </div>
       </div>

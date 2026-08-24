@@ -11,15 +11,46 @@
   background-color: var(--paper);
 }
 
+/* ── Mobile hamburger & overlay (hidden on desktop) ── */
+
+.admin-mobile-toggle {
+  display: none;
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 300;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  background: var(--navy);
+  box-shadow: 0 4px 14px rgba(11,45,91,0.35);
+}
+
+.admin-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(11, 45, 91, 0.5);
+  backdrop-filter: blur(1px);
+}
+
 .admin-sidebar {
   width: 240px;
   flex-shrink: 0;
   background: var(--navy);
   display: flex;
   flex-direction: column;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  bottom: 0;
   height: 100vh;
+  z-index: 100;
   overflow-y: auto;
 }
 
@@ -205,6 +236,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  margin-left: 240px;
 }
 
 .admin-topbar {
@@ -218,6 +250,9 @@
   padding: 2rem 2.5rem;
   max-width: 1400px;
   width: 100%;
+  /* centre capped pages (KYC, Appointments, My Jobs, Privileges…) on wide desktops */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .admin-page-wide {
@@ -312,7 +347,8 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 2px 8px rgba(11,45,91,0.05);
 }
 
@@ -493,6 +529,8 @@
 
 .kyc-doc-frame img {
   width: 100%;
+  max-height: 460px;
+  margin: 0 auto;
   display: block;
   object-fit: contain;
   background: var(--paper);
@@ -649,6 +687,7 @@
   padding: 0.4rem 0.6rem;
   background: rgba(15,87,168,0.07);
   border-radius: 10px;
+  grid-area: time;
 }
 
 .apt-time-hour {
@@ -663,6 +702,11 @@
   color: var(--muted);
 }
 
+.apt-info {
+  min-width: 0;
+  grid-area: info;
+}
+
 .apt-info h4 {
   font-size: 0.92rem;
   font-weight: 600;
@@ -674,6 +718,62 @@
   font-size: 0.8rem;
   color: var(--muted);
   margin: 0;
+}
+
+.apt-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 0.4rem;
+  min-width: 130px;
+  grid-area: meta;
+}
+
+.apt-service-name {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.apt-status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.apt-tech {
+  min-width: 180px;
+  grid-area: tech;
+}
+
+.apt-tech-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.apt-tech-select {
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-family: var(--font-body);
+  background: var(--surface);
+  cursor: pointer;
+  color: var(--text);
+}
+
+.apt-tech-assigned {
+  font-size: 0.72rem;
+  color: var(--blue);
+  margin-top: 0.2rem;
 }
 
 .apt-assign-select {
@@ -699,25 +799,25 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem 1.75rem;
   box-shadow: 0 2px 6px rgba(11,45,91,0.05);
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 0.75rem 1.25rem;
-  align-items: start;
+  gap: 0.9rem 1.75rem;
+  align-items: center;
   transition: box-shadow 0.15s, transform 0.15s;
 }
 
 .tech-job-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
 
 .tech-job-number {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: var(--blue);
   color: #fff;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -727,28 +827,61 @@
 .tech-job-card.completed .tech-job-number { background: var(--green); }
 .tech-job-card.in-progress .tech-job-number { background: #d97706; }
 
+.tech-job-details {
+  min-width: 0;
+  max-width: 780px;
+}
+
 .tech-job-details h4 {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--navy);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.45rem;
+  overflow-wrap: anywhere;
 }
 
 .tech-job-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-  font-size: 0.8rem;
+  gap: 0.5rem;
+  font-size: 0.78rem;
   color: var(--muted);
+  margin-bottom: 0.35rem;
 }
 
-.tech-job-meta span { display: flex; align-items: center; gap: 0.3rem; }
+.tech-job-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.75rem;
+  background: rgba(15,87,168,0.05);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.tech-job-meta strong { color: var(--text); font-weight: 600; }
+
+.tech-job-details p {
+  overflow-wrap: anywhere;
+}
 
 .tech-job-actions {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  align-items: flex-end;
+  align-items: stretch;
+  justify-content: center;
+  min-width: 168px;
+  padding-left: 1.5rem;
+  border-left: 1px dashed var(--line);
+}
+
+.tech-job-actions > span { align-self: flex-start; }
+
+.tech-job-actions .admin-btn {
+  width: 100%;
+  justify-content: center;
 }
 
 /* ── Analytics ───────────────────────────────────────────────────────────── */
@@ -807,6 +940,27 @@
   width: 240px;
   height: 240px;
   margin: 0 auto;
+}
+
+.pie-chart-figure.lg {
+  width: 320px;
+  height: 320px;
+}
+
+.pie-chart-figure svg {
+  width: 100%;
+  height: 100% !important;
+}
+
+@media (max-width: 700px) {
+  .pie-chart-figure,
+  .pie-chart-figure.lg {
+    width: min(240px, 82vw);
+    height: auto;
+    aspect-ratio: 1 / 1;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 .pie-chart-center-info {
@@ -911,6 +1065,61 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 1rem;
+}
+
+.analytics-bleed {
+  width: calc(100% + 5rem);
+  margin-left: -2.5rem;
+  margin-right: -2.5rem;
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+}
+
+.analytics-bleed .analytics-card {
+  margin: 0;
+}
+
+.analytics-top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.analytics-pie-layout {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.analytics-pie-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 2rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 520px) {
+  .analytics-pie-legend { grid-template-columns: 1fr; gap: 0.5rem; }
+}
+
+.analytics-bottom-row {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 860px) {
+  .analytics-bleed {
+    width: calc(100% + 2rem);
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .analytics-top-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .ratio-bar-wrap {
@@ -1033,7 +1242,7 @@
 .service-bar-list {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.85rem;
 }
 
 .service-bar-item {
@@ -1041,11 +1250,11 @@
   grid-template-columns: 1fr auto;
   gap: 0.75rem;
   align-items: center;
-  font-size: 0.83rem;
+  font-size: 0.88rem;
 }
 
 .service-bar-bg {
-  height: 10px;
+  height: 16px;
   border-radius: 100px;
   background: var(--line);
   overflow: hidden;
@@ -1244,12 +1453,83 @@
 .legend-dot.total { background: var(--blue); opacity: 0.35; }
 .legend-dot.today { background: var(--blue); }
 
+.form-vchart-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.form-vchart-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-vchart-yaxis {
+  width: 36px;
+  position: relative;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+  height: 220px;
+  overflow: visible;
+}
+
+.form-vchart-ytick {
+  position: absolute;
+  right: 0;
+  font-size: 0.65rem;
+  color: var(--muted);
+  line-height: 1;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .form-vchart {
   display: flex;
   align-items: flex-end;
   gap: 0.6rem;
   height: 220px;
   position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.form-vchart-gridlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.form-vchart-gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(11, 45, 91, 0.12);
+}
+
+.form-vchart-gridline.baseline {
+  border-top-style: solid;
+  border-top-color: rgba(11, 45, 91, 0.25);
+}
+
+.form-vchart-xaxis {
+  display: flex;
+  gap: 0.6rem;
+  border-top: 1px solid rgba(11, 45, 91, 0.25);
+  padding-top: 0.4rem;
+}
+
+.form-vchart-xlabel {
+  flex: 1;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .form-vchart-col {
@@ -1258,7 +1538,6 @@
   flex-direction: column;
   align-items: center;
   height: 100%;
-  justify-content: flex-end;
   min-width: 0;
 }
 
@@ -1293,18 +1572,6 @@
 
 .form-vchart-bar.clickable {
   cursor: pointer;
-}
-
-.form-vchart-label {
-  font-size: 0.7rem;
-  color: var(--muted);
-  font-weight: 500;
-  text-align: center;
-  margin-top: 0.5rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 /* ── Forms Weekly Page ───────────────────────────────────────────────────── */
@@ -1401,6 +1668,11 @@
 
 .form-detail-chart {
   flex: 1;
+  /* CRITICAL: without this the chart's automatic minimum size equals its
+     bar-row content width, so it overflows the wrap on small screens while
+     the day-label row below keeps the intended width — labels drift out of
+     alignment column by column */
+  min-width: 0;
   position: relative;
   height: 240px;
 }
@@ -1447,7 +1719,6 @@
 
 .form-weekly-bar {
   width: 22px;
-  max-width: 34%;
   border-radius: 3px 3px 0 0;
   transition: height 0.4s ease;
   min-height: 1px;
@@ -1475,10 +1746,14 @@
 
 .form-detail-day {
   flex: 1;
+  min-width: 0;
   text-align: center;
   font-size: 0.6rem;
+  line-height: 1.15;
   color: var(--muted);
-  white-space: nowrap;
+  /* wrap instead of widening the cell — keeps every label centred under its bar pair */
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 @media (max-width: 1100px) {
@@ -1487,9 +1762,6 @@
 
 @media (max-width: 600px) {
   .forms-list-grid { grid-template-columns: 1fr; }
-  .form-detail-chart { height: 150px; }
-  .form-detail-day-row { gap: 0.25rem; }
-  .form-weekly-bar { width: 10px; max-width: 34%; }
 }
 
 /* ── Empty State ─────────────────────────────────────────────────────────── */
@@ -1504,6 +1776,21 @@
 .admin-empty p { font-size: 0.9rem; }
 
 /* ── User Privileges ──────────────────────────────────────────────────────── */
+
+.priv-users-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.priv-filter-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
 
 .priv-role-grid {
   display: grid;
@@ -1558,6 +1845,10 @@
 
 .priv-matrix th,
 .priv-matrix td { text-align: center; }
+
+/* module names read better left-aligned */
+.priv-matrix th:first-child,
+.priv-matrix td:first-child { text-align: left; }
 
 .priv-check {
   display: inline-flex;
@@ -1936,7 +2227,13 @@
   .admin-summary-grid { grid-template-columns: repeat(2, 1fr); }
   .analytics-grid { grid-template-columns: 1fr; }
   .kyc-panel { grid-template-columns: 1fr; }
-  .priv-role-grid { grid-template-columns: 1fr; }
+  .priv-role-grid { grid-template-columns: 1fr 1fr; }
+  /* donut + legend side-by-side gets too tight below 1100px — stack them */
+  .pie-chart-wrap {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    justify-items: center;
+  }
   /* revert full-bleed on narrower screens to avoid horizontal scroll */
   .analytics-grid, .admin-pie-grid, .form-chart-card {
     width: auto;
@@ -1949,17 +2246,213 @@
 }
 
 @media (max-width: 860px) {
-  .admin-sidebar { width: 200px; }
-  .admin-page { padding: 1.25rem; }
-  .apt-card { grid-template-columns: 1fr; }
-  .tech-job-card { grid-template-columns: auto 1fr; }
-  .admin-summary-grid { grid-template-columns: 1fr 1fr; }
+  /* ── Shell / drawer navigation ── */
+  .admin-mobile-toggle { display: flex; }
+
+  .admin-sidebar {
+    width: min(300px, 84vw);
+    transform: translateX(-105%);
+    transition: transform 0.25s ease;
+    box-shadow: none;
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 12px 0 40px rgba(11,45,91,0.35);
+  }
+
+  .admin-main { margin-left: 0; }
+
+  .admin-page {
+    padding: 4rem 1rem 1.5rem;
+  }
+
+  /* ── Page header ── */
+  .admin-page-header { margin-bottom: 1.25rem; }
+  .admin-page-title { font-size: 1.3rem; }
+  .admin-page-subtitle { font-size: 0.85rem; }
+
+  /* ── Summary cards ── */
+  .admin-summary-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .admin-stat-card { padding: 1rem; gap: 0.75rem; }
+  .admin-stat-value { font-size: 1.5rem; }
+
+  /* ── Dashboard pie charts stack ── */
+  .admin-pie-grid { grid-template-columns: 1fr; }
+  .pie-legend { width: 100%; max-width: 420px; }
+
+  /* ── Tables (scroll horizontally inside their wrap) ── */
+  .admin-table th, .admin-table td { padding: 0.7rem 0.75rem; }
+  .priv-matrix { min-width: 560px; }
+  .priv-users-table { min-width: 680px; }
+
+  /* ── Filters ── */
+  .admin-filters { gap: 0.5rem; }
+  .admin-search { min-width: 100%; }
+  .admin-select { flex: 1 1 auto; min-width: 130px; }
+
+  /* ── KYC ── */
+  .kyc-info-grid { grid-template-columns: 1fr 1fr; gap: 0.65rem 1rem; }
+  .kyc-nav-controls { flex-wrap: wrap; gap: 0.5rem; row-gap: 0.6rem; }
+  .kyc-nav-controls .admin-badge { margin-left: 0 !important; }
+  .kyc-search { padding: 1rem; }
+
+  /* ── Appointments ── */
+  .apt-calendar-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .apt-date-nav { flex-wrap: wrap; width: 100%; justify-content: space-between; }
+  .apt-date-label { min-width: 0; flex: 1; text-align: center; font-size: 0.9rem; order: -1; width: 100%; margin-bottom: 0.35rem; }
+  .apt-card {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "time info"
+      "meta meta"
+      "tech tech";
+    padding: 1rem;
+  }
+  .apt-time-block { grid-area: time; }
+  .apt-info { grid-area: info; }
+  .apt-meta { grid-area: meta; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; text-align: left; min-width: 0; padding-top: 0.5rem; border-top: 1px dashed var(--line); }
+  .apt-tech { grid-area: tech; min-width: 0; width: 100%; }
+
+  /* ── Field technician ── */
+  .tech-job-card {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "num details"
+      "actions actions";
+    padding: 1rem;
+  }
+  .tech-job-number { grid-area: num; }
+  .tech-job-details { grid-area: details; min-width: 0; max-width: none; }
+  .tech-job-actions {
+    grid-area: actions;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+    padding-top: 0.6rem;
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px dashed var(--line);
+  }
+  .tech-job-actions .admin-btn { width: auto; }
+
+  /* ── Analytics / pie charts ── */
+  .pie-card { padding: 1rem; }
+  .analytics-card { padding: 1rem; }
+
+  /* ── Forms pages ── */
+  .form-weekly-card { padding: 1rem; }
+  .form-weekly-legend { justify-content: flex-start; flex-wrap: wrap; gap: 0.75rem; }
+  .forms-list-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .form-list-card { padding: 1rem 0.75rem; }
+  .form-list-label { font-size: 0.88rem; }
+  .form-vchart-bar { width: 16px; }
+  .form-vchart { gap: 0.35rem; }
+  .form-vchart-xaxis { gap: 0.35rem; }
+  .form-vchart-xlabel { font-size: 0.6rem; }
+
+  /* ── User privileges ── */
+  .priv-role-grid { grid-template-columns: 1fr; }
+  .priv-role-card { padding: 1rem; }
+
+  /* ── Pagination ── */
+  .admin-pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1rem 0.25rem 0.25rem;
+    text-align: center;
+  }
+
+  /* ── Modal ── */
+  .admin-modal-overlay { padding: 1rem 0.5rem; }
+  .admin-modal { max-height: calc(100vh - 2rem); }
+  .admin-modal-header { padding: 1rem 1rem; }
+  .admin-modal-body { padding: 1rem; }
+
+  /* ── Login page ── */
+  .admin-login-card { padding: 1.75rem 1.25rem; margin: 1rem auto; max-height: none; }
 }
 
 @media (max-width: 600px) {
-  .admin-shell { flex-direction: column; }
-  .admin-sidebar { width: 100%; height: auto; position: static; }
-  .admin-nav { flex-direction: row; overflow-x: auto; padding: 0.5rem; }
-  .admin-nav-item { white-space: nowrap; }
+  /* ── Summary cards stack ── */
   .admin-summary-grid { grid-template-columns: 1fr; }
+
+  /* ── Dashboard pie popup stays inside viewport ── */
+  .pie-chart-popup { white-space: normal; max-width: 220px; }
+
+  /* ── Dashboard today-distribution bar chart ──
+     Keep bars readable; let the card scroll sideways if the viewport is tight */
+  .form-chart-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* headroom so click-popups above tall bars are not clipped by the scroller */
+    padding-top: 38px;
+  }
+  .form-vchart-wrap { min-width: 330px; }
+  .form-vchart-bar { width: 14px; }
+  .form-vchart-yaxis { width: 26px; margin-right: 0.25rem; }
+  .form-vchart-ytick { font-size: 0.58rem; }
+
+  /* ── Forms detail (14-day) bar chart ──
+     Chart and its day labels sit inside ONE shared-width wrapper (.form-detail-aligner),
+     so both rows are always exactly the same width — even when bar content forces
+     the row wider than the minimum — keeping every label centred under its bars */
+  .form-detail-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-top: 38px;
+    padding-bottom: 4px;
+  }
+  /* 560px = yaxis 24 + gap 8 + 14×26px bar pairs + 13×12px gaps — pairs fit at
+     full size with no flex shrinking, and both rows share the aligner width */
+  .form-detail-aligner { min-width: 560px; }
+  .form-detail-chart { height: 170px; }
+  .form-weekly-bar { width: 11px; }
+
+  /* meta pills can break onto two lines on very narrow screens */
+  .tech-job-meta span { white-space: normal; }
+
+  /* KYC applicant info single column */
+  .kyc-info-grid { grid-template-columns: 1fr; }
+
+  /* appointment card stacks fully */
+  .apt-card {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "time"
+      "info"
+      "meta"
+      "tech";
+  }
+  .apt-time-block { flex-direction: row; gap: 0.4rem; align-items: baseline; justify-content: flex-start; min-width: 0; padding: 0.35rem 0.6rem; }
+  .apt-time-hour { font-size: 1.1rem; }
+  .apt-tech select { min-width: 0; width: 100%; }
+
+  /* technician job actions full width buttons */
+  .tech-job-actions { flex-wrap: wrap; gap: 0.5rem; }
+  .tech-job-actions .admin-btn { flex: 1 1 auto; justify-content: center; }
+
+  /* user privilege filter chips scroll instead of wrapping awkwardly */
+  .priv-filter-row { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.25rem; }
+  .priv-filter-row .admin-btn { flex-shrink: 0; white-space: nowrap; }
+
+  /* action groups in tables get breathing room */
+  .admin-action-group { gap: 0.3rem; }
+  .admin-btn { padding: 0.35rem 0.6rem; font-size: 0.76rem; }
+
+  /* modal meta single-ish columns */
+  .admin-modal-meta { grid-template-columns: 1fr 1fr; }
+  .admin-form-grid { grid-template-columns: 1fr 1fr; }
+  .admin-doc-grid { grid-template-columns: 1fr 1fr; }
+
+  /* login art bars shift left so they stay visible */
+  .admin-login-art span:nth-child(1) { left: 18%; }
+  .admin-login-art span:nth-child(2) { left: 30%; }
+  .admin-login-art span:nth-child(3) { left: 35%; }
 }

@@ -71,6 +71,7 @@ export function normalizeApplication(app) {
     address,
     formData: fd,
     documents: fd.documents || {},
+    officeFields: app.officeFields || null,
   };
 }
 

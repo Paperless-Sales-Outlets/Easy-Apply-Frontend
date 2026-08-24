@@ -1,24 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SYSTEM_ROLES, MODULE_ACCESS } from '../data/dummyData';
+import { getUsers } from '../services/adminService';
 
 const ROLE_LABELS = {
   Admin: 'Administrator',
-  Manager: 'Manager',
-  SalesOfficer: 'Sales Officer',
+  Staff: 'Staff',
+  Customer: 'Customer',
+};
+
+const ROLE_BADGE = {
+  Admin: 'approved',
+  Staff: 'pending',
+  Customer: 'rejected',
 };
 
 export default function UserPrivilegesPage() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState('All');
+
+  useEffect(() => {
+    getUsers()
+      .then(res => setUsers(res.users || []))
+      .catch(err => setError(err.response?.data?.message || 'Failed to load users'))
+      .finally(() => setLoading(false));
+  }, []);
+
   const totalPrivileges = MODULE_ACCESS.reduce((sum, mod) => sum + mod.roles.length, 0);
 
   const countForRole = (role) =>
     MODULE_ACCESS.filter(mod => mod.roles.includes(role)).length;
 
+  const filteredUsers = filter === 'All' ? users : users.filter(u => u.role === filter);
+
   const summaryCards = [
     {
-      key: 'roles',
-      label: 'Roles Available',
-      value: SYSTEM_ROLES.length,
-      hint: 'System user roles',
+      key: 'users',
+      label: 'Total Users',
+      value: users.length,
+      hint: 'Registered in system',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -27,6 +48,19 @@ export default function UserPrivilegesPage() {
         </svg>
       ),
       colorClass: 'blue',
+    },
+    {
+      key: 'roles',
+      label: 'Roles Available',
+      value: new Set(users.map(u => u.role)).size,
+      hint: 'Active user roles',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      ),
+      colorClass: 'amber',
     },
     {
       key: 'modules',
@@ -41,19 +75,6 @@ export default function UserPrivilegesPage() {
       ),
       colorClass: 'green',
     },
-    {
-      key: 'privileges',
-      label: 'Total Privileges',
-      value: totalPrivileges,
-      hint: 'Role → module grants',
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-      ),
-      colorClass: 'amber',
-    },
   ];
 
   return (
@@ -61,9 +82,11 @@ export default function UserPrivilegesPage() {
       <div className="admin-page-header">
         <h1 className="admin-page-title">User Privileges</h1>
         <p className="admin-page-subtitle">
-          Review the user privileges available within the system — roles and the modules each can access
+          Review user roles, module access, and registered users
         </p>
       </div>
+
+      {error && <div className="admin-error-banner">{error}</div>}
 
       {/* ── Summary Cards ── */}
       <div className="admin-summary-grid">
@@ -89,7 +112,7 @@ export default function UserPrivilegesPage() {
               <span className="priv-role-name">{role}</span>
               <span className="admin-badge approved">{countForRole(role)} modules</span>
             </div>
-            <div className="priv-role-sub">{ROLE_LABELS[role]}</div>
+            <div className="priv-role-sub">{ROLE_LABELS[role] || role}</div>
             <div className="priv-role-modules">
               {MODULE_ACCESS.filter(mod => mod.roles.includes(role)).map(mod => (
                 <span className="priv-role-chip" key={mod.key}>{mod.label}</span>
@@ -136,6 +159,64 @@ export default function UserPrivilegesPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* ── Registered Users ── */}
+      <div style={{ marginTop: '2rem' }}>
+        <div className="priv-users-head">
+          <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--navy)' }}>Registered Users</h3>
+          <div className="priv-filter-row">
+            {['All', ...SYSTEM_ROLES, 'Customer'].filter((v, i, a) => a.indexOf(v) === i).map(r => (
+              <button
+                key={r}
+                className={`admin-btn ${filter === r ? '' : 'ghost'}`}
+                style={{ fontSize: '0.78rem', padding: '0.35rem 0.8rem' }}
+                onClick={() => setFilter(r)}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="admin-loading">Loading users…</div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="admin-empty card" style={{ padding: '2rem 1rem' }}>
+            <p>No users found.</p>
+          </div>
+        ) : (
+          <div className="admin-table-wrap">
+            <table className="admin-table priv-users-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>NIC</th>
+                  <th>Role</th>
+                  <th>Registered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map(u => (
+                  <tr key={u.id}>
+                    <td style={{ fontWeight: 600 }}>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td>{u.phone}</td>
+                    <td>{u.NIC}</td>
+                    <td>
+                      <span className={`admin-badge ${ROLE_BADGE[u.role] || ''}`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td>{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </>
   );

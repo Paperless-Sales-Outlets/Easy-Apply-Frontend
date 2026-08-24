@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import {
   formatDate,
   getAssetUrl,
@@ -6,6 +7,7 @@ import {
   statusBadgeClass,
   statusLabel,
 } from '../utils/applicationUtils';
+import { updateOfficeFields, createAppointment } from '../services/adminService';
 
 const DOC_LABELS = {
   nicFront: 'NIC Front',
@@ -23,7 +25,6 @@ const DOC_LABELS = {
   signatureFile: 'Signature',
 };
 
-// File-like fields are rendered in the Documents section, not the data grid.
 const FILE_FIELD_KEYS = new Set([
   'documents', 'signature', 'signatureUpload', 'signatureFile', 'digitalSignature',
   'signatureBase64', 'digitalSignatureBase64', 'proofOfAddress', 'authorizationLetter',
@@ -45,7 +46,7 @@ function flattenFormData(obj, prefix = '', acc = []) {
     if (value === null || value === undefined || value === '') return;
 
     if (typeof value === 'object' && !Array.isArray(value)) {
-      if (value.name || value.path || value.url || value.preview) return; // file object
+      if (value.name || value.path || value.url || value.preview) return;
       flattenFormData(value, label, acc);
       return;
     }
@@ -91,7 +92,34 @@ function isImageUrl(url) {
   return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url) || url.startsWith('data:image');
 }
 
+function toInputDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
+}
+
 export default function ApplicationDetailModal({ application, onClose }) {
+  const [officeFields, setOfficeFields] = useState({
+    crNumber: '',
+    amountPaid: '',
+    staffSignature: '',
+    appointmentDate: '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (application) {
+      const of = application.officeFields || {};
+      setOfficeFields({
+        crNumber: of.crNumber || '',
+        amountPaid: of.amountPaid != null ? of.amountPaid : '',
+        staffSignature: of.staffSignature || '',
+        appointmentDate: toInputDate(of.appointmentDate),
+      });
+    }
+  }, [application]);
+
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') onClose?.();
@@ -104,6 +132,48 @@ export default function ApplicationDetailModal({ application, onClose }) {
 
   const rows = flattenFormData(application.formData);
   const docs = collectDocuments(application.formData);
+
+  const handleOfficeChange = (field, value) => {
+    setOfficeFields(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveOffice = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        crNumber: officeFields.crNumber || '',
+        amountPaid: officeFields.amountPaid !== '' ? Number(officeFields.amountPaid) : null,
+        staffSignature: officeFields.staffSignature || '',
+        appointmentDate: officeFields.appointmentDate || null,
+      };
+      await updateOfficeFields(application.id, payload);
+
+      // Auto-create appointment when appointment date is set
+      if (officeFields.appointmentDate) {
+        const scheduledAt = new Date(officeFields.appointmentDate);
+        scheduledAt.setHours(9, 0, 0, 0); // default to 09:00
+
+        await createAppointment({
+          applicationId: application.id,
+          referenceNumber: application.referenceNumber || '',
+          customer: application.name || '',
+          customerName: application.name || '',
+          phone: application.phone || '',
+          address: application.address || '',
+          serviceType: application.serviceType || 'new-connection',
+          scheduledAt: scheduledAt.toISOString(),
+          notes: `Auto-created from application ${application.referenceNumber}`,
+        });
+        toast.success('Office fields saved & appointment created');
+      } else {
+        toast.success('Office fields saved');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save office fields');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="admin-modal-overlay" onClick={onClose}>
@@ -131,6 +201,75 @@ export default function ApplicationDetailModal({ application, onClose }) {
             <div><span>Email</span><strong>{application.email || '—'}</strong></div>
             <div><span>Address</span><strong>{application.address || '—'}</strong></div>
             <div><span>Submitted</span><strong>{formatDate(application.submittedAt)}</strong></div>
+          </div>
+
+          {/* ── Office Processing ── */}
+          <h4>Office Processing</h4>
+          <div className="admin-form-grid" style={{ marginBottom: '1rem' }}>
+            <div className="admin-form-field">
+              <span>CR Number</span>
+              <input
+                type="text"
+                value={officeFields.crNumber}
+                onChange={(e) => handleOfficeChange('crNumber', e.target.value)}
+                placeholder="Enter CR number"
+                style={{
+                  width: '100%', padding: '0.55rem 0.75rem', border: '1px solid var(--line)',
+                  borderRadius: '8px', fontSize: '0.88rem', fontFamily: 'inherit',
+                }}
+              />
+            </div>
+            <div className="admin-form-field">
+              <span>Amount Paid (LKR)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={officeFields.amountPaid}
+                onChange={(e) => handleOfficeChange('amountPaid', e.target.value)}
+                placeholder="0.00"
+                style={{
+                  width: '100%', padding: '0.55rem 0.75rem', border: '1px solid var(--line)',
+                  borderRadius: '8px', fontSize: '0.88rem', fontFamily: 'inherit',
+                }}
+              />
+            </div>
+            <div className="admin-form-field">
+              <span>Staff Signature</span>
+              <input
+                type="text"
+                value={officeFields.staffSignature}
+                onChange={(e) => handleOfficeChange('staffSignature', e.target.value)}
+                placeholder="Staff member name"
+                style={{
+                  width: '100%', padding: '0.55rem 0.75rem', border: '1px solid var(--line)',
+                  borderRadius: '8px', fontSize: '0.88rem', fontFamily: 'inherit',
+                }}
+              />
+            </div>
+            <div className="admin-form-field">
+              <span>Appointment Date</span>
+              <input
+                type="date"
+                value={officeFields.appointmentDate}
+                onChange={(e) => handleOfficeChange('appointmentDate', e.target.value)}
+                style={{
+                  width: '100%', padding: '0.55rem 0.75rem', border: '1px solid var(--line)',
+                  borderRadius: '8px', fontSize: '0.88rem', fontFamily: 'inherit',
+                }}
+              />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <button
+              type="button"
+              onClick={handleSaveOffice}
+              disabled={saving}
+              className="admin-btn primary"
+              style={{ minWidth: '140px' }}
+            >
+              {saving ? 'Saving…' : 'Save Office Fields'}
+            </button>
           </div>
 
           <h4>Form Data</h4>
