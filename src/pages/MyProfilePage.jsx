@@ -248,117 +248,133 @@ export default function MyProfilePage() {
         </div>
 
         {/* ── Profile Header Card ──────────────────────────────────────── */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
           style={{
-            background: 'linear-gradient(135deg, #0056b3 0%, #0284c7 100%)',
-            borderRadius: '16px',
-            padding: '2rem',
+            background: 'linear-gradient(135deg, #001f3f 0%, #003b73 45%, #004d38 85%, #01291e 100%)',
+            borderRadius: '24px',
+            padding: '2.5rem',
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
-            gap: '1.5rem',
+            gap: '2rem',
             marginBottom: '2rem',
             flexWrap: 'wrap',
             position: 'relative',
             overflow: 'hidden',
+            boxShadow: '0 20px 40px -10px rgba(0, 86, 179, 0.25)',
           }}
         >
-          {/* Decorative circles */}
-          <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
-          <div style={{ position: 'absolute', bottom: -20, right: 60, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+          {/* Decorative Elements */}
+          <div style={{ position: 'absolute', top: -150, right: -100, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+          <div style={{ position: 'absolute', bottom: -100, left: 150, width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(2,132,199,0.2) 0%, transparent 70%)', filter: 'blur(30px)' }} />
 
           {/* Avatar */}
           <div
             style={{
-              width: '72px',
-              height: '72px',
+              width: '88px',
+              height: '88px',
               borderRadius: '50%',
-              background: 'rgba(255,255,255,0.2)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              border: '3px solid rgba(255,255,255,0.3)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1)',
             }}
           >
-            <FiUser size={32} />
+            <FiUser size={36} color="rgba(255,255,255,0.9)" />
           </div>
 
-          <div style={{ flex: 1, minWidth: '180px' }}>
-            <h2 style={{ margin: '0 0 0.25rem', fontSize: '1.4rem', fontWeight: 800 }}>
+          <div style={{ flex: 1, minWidth: '220px', zIndex: 1 }}>
+            <h2 style={{ margin: '0 0 0.35rem', fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#ffffff' }}>
               {profile.fullName}
             </h2>
-            <p style={{ margin: '0 0 0.15rem', fontSize: '0.9rem', opacity: 0.85 }}>
-              Account: {profile.accountNumber}
-            </p>
-            <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.7 }}>
-              {profile.connectionType} • Member since {profile.registeredDate}
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255,255,255,0.8)' }}>
+                Account: <strong style={{ color: '#fff' }}>{profile.accountNumber}</strong>
+              </p>
+              <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)' }}>
+                {profile.connectionType} • Member since {profile.registeredDate}
+              </p>
+            </div>
           </div>
 
           {/* Edit Button */}
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                padding: '0.6rem 1.2rem',
-                borderRadius: '9999px',
-                border: '2px solid rgba(255,255,255,0.4)',
-                background: 'rgba(255,255,255,0.15)',
-                color: '#fff',
-                fontWeight: 600,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                backdropFilter: 'blur(4px)',
-              }}
-            >
-              <FiEdit3 size={16} /> Edit Profile
-            </button>
-          ) : (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ zIndex: 1 }}>
+            {!isEditing ? (
               <button
-                onClick={handleSave}
+                onClick={() => setIsEditing(true)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.35rem',
-                  padding: '0.55rem 1rem',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1.5rem',
                   borderRadius: '9999px',
-                  border: 'none',
-                  background: '#10b981',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.1)',
                   color: '#fff',
                   fontWeight: 600,
-                  fontSize: '0.83rem',
+                  fontSize: '0.9rem',
                   cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  backdropFilter: 'blur(8px)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
               >
-                <FiSave size={15} /> Save
+                <FiEdit3 size={16} /> Edit Profile
               </button>
-              <button
-                onClick={handleCancel}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  padding: '0.55rem 1rem',
-                  borderRadius: '9999px',
-                  border: '2px solid rgba(255,255,255,0.4)',
-                  background: 'transparent',
-                  color: '#fff',
-                  fontWeight: 600,
-                  fontSize: '0.83rem',
-                  cursor: 'pointer',
-                }}
-              >
-                <FiX size={15} /> Cancel
-              </button>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  onClick={handleSave}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.75rem 1.25rem',
+                    borderRadius: '9999px',
+                    border: 'none',
+                    background: '#10b981',
+                    color: '#fff',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                  }}
+                >
+                  <FiSave size={16} /> Save
+                </button>
+                <button
+                  onClick={handleCancel}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.75rem 1.25rem',
+                    borderRadius: '9999px',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    background: 'transparent',
+                    color: '#fff',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <FiX size={16} /> Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </motion.div>
 
         {/* ── Content Grid ─────────────────────────────────────────────── */}
         <div
@@ -371,145 +387,160 @@ export default function MyProfilePage() {
         >
           {/* ── Personal Details Card ──────────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
             style={{
               backgroundColor: '#fff',
-              borderRadius: '14px',
-              padding: '1.75rem',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-              border: '1px solid #f1f5f9',
+              borderRadius: '24px',
+              padding: '2rem',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.03)',
+              border: '1px solid rgba(0,0,0,0.05)',
               position: 'relative',
               overflow: 'hidden',
             }}
           >
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #0056b3, #10b981)' }} />
-            <h3
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                margin: '0 0 1.5rem',
-                fontSize: '1.1rem',
-                fontWeight: 700,
-                color: '#0f172a',
-              }}
-            >
-              <FiUser size={18} style={{ color: '#0056b3' }} />
-              Personal Details
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FiUser size={20} style={{ color: '#0056b3' }} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>
+                Personal Details
+              </h3>
+            </div>
 
             {isEditing ? (
-              <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <EditableField label="Full Name" name="fullName" value={editDraft.fullName} onChange={handleEditChange} />
                 <EditableField label="Email" name="email" value={editDraft.email} onChange={handleEditChange} type="email" />
                 <EditableField label="Phone" name="phone" value={editDraft.phone} onChange={handleEditChange} type="tel" />
                 <EditableField label="NIC Number" name="nic" value={editDraft.nic} onChange={handleEditChange} />
                 <EditableField label="Address" name="address" value={editDraft.address} onChange={handleEditChange} />
-              </>
+              </div>
             ) : (
-              <>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1rem 2rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                   <InfoField label="Full Name" value={profile.fullName} />
                   <InfoField label="Email" value={profile.email} />
                   <InfoField label="Phone" value={profile.phone} />
                   <InfoField label="NIC Number" value={profile.nic} />
                 </div>
-                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '1.5rem' }}>
                   <InfoField label="Address" value={profile.address} />
                 </div>
-              </>
+              </div>
             )}
           </motion.div>
 
           {/* ── Account Information Card ───────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: 0.05 }}
+            transition={{ duration: 0.4, delay: 0.15, ease: 'easeOut' }}
             style={{
-              backgroundColor: '#fff',
-              borderRadius: '14px',
-              padding: '1.75rem',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-              border: '1px solid #f1f5f9',
+              backgroundColor: '#f8fafc',
+              borderRadius: '24px',
+              padding: '2rem',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.02)',
+              border: '1px solid rgba(0,0,0,0.03)',
               position: 'relative',
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
             }}
           >
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #7c3aed, #0284c7)' }} />
-            <h3
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                margin: '0 0 1.5rem',
-                fontSize: '1.1rem',
-                fontWeight: 700,
-                color: '#0f172a',
-              }}
-            >
-              <FiCreditCard size={18} style={{ color: '#7c3aed' }} />
-              Account Information
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#f3e8ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FiCreditCard size={20} style={{ color: '#9333ea' }} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>
+                Account Information
+              </h3>
+            </div>
 
             <div
               style={{
-                backgroundColor: '#f8fafc',
-                borderRadius: '12px',
-                padding: '1.25rem',
-                marginBottom: '1.25rem',
-                border: '1px solid #e2e8f0',
+                backgroundColor: '#fff',
+                borderRadius: '16px',
+                padding: '1.5rem',
+                marginBottom: '1.5rem',
+                border: '1px solid rgba(0,0,0,0.04)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.01)',
               }}
             >
-              <InfoField label="Account Number" value={profile.accountNumber} />
-              <InfoField label="Connection Type" value={profile.connectionType} />
-              <InfoField label="Current Package" value={profile.packageName} />
-              <InfoField label="Registered Date" value={profile.registeredDate} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                <InfoField label="Account Number" value={profile.accountNumber} />
+                <InfoField label="Connection Type" value={profile.connectionType} />
+                <InfoField label="Current Package" value={profile.packageName} />
+                <InfoField label="Registered Date" value={profile.registeredDate} />
+              </div>
             </div>
 
             {/* Quick Action Buttons */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: 'auto' }}>
               <button
                 onClick={() => navigate('/new-connection/products')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.55rem 1rem',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
+                  justifyContent: 'center',
+                  flex: 1,
+                  minWidth: '160px',
+                  gap: '0.5rem',
+                  padding: '0.85rem 1.25rem',
+                  borderRadius: '12px',
+                  border: '1px solid #cbd5e1',
                   background: '#fff',
-                  color: '#0056b3',
-                  fontWeight: 600,
-                  fontSize: '0.83rem',
+                  color: '#0f172a',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
                   cursor: 'pointer',
-                  transition: 'all 0.15s',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#94a3b8';
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.04)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#cbd5e1';
+                  e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)';
                 }}
               >
-                <FiWifi size={15} /> View Packages
+                <FiWifi size={18} /> View Packages
               </button>
               <button
                 onClick={() => navigate('/package-migration')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.55rem 1rem',
-                  borderRadius: '8px',
+                  justifyContent: 'center',
+                  flex: 1,
+                  minWidth: '160px',
+                  gap: '0.5rem',
+                  padding: '0.85rem 1.25rem',
+                  borderRadius: '12px',
                   border: 'none',
-                  background: '#0056b3',
+                  background: 'linear-gradient(135deg, #001f3f 0%, #003b73 45%, #004d38 85%, #01291e 100%)',
                   color: '#fff',
-                  fontWeight: 600,
-                  fontSize: '0.83rem',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
                   cursor: 'pointer',
-                  transition: 'all 0.15s',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(0, 59, 115, 0.3)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #002b5e 0%, #004d99 45%, #00664d 85%, #024030 100%)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(0, 59, 115, 0.4)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #001f3f 0%, #003b73 45%, #004d38 85%, #01291e 100%)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 59, 115, 0.3)';
+                  e.currentTarget.style.transform = 'none';
                 }}
               >
-                <FiEdit3 size={15} /> Upgrade Package
+                <FiEdit3 size={18} /> Upgrade Package
               </button>
             </div>
           </motion.div>
@@ -517,61 +548,57 @@ export default function MyProfilePage() {
 
         {/* ── Application History ──────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, delay: 0.1 }}
+          transition={{ duration: 0.4, delay: 0.2, ease: 'easeOut' }}
           style={{
             backgroundColor: '#fff',
-            borderRadius: '14px',
-            padding: '1.75rem',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-            border: '1px solid #f1f5f9',
+            borderRadius: '24px',
+            padding: '2rem',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.03)',
+            border: '1px solid rgba(0,0,0,0.05)',
             position: 'relative',
             overflow: 'hidden',
           }}
         >
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #059669, #0284c7)' }} />
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: '1.5rem',
+              marginBottom: '2rem',
               flexWrap: 'wrap',
-              gap: '0.75rem',
+              gap: '1rem',
             }}
           >
-            <h3
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                margin: 0,
-                fontSize: '1.1rem',
-                fontWeight: 700,
-                color: '#0f172a',
-              }}
-            >
-              <FiFileText size={18} style={{ color: '#059669' }} />
-              Application History
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FiFileText size={20} style={{ color: '#059669' }} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>
+                Application History
+              </h3>
+            </div>
             <button
               onClick={() => navigate('/check-status')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.35rem',
-                padding: '0.45rem 0.85rem',
-                borderRadius: '8px',
+                gap: '0.5rem',
+                padding: '0.6rem 1.25rem',
+                borderRadius: '9999px',
                 border: '1px solid #e2e8f0',
                 background: '#f8fafc',
-                color: '#0056b3',
-                fontWeight: 600,
-                fontSize: '0.8rem',
+                color: '#0f172a',
+                fontWeight: 700,
+                fontSize: '0.85rem',
                 cursor: 'pointer',
+                transition: 'all 0.2s',
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
             >
-              Check Status <FiChevronRight size={14} />
+              Check Status <FiChevronRight size={16} />
             </button>
           </div>
 
@@ -580,8 +607,9 @@ export default function MyProfilePage() {
             <table
               style={{
                 width: '100%',
-                borderCollapse: 'collapse',
-                fontSize: '0.88rem',
+                borderCollapse: 'separate',
+                borderSpacing: '0 8px',
+                fontSize: '0.9rem',
               }}
             >
               <thead>
@@ -591,13 +619,12 @@ export default function MyProfilePage() {
                       key={h}
                       style={{
                         textAlign: 'left',
-                        padding: '0.75rem 1rem',
+                        padding: '0 1.25rem 0.5rem',
                         fontWeight: 700,
-                        fontSize: '0.78rem',
+                        fontSize: '0.75rem',
                         color: '#64748b',
                         textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                        borderBottom: '2px solid #f1f5f9',
+                        letterSpacing: '1px',
                         whiteSpace: 'nowrap',
                       }}
                     >
@@ -612,35 +639,42 @@ export default function MyProfilePage() {
                   return (
                     <tr
                       key={app.referenceNumber}
-                      style={{ borderBottom: '1px solid #f8fafc' }}
+                      style={{
+                        backgroundColor: '#f8fafc',
+                        transition: 'all 0.2s',
+                        cursor: 'default',
+                      }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#fafbfc';
+                        e.currentTarget.style.backgroundColor = '#f1f5f9';
+                        e.currentTarget.style.transform = 'scale(1.002)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.backgroundColor = '#f8fafc';
+                        e.currentTarget.style.transform = 'none';
                       }}
                     >
-                      <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: '#0056b3' }}>
+                      <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#0056b3', borderRadius: '12px 0 0 12px' }}>
                         {app.referenceNumber}
                       </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#334155' }}>
+                      <td style={{ padding: '1rem 1.25rem', color: '#1e293b', fontWeight: 600 }}>
                         {SERVICE_TYPE_LABELS[app.serviceType] || app.serviceType}
                       </td>
-                      <td style={{ padding: '0.85rem 1rem', color: '#64748b' }}>
+                      <td style={{ padding: '1rem 1.25rem', color: '#64748b', fontWeight: 500 }}>
                         {app.createdAt ? new Date(app.createdAt).toISOString().split('T')[0] : ''}
                       </td>
-                      <td style={{ padding: '0.85rem 1rem' }}>
+                      <td style={{ padding: '1rem 1.25rem', borderRadius: '0 12px 12px 0' }}>
                         <span
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '0.3rem',
-                            padding: '0.25rem 0.65rem',
+                            gap: '0.4rem',
+                            padding: '0.35rem 0.85rem',
                             borderRadius: '9999px',
-                            fontSize: '0.76rem',
-                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            fontWeight: 800,
                             color: s.color,
                             backgroundColor: s.bg,
+                            border: `1px solid ${s.color}30`,
                           }}
                         >
                           {s.icon}
@@ -652,7 +686,7 @@ export default function MyProfilePage() {
                 })}
                 {!loadingApplications && applications.length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ padding: '1.5rem 1rem', textAlign: 'center', color: '#94a3b8' }}>
+                    <td colSpan={4} style={{ padding: '3rem 1rem', textAlign: 'center', color: '#64748b', fontWeight: 500, backgroundColor: '#f8fafc', borderRadius: '12px' }}>
                       No applications submitted yet.
                     </td>
                   </tr>

@@ -7,6 +7,19 @@ export function getVerifiedPhone() {
   return sessionStorage.getItem('verifiedPhone') || '';
 }
 
+export function getVerifiedName() {
+  try {
+    const data = sessionStorage.getItem('customerData');
+    if (data) {
+      const parsed = JSON.parse(data);
+      return parsed.fullName || parsed.customerName || parsed.nameFull || '';
+    }
+  } catch (err) {
+    // ignore
+  }
+  return '';
+}
+
 export function notifyAuthUpdated() {
   window.dispatchEvent(new Event(AUTH_UPDATED_EVENT));
 }

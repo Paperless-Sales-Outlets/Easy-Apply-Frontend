@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut } from 'react-icons/fi';
 import sltLogo from '../../assets/sltlogoOnly.png';
-import { getVerifiedPhone, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../utils/authSession';
+import { getVerifiedPhone, getVerifiedName, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../utils/authSession';
 
 const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : n ? `+94 ${n}` : '');
 
@@ -35,9 +35,13 @@ export default function Navbar() {
   }, []);
 
   const [verifiedPhone, setVerifiedPhone] = useState(getVerifiedPhone);
+  const [verifiedName, setVerifiedName] = useState(getVerifiedName);
 
   useEffect(() => {
-    const syncAuth = () => setVerifiedPhone(getVerifiedPhone());
+    const syncAuth = () => {
+      setVerifiedPhone(getVerifiedPhone());
+      setVerifiedName(getVerifiedName());
+    };
     syncAuth();
     window.addEventListener(AUTH_UPDATED_EVENT, syncAuth);
     window.addEventListener('storage', syncAuth);
@@ -247,7 +251,7 @@ export default function Navbar() {
                   title={t('nav.goToProfile', 'Go to My Profile')}
                 >
                   <FiUser size={15} style={{ color: '#50b748' }} />
-                  {formatPhone(verifiedPhone)}
+                  {verifiedName || formatPhone(verifiedPhone)}
                 </Link>
                 <button
                   type="button"
@@ -340,7 +344,7 @@ export default function Navbar() {
                     style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', color: isActivePath('/profile') ? '#0056b3' : '#0f172a', textDecoration: 'none', fontWeight: isActivePath('/profile') ? 800 : 600, fontSize: '0.95rem', backgroundColor: isActivePath('/profile') ? '#eff6ff' : 'transparent', borderRadius: '8px', borderLeft: isActivePath('/profile') ? '3px solid #0056b3' : '3px solid transparent' }}
                   >
                     <FiUser size={16} style={{ color: '#50b748' }} />
-                    <span>{formatPhone(verifiedPhone)}</span>
+                    <span>{verifiedName || formatPhone(verifiedPhone)}</span>
                   </Link>
                   <button
                     type="button"
