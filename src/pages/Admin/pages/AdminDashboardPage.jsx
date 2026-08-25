@@ -174,6 +174,10 @@ function TodayDistributionBarChart({ data }) {
   const figureRef = React.useRef(null);
   const max = Math.max(...data.map(f => Math.max(f.submitted, f.completed)), 0);
 
+  const niceMax = max > 0 ? Math.ceil(max / 5) * 5 || 5 : 5;
+  const tickCount = 5;
+  const ticks = Array.from({ length: tickCount + 1 }, (_, i) => Math.round((niceMax / tickCount) * i));
+
   const handleClick = (index, which, event) => {
     const rect = figureRef.current.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -186,43 +190,71 @@ function TodayDistributionBarChart({ data }) {
   };
 
   return (
-    <div className="form-vchart" ref={figureRef}>
-      {data.map((item, index) => {
-        const subH = max ? (item.submitted / max) * 100 : 0;
-        const comH = max ? (item.completed / max) * 100 : 0;
-        return (
-          <div className="form-vchart-col" key={item.id}>
-            <div className="form-vchart-bars">
-              <div
-                className="form-vchart-bar completed clickable"
-                style={{ height: `${comH}%` }}
-                title={`Completed: ${item.completed}`}
-                onClick={event => handleClick(index, 'completed', event)}
-              />
-              <div
-                className="form-vchart-bar today clickable"
-                style={{ height: `${subH}%` }}
-                title={`Submitted: ${item.submitted}`}
-                onClick={event => handleClick(index, 'submitted', event)}
-              />
-            </div>
-            <div className="form-vchart-label">{shortFormLabel(item.label)}</div>
+    <div className="form-vchart-wrap">
+      <div className="form-vchart-yaxis">
+        {ticks.filter(t => t > 0).map((tick) => (
+          <div
+            key={tick}
+            className="form-vchart-ytick"
+            style={{ bottom: `${niceMax ? (tick / niceMax) * 100 : 0}%` }}
+          >
+            {tick}
           </div>
-        );
-      })}
-      {popup && (
-        <div className="pie-chart-popup" style={{ left: popup.x, top: popup.y }}>
-          <span className="pie-chart-popup-swatch" style={{ background: popup.which === 'completed' ? 'var(--green)' : 'var(--blue)' }} />
-          <div>
-            <div className="pie-chart-popup-count">
-              {popup.which === 'completed' ? data[popup.index].completed : data[popup.index].submitted}
-            </div>
-            <div className="pie-chart-popup-label">
-              {popup.which === 'completed' ? 'Completed today' : 'Submitted today'} — {data[popup.index].label}
-            </div>
+        ))}
+      </div>
+      <div className="form-vchart-body">
+        <div className="form-vchart" ref={figureRef}>
+          <div className="form-vchart-gridlines">
+            {ticks.map((tick) => (
+              <div
+                key={tick}
+                className={`form-vchart-gridline${tick === 0 ? ' baseline' : ''}`}
+                style={{ bottom: `${(tick / niceMax) * 100}%` }}
+              />
+            ))}
           </div>
+          {data.map((item, index) => {
+            const subH = niceMax ? (item.submitted / niceMax) * 100 : 0;
+            const comH = niceMax ? (item.completed / niceMax) * 100 : 0;
+            return (
+              <div className="form-vchart-col" key={item.id}>
+                <div className="form-vchart-bars">
+                  <div
+                    className="form-vchart-bar completed clickable"
+                    style={{ height: `${comH}%` }}
+                    title={`Completed: ${item.completed}`}
+                    onClick={event => handleClick(index, 'completed', event)}
+                  />
+                  <div
+                    className="form-vchart-bar today clickable"
+                    style={{ height: `${subH}%` }}
+                    title={`Submitted: ${item.submitted}`}
+                    onClick={event => handleClick(index, 'submitted', event)}
+                  />
+                </div>
+              </div>
+            );
+          })}
+          {popup && (
+            <div className="pie-chart-popup" style={{ left: popup.x, top: popup.y }}>
+              <span className="pie-chart-popup-swatch" style={{ background: popup.which === 'completed' ? 'var(--green)' : 'var(--blue)' }} />
+              <div>
+                <div className="pie-chart-popup-count">
+                  {popup.which === 'completed' ? data[popup.index].completed : data[popup.index].submitted}
+                </div>
+                <div className="pie-chart-popup-label">
+                  {popup.which === 'completed' ? 'Completed today' : 'Submitted today'} — {data[popup.index].label}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+        <div className="form-vchart-xaxis">
+          {data.map((item) => (
+            <div className="form-vchart-xlabel" key={item.id}>{shortFormLabel(item.label)}</div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

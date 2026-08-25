@@ -190,16 +190,17 @@ export default function ApplicationsPage() {
           <div className="admin-loading">Loading applications…</div>
         ) : (
           <div className="admin-table-wrap">
-            <table className="admin-table" style={{ minWidth: 1240 }}>
+            <table className="admin-table" style={{ minWidth: 1440 }}>
               <thead>
                 <tr>
                   <th>Reference</th>
                   <th>Applicant</th>
                   <th>Service</th>
                   <th>Status</th>
-                  <th>Submitted</th>
+                  <th>CR Number</th>
+                  <th>Amount</th>
+                  <th>Appointment</th>
                   <th>Phone</th>
-                  <th>Address</th>
                   <th>Comments</th>
                   <th>Action</th>
                 </tr>
@@ -235,9 +236,16 @@ export default function ApplicationsPage() {
                             {statusLabel(app.status)}
                           </span>
                         </td>
-                        <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{formatDate(app.submittedAt)}</td>
+                        <td style={{ fontSize: '0.82rem', color: 'var(--muted)', fontFamily: 'monospace' }}>
+                          {app.officeFields?.crNumber || '—'}
+                        </td>
+                        <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>
+                          {app.officeFields?.amountPaid != null ? `Rs. ${Number(app.officeFields.amountPaid).toLocaleString()}` : '—'}
+                        </td>
+                        <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>
+                          {app.officeFields?.appointmentDate ? formatDate(app.officeFields.appointmentDate) : '—'}
+                        </td>
                         <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.phone}</td>
-                        <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.address}</td>
                         <td style={{ fontSize: '0.82rem', color: 'var(--muted)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxWidth: '24rem' }}>
                           {comment ? (
                             <>
@@ -301,7 +309,7 @@ export default function ApplicationsPage() {
                       </tr>
                       {activeEditorId === app.id && (
                         <tr>
-                          <td colSpan={9} style={{ padding: '0.65rem 1rem', background: 'var(--surface)', borderBottom: '1px solid var(--line)' }}>
+                          <td colSpan={10} style={{ padding: '0.65rem 1rem', background: 'var(--surface)', borderBottom: '1px solid var(--line)' }}>
                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                               <textarea
                                 value={commentDrafts[app.id] ?? app.notes ?? ''}
