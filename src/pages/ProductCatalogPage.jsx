@@ -1,17 +1,169 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FiShoppingCart, FiSearch, FiGrid, FiList } from 'react-icons/fi';
+import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
+import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiAlertCircle } from 'react-icons/fi';
 import CategoryChips from '../components/catalog/CategoryChips';
 import SidebarFilters from '../components/catalog/SidebarFilters';
 import ProductCard from '../components/catalog/ProductCard';
 import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
 import SkeletonCard from '../components/catalog/SkeletonCard';
 import Toast from '../components/common/Toast';
-import { getProducts, addToCart, getCart, clearCart } from '../services/productService';
+import HeroBannerCarousel from '../components/catalog/HeroBannerCarousel';
+import { getProducts, addToCart, removeFromCart, getLocalCart, clearCart } from '../services/productService';
+
+const DEFAULT_MOCKUP_PRODUCTS = [
+  // ── 🌐 Broadband Category (5 Packages) ──
+  {
+    _id: 'prod-1',
+    id: 'prod-1',
+    name: '500 Mbps Fibre Broadband',
+    category: 'Fibre Broadband',
+    monthlyPrice: 7999,
+    installationFee: 0,
+    popular: true,
+    speed: '500 Mbps',
+    features: ['Ideal for smart homes', 'Ultra-fast speed', 'Unlimited data'],
+  },
+  {
+    _id: 'prod-2',
+    id: 'prod-2',
+    name: '300 Mbps Fibre Broadband',
+    category: 'Fibre Broadband',
+    monthlyPrice: 5499,
+    installationFee: 0,
+    popular: true,
+    speed: '300 Mbps',
+    features: ['Ultra-fast speed', 'Great for streaming', 'Unlimited data'],
+  },
+  {
+    _id: 'prod-3',
+    id: 'prod-3',
+    name: '1 Gbps Fibre Broadband',
+    category: 'Fibre Broadband',
+    monthlyPrice: 10999,
+    installationFee: 0,
+    popular: true,
+    speed: '1 Gbps',
+    features: ['Superfast downloads', 'Perfect for gaming', 'Unlimited data'],
+  },
+  {
+    _id: 'prod-4',
+    id: 'prod-4',
+    name: 'LTE Home 150 GB',
+    category: 'LTE Home',
+    monthlyPrice: 3999,
+    installationFee: 2500,
+    popular: true,
+    speed: '100 Mbps',
+    features: ['Plug & Play', 'Best for home use', '150GB data'],
+  },
+  {
+    _id: 'prod-5',
+    id: 'prod-5',
+    name: 'LTE Home 300 GB',
+    category: 'LTE Home',
+    monthlyPrice: 4999,
+    installationFee: 2500,
+    popular: true,
+    speed: '100 Mbps',
+    features: ['Plug & Play', 'Best for heavy users', '300GB data'],
+  },
+
+  // ── 📞 Voice Category (4 Packages - Compulsory 1 Required) ──
+  {
+    _id: 'prod-8',
+    id: 'prod-8',
+    name: 'Fibre Voice Home',
+    category: 'Voice',
+    monthlyPrice: 990,
+    installationFee: 1500,
+    popular: true,
+    speed: 'Voice',
+    features: ['Unlimited SLT Calls', 'Crystal Clear Audio', 'Caller ID Included'],
+  },
+  {
+    _id: 'prod-9',
+    id: 'prod-9',
+    name: 'Voice Unlimited',
+    category: 'Voice',
+    monthlyPrice: 1490,
+    installationFee: 1500,
+    popular: true,
+    speed: 'Voice',
+    features: ['Unlimited Local Calls', 'Free Value Services', 'IDD Discount'],
+  },
+  {
+    _id: 'prod-10',
+    id: 'prod-10',
+    name: 'Megaline Voice Basic',
+    category: 'Voice',
+    monthlyPrice: 790,
+    installationFee: 1000,
+    popular: false,
+    speed: 'Voice',
+    features: ['Reliable Landline', 'Low Call Rates', 'Standard Connection'],
+  },
+  {
+    _id: 'prod-11',
+    id: 'prod-11',
+    name: 'Voice Business Prime',
+    category: 'Voice',
+    monthlyPrice: 1990,
+    installationFee: 2000,
+    popular: false,
+    speed: 'Voice',
+    features: ['Multi-line Support', 'Auto Attendant', 'Hunting Lines Included'],
+  },
+
+  // ── 📺 PEO TV Category (4 Packages) ──
+  {
+    _id: 'prod-6',
+    id: 'prod-6',
+    name: 'PEO TV Gold Pack',
+    category: 'PEO TV',
+    monthlyPrice: 2990,
+    installationFee: 500,
+    popular: true,
+    speed: 'HD TV',
+    features: ['100+ Live HD Channels', 'Sports & Movies Pack', 'Catch-up TV'],
+  },
+  {
+    _id: 'prod-7',
+    id: 'prod-7',
+    name: 'PEO TV Starter Pack',
+    category: 'PEO TV',
+    monthlyPrice: 1490,
+    installationFee: 500,
+    popular: false,
+    speed: 'HD TV',
+    features: ['50+ Live HD Channels', '7-Day Catch-up TV', 'Rewind Live TV'],
+  },
+  {
+    _id: 'prod-12',
+    id: 'prod-12',
+    name: 'PEO TV Entertainment',
+    category: 'PEO TV',
+    monthlyPrice: 2190,
+    installationFee: 500,
+    popular: true,
+    speed: 'HD TV',
+    features: ['75+ Premium Channels', 'Kids & News Pack', 'Pause Live TV'],
+  },
+  {
+    _id: 'prod-13',
+    id: 'prod-13',
+    name: 'PEO TV Titanium',
+    category: 'PEO TV',
+    monthlyPrice: 3890,
+    installationFee: 500,
+    popular: false,
+    speed: '4K HD TV',
+    features: ['All 130+ HD Channels', '4K Movies & VOD', 'Multi-Room Support'],
+  },
+];
 
 export default function ProductCatalogPage() {
-  const navigate = useNavigate();
-
+  const { t, i18n } = useTranslation();
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,15 +173,25 @@ export default function ProductCatalogPage() {
   const [activeCategory, setActiveCategory] = useState('All Products');
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedSpeeds, setSelectedSpeeds] = useState([]);
-  const [maxPrice, setMaxPrice] = useState(20000);
-  const [selectedInstallation, setSelectedInstallation] = useState([]);
-  const [availableOnly, setAvailableOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('Popularity');
   const [viewMode, setViewMode] = useState('grid');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Cart & Favorites
-  const [cartCount, setCartCount] = useState(0);
+  // Cart Items State Sync (reads the same local cart used by the Cart page & navbar badge)
+  const [cartItems, setCartItems] = useState(() => getLocalCart());
+
+  useEffect(() => {
+    const syncCart = () => setCartItems(getLocalCart());
+    window.addEventListener('easyapply:cart-updated', syncCart);
+    window.addEventListener('storage', syncCart);
+    return () => {
+      window.removeEventListener('easyapply:cart-updated', syncCart);
+      window.removeEventListener('storage', syncCart);
+    };
+  }, []);
+
+  // Favorites & Toast
   const [favorites, setFavorites] = useState([]);
   const [toast, setToast] = useState(null);
 
@@ -40,33 +202,29 @@ export default function ProductCatalogPage() {
       try {
         const res = await getProducts({ limit: 100 });
         const list = res.data || res.products || res || [];
-        setProducts(list);
+        if (Array.isArray(list) && list.length > 0) {
+          const merged = DEFAULT_MOCKUP_PRODUCTS.map((mock) => {
+            const found = list.find((p) => p.name?.toLowerCase().trim() === mock.name.toLowerCase().trim());
+            return found ? { ...mock, ...found, features: mock.features, monthlyPrice: mock.monthlyPrice } : mock;
+          });
+          setProducts(merged);
+        } else {
+          setProducts(DEFAULT_MOCKUP_PRODUCTS);
+        }
       } catch (err) {
-        console.error('Failed to load products:', err);
-        setError('Failed to load products. Please ensure the backend is running.');
+        console.warn('Using mockup products:', err);
+        setProducts(DEFAULT_MOCKUP_PRODUCTS);
       } finally {
         setLoading(false);
       }
     };
 
-    const fetchCartData = async () => {
-      try {
-        const cartRes = await getCart();
-        const items = cartRes?.data?.items || cartRes?.items || [];
-        const count = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
-        setCartCount(count);
-      } catch (err) {
-        console.warn('Could not fetch cart count:', err.message);
-      }
-    };
-
     fetchCatalogData();
-    fetchCartData();
   }, []);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
+    setTimeout(() => setToast(null), 3800);
   };
 
   const handleTypeToggle = (type) => {
@@ -81,19 +239,10 @@ export default function ProductCatalogPage() {
     );
   };
 
-  const handleInstallationToggle = (instId) => {
-    setSelectedInstallation((prev) =>
-      prev.includes(instId) ? prev.filter((i) => i !== instId) : [...prev, instId]
-    );
-  };
-
   const handleClearAll = () => {
     setActiveCategory('All Products');
     setSelectedTypes([]);
     setSelectedSpeeds([]);
-    setMaxPrice(20000);
-    setSelectedInstallation([]);
-    setAvailableOnly(false);
     setSearchQuery('');
     setSortBy('Popularity');
   };
@@ -111,303 +260,590 @@ export default function ProductCatalogPage() {
     });
   };
 
-  const saveProductDataToSession = (prod, qty) => {
-    const pData = {
-      productId: prod._id || prod.id,
-      productName: prod.name,
-      monthlyPrice: prod.monthlyPrice,
-      installationFee: prod.installationFee || 2500,
-      quantity: qty,
-      speed: prod.speed,
-      features: prod.features || [],
+  // Cart Category Rule Analysis (Voice compulsory, max 1 per category)
+  const cartCategoryAnalysis = useMemo(() => {
+    const selectedProdIds = new Set();
+    const categoriesInCart = new Set();
+
+    cartItems.forEach((item) => {
+      const p = item.product || item;
+      const id = String(item.productId || p._id || p.id || '');
+      if (id) selectedProdIds.add(id);
+
+      const cat = (p.category || item.category || p.name || item.productName || '').toLowerCase();
+      if (cat.includes('voice')) categoriesInCart.add('Voice');
+      else if (cat.includes('peo')) categoriesInCart.add('PEO TV');
+      else categoriesInCart.add('Broadband');
+    });
+
+    return {
+      selectedProdIds,
+      categoriesInCart,
+      hasVoice: categoriesInCart.has('Voice'),
+      hasBroadband: categoriesInCart.has('Broadband'),
+      hasPeoTv: categoriesInCart.has('PEO TV'),
     };
-    sessionStorage.setItem('selectedProduct', JSON.stringify(pData));
-  };
+  }, [cartItems]);
 
   const handleAddToCart = async (prod, qty = 1) => {
-    saveProductDataToSession(prod, qty);
+    const prodId = String(prod._id || prod.id);
+    const catName = (prod.category || prod.name || '').toLowerCase();
+    const group = catName.includes('voice') ? 'Voice' : catName.includes('peo') ? 'PEO TV' : 'Broadband';
+
+    // Rule: Max 1 product per category allowed
+    if (cartCategoryAnalysis.categoriesInCart.has(group) && !cartCategoryAnalysis.selectedProdIds.has(prodId)) {
+      showToast(`Only 1 ${group} package is allowed per customer. Remove existing ${group} package to change.`, 'warning');
+      return;
+    }
+
     try {
       await addToCart(prod, qty);
-      const cartRes = await getCart();
-      const items = cartRes?.data?.items || cartRes?.items || [];
-      const count = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
-      setCartCount(count);
-      showToast(`${prod.name} added to cart!`, 'success');
+      setCartItems(getLocalCart());
+
+      if (group !== 'Voice' && !cartCategoryAnalysis.hasVoice) {
+        showToast(`Added ${prod.name}! Remember: 1 Voice package is COMPULSORY to checkout.`, 'info');
+      } else {
+        showToast(`${prod.name} added to cart!`, 'success');
+      }
     } catch (err) {
       showToast(`${prod.name} added to cart!`, 'success');
     }
   };
 
-  const handleBuyNow = async (prod, qty = 1) => {
-    saveProductDataToSession(prod, qty);
+  const handleRemoveFromCart = async (prod) => {
+    const prodId = String(prod._id || prod.id);
     try {
-      await addToCart(prod, qty);
-      const cartRes = await getCart();
-      const items = cartRes?.data?.items || cartRes?.items || [];
-      const count = items.reduce((acc, item) => acc + (item.quantity || 1), 0);
-      setCartCount(count);
+      await removeFromCart(prodId);
+      setCartItems(getLocalCart());
+      showToast(`${prod.name} removed from cart.`, 'info');
     } catch (err) {
-      console.warn('Buy now fallback add item');
+      setCartItems(getLocalCart());
     }
-    navigate('/cart');
+  };
+
+  const handleClearCartSelection = async () => {
+    await clearCart();
+    setCartItems([]);
+    showToast('Selection reset. All packages are now unselected.', 'info');
   };
 
   const filteredProducts = useMemo(() => {
     let list = products.filter((p) => {
+      // Category filter
       if (activeCategory !== 'All Products') {
-        if (p.category?.toLowerCase() !== activeCategory.toLowerCase()) return false;
+        const cat = (p.category || p.name || '').toLowerCase();
+        if (activeCategory === 'Voice' && !cat.includes('voice')) return false;
+        if (activeCategory === 'Fibre Broadband' && !cat.includes('fibre') && !cat.includes('broadband')) return false;
+        if (activeCategory === 'PEO TV' && !cat.includes('peo')) return false;
       }
+      // Product Type checkbox filter
       if (selectedTypes.length > 0) {
-        const typeMatch = selectedTypes.some(
-          (t) => p.category?.toLowerCase().includes(t.toLowerCase()) || p.name?.toLowerCase().includes(t.toLowerCase())
-        );
-        if (!typeMatch) return false;
-      }
-      if (selectedSpeeds.length > 0) {
-        const numSpeed = parseInt(p.speed) || 0;
-        const matchesSpeed = selectedSpeeds.some((s) => {
-          if (s === 'up_to_100') return numSpeed <= 100 || p.speed?.includes('100');
-          if (s === '100_300') return numSpeed >= 100 && numSpeed <= 300;
-          if (s === '300_500') return numSpeed >= 300 && numSpeed <= 500;
-          if (s === 'above_500') return numSpeed > 500 || p.speed?.includes('1 Gbps');
-          return true;
+        const matchType = selectedTypes.some((type) => {
+          const catName = (p.category || '').toLowerCase();
+          return catName.includes(type.toLowerCase());
         });
-        if (!matchesSpeed) return false;
+        if (!matchType) return false;
       }
-      if (p.monthlyPrice > maxPrice) return false;
-      if (selectedInstallation.length > 0) {
-        const isFree = p.installationFee === 0;
-        const instMatch = selectedInstallation.some((inst) => {
-          if (inst === 'free') return isFree;
-          if (inst === 'paid') return !isFree;
-          return true;
-        });
-        if (!instMatch) return false;
-      }
-      if (availableOnly && p.status !== 'active') return false;
+      // Search query filter
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        if (!p.name?.toLowerCase().includes(q) && !p.description?.toLowerCase().includes(q) && !p.speed?.toLowerCase().includes(q)) return false;
+        const q = searchQuery.toLowerCase().trim();
+        const nameMatch = p.name.toLowerCase().includes(q);
+        const catMatch = (p.category || '').toLowerCase().includes(q);
+        if (!nameMatch && !catMatch) return false;
       }
       return true;
     });
 
-    if (sortBy === 'Price Low to High') list.sort((a, b) => a.monthlyPrice - b.monthlyPrice);
-    else if (sortBy === 'Price High to Low') list.sort((a, b) => b.monthlyPrice - a.monthlyPrice);
-    else if (sortBy === 'Popularity') list.sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
+    // Sorting logic
+    if (sortBy === 'Price Low to High') {
+      list.sort((a, b) => a.monthlyPrice - b.monthlyPrice);
+    } else if (sortBy === 'Price High to Low') {
+      list.sort((a, b) => b.monthlyPrice - a.monthlyPrice);
+    }
 
     return list;
-  }, [products, activeCategory, selectedTypes, selectedSpeeds, maxPrice, selectedInstallation, availableOnly, searchQuery, sortBy]);
+  }, [products, activeCategory, selectedTypes, searchQuery, sortBy]);
 
-  const hasDetailPanel = selectedProduct !== null;
+  // Group filtered products into Category Sections (Voice, Broadband, PEO TV)
+  const categorySections = useMemo(() => {
+    const voiceProds = filteredProducts.filter((p) => (p.category || p.name || '').toLowerCase().includes('voice'));
+    const broadbandProds = filteredProducts.filter((p) => {
+      const cat = (p.category || p.name || '').toLowerCase();
+      return cat.includes('fibre') || cat.includes('lte') || cat.includes('broadband');
+    });
+    const peoTvProds = filteredProducts.filter((p) => (p.category || p.name || '').toLowerCase().includes('peo'));
 
-  /* Full-width container — bypasses page-container's 5% side padding */
-  const wide = { maxWidth: '1600px', margin: '0 auto', width: '100%', padding: '0 1.5rem' };
+    const sections = [];
+
+    if (activeCategory === 'All Products' || activeCategory === 'Voice') {
+      sections.push({
+        id: 'voice-section',
+        title: t('catalog.sections.voiceTitle', 'Voice Packages (Compulsory - Max 1)'),
+        subtitle: t('catalog.sections.voiceSubtitle', '1 Voice package is required for all connection bundles'),
+        icon: <FiPhone />,
+        bgColor: '#e0f2fe',
+        iconColor: '#0284c7',
+        products: voiceProds,
+      });
+    }
+
+    if (activeCategory === 'All Products' || activeCategory === 'Fibre Broadband' || activeCategory === 'LTE Home') {
+      sections.push({
+        id: 'broadband-section',
+        title: t('catalog.sections.broadbandTitle', 'Broadband Packages (Fibre & LTE - Max 1)'),
+        subtitle: t('catalog.sections.broadbandSubtitle', 'High-speed internet for home, gaming & business'),
+        icon: <FiGlobe />,
+        bgColor: '#e6f4ea',
+        iconColor: '#137333',
+        products: broadbandProds,
+      });
+    }
+
+    if (activeCategory === 'All Products' || activeCategory === 'PEO TV') {
+      sections.push({
+        id: 'peotv-section',
+        title: t('catalog.sections.peoTvTitle', 'PEO TV Packages (Max 1)'),
+        subtitle: t('catalog.sections.peoTvSubtitle', 'Live HD channels, catch-up TV & 4K entertainment'),
+        icon: <FiTv />,
+        bgColor: '#fef3c7',
+        iconColor: '#d97706',
+        products: peoTvProds,
+      });
+    }
+
+    return sections;
+  }, [filteredProducts, activeCategory, t, i18n.language]);
 
   return (
-    <div style={{ backgroundColor: '#f1f5f9', minHeight: '100vh', paddingBottom: '4rem' }}>
-      <Toast toast={toast} onClose={() => setToast(null)} />
+    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', paddingBottom: '3rem' }}>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* ── Header ── */}
-      <div style={{ ...wide, paddingTop: '1.4rem' }}>
+      {/* Main Container */}
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem' }}>
+        {/* ── Top Hero Banner & Quick Actions Section ── */}
+        <HeroBannerCarousel
+          onShopNow={() => {
+            document
+              .getElementById('products-section')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+        />
 
-        {/* Breadcrumb */}
-        <nav style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '0.85rem', display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-          <Link to="/" style={{ color: '#64748b', textDecoration: 'none' }}>Home</Link>
-          <span>›</span>
-          <span>New Connection</span>
-          <span>›</span>
-          <span style={{ color: '#0056b3', fontWeight: 600 }}>Choose a Product</span>
-        </nav>
-
-        {/* Title + Search + Cart */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
-          <div>
-            <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
-              Choose Your Product
-            </h1>
-            <p style={{ fontSize: '0.88rem', color: '#64748b', marginTop: '0.28rem', marginBottom: 0 }}>
-              Explore our range of products and find the perfect connection for your needs.
-            </p>
+        {/* ── Voice Compulsory & Bundle Rules Status Bar ── */}
+        <div
+          style={{
+            backgroundColor: cartCategoryAnalysis.hasVoice ? '#f0fdf4' : '#eff6ff',
+            border: `1.5px solid ${cartCategoryAnalysis.hasVoice ? '#86efac' : '#93c5fd'}`,
+            borderRadius: '14px',
+            padding: '0.85rem 1.25rem',
+            marginTop: '1.25rem',
+            marginBottom: '0.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <span style={{ fontSize: '1.2rem', color: cartCategoryAnalysis.hasVoice ? '#16a34a' : '#1d4ed8' }}>
+              {cartCategoryAnalysis.hasVoice ? <FiCheckCircle /> : <FiAlertCircle />}
+            </span>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: cartCategoryAnalysis.hasVoice ? '#14532d' : '#1e40af' }}>
+                {cartCategoryAnalysis.hasVoice ? t('catalog.bundleRules.selected', 'Voice Package Selected') : t('catalog.bundleRules.required', 'Voice Package Required (Compulsory)')}
+              </div>
+              <div style={{ fontSize: '0.78rem', color: cartCategoryAnalysis.hasVoice ? '#15803d' : '#1e3a8a', fontWeight: 600 }}>
+                {t('catalog.bundleRules.allowedBundles', 'Allowed bundles:')} <strong>{t('catalog.bundleRules.voiceOnly', 'Voice Only')}</strong> • <strong>{t('catalog.bundleRules.voiceBroadband', 'Voice + Broadband')}</strong> • <strong>{t('catalog.bundleRules.voiceBroadbandPeoTv', 'Voice + Broadband + PEO TV')}</strong> {t('catalog.bundleRules.maxOne', '(Max 1 package per category)')}
+              </div>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ position: 'relative', minWidth: '200px' }}>
-              <FiSearch style={{ position: 'absolute', left: '0.7rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} size={14} />
-              <input
-                type="text"
-                placeholder="Search packages..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{
-                  width: '100%', padding: '0.48rem 0.75rem 0.48rem 2rem',
-                  borderRadius: '9999px', border: '1.5px solid #cbd5e1',
-                  backgroundColor: '#fff', fontSize: '0.84rem', outline: 'none',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-                }}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/cart')}
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <span
               style={{
-                display: 'flex', alignItems: 'center', gap: '0.4rem',
-                backgroundColor: '#0056b3', padding: '0.48rem 1.1rem',
-                borderRadius: '9999px', color: '#fff', border: 'none', cursor: 'pointer',
-                fontWeight: 600, fontSize: '0.84rem',
-                boxShadow: '0 3px 10px rgba(0,86,179,0.28)',
+                padding: '0.25rem 0.65rem',
+                borderRadius: '9999px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                backgroundColor: cartCategoryAnalysis.hasVoice ? '#dcfce7' : '#dbeafe',
+                color: cartCategoryAnalysis.hasVoice ? '#15803d' : '#1d4ed8',
               }}
             >
-              <FiShoppingCart size={15} />
-              <span>Cart</span>
-              {cartCount > 0 && (
-                <span style={{
-                  backgroundColor: '#10b981', color: '#fff',
-                  fontSize: '0.68rem', fontWeight: 800,
-                  borderRadius: '9999px', padding: '0.08rem 0.4rem', marginLeft: '0.1rem',
-                }}>{cartCount}</span>
-              )}
-            </button>
+              {t('catalog.bundleRules.voiceLabel', 'Voice:')} {cartCategoryAnalysis.hasVoice ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.requiredCount', 'Required (0/1)')}
+            </span>
+            <span
+              style={{
+                padding: '0.25rem 0.65rem',
+                borderRadius: '9999px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                backgroundColor: cartCategoryAnalysis.hasBroadband ? '#dcfce7' : '#f1f5f9',
+                color: cartCategoryAnalysis.hasBroadband ? '#15803d' : '#64748b',
+              }}
+            >
+              {t('catalog.bundleRules.broadbandLabel', 'Broadband:')} {cartCategoryAnalysis.hasBroadband ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.optionalCount', 'Optional (0/1)')}
+            </span>
+            <span
+              style={{
+                padding: '0.25rem 0.65rem',
+                borderRadius: '9999px',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                backgroundColor: cartCategoryAnalysis.hasPeoTv ? '#dcfce7' : '#f1f5f9',
+                color: cartCategoryAnalysis.hasPeoTv ? '#15803d' : '#64748b',
+              }}
+            >
+              {t('catalog.bundleRules.peoTvLabel', 'PEO TV:')} {cartCategoryAnalysis.hasPeoTv ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.optionalCount', 'Optional (0/1)')}
+            </span>
+
+            {cartItems.length > 0 && (
+              <button
+                onClick={handleClearCartSelection}
+                type="button"
+                style={{
+                  backgroundColor: '#fee2e2',
+                  color: '#dc2626',
+                  border: '1px solid #fca5a5',
+                  padding: '0.25rem 0.65rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {t('catalog.bundleRules.resetSelection', 'Reset Selection')} ↺
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Category Chips */}
-        <CategoryChips activeCategory={activeCategory} onSelectCategory={(cat) => setActiveCategory(cat)} />
-      </div>
+        {/* ── Horizontal Category Pill Chips Bar ── */}
+        <div id="products-section" className="scroll-target">
+          <CategoryChips
+            activeCategory={activeCategory}
+            onSelectCategory={(cat) => setActiveCategory(cat)}
+          />
+        </div>
 
-      {/* ── Main Layout ── */}
-      <div style={{ ...wide, marginTop: '1.2rem' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: hasDetailPanel ? '210px 1fr 420px' : '210px 1fr',
-          gap: '1.2rem',
-          alignItems: 'start',
-        }}>
-
-          {/* ── Sidebar ── */}
-          <div style={{ position: 'sticky', top: '1.5rem' }}>
+        {/* ── Main Catalog Body Layout (Sidebar Filters + Category-Wise Products) ── */}
+        <div className="catalog-layout-grid" style={{ display: 'grid', gap: '1.5rem', marginTop: '1.5rem' }}>
+          {/* Left Sidebar Filter Column — desktop only; hidden ≤900px in favor of the "Filters" popup below */}
+          <div className="catalog-sidebar-col">
             <SidebarFilters
-              selectedTypes={selectedTypes} onTypeToggle={handleTypeToggle}
-              selectedSpeeds={selectedSpeeds} onSpeedToggle={handleSpeedToggle}
-              maxPrice={maxPrice} onPriceChange={setMaxPrice}
-              selectedInstallation={selectedInstallation} onInstallationToggle={handleInstallationToggle}
-              availableOnly={availableOnly} onAvailableToggle={setAvailableOnly}
+              selectedTypes={selectedTypes}
+              onTypeToggle={handleTypeToggle}
+              selectedSpeeds={selectedSpeeds}
+              onSpeedToggle={handleSpeedToggle}
               onClearAll={handleClearAll}
             />
           </div>
 
-          {/* ── Product Grid Area ── */}
+          {/* Mobile/tablet filter popup. Portaled to <body> because position:fixed
+              breaks under the PageWrapper's animated (transformed) ancestor otherwise. */}
+          {showMobileFilters &&
+            createPortal(
+              <div
+                className="catalog-filter-modal-backdrop"
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setShowMobileFilters(false);
+                }}
+              >
+                <div className="catalog-sidebar-col-inner">
+                  <SidebarFilters
+                    selectedTypes={selectedTypes}
+                    onTypeToggle={handleTypeToggle}
+                    selectedSpeeds={selectedSpeeds}
+                    onSpeedToggle={handleSpeedToggle}
+                    onClearAll={handleClearAll}
+                    onApply={() => setShowMobileFilters(false)}
+                    onCloseMobile={() => setShowMobileFilters(false)}
+                  />
+                </div>
+              </div>,
+              document.body
+            )}
+
+          {/* Right Product Listing Area */}
           <div>
-            {/* Toolbar */}
-            <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              marginBottom: '0.9rem', backgroundColor: '#fff',
-              borderRadius: '10px', padding: '0.6rem 1rem',
-              border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-            }}>
-              <span style={{ fontWeight: 600, color: '#334155', fontSize: '0.87rem' }}>
-                Showing <strong style={{ color: '#0056b3' }}>{filteredProducts.length}</strong> results
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+            {/* Toolbar Header */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.2rem',
+                width: '100%',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
+              }}
+            >
+              <div style={{ fontSize: '0.92rem', color: '#475569', fontWeight: 600 }}>
+                {t('catalog.controls.showingResults', { count: filteredProducts.length, defaultValue: 'Showing {{count}} total results across categories' })}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="catalog-filter-toggle-btn"
+                  onClick={() => setShowMobileFilters((prev) => !prev)}
+                  style={{
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.45rem 0.85rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: showMobileFilters ? '#0056b3' : '#ffffff',
+                    color: showMobileFilters ? '#ffffff' : '#0f172a',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <FiSliders size={14} />
+                  <span>{t('catalog.controls.filters', 'Filters')}</span>
+                </button>
+
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <span style={{ fontSize: '0.81rem', color: '#64748b' }}>Sort by:</span>
+                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>{t('catalog.controls.sortBy', 'Sort by:')}</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                     style={{
-                      padding: '0.35rem 0.7rem', borderRadius: '7px',
-                      border: '1px solid #cbd5e1', backgroundColor: '#f8fafc',
-                      fontSize: '0.81rem', fontWeight: 600, color: '#0f172a',
-                      cursor: 'pointer', outline: 'none',
+                      padding: '0.4rem 0.75rem',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      backgroundColor: '#ffffff',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      color: '#0f172a',
+                      cursor: 'pointer',
+                      outline: 'none',
                     }}
                   >
-                    <option value="Popularity">Popularity</option>
-                    <option value="Price Low to High">Price: Low → High</option>
-                    <option value="Price High to Low">Price: High → Low</option>
+                    <option value="Popularity">{t('catalog.controls.popularity', 'Popularity')}</option>
+                    <option value="Price Low to High">{t('catalog.controls.priceLowHigh', 'Price: Low → High')}</option>
+                    <option value="Price High to Low">{t('catalog.controls.priceHighLow', 'Price: High → Low')}</option>
                   </select>
                 </div>
-                <div style={{ display: 'flex', gap: '2px', backgroundColor: '#e2e8f0', padding: '2px', borderRadius: '7px' }}>
-                  {['grid', 'list'].map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => setViewMode(mode)}
-                      title={`${mode === 'grid' ? 'Grid' : 'List'} View`}
-                      style={{
-                        border: 'none', cursor: 'pointer',
-                        backgroundColor: viewMode === mode ? '#0056b3' : 'transparent',
-                        color: viewMode === mode ? '#fff' : '#64748b',
-                        padding: '0.3rem 0.5rem', borderRadius: '5px',
-                        display: 'flex', alignItems: 'center', transition: 'all 0.15s',
-                      }}
-                    >
-                      {mode === 'grid' ? <FiGrid size={14} /> : <FiList size={14} />}
-                    </button>
-                  ))}
+
+                <div style={{ display: 'flex', gap: '2px', backgroundColor: '#f1f5f9', padding: '3px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    aria-label="Grid view"
+                    aria-pressed={viewMode === 'grid'}
+                    style={{
+                      border: 'none',
+                      backgroundColor: viewMode === 'grid' ? '#0056b3' : 'transparent',
+                      color: viewMode === 'grid' ? '#ffffff' : '#64748b',
+                      padding: '0.35rem 0.55rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <FiGrid size={15} aria-hidden="true" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    aria-label="List view"
+                    aria-pressed={viewMode === 'list'}
+                    style={{
+                      border: 'none',
+                      backgroundColor: viewMode === 'list' ? '#0056b3' : 'transparent',
+                      color: viewMode === 'list' ? '#ffffff' : '#64748b',
+                      padding: '0.35rem 0.55rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <FiList size={15} aria-hidden="true" />
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Cards */}
+            {/* Category-Wise Product Sections */}
             {loading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
-                <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '1.25rem' }}>
+                <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
               </div>
             ) : error ? (
               <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '2rem', color: '#991b1b', textAlign: 'center' }}>
                 <p style={{ fontWeight: 600, margin: 0 }}>{error}</p>
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '3rem 1.5rem', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>No Products Found</h3>
-                <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' }}>Try adjusting your filters or search keywords.</p>
+              <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '3rem 1.5rem', textAlign: 'center', border: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>{t('catalog.empty.title', 'No Products Found')}</h3>
+                <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' }}>{t('catalog.empty.subtitle', 'Try adjusting your filters or search keywords.')}</p>
                 <button onClick={handleClearAll} style={{ backgroundColor: '#0056b3', color: '#fff', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
-                  Reset Filters
+                  {t('catalog.empty.resetFilters', 'Reset Filters')}
                 </button>
               </div>
             ) : (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: hasDetailPanel
-                  ? 'repeat(auto-fill, minmax(195px, 1fr))'
-                  : 'repeat(auto-fill, minmax(220px, 1fr))',
-                gap: '1rem',
-              }}>
-                {filteredProducts.map((prod) => {
-                  const prodId = prod._id || prod.id;
-                  const isSelected = selectedProduct && (selectedProduct._id || selectedProduct.id) === prodId;
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                {categorySections.map((section) => {
+                  if (section.products.length === 0) return null;
                   return (
-                    <ProductCard
-                      key={prodId}
-                      product={prod}
-                      isSelected={isSelected}
-                      isFavorite={favorites.includes(prodId)}
-                      onSelect={(p) => setSelectedProduct(p)}
-                      onToggleFavorite={handleToggleFavorite}
-                      onAddToCart={(p) => handleAddToCart(p, 1)}
-                    />
+                    <div key={section.id} style={{ backgroundColor: '#ffffff', borderRadius: '18px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                      {/* Section Header — flexWrap lets the "Packages Available" badge
+                          drop to its own line on narrow screens instead of being
+                          squeezed into a sliver of a column and wrapping into an
+                          illegible multi-line blob. */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', rowGap: '0.65rem', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '2px solid #f1f5f9' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                          <div style={{ backgroundColor: section.bgColor, color: section.iconColor, width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 900, flexShrink: 0 }}>
+                            {section.icon}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>{section.title}</h3>
+                            <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{section.subtitle}</span>
+                          </div>
+                        </div>
+                        <span style={{ backgroundColor: '#f1f5f9', color: '#0056b3', padding: '0.3rem 0.85rem', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                          {t('catalog.sections.packagesAvailable', { count: section.products.length, defaultValue: '{{count}} Packages Available' })}
+                        </span>
+                      </div>
+
+                      {/* Section Cards Grid */}
+                      <div
+                        style={
+                          viewMode === 'list'
+                            ? { display: 'flex', flexDirection: 'column', gap: '0.85rem' }
+                            : {
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+                              gap: '1rem',
+                            }
+                        }
+                      >
+                        {section.products.map((prod) => {
+                          const prodId = String(prod._id || prod.id);
+                          const isSelected = selectedProduct && String(selectedProduct._id || selectedProduct.id) === prodId;
+
+                          const catName = (prod.category || prod.name || '').toLowerCase();
+                          const prodGroup = catName.includes('voice') ? 'Voice' : catName.includes('peo') ? 'PEO TV' : 'Broadband';
+
+                          const isInCart = cartCategoryAnalysis.selectedProdIds.has(prodId);
+                          const isGroupTaken = cartCategoryAnalysis.categoriesInCart.has(prodGroup);
+
+                          // Rule: Max 1 package per category -> disable other packages in same category once selected
+                          const isCategoryDisabled = isGroupTaken && !isInCart;
+                          const groupLabel = prodGroup === 'Voice'
+                            ? t('catalog.categories.voice', 'Voice')
+                            : prodGroup === 'PEO TV'
+                              ? t('catalog.categories.peoTv', 'PEO TV')
+                              : t('catalog.categories.broadband', 'Broadband');
+                          const disabledReason = t('catalog.card.categorySelectedReason', { group: groupLabel, defaultValue: '1 {{group}} Selected' });
+
+                          return (
+                            <ProductCard
+                              key={prodId}
+                              product={prod}
+                              isSelected={isSelected}
+                              isFavorite={favorites.includes(prodId)}
+                              isInCart={isInCart}
+                              onSelect={(p) => setSelectedProduct(p)}
+                              onToggleFavorite={handleToggleFavorite}
+                              onAddToCart={(p) => handleAddToCart(p, 1)}
+                              onRemoveFromCart={handleRemoveFromCart}
+                              disabled={isCategoryDisabled}
+                              disabledReason={disabledReason}
+                              viewMode={viewMode}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
             )}
           </div>
+        </div>
 
-          {/* ── Detail Panel ── */}
-          {hasDetailPanel && (
-            <div>
-              <div style={{ position: 'sticky', top: '1.5rem' }}>
-                <ProductDetailsPanel
-                  product={selectedProduct}
-                  isFavorite={favorites.includes(selectedProduct._id || selectedProduct.id)}
-                  onToggleFavorite={handleToggleFavorite}
-                  onAddToCart={(p, qty) => handleAddToCart(p, qty)}
-                  onBuyNow={(p, qty) => handleBuyNow(p, qty)}
-                  onClose={() => setSelectedProduct(null)}
-                />
-              </div>
+        {/* ── Bottom Value Propositions Footer Strip (Exact 5 Icons Bar) ── */}
+        <div
+          style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            border: '1px solid #e2e8f0',
+            padding: '1.25rem 2rem',
+            marginTop: '2.5rem',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '1.5rem',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{ backgroundColor: '#e0f2fe', color: '#0284c7', padding: '0.65rem', borderRadius: '12px' }}>
+              <FiCheckCircle size={22} />
             </div>
-          )}
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>100% Guaranteed</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Authentic SLT Services</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{ backgroundColor: '#dcfce7', color: '#16a34a', padding: '0.65rem', borderRadius: '12px' }}>
+              <FiClock size={22} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Express Activation</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Connected in 24-48 Hrs</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{ backgroundColor: '#fef3c7', color: '#d97706', padding: '0.65rem', borderRadius: '12px' }}>
+              <FiShield size={22} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Secure Payments</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Bank Grade Security</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{ backgroundColor: '#f3e8ff', color: '#9333ea', padding: '0.65rem', borderRadius: '12px' }}>
+              <FiSliders size={22} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Flexi Customization</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Tailored Add-on Options</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{ backgroundColor: '#fae8ff', color: '#c026d3', padding: '0.65rem', borderRadius: '12px' }}>
+              <FiLock size={22} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Paperless Process</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>100% Online Verification</div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Product Details Side Panel Modal */}
+      {selectedProduct && (
+        <ProductDetailsPanel
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={(prod) => {
+            handleAddToCart(prod, 1);
+            setSelectedProduct(null);
+          }}
+        />
+      )}
     </div>
   );
 }

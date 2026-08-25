@@ -14,7 +14,7 @@ export default function DeclarationStep({ isActive }) {
           {t('wizards.ownershipChange.declaration.currConsentText')}
         </p>
         <label className="checkbox-label" style={{ fontWeight: '500' }}>
-          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.ownershipChange.declaration.currConsentLabel')}
+          <input type="checkbox" name="currentCustomerConsent" className="checkbox-input" required={isActive} /> {t('wizards.ownershipChange.declaration.currConsentLabel')}
         </label>
       </div>
 
@@ -24,7 +24,7 @@ export default function DeclarationStep({ isActive }) {
           {t('wizards.ownershipChange.declaration.newDeclText')}
         </p>
         <label className="checkbox-label" style={{ fontWeight: '500' }}>
-          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.ownershipChange.declaration.newDeclLabel')}
+          <input type="checkbox" name="newApplicantDeclaration" className="checkbox-input" required={isActive} /> {t('wizards.ownershipChange.declaration.newDeclLabel')}
         </label>
       </div>
 

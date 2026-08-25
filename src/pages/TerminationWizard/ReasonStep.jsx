@@ -36,6 +36,10 @@ export default function ReasonStep() {
     }
   };
 
+  const reasonFieldName = (reason) => `reason_${reason.replace(/[^a-zA-Z0-9]+/g, '')}`;
+
+  const competitors = ['Airtel', 'Dialog', 'Etisalat', 'Lanka Bell', 'Mobitel', 'Hutch'];
+
   return (
     <div>
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.termination.reason.heading')}</h3>
@@ -43,20 +47,22 @@ export default function ReasonStep() {
         {t('wizards.termination.reason.desc')}
       </p>
 
-      <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
+      <fieldset className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface-color)', border: '1px solid var(--border-color)', boxShadow: 'none', margin: 0 }}>
+        <legend className="sr-only">{t('wizards.termination.reason.heading')}</legend>
         <div className="responsive-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "1rem" }}>
           {reasons.map((reason, idx) => (
             <label key={idx} className="checkbox-label" style={{ margin: 0 }}>
-              <input 
-                type="checkbox" 
-                className="checkbox-input" 
-                onChange={(e) => handleReasonChange(e, reason)} 
-              /> 
+              <input
+                type="checkbox"
+                name={reasonFieldName(reason)}
+                className="checkbox-input"
+                onChange={(e) => handleReasonChange(e, reason)}
+              />
               {t(`wizards.termination.reason.reasons.${reason}`)}
             </label>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       {showCompetitorDetails && (
         <div className="card mt-6" style={{ padding: '1.5rem', border: '1px solid var(--slt-green)', backgroundColor: 'rgba(0, 166, 80, 0.02)' }}>
@@ -64,29 +70,31 @@ export default function ReasonStep() {
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
             {t('wizards.termination.reason.compDetailsDesc')}
           </p>
-          
+
           <div className="table-container">
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
               <thead>
                 <tr style={{ backgroundColor: 'var(--bg-color)', borderBottom: '2px solid var(--border-color)' }}>
-                  <th style={{ padding: '0.8rem' }}>{t('wizards.termination.reason.operatorName')}</th>
-                  <th style={{ padding: '0.8rem' }}>Airtel</th>
-                  <th style={{ padding: '0.8rem' }}>Dialog</th>
-                  <th style={{ padding: '0.8rem' }}>Etisalat</th>
-                  <th style={{ padding: '0.8rem' }}>Lanka Bell</th>
-                  <th style={{ padding: '0.8rem' }}>Mobitel</th>
-                  <th style={{ padding: '0.8rem' }}>Hutch</th>
+                  <th style={{ padding: '0.8rem' }} scope="col">{t('wizards.termination.reason.operatorName')}</th>
+                  {competitors.map((name) => (
+                    <th key={name} style={{ padding: '0.8rem' }} scope="col">{name}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style={{ padding: '0.8rem', fontWeight: 'bold' }}>{t('wizards.termination.reason.pkgName')}</td>
-                  <td style={{ padding: '0.4rem' }}><input type="text" className="form-control" style={{ padding: '0.4rem' }} /></td>
-                  <td style={{ padding: '0.4rem' }}><input type="text" className="form-control" style={{ padding: '0.4rem' }} /></td>
-                  <td style={{ padding: '0.4rem' }}><input type="text" className="form-control" style={{ padding: '0.4rem' }} /></td>
-                  <td style={{ padding: '0.4rem' }}><input type="text" className="form-control" style={{ padding: '0.4rem' }} /></td>
-                  <td style={{ padding: '0.4rem' }}><input type="text" className="form-control" style={{ padding: '0.4rem' }} /></td>
-                  <td style={{ padding: '0.4rem' }}><input type="text" className="form-control" style={{ padding: '0.4rem' }} /></td>
+                  <th style={{ padding: '0.8rem', fontWeight: 'bold' }} scope="row">{t('wizards.termination.reason.pkgName')}</th>
+                  {competitors.map((name) => (
+                    <td key={name} style={{ padding: '0.4rem' }}>
+                      <input
+                        type="text"
+                        name={`competitorPkg_${name.replace(/\s+/g, '')}`}
+                        className="form-control"
+                        style={{ padding: '0.4rem' }}
+                        aria-label={`${t('wizards.termination.reason.pkgName')} - ${name}`}
+                      />
+                    </td>
+                  ))}
                 </tr>
               </tbody>
             </table>
@@ -95,8 +103,8 @@ export default function ReasonStep() {
       )}
 
       <div className="form-group mt-6">
-        <label className="form-label">{t('wizards.termination.reason.addComments')}</label>
-        <textarea className="form-control" rows="3"></textarea>
+        <label className="form-label" htmlFor="term-addComments">{t('wizards.termination.reason.addComments')}</label>
+        <textarea id="term-addComments" name="additionalComments" className="form-control" rows="3"></textarea>
       </div>
 
     </div>

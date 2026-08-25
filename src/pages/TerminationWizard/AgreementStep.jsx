@@ -17,7 +17,7 @@ export default function AgreementStep({ isActive }) {
         </p>
         
         <label className="checkbox-label" style={{ fontWeight: '500', color: 'var(--text-primary)' }}>
-          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.termination.agreement.agreeLabel')}
+          <input type="checkbox" name="agreementAccepted" className="checkbox-input" required={isActive} /> {t('wizards.termination.agreement.agreeLabel')}
         </label>
       </div>
 

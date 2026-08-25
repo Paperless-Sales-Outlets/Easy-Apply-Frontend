@@ -1,13 +1,16 @@
-import React, { useState, useReducer, useEffect } from 'react';
+import React, { useState, useReducer, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
-import ConnectionPackageStep from './ConnectionPackageStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
+import LoopCheckStep from './LoopCheckStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
+import WizardStepper from '../../components/WizardStepper';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
 const formReducer = (state, action) => {
   switch (action.type) {
@@ -49,6 +52,10 @@ const initialState = {
   broadbandPackage: '',
   otherBroadbandPackage: '',
   staticIP: 'no',
+  declarationAccepted: false,
+  signature: '',
+  nicFront: null,
+  nicBack: null,
 };
 
 export default function NewConnectionWizard() {
@@ -56,6 +63,7 @@ export default function NewConnectionWizard() {
   const location = useLocation();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { customerExists, selectedAccount } = useVerifiedContext();
 
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -64,7 +72,7 @@ export default function NewConnectionWizard() {
     if (fromState) {
       setSelectedProduct(fromState);
     } else {
-      const stored = sessionStorage.getItem('selectedProduct');
+      const stored = localStorage.getItem('selectedProduct');
       if (stored) {
         try {
           setSelectedProduct(JSON.parse(stored));
@@ -77,6 +85,7 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
+  const vasStepRef = useRef(null);
   const totalSteps = 5;
 
   useEffect(() => {
@@ -121,6 +130,10 @@ export default function NewConnectionWizard() {
     });
   };
 
+  const handleFileChange = (name, fileData) => {
+    dispatch({ type: 'UPDATE_FIELD', payload: { name, value: fileData } });
+  };
+
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);
@@ -130,63 +143,31 @@ export default function NewConnectionWizard() {
     window.scrollTo(0, 0);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitError('');
-
-    // Step 3 Validation: Checkbox groups require at least one selection each
-    if (currentStep === 3) {
-      // 4.0 — Connection Mode table: at least one must be ticked
-      const hasConnectionMode = [
-        'connectionModeFibreVoice', 'connectionModeFibreBroadband', 'connectionModeFibrePeoTv',
-        'connectionModeLTEVoice', 'connectionModeLTEBroadband', 'connectionModeLTEPeoTv',
-        'connectionModeCopperVoice', 'connectionModeCopperBroadband', 'connectionModeCopperPeoTv',
-      ].some(key => !!formData[key]);
-      if (!hasConnectionMode) {
-        setSubmitError('3.1 – Please select at least one Connection Mode from the table (Voice, Broadband, or PEO TV).');
-        return;
-      }
-
-      // 4.1.1 — Fixed voice packages: at least one must be ticked
-      const has411 = [
-        'fixedVoicePackageHomeMyPhone', 'fixedVoicePackageOffice', 'fixedVoicePackageUnlimited',
-      ].some(key => !!formData[key]);
-      if (!has411) {
-        setSubmitError('4.1.1 – Please select at least one Fixed Voice Package.');
-        return;
-      }
-
-      // 4.1.2 — 4G LTE Postpaid packages: at least one must be ticked
-      const has412 = [
-        'fixedVoicePackageLTEPalBasic', 'fixedVoicePackageLTEPalPremium',
-        'fixedVoicePackageHomeDoublePlay', 'fixedVoicePackageOfficeDoublePlay',
-      ].some(key => !!formData[key]);
-      if (!has412) {
-        setSubmitError('4.1.2 – Please select at least one 4G LTE Postpaid Package.');
-        return;
-      }
-
-      // 4.3 — PEO TV Package: at least one must be ticked
-      const peoTvPkgs = [
-        'PEO Titanium', 'PEO Platinum', 'PEO Entertainment', 'PEO Gold',
-        'PEO Silver Plus', 'PEO Silver', 'PEO Family', 'Other',
-      ];
-      const has43 = peoTvPkgs.some(pkg => !!formData[`peoTvPkg_${pkg.replace(/\s+/g, '')}`]);
-      if (!has43) {
-        setSubmitError('4.3 – Please select at least one PEO TV Package.');
-        return;
-      }
+    // Existing customers already have identity documents on file — only new
+    // customers (no verified account) need to upload their NIC (BRD 5.1.3).
+    if (currentStep === 1 && !selectedAccount && (!formData.nicFront || !formData.nicBack)) {
+      toast.error('Please upload both sides of your NIC to continue');
+      return;
     }
+    if (currentStep === 3 && vasStepRef.current && !vasStepRef.current.validate()) return;
+    if (currentStep < totalSteps) nextStep();
+  };
 
-    if (currentStep < totalSteps) { nextStep(); return; }
-
+  // Real submission — fired either after payment succeeds (loop available)
+  // or immediately after the loop check comes back negative (no payment,
+  // just a pending request for an SLT rep to follow up on).
+  const submitApplication = async (paymentRef, phoneOverride) => {
+    const phone = phoneOverride || verifiedMobile || formData.mobileNumber;
     setSubmitting(true);
     setSubmitError('');
     try {
       const res = await api.post('/applications', {
         serviceType: 'new-connection',
         formData,
-        phone: verifiedMobile,
+        phone,
       });
       navigate('/completion', {
         state: {
@@ -244,29 +225,18 @@ export default function NewConnectionWizard() {
       )}
 
       {/* Progress Bar */}
-      <div className="wizard-nav-wrapper">
-        <div className="wizard-steps-container" style={{ display: "flex", marginBottom: "2rem", position: "relative" }}>
-          <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
-          <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
+      <WizardStepper
+        currentStep={currentStep}
+        steps={[
+          t('wizards.newConnection.steps.s1'),
+          t('wizards.newConnection.steps.s2'),
+          t('wizards.newConnection.steps.s3'),
+          'Coverage Check',
+          'Payment',
+        ]}
+      />
 
-          {[1, 2, 3, 4, 5].map(step => (
-            <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-              <div style={{
-                width: '34px', height: '34px', borderRadius: '50%',
-                backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
-                border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
-                color: step <= currentStep ? 'white' : 'var(--text-secondary)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
-              }}>
-                {step}
-              </div>
-              <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-                {step === 1 ? t('wizards.newConnection.steps.s1') : step === 2 ? t('wizards.newConnection.steps.s2') : step === 3 ? t('wizards.newConnection.steps.s3') : step === 4 ? t('wizards.newConnection.steps.s4') : 'Payment'}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form onSubmit={handleSubmit}>
 
@@ -275,6 +245,7 @@ export default function NewConnectionWizard() {
             <CustomerInfoStep
               formData={formData}
               handleChange={handleChange}
+              handleFileChange={handleFileChange}
               setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
             />
           )}
@@ -282,13 +253,29 @@ export default function NewConnectionWizard() {
             <ServiceInfoStep formData={formData} handleChange={handleChange} />
           )}
           {currentStep === 3 && (
-            <ConnectionPackageStep formData={formData} handleChange={handleChange} />
+            <ValueAddedServicesStep
+              ref={vasStepRef}
+              isActive={currentStep === 3}
+              formData={formData}
+              handleChange={handleChange}
+            />
           )}
           {currentStep === 4 && (
-            <ValueAddedServicesStep formData={formData} handleChange={handleChange} />
+            <LoopCheckStep
+              formData={formData}
+              submitting={submitting}
+              onAvailable={nextStep}
+              onUnavailable={submitApplication}
+            />
           )}
           {currentStep === 5 && (
-            <PaymentStep isActive={currentStep === 5} verifiedPhone={verifiedMobile} onSuccess={nextStep} />
+            <PaymentStep
+              isActive={currentStep === 5}
+              verifiedPhone={verifiedMobile}
+              amount={selectedProduct?.installationFee || 2500}
+              amountLabel="Total Amount"
+              onSuccess={submitApplication}
+            />
           )}
         </div>
 
@@ -302,15 +289,11 @@ export default function NewConnectionWizard() {
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
             {t('common.previous')}
           </button>
-          {currentStep < totalSteps - 1 ? (
+          {currentStep <= 3 && (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               {t('common.nextStep')}
             </button>
-          ) : currentStep === totalSteps - 1 ? (
-            <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting ? t('common.submitting') : t('common.submit')}
-            </button>
-          ) : null}
+          )}
         </div>
       </form>
     </div>

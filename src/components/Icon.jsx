@@ -117,6 +117,13 @@ const PATHS = {
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   ),
 
+  'check-circle': (
+    <>
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </>
+  ),
+
   check: (
     <path d="M20 6 9 17l-5-5" />
   ),
@@ -161,6 +168,44 @@ const PATHS = {
       <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
       <line x1="8" y1="21" x2="16" y2="21" />
       <line x1="12" y1="17" x2="12" y2="21" />
+    </>
+  ),
+
+  'chevron-down': (
+    <path d="m6 9 6 6 6-6" />
+  ),
+
+  x: (
+    <path d="M18 6 6 18M6 6l12 12" />
+  ),
+
+  'alert-circle': (
+    <>
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </>
+  ),
+
+  info: (
+    <>
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="16" x2="12" y2="12"></line>
+      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </>
+  ),
+
+  user: (
+    <>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </>
+  ),
+
+  tag: (
+    <>
+      <path d="m20.59 13.41-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+      <line x1="7" y1="7" x2="7.01" y2="7" />
     </>
   ),
 };

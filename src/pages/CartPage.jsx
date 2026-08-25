@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   FiTrash2,
@@ -25,6 +26,7 @@ import { getCart, removeFromCart, addToCart, getProducts, getLocalCart } from '.
 import Toast from '../components/common/Toast';
 
 export default function CartPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [cart, setCart] = useState(null);
@@ -109,16 +111,13 @@ export default function CartPage() {
       quantity: primaryItem.quantity,
     };
 
-    sessionStorage.setItem('selectedProduct', JSON.stringify(selectedProductData));
-    sessionStorage.setItem('customerType', 'new');
+    localStorage.setItem('selectedProduct', JSON.stringify(selectedProductData));
 
-    // Navigate directly to New Connection Form Page
+    // Navigate to New Connection Form Page
     navigate('/new-connection', {
       state: {
         items,
         selectedProduct: selectedProductData,
-        customerType: 'new',
-        skipOtp: true,
       },
     });
   };
@@ -142,10 +141,10 @@ export default function CartPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h1 style={{ fontSize: '1.9rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
-              Your Shopping Cart
+              {t('cart.title', 'Your Shopping Cart')}
             </h1>
             <p style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '0.35rem', marginBottom: 0 }}>
-              Review your selected products before proceeding.
+              {t('cart.subtitle', 'Review your selected products before proceeding.')}
             </p>
           </div>
 
@@ -167,7 +166,7 @@ export default function CartPage() {
               transition: 'all 0.15s ease',
             }}
           >
-            <FiArrowLeft size={16} /> Continue Browsing
+            <FiArrowLeft size={16} /> {t('cart.continueBrowsing', 'Continue Browsing')}
           </Link>
         </div>
 
@@ -209,7 +208,8 @@ export default function CartPage() {
               {/* SLTMobitel Badge */}
               <span
                 style={{
-                  display: 'inline-flex',
+                  display: 'flex',
+                  width: 'fit-content',
                   alignItems: 'center',
                   gap: '0.35rem',
                   backgroundColor: '#eff6ff',
@@ -220,38 +220,35 @@ export default function CartPage() {
                   borderRadius: '9999px',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
-                  marginBottom: '1.5rem',
+                  margin: '0 auto 1.5rem auto',
                 }}
               >
-                <FiZap size={13} /> SLTMobitel EasyApply
+                <FiZap size={13} /> {t('cart.badge', 'SLTMobitel EasyApply')}
               </span>
 
-              {/* Animated Empty Cart Icon Ring */}
-              <motion.div
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              {/* Empty Cart Icon */}
+              <div
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  display: 'flex',
                   width: '124px',
                   height: '124px',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                  backgroundColor: '#eff6ff',
                   color: '#0056b3',
-                  marginBottom: '1.75rem',
-                  boxShadow: '0 12px 28px rgba(0, 86, 179, 0.12)',
+                  margin: '0 auto 1.75rem auto',
                 }}
               >
                 <FiShoppingCart size={54} />
-              </motion.div>
+              </div>
 
               <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.6rem', letterSpacing: '-0.02em' }}>
-                Your cart is currently empty
+                {t('cart.emptyTitle', 'Your cart is currently empty')}
               </h2>
 
               <p style={{ fontSize: '0.98rem', color: '#64748b', marginBottom: '2.5rem', maxWidth: '540px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
-                Looks like you haven't added any SLTMobitel products yet. Explore our high-speed Fibre Broadband, 4G LTE Home, and PEO TV packages to build your connection.
+                {t('cart.emptyText', "Looks like you haven't added any SLTMobitel products yet. Explore our high-speed Fibre Broadband, 4G LTE Home, and PEO TV packages to build your connection.")}
               </p>
 
               {/* Action Button */}
@@ -274,7 +271,7 @@ export default function CartPage() {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  <FiGrid size={16} /> Browse Products
+                  <FiGrid size={16} /> {t('cart.browseProducts', 'Browse Products')}
                 </Link>
               </div>
             </motion.div>
@@ -369,14 +366,14 @@ export default function CartPage() {
         ) : (
           /* ── NON-EMPTY CART VIEW (Matches Image 3 Exactly) ── */
           <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.75rem', alignItems: 'start', marginBottom: '2.5rem' }}>
+            <div className="cart-layout-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.75rem', alignItems: 'start', marginBottom: '2.5rem' }}>
 
               {/* Left Column: Cart Items List (8 cols) */}
-              <div style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="cart-layout-items" style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem' }}>
                   <FiShoppingCart color="#0056b3" size={20} />
-                  <span>Cart Items ({totalItemCount})</span>
+                  <span>{t('cart.itemsHeading', { count: totalItemCount, defaultValue: 'Cart Items ({{count}})' })}</span>
                 </div>
 
                 {items.map((item, idx) => {
@@ -580,10 +577,10 @@ export default function CartPage() {
                   </div>
                   <div>
                     <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>
-                      Secure & Hassle-Free
+                      {t('cart.secure', 'Secure & Hassle-Free')}
                     </h4>
                     <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.8rem', color: '#475569' }}>
-                      Your information is safe with us. We use OTP verification to ensure a secure application process.
+                      {t('cart.secureText', 'Your information is safe with us. We use OTP verification to ensure a secure application process.')}
                     </p>
                   </div>
                 </div>
@@ -591,7 +588,7 @@ export default function CartPage() {
               </div>
 
               {/* Right Column: Order Summary (4 cols) */}
-              <div style={{ gridColumn: 'span 4' }}>
+              <div className="cart-layout-summary" style={{ gridColumn: 'span 4' }}>
                 <div
                   style={{
                     backgroundColor: '#ffffff',
@@ -607,18 +604,18 @@ export default function CartPage() {
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                    Order Summary
+                    {t('cart.orderSummary', 'Order Summary')}
                   </h3>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.9rem', color: '#475569' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>Subtotal ({totalItemCount} {totalItemCount === 1 ? 'item' : 'items'})</span>
+                      <span>{t('cart.subtotalWithCount', { count: totalItemCount, defaultValue: `Subtotal (${totalItemCount} ${totalItemCount === 1 ? 'item' : 'items'})` })}</span>
                       <strong style={{ color: '#0f172a' }}>Rs. {monthlyTotal.toLocaleString()}</strong>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        Installation Fees <FiInfo size={13} color="#94a3b8" />
+                        {t('cart.installationFees', 'Installation Fees')} <FiInfo size={13} color="#94a3b8" />
                       </span>
                       <strong style={{ color: '#0f172a' }}>Rs. {installationTotal.toLocaleString()}</strong>
                     </div>
@@ -627,7 +624,7 @@ export default function CartPage() {
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
-                        Total Due (First Month)
+                        {t('cart.totalDue', 'Total Due (First Month)')}
                       </span>
                       <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0056b3' }}>
                         Rs. {grandTotal.toLocaleString()}
@@ -650,8 +647,8 @@ export default function CartPage() {
                       gap: '0.4rem',
                     }}
                   >
-                    <span style={{ fontSize: '0.9rem' }}>🏷️</span>
-                    <span>Installation fees are one-time charges payable during activation.</span>
+                    <FiTag size={14} style={{ marginTop: '2px', flexShrink: 0 }} />
+                    <span>{t('cart.installationNote', 'Installation fees are one-time charges payable during activation.')}</span>
                   </div>
 
                   {/* Primary Checkout Button */}
@@ -675,12 +672,12 @@ export default function CartPage() {
                       transition: 'transform 0.15s ease',
                     }}
                   >
-                    Proceed to Checkout <FiArrowRight size={18} />
+                    {t('cart.proceedToCheckout', 'Proceed to Checkout')} <FiArrowRight size={18} />
                   </button>
 
                   {/* Secondary Save for Later Button */}
                   <button
-                    onClick={() => showToast('Cart saved for later!', 'info')}
+                    onClick={() => showToast(t('cart.savedToast', 'Cart saved for later!'), 'info')}
                     style={{
                       backgroundColor: '#ffffff',
                       color: '#0056b3',
@@ -697,13 +694,13 @@ export default function CartPage() {
                       gap: '0.4rem',
                     }}
                   >
-                    <FiBookmark size={15} /> Save for Later
+                    <FiBookmark size={15} /> {t('cart.saveForLater', 'Save for Later')}
                   </button>
 
                   {/* We Accept Footer */}
                   <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
                     <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '0.5rem' }}>
-                      We Accept
+                      {t('cart.weAccept', 'We Accept')}
                     </span>
                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       {['VISA', 'Mastercard', 'AMEX', 'UnionPay', 'Cash'].map((card) => (

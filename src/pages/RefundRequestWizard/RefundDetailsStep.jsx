@@ -1,32 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import FileUploadField from '../../components/form/FileUploadField';
 
 export default function RefundDetailsStep({ isActive }) {
   const { t } = useTranslation();
+  const [receiptUpload, setReceiptUpload] = useState(null);
 
   return (
     <div>
       <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.refundRequest.refundDetails.heading')}</h3>
-      
+
       <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'none', marginBottom: '1.5rem' }}>
         <div className="form-group">
           <label className="form-label">{t('wizards.refundRequest.refundDetails.paidAmount')}</label>
-          <div style={{ maxWidth: '200px' }}>
-            <input type="number" className="form-control" required={isActive} />
-          </div>
+          <input type="number" name="paidAmount" className="form-control" required={isActive} />
         </div>
 
         <div className="form-group mt-4">
           <label className="form-label">{t('wizards.refundRequest.refundDetails.reason')}</label>
-          <textarea className="form-control" rows="3" required={isActive}></textarea>
+          <textarea name="reason" className="form-control" rows="3" required={isActive}></textarea>
         </div>
 
         <div className="form-group mt-4">
-          <label className="form-label">{t('wizards.refundRequest.refundDetails.receiptUpload')}</label>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-            {t('wizards.refundRequest.refundDetails.receiptNote')}
-          </p>
-          <input type="file" className="form-control" accept="image/*,.pdf" required={isActive} />
+          <FileUploadField
+            name="receiptUpload"
+            label={t('wizards.refundRequest.refundDetails.receiptUpload')}
+            accept=".pdf,.jpg,.jpeg,.png"
+            required={isActive}
+            value={receiptUpload}
+            onChange={(_, fileData) => setReceiptUpload(fileData)}
+            helpText={t('wizards.refundRequest.refundDetails.receiptNote')}
+          />
+          {receiptUpload && <input type="hidden" name="receiptUpload" value={receiptUpload.data} />}
         </div>
       </div>
 

@@ -1,18 +1,30 @@
 import React, { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useAdminAuth } from '../context/AdminAuthContext';
 
 export default function AdminLoginPage({ onLogin }) {
+  const { login: contextLogin, admin, accessToken } = useAdminAuth();
+  const navigate = useNavigate();
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
 
+  // If already authenticated, redirect to admin dashboard
+  if (admin && accessToken) {
+    return <Navigate to="/admin" replace />;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const result = await onLogin(email, password);
+    const loginFn = onLogin || contextLogin;
+    const result = await loginFn(email, password);
     if (!result || !result.ok) {
       setError(result?.message || 'Invalid email or password. Please try again.');
+    } else {
+      navigate('/admin', { replace: true });
     }
     setLoading(false);
   };

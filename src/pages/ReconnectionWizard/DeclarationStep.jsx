@@ -1,7 +1,8 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import DigitalSignatureCanvas from '../../components/DigitalSignatureCanvas';
+import { motion } from 'framer-motion';
+import DigitalSignatureCanvas from '../../components/form/DigitalSignatureCanvas';
 
 // A reusable file input wrapper that adds a clear (✕) button and Drag-and-Drop zone
 const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange }, ref) => {
@@ -69,19 +70,31 @@ const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange
         onDrop={handleDrop}
         onClick={() => inputRef.current && inputRef.current.click()}
         style={{
-          border: isDragging ? '2px dashed var(--blue)' : '2px dashed var(--line)',
-          backgroundColor: isDragging ? 'rgba(15, 87, 168, 0.05)' : 'var(--surface)',
-          borderRadius: '12px',
-          padding: '2rem 1.5rem',
+          border: isDragging ? '2px dashed var(--slt-blue)' : '2px dashed rgba(15, 87, 168, 0.2)',
+          backgroundColor: isDragging ? 'rgba(15, 87, 168, 0.08)' : 'var(--surface)',
+          borderRadius: '16px',
+          padding: '2.5rem 1.5rem',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          transition: 'all 0.3s ease',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           textAlign: 'center',
           position: 'relative',
-          minHeight: '120px'
+          minHeight: '140px'
+        }}
+        onMouseEnter={(e) => {
+          if (!isDragging) {
+            e.currentTarget.style.backgroundColor = 'rgba(15, 87, 168, 0.02)';
+            e.currentTarget.style.borderColor = 'rgba(15, 87, 168, 0.4)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isDragging) {
+            e.currentTarget.style.backgroundColor = 'var(--surface)';
+            e.currentTarget.style.borderColor = 'rgba(15, 87, 168, 0.2)';
+          }
         }}
       >
         <input
@@ -95,33 +108,40 @@ const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange
         />
         
         {hasFile ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(40, 167, 69, 0.1)', color: 'var(--slt-green)', display: 'grid', placeItems: 'center' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-            </div>
-            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{fileName}</span>
-            <button
-              type="button"
-              onClick={handleClear}
-              style={{
-                marginTop: '0.5rem',
-                background: 'rgba(220, 53, 69, 0.1)', border: 'none', borderRadius: '20px',
-                color: 'var(--danger, #dc3545)', cursor: 'pointer', padding: '0.3rem 1rem',
-                fontSize: '0.85rem', fontWeight: 600
-              }}
-            >
-              Remove
-            </button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', pointerEvents: 'none' }}>
-            <div style={{ color: isDragging ? 'var(--blue)' : 'var(--muted)' }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'grid', placeItems: 'center', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
             </div>
             <div>
-              <span style={{ fontWeight: 600, color: 'var(--blue)' }}>Click to upload</span> <span style={{ color: 'var(--muted)' }}>or drag and drop</span>
+              <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: '0.25rem' }}>{fileName}</span>
+              <button
+                type="button"
+                onClick={handleClear}
+                style={{
+                  background: 'none', border: 'none', color: 'var(--danger, #ef4444)', fontSize: '0.85rem',
+                  cursor: 'pointer', padding: '0.25rem 0.75rem', borderRadius: '8px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)', fontWeight: 600
+                }}
+              >
+                Remove File
+              </button>
             </div>
-            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>SVG, PNG, JPG or PDF</span>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.08)', color: 'var(--slt-blue)', display: 'grid', placeItems: 'center', transition: 'all 0.3s ease' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <div>
+              <span style={{ fontWeight: 600, color: 'var(--slt-blue)', display: 'block', marginBottom: '0.25rem', fontSize: '1.05rem' }}>
+                {isDragging ? 'Drop file here' : 'Click or drag file here to upload'}
+              </span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Maximum file size 5MB</span>
+            </div>
           </div>
         )}
       </div>
@@ -139,6 +159,7 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
   const signatureFileRef = useRef(null);
 
   const [paymentIntention, setPaymentIntention] = useState('online');
+  const [isAgreed, setIsAgreed] = useState(false);
 
   // Notify parent whenever payment intention changes
   React.useEffect(() => {
@@ -170,51 +191,55 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
 
   return (
     <div>
-      {reconnectionData && (
-        <div style={{ marginBottom: '2.5rem' }}>
-          <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>Customer Details</h3>
-          <div className="card" style={{ padding: '1.5rem', backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', display: 'grid', placeItems: 'center', color: 'var(--slt-blue)' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              </div>
-              <div>
-                <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>{reconnectionData.fullName}</h4>
-                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Account Holder</p>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-              <div style={{ color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-              </div>
-              <div>
-                <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: '1.5' }}>
-                  <strong>Service Address:</strong><br />
-                  {[reconnectionData.addressLine1, reconnectionData.addressLine2].filter(Boolean).join(', ')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-
-
       <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: 'rgba(15, 87, 168, 0.05)', borderRadius: '12px', border: '1px solid rgba(15, 87, 168, 0.2)' }}>
         <h4 style={{ color: 'var(--slt-blue)', marginBottom: '1rem', fontSize: '1.1rem' }}>Pending Balance Settlement</h4>
-        <div className="radio-group" style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-          <label className="radio-label" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
-            <input type="radio" name="paymentIntention" value="online" checked={paymentIntention === 'online'} onChange={() => setPaymentIntention('online')} /> 
+        <div 
+          style={{ 
+            display: 'flex', backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: '12px', padding: '0.25rem', marginBottom: '1.5rem', position: 'relative'
+          }}
+        >
+          {/* Animated Background Pill */}
+          <div 
+            style={{
+              position: 'absolute', top: '0.25rem', bottom: '0.25rem', 
+              left: paymentIntention === 'online' ? '0.25rem' : '50%',
+              width: 'calc(50% - 0.25rem)',
+              backgroundColor: '#fff', borderRadius: '8px',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }} 
+          />
+          <button 
+            type="button" 
+            onClick={() => setPaymentIntention('online')}
+            style={{ 
+              flex: 1, padding: '0.75rem', background: 'none', border: 'none', borderRadius: '8px', 
+              fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', position: 'relative', zIndex: 1,
+              color: paymentIntention === 'online' ? 'var(--slt-blue)' : 'var(--text-secondary)',
+              transition: 'color 0.3s ease'
+            }}
+          >
             Pay Online Now (Recommended)
-          </label>
-          <label className="radio-label" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
-            <input type="radio" name="paymentIntention" value="paid" checked={paymentIntention === 'paid'} onChange={() => setPaymentIntention('paid')} /> 
+          </button>
+          <button 
+            type="button" 
+            onClick={() => setPaymentIntention('paid')}
+            style={{ 
+              flex: 1, padding: '0.75rem', background: 'none', border: 'none', borderRadius: '8px', 
+              fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', position: 'relative', zIndex: 1,
+              color: paymentIntention === 'paid' ? 'var(--slt-blue)' : 'var(--text-secondary)',
+              transition: 'color 0.3s ease'
+            }}
+          >
             I have already paid
-          </label>
+          </button>
+          {/* Hidden inputs to preserve form submission */}
+          <input type="radio" name="paymentIntention" value="online" checked={paymentIntention === 'online'} readOnly style={{ display: 'none' }} />
+          <input type="radio" name="paymentIntention" value="paid" checked={paymentIntention === 'paid'} readOnly style={{ display: 'none' }} />
         </div>
 
         {paymentIntention === 'paid' && (
-          <div className="form-group mb-2" style={{ maxWidth: '400px' }}>
+          <div className="form-group mb-2">
             <FileInputWithClear
               label="Upload Payment Receipt (PDF/JPG/PNG)"
               name="paymentReceipt"
@@ -230,8 +255,43 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
         <p style={{ marginBottom: '1rem' }}>
           {t('wizards.reconnection.declaration.declarationText')}
         </p>
-        <label className="checkbox-label" style={{ color: 'var(--text-primary)', fontWeight: '500' }}>
-          <input type="checkbox" className="checkbox-input" required={isActive} /> {t('wizards.reconnection.declaration.agreeLabel')}
+        <label 
+          style={{ 
+            display: 'inline-flex', alignItems: 'center', gap: '0.75rem', 
+            color: 'var(--text-primary)', fontWeight: 600, cursor: 'pointer',
+            userSelect: 'none'
+          }}
+        >
+          <div style={{ position: 'relative', width: '22px', height: '22px' }}>
+            <input 
+              type="checkbox" 
+              required={isActive} 
+              checked={isAgreed}
+              onChange={(e) => setIsAgreed(e.target.checked)}
+              style={{ opacity: 0, position: 'absolute', width: '100%', height: '100%', cursor: 'pointer', margin: 0, zIndex: 2 }} 
+            />
+            <motion.div
+              animate={{
+                backgroundColor: isAgreed ? 'var(--slt-blue)' : '#ffffff',
+                borderColor: isAgreed ? 'var(--slt-blue)' : 'rgba(0,0,0,0.2)'
+              }}
+              style={{
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                border: '2px solid', borderRadius: '6px',
+                display: 'grid', placeItems: 'center', pointerEvents: 'none'
+              }}
+            >
+              <motion.svg
+                width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: isAgreed ? 1 : 0, opacity: isAgreed ? 1 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <motion.polyline points="20 6 9 17 4 12" />
+              </motion.svg>
+            </motion.div>
+          </div>
+          {t('wizards.reconnection.declaration.agreeLabel')}
         </label>
       </div>
 
@@ -259,7 +319,7 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
             <input type="hidden" name="digitalSignatureBase64" value={signatureBase64} />
           </div>
         ) : (
-          <div style={{ maxWidth: '400px' }}>
+          <div>
             <FileInputWithClear
               label="Upload Signature (PDF/JPG/PNG)"
               name="signatureDoc"

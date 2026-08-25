@@ -1,266 +1,408 @@
 import React from 'react';
-import { FiHeart, FiShoppingCart, FiCheck } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { FiCheck, FiHeart, FiShoppingCart } from 'react-icons/fi';
 import { FaHeart } from 'react-icons/fa';
 import ProductDeviceGraphic from './ProductDeviceGraphic';
 
-const GRADIENTS = {
-  '300 Mbps Fibre Broadband':  'linear-gradient(140deg, #0369a1 0%, #1e3a8a 100%)',
-  '500 Mbps Fibre Broadband':  'linear-gradient(140deg, #4c1d95 0%, #1e1b4b 100%)',
-  '1 Gbps Fibre Broadband':    'linear-gradient(140deg, #065f46 0%, #064e3b 100%)',
-  'LTE Home 150 GB':           'linear-gradient(140deg, #9f1239 0%, #500724 100%)',
-  'LTE Home 300 GB':           'linear-gradient(140deg, #0d6e6e 0%, #115e59 100%)',
-  'PEO TV Starter Pack':       'linear-gradient(140deg, #c2410c 0%, #7c2d12 100%)',
-  'Voice Home Phone':          'linear-gradient(140deg, #1d4ed8 0%, #1e3a8a 100%)',
-  'Add-on Static IP':          'linear-gradient(140deg, #6d28d9 0%, #3b0764 100%)',
-  default:                     'linear-gradient(140deg, #0284c7 0%, #0056b3 100%)',
+const CARD_GRADIENTS = {
+  '500 Mbps Fibre Broadband': 'linear-gradient(135deg, #1d074d 0%, #120435 100%)',
+  '300 Mbps Fibre Broadband': 'linear-gradient(135deg, #003e92 0%, #002256 100%)',
+  '1 Gbps Fibre Broadband': 'linear-gradient(135deg, #013e28 0%, #002316 100%)',
+  'LTE Home 150 GB': 'linear-gradient(135deg, #371866 0%, #1e0b3c 100%)',
+  'LTE Home 300 GB': 'linear-gradient(135deg, #5c0717 0%, #34020b 100%)',
+  'Fibre Voice Home': 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+  'Voice Unlimited': 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
+  'Megaline Voice Basic': 'linear-gradient(135deg, #0284c7 0%, #075985 100%)',
+  'Voice Business Prime': 'linear-gradient(135deg, #4338ca 0%, #3730a3 100%)',
+  'PEO TV Gold Pack': 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
+  'PEO TV Starter Pack': 'linear-gradient(135deg, #c026d3 0%, #86198f 100%)',
+  'PEO TV Entertainment': 'linear-gradient(135deg, #d97706 0%, #92400e 100%)',
+  'PEO TV Titanium': 'linear-gradient(135deg, #be123c 0%, #881337 100%)',
 };
+
+const DEFAULT_GRADIENT = 'linear-gradient(135deg, #0056b3 0%, #002b66 100%)';
 
 export default function ProductCard({
   product,
   isSelected,
   isFavorite,
+  isInCart = false,
   onSelect,
   onToggleFavorite,
   onAddToCart,
+  onRemoveFromCart,
+  disabled = false,
+  disabledReason = 'Category Limit Reached',
+  viewMode = 'grid',
 }) {
+  const { t } = useTranslation();
   const {
     _id,
     id,
     name,
-    category,
-    monthlyPrice = 0,
-    installationFee = 0,
+    monthlyPrice,
+    installationFee = 2500,
     features = [],
+    category = 'Broadband',
     popular = false,
   } = product;
 
-  const productId = _id || id;
-  const gradient = GRADIENTS[name] || GRADIENTS.default;
+  const cardGradient = CARD_GRADIENTS[name] || DEFAULT_GRADIENT;
 
-  return (
-    <div
-      onClick={() => onSelect(product)}
-      style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '14px',
-        overflow: 'hidden',
-        boxShadow: isSelected
-          ? '0 6px 24px rgba(0, 86, 179, 0.28)'
-          : '0 2px 10px rgba(0, 0, 0, 0.08)',
-        border: isSelected ? '2px solid #0056b3' : '1.5px solid #e8edf3',
-        transition: 'transform 0.22s ease, box-shadow 0.22s ease',
-        display: 'flex',
-        flexDirection: 'column',
-        cursor: 'pointer',
-      }}
-      onMouseEnter={e => {
-        if (!isSelected) {
-          e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.14)';
-        }
-      }}
-      onMouseLeave={e => {
-        if (!isSelected) {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.08)';
-        }
-      }}
-    >
-      {/* ── Banner ── */}
-      <div
+  if (viewMode === 'list') {
+    return (
+      <motion.div
+        whileHover={{ y: -2, boxShadow: '0 10px 28px rgba(0, 86, 179, 0.14)' }}
+        transition={{ type: 'spring', stiffness: 350, damping: 25 }}
         style={{
-          background: gradient,
-          padding: '0.85rem 0.85rem 0 0.85rem',
-          height: '200px',
-          display: 'flex',
-          flexDirection: 'column',
-          position: 'relative',
+          backgroundColor: '#ffffff',
+          borderRadius: '14px',
+          border: isSelected ? '2px solid #0056b3' : '1px solid #e2e8f0',
           overflow: 'hidden',
-        }}
-      >
-        {/* Subtle highlight blob */}
-        <div style={{
-          position: 'absolute', top: '-40px', left: '-20px',
-          width: '130px', height: '130px', borderRadius: '50%',
-          background: 'rgba(255,255,255,0.07)', pointerEvents: 'none',
-        }} />
-
-        {/* Row 1: Badge + Heart */}
-        <div style={{
+          boxShadow: isSelected ? '0 8px 25px rgba(0,86,179,0.2)' : '0 2px 10px rgba(0,0,0,0.03)',
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexShrink: 0,
-          zIndex: 2,
-        }}>
-          {popular ? (
-            <span style={{
-              backgroundColor: '#10b981',
-              color: '#fff',
-              fontSize: '0.58rem',
-              fontWeight: 800,
-              letterSpacing: '0.07em',
-              padding: '0.18rem 0.6rem',
-              borderRadius: '9999px',
-              textTransform: 'uppercase',
-            }}>
-              POPULAR
+          alignItems: 'stretch',
+          gap: '1rem',
+          padding: '0.85rem',
+        }}
+        className="catalog-product-list-row"
+      >
+        {/* Left gradient icon tile */}
+        <div
+          style={{
+            background: cardGradient,
+            borderRadius: '10px',
+            width: '92px',
+            minWidth: '92px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+          }}
+        >
+          <div style={{ width: '56px', height: '56px' }}>
+            <ProductDeviceGraphic name={name} category={category} />
+          </div>
+          {popular && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '0.35rem',
+                left: '0.35rem',
+                backgroundColor: '#047857',
+                color: '#ffffff',
+                fontSize: '0.55rem',
+                fontWeight: 900,
+                padding: '0.15rem 0.4rem',
+                borderRadius: '9999px',
+                letterSpacing: '0.03em',
+              }}
+            >
+              {t('catalog.card.popular', 'POPULAR')}
             </span>
-          ) : <span />}
+          )}
+        </div>
+
+        {/* Middle: title + features */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.35rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>{name}</h3>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFavorite(_id || id);
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: isFavorite ? '#f87171' : '#cbd5e1',
+                display: 'flex',
+                flexShrink: 0,
+              }}
+            >
+              {isFavorite ? <FaHeart size={13} /> : <FiHeart size={13} />}
+            </button>
+          </div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexWrap: 'wrap', gap: '0.25rem 0.9rem' }}>
+            {features.slice(0, 3).map((feat, idx) => {
+              const cleanText = String(feat).replace(/^[✓✔]\s*/, '');
+              return (
+                <li key={idx} style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#64748b', fontWeight: 500 }}>
+                  <FiCheck size={12} style={{ color: '#16a34a', flexShrink: 0 }} />
+                  <span>{cleanText}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/* Right: price + actions */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            flexShrink: 0,
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+          }}
+          className="catalog-product-list-actions"
+        >
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>
+              Rs. {monthlyPrice ? monthlyPrice.toLocaleString() : '0'}
+              <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.card.perMo', '/mo')}</span>
+            </div>
+            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+              {t('catalog.card.installation', 'Installation:')} Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
+            </div>
+          </div>
 
           <button
-            onClick={e => { e.stopPropagation(); onToggleFavorite(productId); }}
+            onClick={() => onSelect(product)}
             style={{
-              background: 'rgba(255,255,255,0.2)',
+              backgroundColor: '#f8fafc',
+              color: '#0056b3',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '0.5rem 0.85rem',
+              fontWeight: 700,
+              fontSize: '0.78rem',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('catalog.card.details', 'Details')}
+          </button>
+
+          <button
+            onClick={() => {
+              if (disabled) return;
+              if (isInCart) onRemoveFromCart(product);
+              else onAddToCart(product);
+            }}
+            disabled={disabled}
+            title={isInCart ? t('catalog.card.removeFromCart', 'Remove from cart') : undefined}
+            style={{
+              backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
+              color: isInCart ? '#ffffff' : disabled ? '#475569' : '#ffffff',
+              border: disabled ? '1px solid #cbd5e1' : 'none',
+              borderRadius: '8px',
+              padding: '0.5rem 0.9rem',
+              fontWeight: 800,
+              fontSize: '0.8rem',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.4rem',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {isInCart ? <FiCheck size={15} /> : <FiShoppingCart size={14} />}
+            <span>{isInCart ? t('catalog.card.inCart', 'In Cart') : disabled ? disabledReason : t('catalog.card.addToCart', 'Add to Cart')}</span>
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      whileHover={{ y: -7, boxShadow: '0 18px 40px rgba(0, 86, 179, 0.18)' }}
+      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+      style={{
+        backgroundColor: '#ffffff',
+        borderRadius: '16px',
+        border: isSelected ? '2px solid #0056b3' : '1px solid #e2e8f0',
+        overflow: 'hidden',
+        boxShadow: isSelected ? '0 8px 25px rgba(0,86,179,0.2)' : '0 4px 15px rgba(0,0,0,0.04)',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+      }}
+    >
+      {/* Top Banner with Gradient */}
+      <div
+        style={{
+          background: cardGradient,
+          padding: '1.25rem 1.1rem 1rem 1.1rem',
+          color: '#ffffff',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          minHeight: '230px',
+        }}
+      >
+        {/* Top Badges Row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', zIndex: 2 }}>
+          {popular ? (
+            <span
+              style={{
+                backgroundColor: '#047857',
+                color: '#ffffff',
+                fontSize: '0.62rem',
+                fontWeight: 900,
+                padding: '0.2rem 0.55rem',
+                borderRadius: '9999px',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {t('catalog.card.popular', 'POPULAR')}
+            </span>
+          ) : (
+            <span />
+          )}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite(_id || id);
+            }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.15)',
               border: 'none',
               borderRadius: '50%',
-              width: '30px',
-              height: '30px',
+              width: '28px',
+              height: '28px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: isFavorite ? '#f87171' : '#fff',
-              flexShrink: 0,
+              color: isFavorite ? '#f87171' : '#ffffff',
             }}
-            aria-label="Favorite"
           >
             {isFavorite ? <FaHeart size={13} /> : <FiHeart size={13} />}
           </button>
         </div>
 
-        {/* Row 2: Text left / Device right — fills remaining height */}
-        <div style={{
-          display: 'flex',
-          flex: 1,
-          alignItems: 'flex-end',
-          zIndex: 2,
-          overflow: 'hidden',
-        }}>
-          {/* Left: Title + Features */}
-          <div style={{
-            flex: '1 1 0',
-            minWidth: 0,
-            paddingBottom: '0.65rem',
-            paddingRight: '0.35rem',
-          }}>
-            <h3 style={{
-              fontSize: '0.98rem',
+        {/* 3D Device Graphic Positioned Top Right */}
+        <div
+          style={{
+            position: 'absolute',
+            right: '0.75rem',
+            top: '2.2rem',
+            width: '80px',
+            height: '80px',
+            zIndex: 1,
+          }}
+        >
+          <ProductDeviceGraphic name={name} category={category} />
+        </div>
+
+        {/* Product Title */}
+        <div style={{ zIndex: 2, paddingRight: '75px', marginBottom: '0.75rem' }}>
+          <h3
+            style={{
+              fontSize: '1.05rem',
               fontWeight: 800,
               lineHeight: 1.25,
-              color: '#fff',
-              marginBottom: '0.45rem',
-              wordBreak: 'break-word',
-            }}>
-              {name}
-            </h3>
-            <ul style={{
-              listStyle: 'none', padding: 0, margin: 0,
-              display: 'flex', flexDirection: 'column', gap: '0.22rem',
-            }}>
-              {features.slice(0, 4).map((feat, idx) => (
-                <li key={idx} style={{
-                  fontSize: '0.7rem',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '0.28rem',
-                  color: 'rgba(255,255,255,0.92)',
-                  lineHeight: 1.3,
-                }}>
-                  <FiCheck size={10} style={{ flexShrink: 0, marginTop: '1px', strokeWidth: 3 }} />
-                  <span style={{ overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical' }}>
-                    {feat}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+              color: '#ffffff',
+              margin: 0,
+            }}
+          >
+            {name}
+          </h3>
+        </div>
 
-          {/* Right: Device Graphic — fixed width, flush bottom */}
-          <div style={{
-            flexShrink: 0,
-            width: '110px',
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
-            alignSelf: 'flex-end',
-            overflow: 'hidden',
-          }}>
-            <ProductDeviceGraphic name={name} category={category} />
-          </div>
+        {/* Features List */}
+        <div style={{ zIndex: 2 }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            {features.slice(0, 3).map((feat, idx) => {
+              const cleanText = String(feat).replace(/^[✓✔]\s*/, '');
+              return (
+                <li
+                  key={idx}
+                  style={{
+                    fontSize: '0.74rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    color: 'rgba(255, 255, 255, 0.95)',
+                    fontWeight: 500,
+                  }}
+                >
+                  <FiCheck size={12} style={{ color: '#34d399', flexShrink: 0 }} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanText}</span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
 
-      {/* ── Pricing & Buttons ── */}
-      <div style={{
-        padding: '0.85rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.75rem',
-        flex: 1,
-      }}>
+      {/* Bottom Card Body */}
+      <div style={{ padding: '1.1rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#ffffff' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.2rem', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
-              Rs. {monthlyPrice.toLocaleString()}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', marginBottom: '0.2rem' }}>
+            <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>
+              Rs. {monthlyPrice ? monthlyPrice.toLocaleString() : '0'}
             </span>
-            <span style={{ fontSize: '0.73rem', color: '#64748b', fontWeight: 500 }}>/month</span>
+            <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.card.perMonth', '/month')}</span>
           </div>
-          <div style={{ fontSize: '0.73rem', color: '#94a3b8', marginTop: '0.1rem' }}>
-            Installation: {installationFee === 0 ? 'Free' : `Rs. ${installationFee.toLocaleString()}`}
+          <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.5rem' }}>
+            {t('catalog.card.installation', 'Installation:')} Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.45rem' }}>
+        <div style={{ marginTop: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
           <button
-            onClick={e => { e.stopPropagation(); onSelect(product); }}
-            style={{
-              flex: 1,
-              padding: '0.52rem 0.3rem',
-              borderRadius: '7px',
-              border: '1.5px solid #0056b3',
-              backgroundColor: 'transparent',
-              color: '#0056b3',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'background 0.18s',
-              whiteSpace: 'nowrap',
+            onClick={() => {
+              if (disabled) return;
+              if (isInCart) onRemoveFromCart(product);
+              else onAddToCart(product);
             }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#eff6ff'}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+            disabled={disabled}
+            title={isInCart ? t('catalog.card.removeFromCart', 'Remove from cart') : undefined}
+            style={{
+              width: '100%',
+              backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
+              color: isInCart ? '#ffffff' : disabled ? '#475569' : '#ffffff',
+              border: disabled ? '1px solid #cbd5e1' : 'none',
+              borderRadius: '8px',
+              padding: '0.55rem 0.75rem',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.45rem',
+              boxShadow: disabled ? 'none' : '0 3px 10px rgba(0,86,179,0.25)',
+              transition: 'all 0.15s ease',
+            }}
           >
-            View Details
+            {isInCart ? <FiCheck size={16} /> : <FiShoppingCart size={15} />}
+            <span>{isInCart ? `${t('catalog.card.inCart', 'In Cart')} ✓` : disabled ? disabledReason : t('catalog.card.addToCart', 'Add to Cart')}</span>
           </button>
 
           <button
-            onClick={e => { e.stopPropagation(); onAddToCart(product); }}
+            onClick={() => onSelect(product)}
             style={{
-              flex: 1,
-              padding: '0.52rem 0.3rem',
-              borderRadius: '7px',
-              border: 'none',
-              backgroundColor: '#0056b3',
-              color: '#fff',
-              fontSize: '0.75rem',
-              fontWeight: 600,
+              width: '100%',
+              backgroundColor: '#f8fafc',
+              color: '#0056b3',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '0.45rem 0.75rem',
+              fontWeight: 700,
+              fontSize: '0.78rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.3rem',
-              boxShadow: '0 3px 8px rgba(0,86,179,0.25)',
-              transition: 'background 0.18s',
-              whiteSpace: 'nowrap',
+              gap: '0.35rem',
+              transition: 'all 0.15s ease',
             }}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#004494'}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = '#0056b3'}
           >
-            <FiShoppingCart size={12} strokeWidth={2.5} />
-            <span>Add to Cart</span>
+            {t('catalog.card.viewDetails', 'View Details')}
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

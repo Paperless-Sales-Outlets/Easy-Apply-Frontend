@@ -1,45 +1,109 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import api from '../../utils/api';
+import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
+import WizardStepper from '../../components/WizardStepper';
+import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
+
 import GeneralInfoStep from './GeneralInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
 import AgreementStep from './AgreementStep';
-import { useTranslation } from 'react-i18next';
-import api from '../../utils/api';
-import { useVerifiedMobile } from '../../components/verification';
+import PaymentStep from '../PaymentStep';
 
 export default function ServiceVacationWizard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
+  const { customerExists, selectedAccount } = useVerifiedContext();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  
+  const [vacationData, setVacationData] = useState(selectedAccount || null);
+  const [paymentIntention, setPaymentIntention] = useState('later'); // 'later', 'paid', 'gateway'
+
+  // The customer's account is already verified via OTP + real DB lookup
+  // before reaching this wizard — reuse it instead of asking/looking it up again.
+  useEffect(() => {
+    if (selectedAccount) setVacationData(selectedAccount);
+  }, [selectedAccount]);
+  
   const formRef = useRef(null);
-  const totalSteps = 3;
+  const step1Ref = useRef(null);
+  const step2Ref = useRef(null);
+  const step3Ref = useRef(null);
+  
+  const totalSteps = 4;
 
   const nextStep = () => {
-    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
-    window.scrollTo(0, 0);
+    if (currentStep === 1 && step1Ref.current && !step1Ref.current.validate()) return;
+    if (currentStep === 2 && step2Ref.current && !step2Ref.current.validate()) return;
+    if (currentStep === 3 && step3Ref.current && !step3Ref.current.validate()) return;
+
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+      window.scrollTo(0, 0);
+    }
   };
+
   const prevStep = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     if (currentStep < totalSteps) { nextStep(); return; }
 
     const raw = new FormData(formRef.current);
     const formData = Object.fromEntries(raw.entries());
 
+    // Prepare multipart data
+    const submitData = new FormData();
+    submitData.append('serviceType', 'service-vacation');
+    
+    let formattedPhone = verifiedMobile || formData.verifiedMobile || '';
+    if (formattedPhone && formattedPhone.length === 9) {
+      formattedPhone = '0' + formattedPhone;
+    }
+    submitData.append('phone', formattedPhone);
+    delete formData.verifiedMobile;
+
+    // Extract signature
+    const signatureBase64 = formData.digitalSignatureBase64;
+    delete formData.digitalSignatureBase64;
+    delete formData.signatureMethod;
+    delete formData.paymentIntention;
+
+    // Append JSON payload
+    submitData.append('formData', JSON.stringify(formData));
+
+    // Append standard file uploads (if any exist, e.g. Payment Receipt, Signature Doc)
+    for (let [key, value] of raw.entries()) {
+      if (value instanceof File && value.size > 0) {
+        submitData.append(key, value);
+      }
+    }
+
+    // Convert signature Base64 to Blob
+    if (signatureBase64) {
+      try {
+        const res = await fetch(signatureBase64);
+        const blob = await res.blob();
+        const signatureFile = new File([blob], 'signature.png', { type: 'image/png' });
+        submitData.append('signatureDoc', signatureFile);
+      } catch (err) {
+        console.error('Failed to convert signature to file:', err);
+      }
+    }
+
     setSubmitting(true);
     setSubmitError('');
     try {
-      const res = await api.post('/applications', {
-        serviceType: 'service-vacation',
-        formData,
-        phone: verifiedMobile,
+      const res = await api.post('/applications', submitData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       navigate('/completion', {
         state: {
@@ -67,42 +131,52 @@ export default function ServiceVacationWizard() {
       <h2 style={{ marginBottom: '1.5rem' }}>{t('wizards.serviceVacation.title')}</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('wizards.serviceVacation.subtitle')}</p>
 
-      {/* Progress Bar */}
-      <div className="wizard-nav-wrapper">
-        <div className="wizard-steps-container" style={{ display: "flex", marginBottom: "2rem", position: "relative" }}>
-        <div style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, right: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--border-color)", zIndex: 0 }} />
-        <div className="wizard-progress-bar" style={{ position: "absolute", top: "15px", left: `calc(50% / ${totalSteps})`, height: "4px", backgroundColor: "var(--slt-green)", zIndex: 0, width: `calc((100% - 100% / ${totalSteps}) * ${(currentStep - 1) / (totalSteps - 1)})`, transition: "width 0.3s ease" }} />
+      <WizardStepper
+        currentStep={currentStep}
+        steps={[
+          t('wizards.serviceVacation.steps.s1'),
+          t('wizards.serviceVacation.steps.s2'),
+          t('wizards.serviceVacation.steps.s3'),
+          t('wizards.serviceVacation.steps.s4')
+        ]}
+      />
 
-        {[1, 2, 3].map(step => (
-          <div key={step} className="wizard-step" style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", flex: 1 }}>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '50%',
-              backgroundColor: step <= currentStep ? 'var(--slt-green)' : 'var(--surface-color)',
-              border: `2px solid ${step <= currentStep ? 'var(--slt-green)' : 'var(--border-color)'}`,
-              color: step <= currentStep ? 'white' : 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
-            }}>
-              {step}
-            </div>
-            <span style={{ fontSize: '0.8rem', color: step <= currentStep ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-              {step === 1 ? t('wizards.serviceVacation.steps.s1') : step === 2 ? t('wizards.serviceVacation.steps.s2') : t('wizards.serviceVacation.steps.s3')}
-            </span>
-          </div>
-        ))}
-      </div>
-      </div>
+      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form ref={formRef} onSubmit={handleSubmit}>
-
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           <div style={{ display: currentStep === 1 ? 'block' : 'none' }}>
-            <GeneralInfoStep isActive={currentStep === 1} />
+            <GeneralInfoStep
+              ref={step1Ref}
+              isActive={currentStep === 1}
+              vacationData={vacationData}
+              onVerifySuccess={(data) => setVacationData(data)}
+              verifiedMobile={verifiedMobile}
+            />
           </div>
           <div style={{ display: currentStep === 2 ? 'block' : 'none' }}>
-            <ServiceInfoStep isActive={currentStep === 2} />
+            <ServiceInfoStep
+              ref={step2Ref}
+              isActive={currentStep === 2}
+            />
           </div>
           <div style={{ display: currentStep === 3 ? 'block' : 'none' }}>
-            <AgreementStep isActive={currentStep === 3} />
+            <AgreementStep
+              ref={step3Ref}
+              isActive={currentStep === 3}
+              onPaymentIntentionChange={setPaymentIntention}
+            />
+          </div>
+          <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
+            <PaymentStep
+              isActive={currentStep === 4}
+              verifiedPhone={verifiedMobile}
+              amount={vacationData?.outstandingBalance || 0}
+              feeAmount={500}
+              feeLabel="Vacation Fee"
+              hasPaymentReceipt={formRef.current ? (new FormData(formRef.current).get('paymentReceipt')?.size > 0) : false}
+              onSuccess={() => handleSubmit({ preventDefault: () => {} })}
+            />
           </div>
         </div>
 
@@ -117,14 +191,10 @@ export default function ServiceVacationWizard() {
             {t('common.previous')}
           </button>
           {currentStep < totalSteps ? (
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
+            <button type="button" className="btn btn-primary" onClick={nextStep}>
               {t('common.nextStep')}
             </button>
-          ) : (
-            <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting ? t('common.submitting') : t('common.submit')}
-            </button>
-          )}
+          ) : null}
         </div>
       </form>
     </div>

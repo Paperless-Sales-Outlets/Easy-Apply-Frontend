@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import CartItem from './CartItem';
@@ -9,6 +9,15 @@ const Cart = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { cart, loading, updateItemQuantity, removeItem, clearCartItems, getCartItemCount, getCartTotal } = useCart();
   const [showPayHere, setShowPayHere] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -23,6 +32,18 @@ const Cart = ({ isOpen, onClose }) => {
       alert('Your cart is empty or the total is Rs. 0. Please add items before checkout.');
       return;
     }
+
+    const hasVoicePackage = cartItems.some((item) => {
+      const p = item.product || item;
+      const cat = (p.category || p.name || '').toLowerCase();
+      return cat.includes('voice');
+    });
+
+    if (!hasVoicePackage) {
+      alert('Voice Package Required (Compulsory):\n\nAll SLTMobitel bundles require at least 1 Voice package.\nAllowed combinations:\n• Voice Only\n• Voice + Broadband\n• Voice + Broadband + PEO TV\n\nPlease add 1 Voice package to your cart to proceed with checkout.');
+      return;
+    }
+
     setShowPayHere(true);
   };
 

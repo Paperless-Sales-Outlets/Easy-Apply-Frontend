@@ -3,8 +3,12 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useCallback,
 } from 'react';
-import api from '../../../utils/api';
+import api, {
+  setAdminAccessToken,
+  setAdminLogoutHandler,
+} from '../../../utils/api';
 
 const AdminAuthContext = createContext(null);
 
@@ -12,7 +16,7 @@ const SESSION_KEY = 'admin_session';
 
 function loadSession() {
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
+    const raw = sessionStorage.getItem(SESSION_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -21,45 +25,130 @@ function loadSession() {
 
 function saveSession(data) {
   try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
   } catch {
-    /* ignore */
+    // Ignore storage errors
   }
 }
 
 function clearSession() {
   try {
-    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('refreshToken');
   } catch {
-    /* ignore */
+    // Ignore storage errors
   }
 }
 
 export function AdminAuthProvider({ children }) {
   const [admin, setAdmin] = useState(() => loadSession());
+  const [accessToken, setAccessToken] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState(null);
 
-  // Validate stored session on mount
-  useEffect(() => {
-    const session = loadSession();
-    const token = localStorage.getItem('accessToken');
+  /*
+   * Keep React token state and the shared Axios/API client
+   * Authorization header synchronized.
+   */
+  const updateAccessToken = useCallback((token) => {
+    setAccessToken(token || null);
+    setAdminAccessToken(token || null);
+  }, []);
 
-    if (!session || !token) {
-      clearSession();
-      setAdmin(null);
-      setInitializing(false);
-      return;
+  /*
+   * Completely clear the local admin authentication state.
+   */
+  const clearAuthState = useCallback(() => {
+    setAdmin(null);
+    updateAccessToken(null);
+    clearSession();
+  }, [updateAccessToken]);
+
+  /*
+   * Refresh the short-lived access token using the refresh token.
+   */
+  const refreshAuthToken = useCallback(async () => {
+    const storedRefreshToken = sessionStorage.getItem('refreshToken');
+
+    if (!storedRefreshToken) {
+      clearAuthState();
+      return null;
     }
 
-    api
-      .get('/auth/me')
-      .then((res) => {
-        const { user } = res.data;
+    try {
+      const response = await api.post('/auth/refresh', {
+        refreshToken: storedRefreshToken,
+      });
 
-        if (!['Admin', 'Staff'].includes(user.role)) {
-          throw new Error('Not admin/staff');
+      const newAccessToken = response.data?.accessToken;
+
+      if (!newAccessToken) {
+        throw new Error('No access token returned from refresh endpoint.');
+      }
+
+      updateAccessToken(newAccessToken);
+
+      return newAccessToken;
+    } catch (err) {
+      console.error('Token refresh failed:', err);
+      clearAuthState();
+
+      return null;
+    }
+  }, [clearAuthState, updateAccessToken]);
+
+  /*
+   * Allows the API response interceptor to force logout when
+   * authentication can no longer be refreshed.
+   */
+  useEffect(() => {
+    setAdminLogoutHandler(() => {
+      clearAuthState();
+    });
+  }, [clearAuthState]);
+
+  /*
+   * Restore and validate an existing admin session when the page reloads.
+   *
+   * The access token intentionally isn't persisted. Instead we use the
+   * refresh token to obtain a new one, then verify the current user via
+   * /auth/me.
+   */
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      const storedSession = loadSession();
+      const storedRefreshToken = sessionStorage.getItem('refreshToken');
+
+      if (!storedSession || !storedRefreshToken) {
+        clearAuthState();
+
+        if (isMounted) {
+          setInitializing(false);
+        }
+
+        return;
+      }
+
+      try {
+        const token = await refreshAuthToken();
+
+        if (!token || !isMounted) {
+          return;
+        }
+
+        /*
+         * Validate that the refreshed token still belongs to
+         * an Admin or Staff account.
+         */
+        const response = await api.get('/auth/me');
+        const user = response.data?.user;
+
+        if (!user || !['Admin', 'Staff'].includes(user.role)) {
+          throw new Error('Admin or Staff access required.');
         }
 
         const validSession = {
@@ -69,24 +158,29 @@ export function AdminAuthProvider({ children }) {
           role: user.role,
         };
 
-        setAdmin(validSession);
-        saveSession(validSession);
-      })
-      .catch(() => {
-        setAdmin(null);
-        clearSession();
-
-        try {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-        } catch {
-          /* ignore */
+        if (isMounted) {
+          setAdmin(validSession);
+          saveSession(validSession);
         }
-      })
-      .finally(() => {
-        setInitializing(false);
-      });
-  }, []);
+      } catch (err) {
+        console.error('Admin session validation failed:', err);
+
+        if (isMounted) {
+          clearAuthState();
+        }
+      } finally {
+        if (isMounted) {
+          setInitializing(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [clearAuthState, refreshAuthToken]);
 
   const login = async (email, password) => {
     setLoading(true);
@@ -98,10 +192,16 @@ export function AdminAuthProvider({ children }) {
         password,
       });
 
-      const { user, accessToken, refreshToken } = response.data;
+      const {
+        user,
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      } = response.data;
 
-      if (!['Admin', 'Staff'].includes(user.role)) {
-        const message = 'Admin or Staff access required for this portal.';
+      if (!user || !['Admin', 'Staff'].includes(user.role)) {
+        const message =
+          'Admin or Staff access required for this portal.';
+
         setError(message);
 
         return {
@@ -110,13 +210,23 @@ export function AdminAuthProvider({ children }) {
         };
       }
 
-      // Store JWTs so the shared api client can authenticate admin routes.
-      if (accessToken) {
-        localStorage.setItem('accessToken', accessToken);
+      if (!newAccessToken) {
+        throw new Error('Access token was not returned by the server.');
       }
 
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
+      /*
+       * Access token remains in memory.
+       */
+      updateAccessToken(newAccessToken);
+
+      /*
+       * Refresh token persists only for the current browser tab/session.
+       */
+      if (newRefreshToken) {
+        sessionStorage.setItem(
+          'refreshToken',
+          newRefreshToken
+        );
       }
 
       const session = {
@@ -133,10 +243,12 @@ export function AdminAuthProvider({ children }) {
         ok: true,
         user: session,
       };
-    } catch (error) {
+    } catch (err) {
+      clearAuthState();
+
       const message =
-        error.response?.data?.message ||
-        error.message ||
+        err.response?.data?.message ||
+        err.message ||
         'Login failed';
 
       setError(message);
@@ -151,31 +263,41 @@ export function AdminAuthProvider({ children }) {
   };
 
   const logout = async () => {
+    const storedRefreshToken =
+      sessionStorage.getItem('refreshToken');
+
     try {
-      await api.post('/auth/logout');
+      /*
+       * Always call logout so the backend can also invalidate
+       * an HttpOnly refresh cookie if one is being used.
+       */
+      await api.post(
+        '/auth/logout',
+        storedRefreshToken
+          ? { refreshToken: storedRefreshToken }
+          : {}
+      );
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
-      setAdmin(null);
-      clearSession();
-
-      try {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-      } catch {
-        /* ignore */
-      }
+      clearAuthState();
     }
   };
 
   const value = {
     admin,
+    accessToken,
+
     loading,
     initializing,
+
     error,
+
     login,
     logout,
-    isAuthenticated: !!admin,
+    refreshAuthToken,
+
+    isAuthenticated: Boolean(admin && accessToken),
   };
 
   return (
@@ -185,4 +307,5 @@ export function AdminAuthProvider({ children }) {
   );
 }
 
-export const useAdminAuth = () => useContext(AdminAuthContext);
+export const useAdminAuth = () =>
+  useContext(AdminAuthContext);

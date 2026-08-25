@@ -1,7 +1,20 @@
 import { createContext, useContext } from 'react';
 
-/* Carries the OTP-verified mobile number down to the form steps so
-   they can pre-fill it. Empty string until verification completes. */
-export const VerificationContext = createContext('');
+/* Carries verified mobile number, customer identification status, and selected customer account details down to form steps. */
+export const VerificationContext = createContext({
+  mobileNumber: '',
+  customerExists: false,
+  customerData: null,
+  selectedAccount: null,
+  accountsList: [],
+  switchAccount: () => {},
+});
 
-export const useVerifiedMobile = () => useContext(VerificationContext);
+export const useVerifiedContext = () => useContext(VerificationContext);
+
+export const useVerifiedMobile = () => {
+  const ctx = useContext(VerificationContext);
+  if (!ctx) return '';
+  if (typeof ctx === 'string') return ctx;
+  return ctx.mobileNumber || '';
+};

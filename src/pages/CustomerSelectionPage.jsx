@@ -9,23 +9,15 @@ export default function CustomerSelectionPage() {
 
   const handleSelectCustomerType = (type) => {
     if (type === 'existing') {
-      // Existing Customer -> Phone Verification -> OTP -> Reconnection Form
-      sessionStorage.setItem('customerType', 'existing');
-      navigate('/verify-phone', {
-        state: {
-          ...cartState,
-          customerType: 'existing',
-          redirectTo: '/reconnection',
-        },
-      });
-    } else {
-      // New Customer -> New Connection Form (Skip Phone/OTP Verification)
-      sessionStorage.setItem('customerType', 'new');
       navigate('/new-connection', {
         state: {
           ...cartState,
-          customerType: 'new',
-          skipOtp: true,
+        },
+      });
+    } else {
+      navigate('/new-connection', {
+        state: {
+          ...cartState,
         },
       });
     }

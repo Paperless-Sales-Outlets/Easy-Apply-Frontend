@@ -20,31 +20,43 @@ import PackageMigrationWizard from './pages/PackageMigrationWizard';
 import ServiceVacationWizard from './pages/ServiceVacationWizard';
 import RefundRequestWizard from './pages/RefundRequestWizard';
 import CustomerRequestAcceptanceWizard from './pages/CustomerRequestAcceptanceWizard';
+import InternetServicesWizard from './pages/InternetServicesWizard';
 
 import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
 import ThankYouPage from './pages/ThankYouPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentCancelPage from './pages/PaymentCancelPage';
 import AdminDashboard from './pages/Admin';
 import AddToCartPage from './pages/AddToCartPage';
+import ServicesPage from './pages/ServicesPage';
 
 import ProductCatalogPage from './pages/ProductCatalogPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
+import HelpSupportPage from './pages/HelpSupportPage';
+import MyProfilePage from './pages/MyProfilePage';
+import SignUpPage from './pages/SignUpPage';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
+import FloatingCartButton from './components/layout/FloatingCartButton';
 import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
 
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminLoginPage from './pages/Admin/pages/AdminLoginPage';
+import { AdminAuthProvider } from './pages/Admin/context/AdminAuthContext';
 import { CartProvider } from './context/CartContext';
 
-const PageWrapper = ({ children, fullBleed = false }) => {
+const PageWrapper = ({ children, fullBleed = false, form = false }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
       transition={{ duration: 0.2 }}
+      className={fullBleed ? undefined : form ? 'page-shell--form' : 'page-shell'}
       style={{ width: '100%' }}
     >
       {children}
@@ -56,7 +68,7 @@ const VerifyPhonePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const targetRoute = location.state?.redirectTo || '/reconnection';
+  const targetRoute = location.state?.redirectTo || '/profile';
 
   return (
     <OtpProtectedForm
@@ -93,6 +105,16 @@ const AnimatedRoutes = () => {
           element={
             <PageWrapper fullBleed>
               <ProductCatalogPage />
+            </PageWrapper>
+          }
+        />
+
+        {/* Services Page */}
+        <Route
+          path="/services"
+          element={
+            <PageWrapper fullBleed>
+              <ServicesPage />
             </PageWrapper>
           }
         />
@@ -136,7 +158,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/new-connection"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <NewConnectionWizard />
               </OtpProtectedForm>
@@ -147,7 +169,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/reconnection"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <ReconnectionWizard />
               </OtpProtectedForm>
@@ -158,7 +180,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/ownership-change"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <OwnershipChangeWizard />
               </OtpProtectedForm>
@@ -169,7 +191,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/location-change"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <LocationChangeWizard />
               </OtpProtectedForm>
@@ -180,7 +202,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/termination"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <TerminationWizard />
               </OtpProtectedForm>
@@ -191,7 +213,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/package-migration"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <PackageMigrationWizard />
               </OtpProtectedForm>
@@ -202,7 +224,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/service-vacation"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <ServiceVacationWizard />
               </OtpProtectedForm>
@@ -213,7 +235,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/refund-request"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <RefundRequestWizard />
               </OtpProtectedForm>
@@ -224,7 +246,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/customer-request-acceptance"
           element={
-            <PageWrapper>
+            <PageWrapper form>
               <OtpProtectedForm>
                 <CustomerRequestAcceptanceWizard />
               </OtpProtectedForm>
@@ -232,7 +254,43 @@ const AnimatedRoutes = () => {
           }
         />
 
+        <Route
+          path="/internet-services"
+          element={
+            <PageWrapper form>
+              <OtpProtectedForm>
+                <InternetServicesWizard />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
+        {/* Auth */}
+        <Route
+          path="/signup"
+          element={<SignUpPage />}
+        />
+
         {/* General Pages */}
+        <Route
+          path="/help"
+          element={
+            <PageWrapper>
+              <HelpSupportPage />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PageWrapper>
+              <OtpProtectedForm>
+                <MyProfilePage />
+              </OtpProtectedForm>
+            </PageWrapper>
+          }
+        />
+
         <Route
           path="/check-status"
           element={
@@ -260,6 +318,24 @@ const AnimatedRoutes = () => {
           }
         />
 
+        {/* PayHere Return URLs */}
+        <Route
+          path="/payment/success"
+          element={
+            <PageWrapper>
+              <PaymentSuccessPage />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/payment/cancel"
+          element={
+            <PageWrapper>
+              <PaymentCancelPage />
+            </PageWrapper>
+          }
+        />
+
         {/* Payment Gateway Cart */}
         <Route
           path="/add-to-cart"
@@ -270,10 +346,89 @@ const AnimatedRoutes = () => {
           }
         />
 
-        {/* Admin Portal */}
+        {/* Admin Portal — Public Login */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+
+        {/* Admin Portal — Protected Routes */}
         <Route
           path="/admin"
-          element={<AdminDashboard />}
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/applications"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/forms"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/kyc"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/appointments"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/technician"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/analytics"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/privileges"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </AnimatePresence>
@@ -282,7 +437,8 @@ const AnimatedRoutes = () => {
 
 const NavigationLayout = ({ children }) => {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
+  const isAdmin  = location.pathname.startsWith('/admin');
+  const isSignup = location.pathname === '/signup';
 
   if (isAdmin) {
     return (
@@ -329,6 +485,7 @@ const NavigationLayout = ({ children }) => {
       </main>
 
       <Footer />
+      <FloatingCartButton />
     </div>
   );
 };
@@ -363,11 +520,13 @@ function App() {
       />
 
       <MotionConfig reducedMotion="user">
-        <CartProvider>
-          <NavigationLayout>
-            <AnimatedRoutes />
-          </NavigationLayout>
-        </CartProvider>
+        <AdminAuthProvider>
+          <CartProvider>
+            <NavigationLayout>
+              <AnimatedRoutes />
+            </NavigationLayout>
+          </CartProvider>
+        </AdminAuthProvider>
       </MotionConfig>
     </BrowserRouter>
   );

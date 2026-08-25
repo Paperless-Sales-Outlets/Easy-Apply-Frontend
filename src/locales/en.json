@@ -21,7 +21,16 @@
     "loginLink": "Sign In"
   },
   "nav": {
-    "title": "SLTMobitel EasyApply"
+    "title": "SLTMobitel EasyApply",
+    "home": "Home",
+    "applicationStatus": "Application Status",
+    "help": "Help & Support",
+    "myProfile": "My Profile",
+    "login": "Login",
+    "logout": "Logout",
+    "cart": "Cart",
+    "verifiedNumber": "Verified number",
+    "goToProfile": "Go to My Profile"
   },
   "hero": {
     "eyebrow": "SLTMobitel online services",
@@ -84,7 +93,8 @@
     "submit": "Submit Application",
     "submitting": "Submitting...",
     "submitError": "Submission failed. Please try again.",
-    "confirmTermination": "Confirm Termination"
+    "confirmTermination": "Confirm Termination",
+    "autoFilledHeading": "Auto-filled from your account"
   },
   "wizardFlow": {
     "verify": "Verify",
@@ -112,8 +122,7 @@
       "steps": {
         "s1": "Customer",
         "s2": "Service",
-        "s3": "Billing",
-        "s4": "Declaration"
+        "s3": "Additional Services"
       },
       "customerInfo": {
         "heading": "1. Customer Information",
@@ -306,6 +315,7 @@
         "disconnectedTo": "to",
         "amountToPay": "I would like to pay Rs. (Amount)",
         "facilitiesHeading": "Which services would you like to reactivate?",
+        "voice": "Voice (Telephone)",
         "broadband": "SLT Broadband Internet (ADSL/Wi-Max)",
         "peoTv": "PeoTV",
         "sltPlus": "SLT Plus",
@@ -320,7 +330,7 @@
         "facilitiesRequired": "Please select at least one facility."
       },
       "declaration": {
-        "heading": "3. Customer Agreement",
+        "heading": "Customer Agreement",
         "declarationText": "I request the reactivation of the selected services and agree to the applicable reconnection charges.",
         "agreeLabel": "I accept the Terms and Conditions"
       }
@@ -329,34 +339,42 @@
       "title": "Application for Package Migration",
       "subtitle": "Change your existing SLT package.",
       "steps": {
-        "s1": "Customer Info",
-        "s2": "Package Details"
+        "s1": "Package Details",
+        "s2": "Payment",
+        "step1": "Existing Account Verification",
+        "step2": "Migration Schedule",
+        "step3": "Declaration"
       },
-      "customerInfo": {
-        "heading": "1. Customer Information",
-        "telephone": "Telephone Number",
-        "fullName": "Full Name / Company Name",
-        "nicBrc": "N.I.C / B.R.C. No",
-        "contactNo": "Contact No."
+      "profile": {
+        "telephone": "Telephone / Account Number",
+        "fullName": "Full Name",
+        "nic": "NIC",
+        "contactNo": "Contact Number",
+        "existingPackage": "Existing Package"
       },
       "packageDetails": {
-        "heading": "2. Required Package Change",
-        "existingPackage": "Existing Package",
+        "heading": "Migration Schedule",
         "requiredPackage": "Required Package",
         "effectiveDate": "With effect from",
         "remarks": "Remarks",
-        "declaration": "Please change my existing package as requested above."
+        "declarationHeading": "Customer Declaration",
+        "declarationText": "I hereby declare that the information provided in this package migration application is true and accurate to the best of my knowledge. I understand that migrating to the requested package may change my monthly charges, contract terms, and service features, and I agree to bear any applicable migration fees as per SLT's prevailing terms and conditions. I confirm I am the registered owner of this connection, or an authorized representative, and I consent to SLT processing this request based on the details provided above.",
+        "declarationLabel": "I accept the above declaration and request SLT to change my existing package as requested."
       }
     },
     "serviceVacation": {
       "title": "Service Vacation",
       "subtitle": "Apply for temporary service deactivation.",
       "steps": {
-        "s1": "General Info",
-        "s2": "Service Info",
-        "s3": "Agreement"
+        "s1": "Existing Account Verification",
+        "s2": "Vacation Details",
+        "s3": "Agreement",
+        "s4": "Checkout & Auth"
       },
       "generalInfo": {
+        "connectionLookupTitle": "Connection Lookup",
+        "multipleConnectionsTitle": "Multiple Connections Found",
+        "multipleConnectionsSubtitle": "Please select the connection you want to put on vacation.",
         "heading": "1. General Information (Mandatory)",
         "telephone": "1.1 Customer Telephone Number",
         "fullName": "1.2 Customer Name / Company Name",
@@ -391,7 +409,7 @@
       "title": "Refund Request",
       "subtitle": "Application for FTTH/PSTN/LTE Service refund.",
       "steps": {
-        "s1": "Customer Details",
+        "s1": "Existing Account Verification",
         "s2": "Refund Details"
       },
       "customerDetails": {
@@ -427,29 +445,29 @@
         "s2": "Declaration"
       },
       "requestDetails": {
-        "heading": "1. Customer & Request Information",
-        "fullName": "1.1 Name",
-        "nicBrc": "1.2 NIC/Passport/Business Reg No",
-        "telephone": "1.3 Telephone Number",
-        "requiredService": "1.4 Required Service",
+        "heading": "Customer & Request Information",
+        "fullName": "Name",
+        "nicBrc": "NIC/Passport/Business Reg No",
+        "telephone": "Telephone Number",
+        "requiredService": "Required Service",
         "ftth": "SLT Fibre (FTTH)",
         "peoTv": "PeoTV",
         "broadband": "Broadband",
         "voice": "Megaline (Voice)",
         "lte": "4G LTE",
         "otherService": "Others",
-        "requestType": "1.5 Request Type",
+        "requestType": "Request Type",
         "billing": "Billing",
         "serviceMod": "Service modification",
         "hardware": "Hardware changes",
         "otherRequest": "Others",
-        "contactDetails": "1.6 Customer contact details",
+        "contactDetails": "Customer contact details",
         "fixed": "Fixed",
         "mobile": "Mobile",
         "email": "Email",
         "nicHelper": "NIC, passport, or Business Registration number",
         "mobilePrefill": "Taken from your verified number — edit if needed",
-        "descriptionHeading": "2. Description of the request",
+        "descriptionHeading": "Description of the request",
         "descriptionLabel": "Describe your request",
         "descriptionHelper": "Include any account numbers or dates that help us act faster",
         "description": "Please provide the details of your request here."
@@ -463,25 +481,15 @@
     "ownershipChange": {
       "title": "Application for Change of Customer",
       "steps": {
-        "s1": "Current Owner",
-        "s2": "New Applicant",
-        "s3": "Documents",
-        "s4": "Declaration"
+        "s1": "New Applicant",
+        "s2": "Documents",
+        "s3": "Declaration"
       },
-      "currentCustomer": {
-        "heading": "Form A - Current Customer Details",
-        "telephone": "1. Telephone number to be transferred",
-        "customerName": "2. Name of the Customer",
-        "customerNameNote": "(as stated under the existing telephone application/agreement)",
-        "customerNamePlaceholder": "Full name / Company name",
-        "partnership": "Partnership / Sole Proprietorship Info",
-        "partnershipNote": "(If applicable, provide full names of all partners or the sole proprietor)",
-        "partnershipPlaceholder": "Partner 1\\nPartner 2...",
-        "nicBrc": "3. N.I.C / B.R.C No",
-        "contactNo": "4. Contact No.",
-        "transferTo": "Kindly transfer the above telephone to following person/Company",
-        "transferToPlaceholder": "Rev. / Mr. / Mrs. / Ms. / Company",
-        "remarks": "Remarks"
+      "profile": {
+        "telephone": "Current Telephone Number",
+        "fullName": "Current Customer Name",
+        "nic": "Current NIC",
+        "contactNo": "Current Contact Number"
       },
       "newApplicant": {
         "heading": "Form B - New Applicant Details",
@@ -510,8 +518,14 @@
         "provideFollowing": "Please provide the following documents:",
         "note": "Note:",
         "noteText": "In case the above specified documents are unavailable, you may contact the Regional Telecom Manager or the Manager of the nearest SLT Teleshop in your area.",
+        "consentHelp": "Upload as a PDF file.",
+        "nicFormatLabel": "How would you like to upload the NIC copy?",
+        "nicFormatPdf": "PDF (both sides in one file)",
+        "nicFormatJpeg": "JPEG (separate front & back photos)",
+        "nicPdfHelp": "Upload a single PDF containing both the front and back of the NIC.",
+        "nicFront": "NIC Front (JPEG)",
+        "nicBack": "NIC Back (JPEG)",
         "docs": {
-          "formA_or_consent": "Form A in overleaf or letter of consent from present owner",
           "newOwnerConsent": "New owner's consent letter",
           "newOwnerNic": "Photo copy of NIC of new owner",
           "form20": "A copy of the form 20 obtained from the registrar of companies",
@@ -617,10 +631,17 @@
       "title": "Application for Termination of Services",
       "subtitle": "Request permanent or temporary disconnection of SLT services and facilities.",
       "steps": {
-        "s1": "Service Info",
-        "s2": "Contact Info",
-        "s3": "Reason",
-        "s4": "Agreement"
+        "s1": "Existing Account Verification",
+        "s2": "Reason",
+        "s3": "Agreement"
+      },
+      "profile": {
+        "telephone": "Telephone Number to be Disconnected",
+        "fullName": "Customer Name",
+        "nic": "NIC / Passport / BRC No.",
+        "mobile": "Mobile Number",
+        "fixed": "Fixed Contact Number",
+        "email": "Email Address"
       },
       "serviceDetails": {
         "heading": "1. Service Details",
@@ -633,13 +654,13 @@
         "disconnectAll": "b. Disconnect the telephone line with all facilities",
         "permanent": "Disconnect Permanently",
         "temporary": "Temporary",
-        "presentNumber": "c. Present Telephone number (to be disconnected)",
-        "presentNumberNote": "(If more, attach separately or list in remarks)",
         "specificServices": "Specific Services to Disconnect",
+        "selectServicesLabel": "Select services to disconnect",
+        "selectServicesPlaceholder": "Select services...",
+        "usernameFor": "{{service}} Username",
         "broadband": "SLT Broadband Internet",
         "dialUp": "Dial-up Internet",
         "email": "Email",
-        "username": "User name:",
         "peoTv": "PeoTV",
         "sltPlus": "SLTPlus",
         "idd": "IDD",
@@ -650,7 +671,7 @@
         "disconnectDate": "1.2 Disconnect the above requested service with effect from (Date)"
       },
       "reason": {
-        "heading": "3. Reason for Disconnection",
+        "heading": "2. Reason for Disconnection",
         "desc": "Please select the reasons for disconnecting the service to help us improve our service excellence.",
         "compDetails": "* Better Competitor Offer Details",
         "compDetailsDesc": "Please specify the competitor and package you are switching to.",
@@ -682,19 +703,8 @@
           "Children Addicted to TV": "Children Addicted to TV"
         }
       },
-      "contact": {
-        "heading": "2. Contact Details",
-        "name": "2.1 Name of the person / Company",
-        "nameNote": "(Name should be the same as it appears under the agreement for provisioning of telecom services)",
-        "nicBrc": "2.2 N.I.C. No. / Passport No. / Business Registration No.",
-        "contactHeading": "2.3 Contact Numbers",
-        "mobile": "Mobile",
-        "fixed": "Fixed",
-        "email": "E-mail",
-        "fax": "Fax"
-      },
       "agreement": {
-        "heading": "4. Customer Agreement",
+        "heading": "3. Customer Agreement",
         "para1": "I do hereby declare that the information furnished by me are true and confirm that I have settled all the dues to SLT outstanding under the account number/s mentioned in this application.",
         "para2": "I further agree to indemnify and hold harmless SLT against any claim, action, demand, expense, loss or other liabilities which may arise in future due to negligence and /or omission and /or failure to fulfill any obligation on our part or for the using there service for illegal or immoral purpose or for the transmission and /or introduction of harmful computer viruses or programs into telecommunication network, computer systems, computers and computer apparatus, any unauthorized use of the service and the violation of any applicable laws and regulations by my self, during the tenor of the agreement.",
         "agreeLabel": "I accept the Declaration and agree to the Terms & Conditions"
@@ -755,5 +765,98 @@
     "actionedBy": "Processed by",
     "actionedAt": "Processed on",
     "notFound": "No application found with these details. Please check the reference number and NIC."
+  },
+  "catalog": {
+    "hero": {
+      "saleTag": "8.8 GREAT 8 SALE",
+      "headline": "MEGA DEALS",
+      "subheadline": "Biggest Deals. Best Prices.",
+      "discountVouchers": "Discount Vouchers",
+      "freeDelivery": "FREE Delivery",
+      "trustedConnection": "Trusted Connection",
+      "shopNow": "Shop Now",
+      "upTo": "UP TO",
+      "off": "OFF"
+    },
+    "categories": {
+      "allProducts": "All Products",
+      "voice": "Voice",
+      "fibreBroadband": "Fibre Broadband",
+      "peoTv": "PEO TV",
+      "broadband": "Broadband"
+    },
+    "bundleRules": {
+      "selected": "Voice Package Selected",
+      "required": "Voice Package Required (Compulsory)",
+      "allowedBundles": "Allowed bundles:",
+      "voiceOnly": "Voice Only",
+      "voiceBroadband": "Voice + Broadband",
+      "voiceBroadbandPeoTv": "Voice + Broadband + PEO TV",
+      "maxOne": "(Max 1 package per category)",
+      "voiceLabel": "Voice:",
+      "broadbandLabel": "Broadband:",
+      "peoTvLabel": "PEO TV:",
+      "selectedCount": "Selected (1/1)",
+      "requiredCount": "Required (0/1)",
+      "optionalCount": "Optional (0/1)",
+      "resetSelection": "Reset Selection"
+    },
+    "controls": {
+      "showingResults": "Showing {{count}} total results across categories",
+      "filters": "Filters",
+      "sortBy": "Sort by:",
+      "popularity": "Popularity",
+      "priceLowHigh": "Price: Low → High",
+      "priceHighLow": "Price: High → Low"
+    },
+    "empty": {
+      "title": "No Products Found",
+      "subtitle": "Try adjusting your filters or search keywords.",
+      "resetFilters": "Reset Filters"
+    },
+    "card": {
+      "addToCart": "Add to Cart",
+      "viewDetails": "View Details",
+      "details": "Details",
+      "inCart": "In Cart",
+      "popular": "POPULAR",
+      "installation": "Installation:",
+      "perMonth": "/month",
+      "perMo": "/mo",
+      "removeFromCart": "Remove from cart",
+      "categorySelectedReason": "1 {{group}} Selected"
+    },
+    "sections": {
+      "packagesAvailable": "{{count}} Packages Available",
+      "voiceTitle": "Voice Packages (Compulsory - Max 1)",
+      "voiceSubtitle": "1 Voice package is required for all connection bundles",
+      "broadbandTitle": "Broadband Packages (Fibre & LTE - Max 1)",
+      "broadbandSubtitle": "High-speed internet for home, gaming & business",
+      "peoTvTitle": "PEO TV Packages (Max 1)",
+      "peoTvSubtitle": "Live HD channels, catch-up TV & 4K entertainment"
+    }
+  },
+  "cart": {
+    "title": "Your Shopping Cart",
+    "subtitle": "Review your selected products before proceeding.",
+    "continueBrowsing": "Continue Browsing",
+    "badge": "SLTMobitel EasyApply",
+    "emptyTitle": "Your cart is currently empty",
+    "emptyText": "Looks like you haven't added any SLTMobitel products yet. Explore our high-speed Fibre Broadband, 4G LTE Home, and PEO TV packages to build your connection.",
+    "browseProducts": "Browse Products",
+    "itemsHeading": "Cart Items ({{count}})",
+    "orderSummary": "Order Summary",
+    "subtotal": "Subtotal",
+    "installationFees": "Installation Fees",
+    "totalDue": "Total Due (First Month)",
+    "installationNote": "Installation fees are one-time charges payable during activation.",
+    "proceedToCheckout": "Proceed to Checkout",
+    "saveForLater": "Save for Later",
+    "weAccept": "We Accept",
+    "secure": "Secure & Hassle-Free",
+    "secureText": "Your information is safe with us. We use OTP verification to ensure a secure application process.",
+    "subtotalWithCount_one": "Subtotal ({{count}} item)",
+    "subtotalWithCount_other": "Subtotal ({{count}} items)",
+    "savedToast": "Cart saved for later!"
   }
 }
