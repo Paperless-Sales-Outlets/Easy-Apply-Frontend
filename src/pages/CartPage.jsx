@@ -111,7 +111,7 @@ export default function CartPage() {
       quantity: primaryItem.quantity,
     };
 
-    sessionStorage.setItem('selectedProduct', JSON.stringify(selectedProductData));
+    localStorage.setItem('selectedProduct', JSON.stringify(selectedProductData));
 
     // Navigate to New Connection Form Page
     navigate('/new-connection', {

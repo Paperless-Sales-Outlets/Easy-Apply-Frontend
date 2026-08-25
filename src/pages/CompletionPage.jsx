@@ -432,7 +432,13 @@ export default function CompletionPage() {
   };
 
   const handleTrackStatus = () => {
-    navigate('/check-status', { state: { ref: referenceNumber } });
+    if (referenceNumber && referenceNumber !== '—') {
+      navigate(`/check-status?ref=${encodeURIComponent(referenceNumber)}`, {
+        state: { ref: referenceNumber },
+      });
+    } else {
+      navigate('/check-status');
+    }
   };
 
   return (
@@ -577,4 +583,3 @@ export default function CompletionPage() {
     </div>
   );
 }
-

@@ -3,14 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
   FiEdit3,
   FiSave,
   FiX,
   FiCreditCard,
-  FiWifi,
   FiFileText,
   FiClock,
   FiCheckCircle,
@@ -290,6 +286,66 @@ export default function MyProfilePage() {
           </p>
         </div>
 
+        {/* ── Profile Header Card ──────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          style={{
+            background: 'linear-gradient(135deg, #001f3f 0%, #003b73 45%, #004d38 85%, #01291e 100%)',
+            borderRadius: '24px',
+            padding: '2.5rem',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '2rem',
+            marginBottom: '2rem',
+            flexWrap: 'wrap',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: '0 20px 40px -10px rgba(0, 86, 179, 0.25)',
+          }}
+        >
+          {/* Decorative Elements */}
+          <div style={{ position: 'absolute', top: -150, right: -100, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+          <div style={{ position: 'absolute', bottom: -100, left: 150, width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(2,132,199,0.2) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+
+          {/* Avatar */}
+          <div
+            style={{
+              width: '88px',
+              height: '88px',
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <FiUser size={36} color="rgba(255,255,255,0.9)" />
+          </div>
+
+          <div style={{ flex: 1, minWidth: '220px', zIndex: 1 }}>
+            <h2 style={{ margin: '0 0 0.35rem', fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#ffffff' }}>
+              {profile.fullName || 'SLTMobitel Customer'}
+            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255,255,255,0.8)' }}>
+                Account: <strong style={{ color: '#fff' }}>{profile.accountNumber || '—'}</strong>
+              </p>
+              <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)' }}>
+                {profile.connectionType || 'SLT Connection'}{profile.registeredDate ? ` • Member since ${profile.registeredDate}` : ''}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* ── Content Grid ─────────────────────────────────────────────── */}
         <div
           style={{
@@ -301,7 +357,7 @@ export default function MyProfilePage() {
         >
           {/* ── Personal Details Card ──────────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             style={cardStyle}
@@ -410,7 +466,7 @@ export default function MyProfilePage() {
 
           {/* ── Account Information Card ───────────────────────────────── */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
             style={cardStyle}
@@ -523,7 +579,7 @@ export default function MyProfilePage() {
             </div>
 
             {/* Quick Action Buttons */}
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: 'auto' }}>
               <button
                 onClick={() => navigate('/new-connection/products')}
                 style={{
@@ -574,7 +630,7 @@ export default function MyProfilePage() {
 
         {/* ── Application History ──────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
           style={cardStyle}
@@ -584,9 +640,9 @@ export default function MyProfilePage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: '1.5rem',
+              marginBottom: '2rem',
               flexWrap: 'wrap',
-              gap: '0.75rem',
+              gap: '1rem',
             }}
           >
             <h3
@@ -619,8 +675,11 @@ export default function MyProfilePage() {
                 fontWeight: 700,
                 fontSize: '0.85rem',
                 cursor: 'pointer',
+                transition: 'all 0.2s',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
             >
               Track Status <FiChevronRight size={14} />
             </button>
@@ -663,12 +722,19 @@ export default function MyProfilePage() {
                   return (
                     <tr
                       key={app.referenceNumber}
-                      style={{ borderBottom: '1px solid rgba(226, 232, 240, 0.4)', transition: '0.2s' }}
+                      style={{
+                        backgroundColor: '#f8fafc',
+                        borderBottom: '1px solid rgba(226, 232, 240, 0.4)',
+                        transition: 'all 0.2s',
+                        cursor: 'default',
+                      }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.6)';
+                        e.currentTarget.style.backgroundColor = '#f1f5f9';
+                        e.currentTarget.style.transform = 'scale(1.002)';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.backgroundColor = '#f8fafc';
+                        e.currentTarget.style.transform = 'none';
                       }}
                     >
                       <td style={{ padding: '1rem', fontWeight: 800, color: '#0056b3' }}>
@@ -752,14 +818,14 @@ export default function MyProfilePage() {
                 })}
                 {!loadingApplications && applications.length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8', fontWeight: 600 }}>
+                    <td colSpan={5} style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8', fontWeight: 600 }}>
                       No applications submitted yet.
                     </td>
                   </tr>
                 )}
                 {loadingApplications && (
                   <tr>
-                    <td colSpan={4} style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8', fontWeight: 600 }}>
+                    <td colSpan={5} style={{ padding: '2rem 1rem', textAlign: 'center', color: '#94a3b8', fontWeight: 600 }}>
                       Loading your application history...
                     </td>
                   </tr>

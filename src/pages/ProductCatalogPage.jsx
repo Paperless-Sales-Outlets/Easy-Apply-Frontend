@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiAlertCircle, FiCheck } from 'react-icons/fi';
+import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiAlertCircle } from 'react-icons/fi';
 import CategoryChips from '../components/catalog/CategoryChips';
 import SidebarFilters from '../components/catalog/SidebarFilters';
 import ProductCard from '../components/catalog/ProductCard';
@@ -165,8 +164,6 @@ const DEFAULT_MOCKUP_PRODUCTS = [
 
 export default function ProductCatalogPage() {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
-
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -426,7 +423,9 @@ export default function ProductCatalogPage() {
         {/* ── Top Hero Banner & Quick Actions Section ── */}
         <HeroBannerCarousel
           onShopNow={() => {
-            document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document
+              .getElementById('products-section')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }}
         />
 
@@ -717,16 +716,16 @@ export default function ProductCatalogPage() {
                           viewMode === 'list'
                             ? { display: 'flex', flexDirection: 'column', gap: '0.85rem' }
                             : {
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
-                                gap: '1rem',
-                              }
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+                              gap: '1rem',
+                            }
                         }
                       >
                         {section.products.map((prod) => {
                           const prodId = String(prod._id || prod.id);
                           const isSelected = selectedProduct && String(selectedProduct._id || selectedProduct.id) === prodId;
-                          
+
                           const catName = (prod.category || prod.name || '').toLowerCase();
                           const prodGroup = catName.includes('voice') ? 'Voice' : catName.includes('peo') ? 'PEO TV' : 'Broadband';
 

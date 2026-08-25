@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { QUICK_SERVICES } from '../../data/quickServices';
 import {
@@ -277,7 +278,9 @@ export default function HeroBannerCarousel({ onShopNow }) {
         </div>
 
         {/* ── High-Tech 3D Pedestal Router Graphic (Center-Right Platform) ── */}
-        <div
+        <motion.div
+          animate={{ y: [-8, 8, -8] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           style={{
             position: 'absolute',
             right: '130px',
@@ -286,14 +289,16 @@ export default function HeroBannerCarousel({ onShopNow }) {
             zIndex: 2,
             pointerEvents: 'none',
           }}
-          className="animate-float-device hero-devices-cluster"
+          className="hero-devices-cluster"
         >
           <MegaCardPedestalRouterGraphic />
-        </div>
+        </motion.div>
 
         {/* UP TO 35% OFF Badge */}
-        <div
+        <motion.div
           className="animate-pulse-badge hero-promo-badge"
+          animate={{ scale: [1, 1.06, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           style={{
             position: 'absolute',
             right: '2rem',
@@ -315,7 +320,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
           <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', color: '#064e3b' }}>{t('catalog.hero.upTo', 'UP TO')}</span>
           <span style={{ fontSize: '1.65rem', fontWeight: 900, lineHeight: 1, color: '#064e3b' }}>35%</span>
           <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#064e3b' }}>{t('catalog.hero.off', 'OFF')}</span>
-        </div>
+        </motion.div>
 
         {/* Slider Pagination Dots */}
         <div
@@ -359,9 +364,11 @@ export default function HeroBannerCarousel({ onShopNow }) {
         {QUICK_SERVICES.map((srv) => {
           const IconComp = srv.icon;
           return (
-            <div
+            <motion.div
               key={srv.id}
               onClick={() => navigate(srv.route)}
+              whileHover={{ scale: 1.02, x: -4 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               role="button"
               tabIndex={0}
               aria-label={`${srv.title}: ${srv.desc}`}
@@ -381,7 +388,6 @@ export default function HeroBannerCarousel({ onShopNow }) {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
                 flex: 1,
               }}
               className="quick-action-card-hover"
@@ -432,7 +438,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
                 </div>
               </div>
               <FiChevronRight size={14} style={{ color: '#94a3b8', flexShrink: 0, marginLeft: '0.3rem' }} />
-            </div>
+            </motion.div>
           );
         })}
       </div>

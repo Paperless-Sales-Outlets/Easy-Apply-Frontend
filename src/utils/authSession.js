@@ -4,7 +4,20 @@
 export const AUTH_UPDATED_EVENT = 'easyapply:auth-updated';
 
 export function getVerifiedPhone() {
-  return sessionStorage.getItem('verifiedPhone') || '';
+  return localStorage.getItem('verifiedPhone') || '';
+}
+
+export function getVerifiedName() {
+  try {
+    const data = localStorage.getItem('customerData');
+    if (data) {
+      const parsed = JSON.parse(data);
+      return parsed.fullName || parsed.customerName || parsed.nameFull || '';
+    }
+  } catch (err) {
+    // ignore
+  }
+  return '';
 }
 
 export function notifyAuthUpdated() {
@@ -12,9 +25,9 @@ export function notifyAuthUpdated() {
 }
 
 export function logoutVerifiedSession() {
-  sessionStorage.removeItem('verifiedPhone');
-  sessionStorage.removeItem('customerExists');
-  sessionStorage.removeItem('selectedAccount');
-  sessionStorage.removeItem('customerData');
+  localStorage.removeItem('verifiedPhone');
+  localStorage.removeItem('customerExists');
+  localStorage.removeItem('selectedAccount');
+  localStorage.removeItem('customerData');
   notifyAuthUpdated();
 }

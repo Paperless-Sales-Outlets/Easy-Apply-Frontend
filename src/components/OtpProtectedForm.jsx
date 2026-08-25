@@ -7,7 +7,6 @@ import {
   FiShield,
   FiSearch,
   FiUser,
-  FiCheck,
   FiArrowRight,
   FiLock,
   FiCheckCircle,
@@ -89,22 +88,26 @@ export default function OtpProtectedForm({ children, onVerified }) {
     return () => clearInterval(interval);
   }, [phase, navigate]);
 
+
   // Restore a verification already completed earlier this browser session
   // (e.g. on a different wizard) instead of asking for phone + OTP again.
   useEffect(() => {
-    const storedPhone = sessionStorage.getItem('verifiedPhone');
+    const storedPhone = localStorage.getItem('verifiedPhone');
     if (storedPhone) {
-      const storedExists = sessionStorage.getItem('customerExists') === 'true';
-        let storedAccount = null;
-        let storedAccountsList = [];
-        try {
-          const raw = sessionStorage.getItem('selectedAccount');
-          storedAccount = raw ? JSON.parse(raw) : null;
-          const rawList = sessionStorage.getItem('accountsList');
-          storedAccountsList = rawList ? JSON.parse(rawList) : [];
-        } catch (err) {
-          storedAccount = null;
-        }
+      const storedExists = localStorage.getItem('customerExists') === 'true';
+      let storedAccount = null;
+      let storedAccountsList = [];
+
+      try {
+        const raw = localStorage.getItem('selectedAccount');
+        storedAccount = raw ? JSON.parse(raw) : null;
+
+        const rawList = localStorage.getItem('accountsList');
+        storedAccountsList = rawList ? JSON.parse(rawList) : [];
+      } catch (err) {
+        storedAccount = null;
+        storedAccountsList = [];
+      }
 
         setMobileNumber(storedPhone);
         setCustomerExists(storedExists);
@@ -180,7 +183,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
   // Brief "verified" beat before handing over to the form
   useEffect(() => {
     if (phase !== 'verified') return;
-    if (mobileNumber) sessionStorage.setItem('verifiedPhone', mobileNumber);
+    if (mobileNumber) localStorage.setItem('verifiedPhone', mobileNumber);
     notifyAuthUpdated();
     const id = setTimeout(() => setDone(true), 700);
     return () => clearTimeout(id);
@@ -195,9 +198,31 @@ export default function OtpProtectedForm({ children, onVerified }) {
     setError('');
     setIsLoading(true);
 
-    // Stay on the 'mobile' phase (just show a loading state) while we check —
-    // only make a single phase transition once we know where to land, so we
-    // don't fire two animated phase changes back-to-back.
+    // ── Step 1: Check if this phone belongs to a registered User ──
+    // Existing user → send OTP → OTP page
+    // New user     → skip OTP → go directly to signup with phone pre-filled
+    try {
+      const checkRes = await api.post('/auth/check-phone', { phone: mobileNumber });
+      const customerFound = checkRes.data?.registered;
+
+      if (!customerFound) {
+        // New customer — store phone so SignUpPage can pre-fill it, then go directly
+        localStorage.setItem('signupPhone', mobileNumber);
+        setIsLoading(false);
+        navigate('/signup');
+        return;
+      }
+    } catch (err) {
+      // API call failed — show error and stay on this page; do NOT redirect
+      setError('Unable to verify your number. Please check your connection and try again.');
+      setIsLoading(false);
+      return;
+    }
+
+    // ── Step 2: Existing customer — fetch full account data, then send OTP ──
+    // performCustomerLookup populates customerExists, accountsList, selectedAccount
+    // so that once OTP is verified we already have their details ready.
+    // If the service requires an existing account but none is found, redirect.
     const canProceed = await performCustomerLookup(mobileNumber);
     if (!canProceed) {
       setPhase('new-customer-redirect');
@@ -205,14 +230,17 @@ export default function OtpProtectedForm({ children, onVerified }) {
       return;
     }
 
+    // ── Step 3: Send OTP ──
     try {
       const response = await api.post('/otp/send', { phone: mobileNumber });
       if (response.data && response.data.success) {
         setPhase('otp');
       } else {
-        setError(response.data?.message || 'Failed to send verification code');
+        setError(response.data?.message || 'Failed to send verification code. Please try again.');
       }
     } catch (err) {
+      // Fallback: even if the send call errors, allow OTP entry
+      // (dev mode / SMS gateway may not be wired up)
       setPhase('otp');
     } finally {
       setIsLoading(false);
@@ -222,20 +250,21 @@ export default function OtpProtectedForm({ children, onVerified }) {
   // The account lookup already happened before the OTP was sent — once the
   // code checks out, just apply what we already know instead of re-fetching.
   const finalizeVerification = () => {
-    sessionStorage.setItem('verifiedPhone', mobileNumber);
+    localStorage.setItem('verifiedPhone', mobileNumber);
     if (customerExists) {
-      sessionStorage.setItem('customerExists', 'true');
-      sessionStorage.setItem('accountsList', JSON.stringify(accountsList));
+      localStorage.setItem('customerExists', 'true');
+      localStorage.setItem('accountsList', JSON.stringify(accountsList));
       if (accountsList.length > 1) {
         setPhase('account-select');
         return;
       }
-      sessionStorage.setItem('selectedAccount', JSON.stringify(selectedAccount));
-      sessionStorage.setItem('customerData', JSON.stringify(selectedAccount));
+      localStorage.setItem('selectedAccount', JSON.stringify(selectedAccount));
+      localStorage.setItem('customerData', JSON.stringify(selectedAccount));
     } else {
-      sessionStorage.setItem('customerExists', 'false');
-      sessionStorage.removeItem('selectedAccount');
-      sessionStorage.removeItem('customerData');
+      localStorage.setItem('customerExists', 'false');
+      localStorage.removeItem('accountsList');
+      localStorage.removeItem('selectedAccount');
+      localStorage.removeItem('customerData');
     }
     setPhase('verified');
   };
@@ -308,10 +337,11 @@ export default function OtpProtectedForm({ children, onVerified }) {
 
   const handleSelectAccount = (account) => {
     setSelectedAccount(account);
-    sessionStorage.setItem('verifiedPhone', mobileNumber);
-    sessionStorage.setItem('customerExists', 'true');
-    sessionStorage.setItem('selectedAccount', JSON.stringify(account));
-    sessionStorage.setItem('customerData', JSON.stringify(account));
+    localStorage.setItem('verifiedPhone', mobileNumber);
+    localStorage.setItem('customerExists', 'true');
+    localStorage.setItem('accountsList', JSON.stringify(accountsList));
+    localStorage.setItem('selectedAccount', JSON.stringify(account));
+    localStorage.setItem('customerData', JSON.stringify(account));
     setPhase('verified');
   };
 
@@ -910,6 +940,88 @@ export default function OtpProtectedForm({ children, onVerified }) {
                   >
                     <span>Browse Products & Buy Now</span>
                     <FiArrowRight size={18} />
+                  </button>
+
+                  <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>
+                    Automatically redirecting in {redirectCountdown}s...
+                  </span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* PHASE: Sign-Up Redirect — phone not registered */}
+            {phase === 'signup-redirect' && (
+              <motion.div key="signup-redirect" {...swap} style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <div
+                  style={{
+                    backgroundColor: '#eff6ff',
+                    color: '#0f57a8',
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1.25rem auto',
+                    border: '2px solid #bfdbfe',
+                  }}
+                >
+                  <FiUser size={28} />
+                </div>
+
+                <h2 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.5rem 0' }}>
+                  Account Not Found
+                </h2>
+
+                <p style={{ fontSize: '0.98rem', color: '#0f57a8', fontWeight: 800, margin: '0 0 0.85rem 0', lineHeight: 1.5 }}>
+                  This number is not yet registered.
+                </p>
+
+                <p style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600, marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                  No account was found for <strong>{formatNumber(mobileNumber)}</strong>.
+                  Please create a free account to access EasyApply services.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/signup')}
+                    style={{
+                      width: '100%',
+                      padding: '0.85rem 1.5rem',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #50b748 0%, #3a9636 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontWeight: 800,
+                      fontSize: '0.92rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      boxShadow: '0 4px 16px rgba(80, 183, 72, 0.35)',
+                    }}
+                  >
+                    <span>Create Account Now</span>
+                    <FiArrowRight size={18} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setPhase('mobile'); setError(''); }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#64748b',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      padding: '0.25rem',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    ← Try a different number
                   </button>
 
                   <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600 }}>
