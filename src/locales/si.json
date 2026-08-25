@@ -901,5 +901,97 @@
       "serviceVacation": "සේවා නිවාඩු අයදුම්පත සාර්ථකව ඉදිරිපත් කරන ලදී!",
       "termination": "අවසන් කිරීමේ අයදුම්පත සාර්ථකව ඉදිරිපත් කරන ලදී!"
     }
+  },
+  "catalog": {
+    "hero": {
+      "saleTag": "8.8 මහා අලෙවිය",
+      "headline": "මහා වට්ටම්",
+      "subheadline": "විශාලතම වට්ටම්. හොඳම මිල.",
+      "discountVouchers": "වට්ටම් වවුචර්",
+      "freeDelivery": "නොමිලේ බෙදාහැරීම",
+      "trustedConnection": "විශ්වාසනීය සම්බන්ධතාවය",
+      "shopNow": "දැන් මිලදී ගන්න",
+      "upTo": "දක්වා",
+      "off": "වට්ටම්"
+    },
+    "categories": {
+      "allProducts": "සියලුම නිෂ්පාදන",
+      "voice": "හඬ",
+      "fibreBroadband": "ෆයිබර් බ්‍රෝඩ්බෑන්ඩ්",
+      "peoTv": "PEO TV",
+      "broadband": "බ්‍රෝඩ්බෑන්ඩ්"
+    },
+    "bundleRules": {
+      "selected": "හඬ පැකේජය තෝරාගන්නා ලදී",
+      "required": "හඬ පැකේජය අවශ්‍යයි (අනිවාර්යයි)",
+      "allowedBundles": "අවසර ලත් බන්ඩල්:",
+      "voiceOnly": "හඬ පමණයි",
+      "voiceBroadband": "හඬ + බ්‍රෝඩ්බෑන්ඩ්",
+      "voiceBroadbandPeoTv": "හඬ + බ්‍රෝඩ්බෑන්ඩ් + PEO TV",
+      "maxOne": "(එක් කාණ්ඩයකට උපරිම පැකේජ 1)",
+      "voiceLabel": "හඬ:",
+      "broadbandLabel": "බ්‍රෝඩ්බෑන්ඩ්:",
+      "peoTvLabel": "PEO TV:",
+      "selectedCount": "තෝරාගන්නා ලදී (1/1)",
+      "requiredCount": "අවශ්‍යයි (0/1)",
+      "optionalCount": "විකල්ප (0/1)",
+      "resetSelection": "තේරීම යළි සකසන්න"
+    },
+    "controls": {
+      "showingResults": "කාණ්ඩ හරහා මුළු ප්‍රතිඵල {{count}}ක් පෙන්වයි",
+      "filters": "පෙරහන්",
+      "sortBy": "අනුව පෙළගස්වන්න:",
+      "popularity": "ජනප්‍රියත්වය",
+      "priceLowHigh": "මිල: අඩුවේ සිට වැඩි දක්වා",
+      "priceHighLow": "මිල: වැඩි සිට අඩු දක්වා"
+    },
+    "empty": {
+      "title": "නිෂ්පාදන හමු නොවීය",
+      "subtitle": "ඔබේ පෙරහන් හෝ සෙවුම් වචන සකස් කර බලන්න.",
+      "resetFilters": "පෙරහන් යළි සකසන්න"
+    },
+    "card": {
+      "addToCart": "කරත්තයට එකතු කරන්න",
+      "viewDetails": "විස්තර බලන්න",
+      "details": "විස්තර",
+      "inCart": "කරත්තයේ ඇත",
+      "popular": "ජනප්‍රියයි",
+      "installation": "ස්ථාපනය:",
+      "perMonth": "/මාසයට",
+      "perMo": "/මා",
+      "removeFromCart": "කරත්තයෙන් ඉවත් කරන්න",
+      "categorySelectedReason": "{{group}} 1ක් තෝරාගෙන ඇත"
+    },
+    "sections": {
+      "packagesAvailable": "පැකේජ {{count}}ක් ලබා ගත හැක",
+      "voiceTitle": "හඬ පැකේජ (අනිවාර්ය - උපරිම 1)",
+      "voiceSubtitle": "සියලුම සම්බන්ධතා බන්ඩල සඳහා හඬ පැකේජයක් අවශ්‍ය වේ",
+      "broadbandTitle": "බ්‍රෝඩ්බෑන්ඩ් පැකේජ (ෆයිබර් සහ LTE - උපරිම 1)",
+      "broadbandSubtitle": "නිවස, ක්‍රීඩා සහ ව්‍යාපාර සඳහා අධිවේගී අන්තර්ජාලය",
+      "peoTvTitle": "PEO TV පැකේජ (උපරිම 1)",
+      "peoTvSubtitle": "සජීවී HD නාලිකා, කැච්-අප් TV සහ 4K විනෝදාස්වාදය"
+    }
+  },
+  "cart": {
+    "title": "ඔබේ සාප්පු කරත්තය",
+    "subtitle": "ඉදිරියට යාමට පෙර ඔබ තෝරාගත් නිෂ්පාදන සමාලෝචනය කරන්න.",
+    "continueBrowsing": "පිරික්සීම දිගටම කරගෙන යන්න",
+    "badge": "SLTMobitel EasyApply",
+    "emptyTitle": "ඔබේ කරත්තය දැනට හිස්ය",
+    "emptyText": "ඔබ තවම SLTMobitel නිෂ්පාදන කිසිවක් එකතු කර නොමැති බව පෙනේ. ඔබේ සම්බන්ධතාවය සකස් කර ගැනීමට අපගේ අධිවේගී ෆයිබර් බ්‍රෝඩ්බෑන්ඩ්, 4G LTE Home, සහ PEO TV පැකේජ ගවේෂණය කරන්න.",
+    "browseProducts": "නිෂ්පාදන පිරික්සන්න",
+    "itemsHeading": "කරත්තයේ අයිතම ({{count}})",
+    "orderSummary": "ඇණවුම් සාරාංශය",
+    "subtotal": "උප එකතුව",
+    "installationFees": "ස්ථාපන ගාස්තු",
+    "totalDue": "ගෙවිය යුතු මුළු මුදල (පළමු මාසය)",
+    "installationNote": "ස්ථාපන ගාස්තු සක්‍රීය කිරීමේදී ගෙවිය යුතු එක් වරක් අය කිරීමකි.",
+    "proceedToCheckout": "ගෙවීමට යන්න",
+    "saveForLater": "පසුව සඳහා සුරකින්න",
+    "weAccept": "අපි පිළිගනිමු",
+    "secure": "ආරක්ෂිත සහ බාධාවකින් තොර",
+    "secureText": "ඔබේ තොරතුරු අප සමඟ ආරක්ෂිතයි. ආරක්ෂිත අයදුම් ක්‍රියාවලියක් සහතික කිරීමට අපි OTP සත්‍යාපනය භාවිතා කරමු.",
+    "subtotalWithCount_other": "උප එකතුව (අයිතම {{count}}ක්)",
+    "savedToast": "කරත්තය පසුව සඳහා සුරකින ලදී!"
   }
 }

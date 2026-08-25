@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -22,6 +22,7 @@ import api from '../utils/api';
 export default function CheckStatusPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
   const [reference, setReference] = useState('');
@@ -94,14 +95,17 @@ export default function CheckStatusPage() {
     }
   }, [t]);
 
-  // Read URL param on initial load & auto-trigger status search if ref present
+  // Prefer route-state ref (from CompletionPage), then fall back to URL param.
   useEffect(() => {
+    const stateRef = location.state?.ref;
     const urlRef = searchParams.get('ref');
-    if (urlRef) {
-      setReference(urlRef);
-      fetchStatus(urlRef);
+    const initialRef = (stateRef || urlRef || '').trim();
+
+    if (initialRef) {
+      setReference(initialRef);
+      fetchStatus(initialRef);
     }
-  }, [searchParams, fetchStatus]);
+  }, [location.state, searchParams, fetchStatus]);
 
   const handleCheck = (e) => {
     e.preventDefault();

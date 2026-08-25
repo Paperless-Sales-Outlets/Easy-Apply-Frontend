@@ -37,7 +37,6 @@ const FacilityCard = ({ id, icon, label, checked, onChange }) => (
 
     <span style={{
       fontWeight: 600, fontSize: '1.05rem', flex: 1, color: checked ? 'var(--slt-blue)' : 'var(--text-primary)', transition: 'color 0.3s',
-      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
     }}>
       {label}
     </span>

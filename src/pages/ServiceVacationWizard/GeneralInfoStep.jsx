@@ -10,7 +10,6 @@ import toast from 'react-hot-toast';
 const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, verifiedMobile }, ref) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const [matchedConnections, setMatchedConnections] = useState([]);
 
   useImperativeHandle(ref, () => ({
     validate: () => {
@@ -24,10 +23,8 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
 
   const handleApiResponse = (data) => {
     if (Array.isArray(data)) {
-      if (data.length === 1) {
+      if (data.length > 0) {
         selectConnection(data[0]);
-      } else if (data.length > 1) {
-        setMatchedConnections(data);
       } else {
         toast.error('No active connections found for this number.');
       }
@@ -37,7 +34,6 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
   };
 
   const selectConnection = (connection) => {
-    setMatchedConnections([]);
     if (onVerifySuccess) {
       onVerifySuccess(connection);
     }
@@ -71,12 +67,6 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
     }
   };
 
-  useEffect(() => {
-    if (verifiedMobile && !vacationData && !loading && matchedConnections.length === 0 && !errorOccurred && !showManualLookup) {
-      performLookup(verifiedMobile);
-    }
-  }, [verifiedMobile, vacationData, loading, matchedConnections.length, errorOccurred, showManualLookup]);
-
   return (
     <div>
 
@@ -84,11 +74,10 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
       
       {loading ? (
         <div style={{ padding: '3rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-          <SLTLoader size={48} />
+          <SLTLoader size={120} />
           <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Searching for your connections...</p>
-
         </div>
-      ) : showManualLookup && !vacationData && matchedConnections.length === 0 ? (
+      ) : showManualLookup && !vacationData ? (
         <div style={{
           padding: '2.5rem',
           background: 'rgba(255, 255, 255, 0.4)',
@@ -143,46 +132,84 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
           <motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
             style={{ 
-              marginTop: '1.5rem', padding: '1.5rem', borderRadius: '16px',
-              background: 'rgba(255, 255, 255, 0.4)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.5)',
-              boxShadow: '0 8px 32px rgba(31, 38, 135, 0.05)',
-              position: 'relative', overflow: 'hidden'
+              marginTop: '2rem',
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+              gap: '1.5rem' 
             }}
           >
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'linear-gradient(90deg, var(--slt-blue), var(--slt-green))' }} />
-            
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-              <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'rgba(15, 87, 168, 0.1)', color: 'var(--slt-blue)', display: 'grid', placeItems: 'center' }}>
-                <Icon name="user" size={28} />
-              </div>
-              
-              <div style={{ flex: 1, minWidth: '250px' }}>
-                <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.25rem', color: 'var(--text-primary)' }}>
-                  {vacationData.fullName || vacationData.customerName || 'Valued Customer'}
-                </h4>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    <Icon name="tag" size={16} />
-                    <span style={{ fontWeight: 600 }}>{vacationData.customerType === 'office' ? 'Business' : 'Home'} Connection</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    <Icon name="phone" size={16} />
-                    <span>{vacationData.telephone || vacationData.accountNo}</span>
+            {/* Left Card: Customer Details */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.75)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255, 255, 255, 0.8)',
+              borderRadius: '24px',
+              padding: '2rem',
+              boxShadow: '0 16px 40px rgba(0, 84, 166, 0.1), inset 0 4px 10px rgba(255,255,255,1)',
+              position: 'relative', overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '6px', background: 'linear-gradient(90deg, var(--slt-blue), #00AEEF)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <div style={{ 
+                  width: '64px', height: '64px', borderRadius: '50%', flexShrink: 0,
+                  background: 'linear-gradient(135deg, rgba(0, 84, 166, 0.1), rgba(0, 174, 239, 0.1))', 
+                  color: 'var(--slt-blue)', display: 'grid', placeItems: 'center',
+                  boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.8), 0 4px 12px rgba(0, 84, 166, 0.05)'
+                }}>
+                  <Icon name="user" size={32} />
+                </div>
+                <div>
+                  <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', color: 'var(--slt-blue)', fontWeight: 700 }}>
+                    {vacationData.fullName || vacationData.customerName || 'Valued Customer'}
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                      <Icon name="tag" size={16} />
+                      <span style={{ fontWeight: 600 }}>{vacationData.customerType === 'office' ? 'Business' : 'Home'} Connection</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                      <Icon name="phone" size={16} />
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{vacationData.telephone || vacationData.accountNo}</span>
+                    </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div style={{ padding: '1rem 1.5rem', background: 'rgba(255, 255, 255, 0.6)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.4)', textAlign: 'right' }}>
-                <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.25rem' }}>Outstanding</span>
-                <span style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800, color: 'var(--danger)' }}>
-                  Rs. {(vacationData.outstandingBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            {/* Right Card: Payment Breakdown */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.75)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255, 255, 255, 0.8)',
+              borderRadius: '24px',
+              padding: '2rem',
+              boxShadow: '0 16px 40px rgba(77, 184, 72, 0.1), inset 0 4px 10px rgba(255,255,255,1)',
+              position: 'relative', overflow: 'hidden',
+              display: 'flex', flexDirection: 'column', justifyContent: 'center'
+            }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '6px', background: 'linear-gradient(90deg, var(--slt-green), #00AEEF)' }} />
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px dashed rgba(0,0,0,0.15)' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Outstanding Dues</span>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Rs. {(vacationData.outstandingBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', paddingBottom: '1.25rem', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Vacation Fee</span>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Rs. 500.00</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'var(--slt-green)', fontWeight: 700, fontSize: '1.1rem' }}>Total Payable</span>
+                <span style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--slt-green)' }}>
+                  Rs. {((vacationData.outstandingBalance || 0) + 500).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
             
+            {/* Hidden fields */}
             <input type="hidden" name="telephone" value={vacationData.telephone || vacationData.accountNo || ''} />
             <input type="hidden" name="fullName" value={vacationData.fullName || vacationData.customerName || ''} />
             <input type="hidden" name="outstandingBalance" value={vacationData.outstandingBalance || 0} />
@@ -191,66 +218,7 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
         )}
       </AnimatePresence>
 
-      {/* Multiple Connections Modal */}
-      {createPortal(
-        <AnimatePresence>
-          {matchedConnections.length > 1 && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ 
-                position: 'fixed', inset: 0, backgroundColor: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(4px)', 
-                zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' 
-              }}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                style={{
-                  backgroundColor: '#fff', borderRadius: '16px', padding: '2rem', width: '90%', maxWidth: '500px',
-                  boxShadow: '0 24px 48px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto'
-                }}
-              >
-                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', color: 'var(--slt-blue)', display: 'grid', placeItems: 'center', margin: '0 auto 1rem' }}>
-                    <Icon name="layers" size={24} />
-                  </div>
-                  <h3 style={{ margin: 0, color: 'var(--slt-blue)' }}>{t('wizards.serviceVacation.generalInfo.multipleConnectionsTitle')}</h3>
-                  <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    {t('wizards.serviceVacation.generalInfo.multipleConnectionsSubtitle')}
-                  </p>
-                </div>
 
-                <div style={{ display: 'grid', gap: '1rem' }}>
-                  {matchedConnections.map((conn, idx) => (
-                    <motion.div
-                      key={idx}
-                      whileHover={{ scale: 1.02, backgroundColor: 'rgba(15, 87, 168, 0.03)' }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => selectConnection(conn)}
-                      style={{
-                        padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '12px',
-                        cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: '1rem'
-                      }}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <h5 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-primary)', fontSize: '1rem' }}>
-                          {conn.telephone || conn.accountNo}
-                        </h5>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                          {conn.customerType === 'office' ? 'Business' : 'Home'} Connection
-                        </span>
-                      </div>
-                      <div style={{ color: 'var(--slt-blue)' }}>
-                        <Icon name="chevron-right" size={20} />
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
 
     </div>
   );

@@ -1,5 +1,12 @@
 import api from '../utils/api';
 
+// The catalogue shown to customers doesn't share ids with whatever's actually
+// seeded in the real database, so a mock/curated-catalogue id (e.g. 'prod-1')
+// can never resolve there — posting one to the backend is guaranteed to fail.
+// Skip the network call for those instead of firing a request that's certain
+// to error, and go straight to the mock/local fallback.
+const isRealObjectId = (id) => typeof id === 'string' && /^[a-f0-9]{24}$/i.test(id);
+
 // Mock data for testing without backend
 const mockProducts = [
   {
@@ -116,95 +123,110 @@ export const getCart = async () => {
   }
 };
 
+const addToMockCart = (data) => {
+  const product = mockProducts.find(p => p.productId === data.productId);
+  if (product) {
+    const existingItem = mockCart.items.find(item => item.productId === data.productId);
+    if (existingItem) {
+      existingItem.quantity += data.quantity;
+      existingItem.subtotal = existingItem.quantity * existingItem.price;
+    } else {
+      mockCart.items.push({
+        _id: 'item-' + Date.now(),
+        productId: product.productId,
+        productName: product.productName,
+        price: product.price,
+        quantity: data.quantity,
+        subtotal: product.price * data.quantity,
+        availableQuantity: product.availableQuantity,
+      });
+    }
+    mockCart.totalAmount = mockCart.items.reduce((sum, item) => sum + item.subtotal, 0);
+  } else if (data.customPackage) {
+    // Handle custom package from wizard
+    const existingItem = mockCart.items.find(item => item.productId === data.productId);
+    if (existingItem) {
+      existingItem.quantity += data.quantity;
+      existingItem.subtotal = existingItem.quantity * existingItem.price;
+    } else {
+      mockCart.items.push({
+        _id: 'item-' + Date.now(),
+        productId: data.productId,
+        productName: data.customPackage.name,
+        price: data.customPackage.price,
+        quantity: data.quantity,
+        subtotal: data.customPackage.price * data.quantity,
+        availableQuantity: 999,
+      });
+    }
+    mockCart.totalAmount = mockCart.items.reduce((sum, item) => sum + item.subtotal, 0);
+  }
+  return {
+    success: true,
+    message: 'Product added to cart successfully',
+    data: mockCart,
+  };
+};
+
 export const addToCart = async (data) => {
+  // Curated-catalogue ids never exist in the real DB — go straight to the
+  // mock/local cart instead of firing a request that's certain to 500.
+  if (!isRealObjectId(data.productId)) {
+    return addToMockCart(data);
+  }
   try {
     const response = await api.post('/cart/add', data);
     return response.data;
   } catch (error) {
-    console.log('Using mock add to cart', data);
-    const product = mockProducts.find(p => p.productId === data.productId);
-    console.log('Found product:', product);
-    if (product) {
-      const existingItem = mockCart.items.find(item => item.productId === data.productId);
-      if (existingItem) {
-        existingItem.quantity += data.quantity;
-        existingItem.subtotal = existingItem.quantity * existingItem.price;
-      } else {
-        mockCart.items.push({
-          _id: 'item-' + Date.now(),
-          productId: product.productId,
-          productName: product.productName,
-          price: product.price,
-          quantity: data.quantity,
-          subtotal: product.price * data.quantity,
-          availableQuantity: product.availableQuantity,
-        });
-      }
-      mockCart.totalAmount = mockCart.items.reduce((sum, item) => sum + item.subtotal, 0);
-      console.log('Cart after add:', mockCart);
-    } else if (data.customPackage) {
-      // Handle custom package from wizard
-      const existingItem = mockCart.items.find(item => item.productId === data.productId);
-      if (existingItem) {
-        existingItem.quantity += data.quantity;
-        existingItem.subtotal = existingItem.quantity * existingItem.price;
-      } else {
-        mockCart.items.push({
-          _id: 'item-' + Date.now(),
-          productId: data.productId,
-          productName: data.customPackage.name,
-          price: data.customPackage.price,
-          quantity: data.quantity,
-          subtotal: data.customPackage.price * data.quantity,
-          availableQuantity: 999,
-        });
-      }
-      mockCart.totalAmount = mockCart.items.reduce((sum, item) => sum + item.subtotal, 0);
-      console.log('Cart after custom package add:', mockCart);
-    } else {
-      console.log('Product not found and no custom package');
-    }
-    return {
-      success: true,
-      message: 'Product added to cart successfully',
-      data: mockCart,
-    };
+    return addToMockCart(data);
   }
 };
 
+const updateMockCartItem = (data) => {
+  const item = mockCart.items.find(i => i.productId === data.productId);
+  if (item) {
+    item.quantity = data.quantity;
+    item.subtotal = item.quantity * item.price;
+    mockCart.totalAmount = mockCart.items.reduce((sum, i) => sum + i.subtotal, 0);
+  }
+  return {
+    success: true,
+    message: 'Cart updated successfully',
+    data: mockCart,
+  };
+};
+
 export const updateCartItem = async (data) => {
+  if (!isRealObjectId(data.productId)) {
+    return updateMockCartItem(data);
+  }
   try {
     const response = await api.put('/cart/update', data);
     return response.data;
   } catch (error) {
-    console.log('Using mock update cart item');
-    const item = mockCart.items.find(i => i.productId === data.productId);
-    if (item) {
-      item.quantity = data.quantity;
-      item.subtotal = item.quantity * item.price;
-      mockCart.totalAmount = mockCart.items.reduce((sum, i) => sum + i.subtotal, 0);
-    }
-    return {
-      success: true,
-      message: 'Cart updated successfully',
-      data: mockCart,
-    };
+    return updateMockCartItem(data);
   }
 };
 
+const removeMockCartItem = (itemId) => {
+  mockCart.items = mockCart.items.filter(item => item._id !== itemId);
+  mockCart.totalAmount = mockCart.items.reduce((sum, item) => sum + item.subtotal, 0);
+  return {
+    success: true,
+    message: 'Item removed from cart',
+    data: mockCart,
+  };
+};
+
 export const removeCartItem = async (itemId) => {
+  if (!isRealObjectId(itemId)) {
+    return removeMockCartItem(itemId);
+  }
   try {
     const response = await api.delete(`/cart/remove/${itemId}`);
     return response.data;
   } catch (error) {
-    console.log('Using mock remove cart item');
-    mockCart.items = mockCart.items.filter(item => item._id !== itemId);
-    mockCart.totalAmount = mockCart.items.reduce((sum, item) => sum + item.subtotal, 0);
-    return {
-      success: true,
-      message: 'Item removed from cart',
-      data: mockCart,
-    };
+    return removeMockCartItem(itemId);
   }
 };
 

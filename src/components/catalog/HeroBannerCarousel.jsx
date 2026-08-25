@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { QUICK_SERVICES } from '../../data/quickServices';
 import {
   FiTag,
   FiTruck,
   FiShield,
   FiArrowRight,
-  FiRefreshCw,
-  FiMapPin,
-  FiRepeat,
-  FiTrendingUp,
-  FiSun,
-  FiDollarSign,
-  FiFileText,
-  FiSmartphone,
   FiChevronRight,
 } from 'react-icons/fi';
 
@@ -101,82 +95,8 @@ function MegaCardPedestalRouterGraphic() {
   );
 }
 
-const QUICK_SERVICES = [
-  {
-    id: 'reconnection',
-    title: 'Reconnection',
-    desc: 'Reconnect your disconnected service',
-    route: '/reconnection',
-    icon: FiRefreshCw,
-    bgColor: '#e6f4ea',
-    iconColor: '#137333',
-  },
-  {
-    id: 'relocation',
-    title: 'Relocation',
-    desc: 'Move your connection to a new address',
-    route: '/location-change',
-    icon: FiMapPin,
-    bgColor: '#e8f0fe',
-    iconColor: '#1a73e8',
-  },
-  {
-    id: 'transfer',
-    title: 'Transfer',
-    desc: 'Transfer ownership of an existing connection',
-    route: '/ownership-change',
-    icon: FiRepeat,
-    bgColor: '#f3e8ff',
-    iconColor: '#9333ea',
-  },
-  {
-    id: 'package-migration',
-    title: 'Package Migration',
-    desc: 'Migrate or upgrade to a new package',
-    route: '/package-migration',
-    icon: FiTrendingUp,
-    bgColor: '#ffedd5',
-    iconColor: '#ea580c',
-  },
-  {
-    id: 'service-vacation',
-    title: 'Service Vacation',
-    desc: 'Apply for temporary service vacation',
-    route: '/service-vacation',
-    icon: FiSun,
-    bgColor: '#fae8ff',
-    iconColor: '#c026d3',
-  },
-  {
-    id: 'refund-request',
-    title: 'Refund Request',
-    desc: 'Request a refund for deposits or overpayments',
-    route: '/refund-request',
-    icon: FiDollarSign,
-    bgColor: '#fef3c7',
-    iconColor: '#d97706',
-  },
-  {
-    id: 'customer-request',
-    title: 'General Customer Request',
-    desc: 'Submit general requests or service inquiries',
-    route: '/customer-request-acceptance',
-    icon: FiFileText,
-    bgColor: '#dcfce7',
-    iconColor: '#16a34a',
-  },
-  {
-    id: 'track-application',
-    title: 'Track Application',
-    desc: 'Track the status of your submitted application',
-    route: '/check-status',
-    icon: FiSmartphone,
-    bgColor: '#f3e8ff',
-    iconColor: '#7c3aed',
-  },
-];
-
 export default function HeroBannerCarousel({ onShopNow }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeDot, setActiveDot] = useState(0);
 
@@ -243,36 +163,40 @@ export default function HeroBannerCarousel({ onShopNow }) {
               textTransform: 'uppercase',
             }}
           >
-            8.8 GREAT 8 SALE
+            {t('catalog.hero.saleTag', '8.8 GREAT 8 SALE')}
           </span>
         </div>
 
-        {/* Main Headline */}
-        <h1
-          style={{
-            fontSize: 'clamp(2.2rem, 4.5vw, 3.2rem)',
-            fontWeight: 900,
-            lineHeight: 1.05,
-            margin: 0,
-            color: '#ffffff',
-            letterSpacing: '-0.02em',
-            fontFamily: 'var(--font-head)',
-          }}
-        >
-          MEGA DEALS
-        </h1>
+        {/* Text block gets a reserved right-hand gutter so the "UP TO 35% OFF"
+            badge (absolutely positioned, doesn't participate in text flow)
+            never overlaps the headline on narrow screens. */}
+        <div style={{ paddingRight: '110px' }}>
+          <h1
+            style={{
+              fontSize: 'clamp(1.8rem, 4.5vw, 3.2rem)',
+              fontWeight: 900,
+              lineHeight: 1.05,
+              margin: 0,
+              color: '#ffffff',
+              letterSpacing: '-0.02em',
+              fontFamily: 'var(--font-head)',
+            }}
+          >
+            {t('catalog.hero.headline', 'MEGA DEALS')}
+          </h1>
 
-        <p
-          style={{
-            fontSize: '1.15rem',
-            fontWeight: 700,
-            color: '#ffffff',
-            marginTop: '0.35rem',
-            marginBottom: '1.25rem',
-          }}
-        >
-          Biggest Deals. Best Prices.
-        </p>
+          <p
+            style={{
+              fontSize: '1.15rem',
+              fontWeight: 700,
+              color: '#ffffff',
+              marginTop: '0.35rem',
+              marginBottom: '1.25rem',
+            }}
+          >
+            {t('catalog.hero.subheadline', 'Biggest Deals. Best Prices.')}
+          </p>
+        </div>
 
         {/* Promo Features Badges */}
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
@@ -290,7 +214,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
             }}
           >
             <FiTag style={{ color: '#34d399' }} />
-            <span>Discount Vouchers</span>
+            <span>{t('catalog.hero.discountVouchers', 'Discount Vouchers')}</span>
           </div>
 
           <div
@@ -307,7 +231,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
             }}
           >
             <FiTruck style={{ color: '#34d399' }} />
-            <span>FREE Delivery</span>
+            <span>{t('catalog.hero.freeDelivery', 'FREE Delivery')}</span>
           </div>
 
           <div
@@ -324,7 +248,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
             }}
           >
             <FiShield style={{ color: '#34d399' }} />
-            <span>Trusted Connection</span>
+            <span>{t('catalog.hero.trustedConnection', 'Trusted Connection')}</span>
           </div>
         </div>
 
@@ -348,7 +272,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
               boxShadow: '0 4px 18px rgba(4, 120, 87, 0.45)',
             }}
           >
-            <span>Shop Now</span>
+            <span>{t('catalog.hero.shopNow', 'Shop Now')}</span>
             <FiArrowRight size={16} />
           </button>
         </div>
@@ -372,6 +296,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
 
         {/* UP TO 35% OFF Badge */}
         <motion.div
+          className="animate-pulse-badge hero-promo-badge"
           animate={{ scale: [1, 1.06, 1] }}
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           style={{
@@ -392,9 +317,9 @@ export default function HeroBannerCarousel({ onShopNow }) {
             zIndex: 3,
           }}
         >
-          <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', color: '#064e3b' }}>UP TO</span>
+          <span style={{ fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', color: '#064e3b' }}>{t('catalog.hero.upTo', 'UP TO')}</span>
           <span style={{ fontSize: '1.65rem', fontWeight: 900, lineHeight: 1, color: '#064e3b' }}>35%</span>
-          <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#064e3b' }}>OFF</span>
+          <span style={{ fontSize: '0.68rem', fontWeight: 900, color: '#064e3b' }}>{t('catalog.hero.off', 'OFF')}</span>
         </motion.div>
 
         {/* Slider Pagination Dots */}
@@ -444,6 +369,15 @@ export default function HeroBannerCarousel({ onShopNow }) {
               onClick={() => navigate(srv.route)}
               whileHover={{ scale: 1.02, x: -4 }}
               transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              role="button"
+              tabIndex={0}
+              aria-label={`${srv.title}: ${srv.desc}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate(srv.route);
+                }
+              }}
               style={{
                 backgroundColor: '#ffffff',
                 borderRadius: '10px',

@@ -44,6 +44,9 @@ import FloatingCartButton from './components/layout/FloatingCartButton';
 import ErrorBoundary from './components/ErrorBoundary';
 import OtpProtectedForm from './components/OtpProtectedForm';
 
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminLoginPage from './pages/Admin/pages/AdminLoginPage';
+import { AdminAuthProvider } from './pages/Admin/context/AdminAuthContext';
 import { CartProvider } from './context/CartContext';
 
 const PageWrapper = ({ children, fullBleed = false, form = false }) => {
@@ -343,10 +346,89 @@ const AnimatedRoutes = () => {
           }
         />
 
-        {/* Admin Portal */}
+        {/* Admin Portal — Public Login */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+
+        {/* Admin Portal — Protected Routes */}
         <Route
           path="/admin"
-          element={<AdminDashboard />}
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/applications"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/forms"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/kyc"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/appointments"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/technician"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/analytics"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/privileges"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </AnimatePresence>
@@ -438,11 +520,13 @@ function App() {
       />
 
       <MotionConfig reducedMotion="user">
-        <CartProvider>
-          <NavigationLayout>
-            <AnimatedRoutes />
-          </NavigationLayout>
-        </CartProvider>
+        <AdminAuthProvider>
+          <CartProvider>
+            <NavigationLayout>
+              <AnimatedRoutes />
+            </NavigationLayout>
+          </CartProvider>
+        </AdminAuthProvider>
       </MotionConfig>
     </BrowserRouter>
   );

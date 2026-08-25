@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import DigitalSignatureCanvas from '../../components/DigitalSignatureCanvas';
+import DigitalSignatureCanvas from '../../components/form/DigitalSignatureCanvas';
 
 const ValueAddedServicesStep = forwardRef(function ValueAddedServicesStep({ formData, handleChange, isActive }, ref) {
   const { t } = useTranslation();

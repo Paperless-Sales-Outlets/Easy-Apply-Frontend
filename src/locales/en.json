@@ -343,7 +343,7 @@
         "s2": "Payment",
         "step1": "Existing Account Verification",
         "step2": "Migration Schedule",
-        "step3": "Declaration & Submission"
+        "step3": "Declaration"
       },
       "profile": {
         "telephone": "Telephone / Account Number",
@@ -445,29 +445,29 @@
         "s2": "Declaration"
       },
       "requestDetails": {
-        "heading": "1. Customer & Request Information",
-        "fullName": "1.1 Name",
-        "nicBrc": "1.2 NIC/Passport/Business Reg No",
-        "telephone": "1.3 Telephone Number",
-        "requiredService": "1.4 Required Service",
+        "heading": "Customer & Request Information",
+        "fullName": "Name",
+        "nicBrc": "NIC/Passport/Business Reg No",
+        "telephone": "Telephone Number",
+        "requiredService": "Required Service",
         "ftth": "SLT Fibre (FTTH)",
         "peoTv": "PeoTV",
         "broadband": "Broadband",
         "voice": "Megaline (Voice)",
         "lte": "4G LTE",
         "otherService": "Others",
-        "requestType": "1.5 Request Type",
+        "requestType": "Request Type",
         "billing": "Billing",
         "serviceMod": "Service modification",
         "hardware": "Hardware changes",
         "otherRequest": "Others",
-        "contactDetails": "1.6 Customer contact details",
+        "contactDetails": "Customer contact details",
         "fixed": "Fixed",
         "mobile": "Mobile",
         "email": "Email",
         "nicHelper": "NIC, passport, or Business Registration number",
         "mobilePrefill": "Taken from your verified number — edit if needed",
-        "descriptionHeading": "2. Description of the request",
+        "descriptionHeading": "Description of the request",
         "descriptionLabel": "Describe your request",
         "descriptionHelper": "Include any account numbers or dates that help us act faster",
         "description": "Please provide the details of your request here."
@@ -765,5 +765,98 @@
     "actionedBy": "Processed by",
     "actionedAt": "Processed on",
     "notFound": "No application found with these details. Please check the reference number and NIC."
+  },
+  "catalog": {
+    "hero": {
+      "saleTag": "8.8 GREAT 8 SALE",
+      "headline": "MEGA DEALS",
+      "subheadline": "Biggest Deals. Best Prices.",
+      "discountVouchers": "Discount Vouchers",
+      "freeDelivery": "FREE Delivery",
+      "trustedConnection": "Trusted Connection",
+      "shopNow": "Shop Now",
+      "upTo": "UP TO",
+      "off": "OFF"
+    },
+    "categories": {
+      "allProducts": "All Products",
+      "voice": "Voice",
+      "fibreBroadband": "Fibre Broadband",
+      "peoTv": "PEO TV",
+      "broadband": "Broadband"
+    },
+    "bundleRules": {
+      "selected": "Voice Package Selected",
+      "required": "Voice Package Required (Compulsory)",
+      "allowedBundles": "Allowed bundles:",
+      "voiceOnly": "Voice Only",
+      "voiceBroadband": "Voice + Broadband",
+      "voiceBroadbandPeoTv": "Voice + Broadband + PEO TV",
+      "maxOne": "(Max 1 package per category)",
+      "voiceLabel": "Voice:",
+      "broadbandLabel": "Broadband:",
+      "peoTvLabel": "PEO TV:",
+      "selectedCount": "Selected (1/1)",
+      "requiredCount": "Required (0/1)",
+      "optionalCount": "Optional (0/1)",
+      "resetSelection": "Reset Selection"
+    },
+    "controls": {
+      "showingResults": "Showing {{count}} total results across categories",
+      "filters": "Filters",
+      "sortBy": "Sort by:",
+      "popularity": "Popularity",
+      "priceLowHigh": "Price: Low → High",
+      "priceHighLow": "Price: High → Low"
+    },
+    "empty": {
+      "title": "No Products Found",
+      "subtitle": "Try adjusting your filters or search keywords.",
+      "resetFilters": "Reset Filters"
+    },
+    "card": {
+      "addToCart": "Add to Cart",
+      "viewDetails": "View Details",
+      "details": "Details",
+      "inCart": "In Cart",
+      "popular": "POPULAR",
+      "installation": "Installation:",
+      "perMonth": "/month",
+      "perMo": "/mo",
+      "removeFromCart": "Remove from cart",
+      "categorySelectedReason": "1 {{group}} Selected"
+    },
+    "sections": {
+      "packagesAvailable": "{{count}} Packages Available",
+      "voiceTitle": "Voice Packages (Compulsory - Max 1)",
+      "voiceSubtitle": "1 Voice package is required for all connection bundles",
+      "broadbandTitle": "Broadband Packages (Fibre & LTE - Max 1)",
+      "broadbandSubtitle": "High-speed internet for home, gaming & business",
+      "peoTvTitle": "PEO TV Packages (Max 1)",
+      "peoTvSubtitle": "Live HD channels, catch-up TV & 4K entertainment"
+    }
+  },
+  "cart": {
+    "title": "Your Shopping Cart",
+    "subtitle": "Review your selected products before proceeding.",
+    "continueBrowsing": "Continue Browsing",
+    "badge": "SLTMobitel EasyApply",
+    "emptyTitle": "Your cart is currently empty",
+    "emptyText": "Looks like you haven't added any SLTMobitel products yet. Explore our high-speed Fibre Broadband, 4G LTE Home, and PEO TV packages to build your connection.",
+    "browseProducts": "Browse Products",
+    "itemsHeading": "Cart Items ({{count}})",
+    "orderSummary": "Order Summary",
+    "subtotal": "Subtotal",
+    "installationFees": "Installation Fees",
+    "totalDue": "Total Due (First Month)",
+    "installationNote": "Installation fees are one-time charges payable during activation.",
+    "proceedToCheckout": "Proceed to Checkout",
+    "saveForLater": "Save for Later",
+    "weAccept": "We Accept",
+    "secure": "Secure & Hassle-Free",
+    "secureText": "Your information is safe with us. We use OTP verification to ensure a secure application process.",
+    "subtotalWithCount_one": "Subtotal ({{count}} item)",
+    "subtotalWithCount_other": "Subtotal ({{count}} items)",
+    "savedToast": "Cart saved for later!"
   }
 }

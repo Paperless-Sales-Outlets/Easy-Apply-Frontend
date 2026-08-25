@@ -5,10 +5,28 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
 // Create an instance of Axios
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// ── In-Memory Admin Access Token Accessor ─────────────────────────────────────
+let adminAccessToken = null;
+let onForceLogout = null;
+
+export const setAdminAccessToken = (token) => {
+  adminAccessToken = token;
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common['Authorization'];
+  }
+};
+
+export const setAdminLogoutHandler = (handler) => {
+  onForceLogout = handler;
+};
 
 // ── Session ID ─────────────────────────────────────────────────────────────
 // Provides a stable, anonymous cart session without requiring login.
@@ -22,15 +40,57 @@ const getSessionId = () => {
   return sid;
 };
 
-// Request Interceptor: Attach access token (if logged in) and session ID
+/**
+ * Clear the cart after a successful application submission or payment.
+ *
+ * There are two cart stores that must both be cleared:
+ *   1. localStorage key "easy_apply_cart"  — productService local cart
+ *   2. localStorage key "slt_session_id"   — backend session ID for MongoDB cart
+ *
+ * Both steps are attempted independently so a backend failure does not
+ * block the localStorage clean-up.
+ */
+export const clearSessionCart = async () => {
+  // 1. Tell the backend to empty the MongoDB cart for this session
+  try {
+    await api.delete('/cart/clear');
+  } catch (err) {
+    // Non-fatal — the 7-day TTL index will eventually clean up the DB document
+    console.warn('Could not clear cart on server:', err?.response?.data?.message || err.message);
+  }
+
+  // 2. Wipe the local cart stored in localStorage by productService.js
+  try {
+    localStorage.removeItem('easy_apply_cart');   // ← the actual key used by productService
+    localStorage.removeItem('slt_session_id');    // ← backend session ID (starts a fresh cart session)
+    sessionStorage.removeItem('selectedProduct'); // ← product carried into the checkout form
+  } catch (_) {
+    // ignore storage errors in sandboxed environments
+  }
+
+  // 3. Tell all listeners (navbar badge, FloatingCartButton, etc.) the cart is now empty
+  try {
+    window.dispatchEvent(new Event('easyapply:cart-updated'));
+  } catch (_) {}
+};
+
+// Request Interceptor: Attach in-memory admin accessToken & session ID
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+    // 1. Attach in-memory admin accessToken if available
+    if (adminAccessToken) {
+      config.headers['Authorization'] = `Bearer ${adminAccessToken}`;
+    } else {
+      // Fallback for customer token if present in storage
+      const customerToken = localStorage.getItem('accessToken');
+      if (customerToken) {
+        config.headers['Authorization'] = `Bearer ${customerToken}`;
+      }
     }
+
     // Always send the session ID for cart operations
     config.headers['x-session-id'] = getSessionId();
+
     return config;
   },
   (error) => {
@@ -38,48 +98,62 @@ api.interceptors.request.use(
   }
 );
 
-// Response Interceptor: Handle token expiration (401 errors)
+// Response Interceptor: Handle 401 Unauthorized for admin API requests
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const is401 = error.response && error.response.status === 401;
 
-    // Check if error is 401 (Unauthorized) and we haven't retried this request yet
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    // 4. Check if request is an admin request
+    const isAdminRequest =
+      originalRequest?.url?.includes('/admin') ||
+      window.location.pathname.includes('/admin');
+
+    if (is401 && isAdminRequest && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem('refreshToken');
 
-      if (refreshToken) {
+      const storedRefreshToken = sessionStorage.getItem('refreshToken');
+
+      // 3. Try calling token refresh (POST /api/auth/refresh) once before logging out
+      if (storedRefreshToken) {
         try {
-          // Attempt to get a new access token using the refresh token
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refreshToken,
+          const refreshRes = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+            refreshToken: storedRefreshToken,
           });
 
-          const { accessToken } = response.data;
+          const newAccessToken = refreshRes.data.accessToken;
 
-          // Save new access token
-          localStorage.setItem('accessToken', accessToken);
+          if (newAccessToken) {
+            // Update in-memory token
+            setAdminAccessToken(newAccessToken);
 
-          // Update header and retry the original request
-          originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
-          return api(originalRequest);
-        } catch (refreshError) {
-          // If refresh token fails, clear storage and log out
-          console.error('Refresh token expired or invalid:', refreshError);
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-
-          // Redirect to login respecting the Vite BASE_URL (e.g. /Paperlessbackup/)
-          const base = import.meta.env.BASE_URL || '/';
-          window.location.href = base.replace(/\/$/, '') + '/login';
-          return Promise.reject(refreshError);
+            // Retry original request with new token
+            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+            return api(originalRequest);
+          }
+        } catch (refreshErr) {
+          console.error('Admin token auto-refresh failed:', refreshErr);
         }
       }
-      // No refresh token — 401 on session-based endpoints (e.g. /cart) should
-      // fall through and be handled by the caller as a graceful fallback.
+
+      // 2. If refresh fails or no refresh token exists -> Clear session and redirect to /admin/login
+      setAdminAccessToken(null);
+      sessionStorage.removeItem('refreshToken');
+      sessionStorage.removeItem('admin_session');
+
+      if (onForceLogout) {
+        onForceLogout();
+      }
+
+      const base = import.meta.env.BASE_URL || '/';
+      const loginUrl = base.replace(/\/$/, '') + '/admin/login';
+      if (window.location.pathname !== loginUrl) {
+        window.location.href = loginUrl;
+      }
     }
 
+    // 4. Non-admin / customer-facing API calls remain unaffected
     return Promise.reject(error);
   }
 );

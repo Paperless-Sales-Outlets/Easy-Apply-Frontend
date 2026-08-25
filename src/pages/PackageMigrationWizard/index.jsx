@@ -6,6 +6,7 @@ import { useVerifiedContext } from '../../components/verification';
 import PackageDetailsStep from './PackageDetailsStep';
 import PackageMigrationDeclarationStep from './PackageMigrationDeclarationStep';
 import LoopCheckStep from './LoopCheckStep';
+import PaymentStep from '../PaymentStep';
 import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 import WizardStepper from '../../components/WizardStepper';
 import { isPackageUpgrade, needsLoopCheck } from '../../utils/technology';
@@ -165,7 +166,9 @@ export default function PackageMigrationWizard() {
   const registeredAddress =
     customerPackage?.address || [customerPackage?.addressLine1, customerPackage?.addressLine2].filter(Boolean).join(', ');
 
-  const stepKeys = needsLoop ? ['account', 'loop', 'schedule', 'declaration'] : ['account', 'schedule', 'declaration'];
+  const stepKeys = needsLoop
+    ? ['account', 'loop', 'schedule', 'declaration', 'payment']
+    : ['account', 'schedule', 'declaration', 'payment'];
   const totalSteps = stepKeys.length;
   const currentKey = stepKeys[currentStep - 1];
 
@@ -203,6 +206,11 @@ export default function PackageMigrationWizard() {
         setShowValidationErrors(true);
         return;
       }
+    } else if (currentKey === 'declaration') {
+      if (!isStep3Valid) {
+        setShowValidationErrors(true);
+        return;
+      }
     }
     setShowValidationErrors(false);
     setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
@@ -214,19 +222,15 @@ export default function PackageMigrationWizard() {
     window.scrollTo(0, 0);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    if (currentStep < totalSteps) handleNext();
+  };
 
-    if (currentStep < totalSteps) {
-      handleNext();
-      return;
-    }
-
-    if (!isStep3Valid) {
-      setShowValidationErrors(true);
-      return;
-    }
-
+  // Real submission — fired once payment succeeds (or immediately for a
+  // receipt-upload confirmation), i.e. only once we're actually on the
+  // final Payment step with a valid declaration + signature already given.
+  const submitApplication = async () => {
     setSubmitting(true);
     setSubmitError('');
 
@@ -289,12 +293,14 @@ export default function PackageMigrationWizard() {
         t('wizards.packageMigration.steps.step1', 'Existing Account Verification'),
         'Fibre Feasibility Check',
         t('wizards.packageMigration.steps.step2', 'Migration Schedule'),
-        t('wizards.packageMigration.steps.step3', 'Declaration & Submission'),
+        t('wizards.packageMigration.steps.step3', 'Declaration'),
+        'Payment',
       ]
     : [
         t('wizards.packageMigration.steps.step1', 'Existing Account Verification'),
         t('wizards.packageMigration.steps.step2', 'Migration Schedule'),
-        t('wizards.packageMigration.steps.step3', 'Declaration & Submission'),
+        t('wizards.packageMigration.steps.step3', 'Declaration'),
+        'Payment',
       ];
 
   return (
@@ -440,6 +446,16 @@ export default function PackageMigrationWizard() {
             showValidationErrors={showValidationErrors}
           />
         )}
+
+        {currentKey === 'payment' && (
+          <PaymentStep
+            isActive={currentKey === 'payment'}
+            verifiedPhone={mobileNumber || phone}
+            amount={500}
+            amountLabel="Migration Processing Fee"
+            onSuccess={submitApplication}
+          />
+        )}
         </div>
 
         {submitError && (
@@ -453,13 +469,9 @@ export default function PackageMigrationWizard() {
             {t('common.previous')}
           </button>
 
-          {currentKey === 'loop' ? null : currentStep < totalSteps ? (
-            <button type="button" onClick={handleNext} className="btn btn-primary" disabled={submitting}>
+          {(currentKey === 'loop' || currentKey === 'payment') ? null : (
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
               {t('common.nextStep')}
-            </button>
-          ) : (
-            <button type="submit" className="btn btn-success" disabled={submitting}>
-              {submitting ? t('common.submitting') : 'Submit Package Migration'}
             </button>
           )}
         </div>

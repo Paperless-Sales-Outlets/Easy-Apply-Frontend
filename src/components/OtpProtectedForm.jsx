@@ -7,7 +7,6 @@ import {
   FiShield,
   FiSearch,
   FiUser,
-  FiCheck,
   FiArrowRight,
   FiLock,
   FiCheckCircle,
@@ -97,17 +96,23 @@ export default function OtpProtectedForm({ children, onVerified }) {
     if (storedPhone) {
       const storedExists = localStorage.getItem('customerExists') === 'true';
       let storedAccount = null;
+      let storedAccountsList = [];
+
       try {
         const raw = localStorage.getItem('selectedAccount');
         storedAccount = raw ? JSON.parse(raw) : null;
+
+        const rawList = localStorage.getItem('accountsList');
+        storedAccountsList = rawList ? JSON.parse(rawList) : [];
       } catch (err) {
         storedAccount = null;
+        storedAccountsList = [];
       }
 
-      setMobileNumber(storedPhone);
-      setCustomerExists(storedExists);
-      setSelectedAccount(storedAccount);
-      setAccountsList(storedAccount ? [storedAccount] : []);
+        setMobileNumber(storedPhone);
+        setCustomerExists(storedExists);
+        setSelectedAccount(storedAccount);
+        setAccountsList(storedAccountsList.length > 0 ? storedAccountsList : (storedAccount ? [storedAccount] : []));
 
       if (!storedExists && requiresExistingAccount()) {
         setPhase('new-customer-redirect');
@@ -248,6 +253,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
     localStorage.setItem('verifiedPhone', mobileNumber);
     if (customerExists) {
       localStorage.setItem('customerExists', 'true');
+      localStorage.setItem('accountsList', JSON.stringify(accountsList));
       if (accountsList.length > 1) {
         setPhase('account-select');
         return;
@@ -256,6 +262,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
       localStorage.setItem('customerData', JSON.stringify(selectedAccount));
     } else {
       localStorage.setItem('customerExists', 'false');
+      localStorage.removeItem('accountsList');
       localStorage.removeItem('selectedAccount');
       localStorage.removeItem('customerData');
     }
@@ -332,6 +339,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
     setSelectedAccount(account);
     localStorage.setItem('verifiedPhone', mobileNumber);
     localStorage.setItem('customerExists', 'true');
+    localStorage.setItem('accountsList', JSON.stringify(accountsList));
     localStorage.setItem('selectedAccount', JSON.stringify(account));
     localStorage.setItem('customerData', JSON.stringify(account));
     setPhase('verified');
@@ -372,6 +380,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
           customerData: selectedAccount,
           selectedAccount,
           accountsList,
+          switchAccount: handleSelectAccount,
         }}
       >
         {children}
@@ -394,6 +403,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
+        className="otp-card"
         style={{
           width: '100%',
           maxWidth: '940px',
@@ -403,7 +413,6 @@ export default function OtpProtectedForm({ children, onVerified }) {
           border: '1px solid #e2e8f0',
           overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'row',
           position: 'relative',
         }}
       >
@@ -422,15 +431,13 @@ export default function OtpProtectedForm({ children, onVerified }) {
 
         {/* Left Hero Brand Banner Side */}
         <div
+          className="otp-card-left"
           style={{
-            flex: '1 1 45%',
-            maxWidth: '45%',
             background: 'linear-gradient(135deg, #004b93 0%, #002350 100%)',
             position: 'relative',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            padding: '2.5rem 2rem',
             color: '#ffffff',
             overflow: 'hidden',
           }}
@@ -499,10 +506,8 @@ export default function OtpProtectedForm({ children, onVerified }) {
 
         {/* Right Interactive Verification Form Side */}
         <div
+          className="otp-card-right"
           style={{
-            flex: '1 1 55%',
-            maxWidth: '55%',
-            padding: '3rem 2.5rem',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -836,6 +841,15 @@ export default function OtpProtectedForm({ children, onVerified }) {
                     <div
                       key={acc.customerId || acc.accountNumber || acc.telephone}
                       onClick={() => handleSelectAccount(acc)}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Select service ${acc.package || acc.packageName || 'SLT Connection Package'}, account ${acc.accountNumber}, ${acc.telephone || acc.phoneNumber}`}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleSelectAccount(acc);
+                        }
+                      }}
                       style={{
                         backgroundColor: '#ffffff',
                         border: '1.5px solid #cbd5e1',
