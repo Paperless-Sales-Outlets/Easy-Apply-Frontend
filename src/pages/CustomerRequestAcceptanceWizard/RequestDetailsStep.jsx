@@ -147,6 +147,13 @@ const RequestDetailsStep = forwardRef(({ isActive }, ref) => {
               isActive={isActive}
             />
           </div>
+          <Field 
+            name="address" 
+            label="Customer Address" 
+            rules={{ required: true }} 
+            autoComplete="street-address" 
+            isActive={isActive} 
+          />
         </div>
       )}
 
