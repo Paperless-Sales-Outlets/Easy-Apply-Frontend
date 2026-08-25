@@ -72,7 +72,7 @@ export default function NewConnectionWizard() {
     if (fromState) {
       setSelectedProduct(fromState);
     } else {
-      const stored = sessionStorage.getItem('selectedProduct');
+      const stored = localStorage.getItem('selectedProduct');
       if (stored) {
         try {
           setSelectedProduct(JSON.parse(stored));

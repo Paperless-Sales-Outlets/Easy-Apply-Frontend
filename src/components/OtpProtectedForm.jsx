@@ -93,12 +93,12 @@ export default function OtpProtectedForm({ children, onVerified }) {
   // Restore a verification already completed earlier this browser session
   // (e.g. on a different wizard) instead of asking for phone + OTP again.
   useEffect(() => {
-    const storedPhone = sessionStorage.getItem('verifiedPhone');
+    const storedPhone = localStorage.getItem('verifiedPhone');
     if (storedPhone) {
-      const storedExists = sessionStorage.getItem('customerExists') === 'true';
+      const storedExists = localStorage.getItem('customerExists') === 'true';
       let storedAccount = null;
       try {
-        const raw = sessionStorage.getItem('selectedAccount');
+        const raw = localStorage.getItem('selectedAccount');
         storedAccount = raw ? JSON.parse(raw) : null;
       } catch (err) {
         storedAccount = null;
@@ -178,7 +178,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
   // Brief "verified" beat before handing over to the form
   useEffect(() => {
     if (phase !== 'verified') return;
-    if (mobileNumber) sessionStorage.setItem('verifiedPhone', mobileNumber);
+    if (mobileNumber) localStorage.setItem('verifiedPhone', mobileNumber);
     notifyAuthUpdated();
     const id = setTimeout(() => setDone(true), 700);
     return () => clearTimeout(id);
@@ -202,7 +202,7 @@ export default function OtpProtectedForm({ children, onVerified }) {
 
       if (!customerFound) {
         // New customer — store phone so SignUpPage can pre-fill it, then go directly
-        sessionStorage.setItem('signupPhone', mobileNumber);
+        localStorage.setItem('signupPhone', mobileNumber);
         setIsLoading(false);
         navigate('/signup');
         return;
@@ -245,19 +245,19 @@ export default function OtpProtectedForm({ children, onVerified }) {
   // The account lookup already happened before the OTP was sent — once the
   // code checks out, just apply what we already know instead of re-fetching.
   const finalizeVerification = () => {
-    sessionStorage.setItem('verifiedPhone', mobileNumber);
+    localStorage.setItem('verifiedPhone', mobileNumber);
     if (customerExists) {
-      sessionStorage.setItem('customerExists', 'true');
+      localStorage.setItem('customerExists', 'true');
       if (accountsList.length > 1) {
         setPhase('account-select');
         return;
       }
-      sessionStorage.setItem('selectedAccount', JSON.stringify(selectedAccount));
-      sessionStorage.setItem('customerData', JSON.stringify(selectedAccount));
+      localStorage.setItem('selectedAccount', JSON.stringify(selectedAccount));
+      localStorage.setItem('customerData', JSON.stringify(selectedAccount));
     } else {
-      sessionStorage.setItem('customerExists', 'false');
-      sessionStorage.removeItem('selectedAccount');
-      sessionStorage.removeItem('customerData');
+      localStorage.setItem('customerExists', 'false');
+      localStorage.removeItem('selectedAccount');
+      localStorage.removeItem('customerData');
     }
     setPhase('verified');
   };
@@ -330,10 +330,10 @@ export default function OtpProtectedForm({ children, onVerified }) {
 
   const handleSelectAccount = (account) => {
     setSelectedAccount(account);
-    sessionStorage.setItem('verifiedPhone', mobileNumber);
-    sessionStorage.setItem('customerExists', 'true');
-    sessionStorage.setItem('selectedAccount', JSON.stringify(account));
-    sessionStorage.setItem('customerData', JSON.stringify(account));
+    localStorage.setItem('verifiedPhone', mobileNumber);
+    localStorage.setItem('customerExists', 'true');
+    localStorage.setItem('selectedAccount', JSON.stringify(account));
+    localStorage.setItem('customerData', JSON.stringify(account));
     setPhase('verified');
   };
 

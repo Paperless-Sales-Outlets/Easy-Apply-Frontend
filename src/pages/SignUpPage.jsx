@@ -144,8 +144,8 @@ export default function SignUpPage() {
   const navigate = useNavigate();
 
   const prefilledPhone = (() => {
-    const stored = sessionStorage.getItem('signupPhone') || '';
-    if (stored) sessionStorage.removeItem('signupPhone');
+    const stored = localStorage.getItem('signupPhone') || '';
+    if (stored) localStorage.removeItem('signupPhone');
     return stored;
   })();
 
