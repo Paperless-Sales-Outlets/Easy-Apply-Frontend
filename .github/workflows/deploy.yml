@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - main-backup
+      - main-v3
 
 jobs:
   build-and-deploy:
@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
 
       - name: Determine Environment Variables & Folders
         run: |
