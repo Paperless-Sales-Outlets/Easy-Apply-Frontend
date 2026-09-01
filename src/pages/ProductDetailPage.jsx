@@ -44,7 +44,8 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = async (prod, qty) => {
     await handleAddToCart(prod, qty);
-    navigate('/verify-phone');
+    // The customer is already signed in by this point — straight to the form.
+    navigate('/new-connection');
   };
 
   return (
