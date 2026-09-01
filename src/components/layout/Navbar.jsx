@@ -258,7 +258,7 @@ export default function Navbar() {
                   gap: '0.35rem',
                   backgroundColor: servicesOpen ? '#eff6ff' : '#f8fafc',
                   border: `1px solid ${servicesOpen ? '#bfdbfe' : '#e2e8f0'}`,
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   padding: '0.4rem 0.65rem',
                   fontSize: '0.82rem',
                   fontWeight: 700,
@@ -352,7 +352,7 @@ export default function Navbar() {
                 gap: '0.35rem',
                 backgroundColor: '#f8fafc',
                 padding: '0.35rem 0.65rem',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 border: '1px solid #e2e8f0',
               }}
             >

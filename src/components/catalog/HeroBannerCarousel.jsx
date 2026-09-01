@@ -87,7 +87,7 @@ function MegaCardPedestalRouterGraphic() {
 
       {/* Metallic Logo Badge */}
       <rect x="165" y="123" width="42" height="14" rx="4" fill="#003828" stroke="#10b981" strokeWidth="1" />
-      <text x="186" y="133.5" fontSize="7.5" fontWeight="900" fill="#10b981" textAnchor="middle" fontFamily="system-ui, sans-serif">FIBRE 6</text>
+      <text x="186" y="133.5" fontSize="7.5" fontWeight="900" fill="#10b981" textAnchor="middle" fontFamily="var(--font-head)">FIBRE 6</text>
 
       {/* Base Drop Shadow */}
       <ellipse cx="140" cy="158" rx="95" ry="11" fill="black" opacity="0.55" />
@@ -121,7 +121,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
       {/* ── Left Main Hero Banner (Navy Blue to Teal Theme) ── */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #001f3f 0%, #003b73 45%, #004d38 85%, #01291e 100%)',
+          background: 'var(--brand-gradient)',
           borderRadius: '16px',
           padding: '2.25rem 2.5rem',
           color: '#ffffff',
@@ -213,7 +213,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
               fontWeight: 700,
             }}
           >
-            <FiTag style={{ color: '#34d399' }} />
+            <FiTag style={{ color: '#ffffff' }} />
             <span>{t('catalog.hero.discountVouchers', 'Discount Vouchers')}</span>
           </div>
 
@@ -230,7 +230,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
               fontWeight: 700,
             }}
           >
-            <FiTruck style={{ color: '#34d399' }} />
+            <FiTruck style={{ color: '#ffffff' }} />
             <span>{t('catalog.hero.freeDelivery', 'FREE Delivery')}</span>
           </div>
 
@@ -247,7 +247,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
               fontWeight: 700,
             }}
           >
-            <FiShield style={{ color: '#34d399' }} />
+            <FiShield style={{ color: '#ffffff' }} />
             <span>{t('catalog.hero.trustedConnection', 'Trusted Connection')}</span>
           </div>
         </div>
@@ -279,8 +279,9 @@ export default function HeroBannerCarousel({ onShopNow }) {
 
         {/* ── High-Tech 3D Pedestal Router Graphic (Center-Right Platform) ── */}
         <motion.div
-          animate={{ y: [-8, 8, -8] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
           style={{
             position: 'absolute',
             right: '130px',
@@ -296,9 +297,10 @@ export default function HeroBannerCarousel({ onShopNow }) {
 
         {/* UP TO 35% OFF Badge */}
         <motion.div
-          className="animate-pulse-badge hero-promo-badge"
-          animate={{ scale: [1, 1.06, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          className="hero-promo-badge"
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
           style={{
             position: 'absolute',
             right: '2rem',
@@ -367,8 +369,8 @@ export default function HeroBannerCarousel({ onShopNow }) {
             <motion.div
               key={srv.id}
               onClick={() => navigate(srv.route)}
-              whileHover={{ scale: 1.02, x: -4 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              whileHover={{ backgroundColor: '#f8fafc', x: -2 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
               role="button"
               tabIndex={0}
               aria-label={`${srv.title}: ${srv.desc}`}
@@ -380,7 +382,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
               }}
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '10px',
+                borderRadius: '12px',
                 padding: '0.45rem 0.75rem',
                 border: '1px solid #e2e8f0',
                 boxShadow: '0 2px 6px rgba(0,0,0,0.03)',

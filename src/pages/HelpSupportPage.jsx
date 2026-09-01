@@ -125,7 +125,7 @@ const CONTACT_CHANNELS = [
     detail: 'support@slt.lk',
     detailSecondary: 'info@slt.lk',
     icon: <FiMail size={24} />,
-    color: '#059669',
+    color: '#047857',
     bgColor: '#ecfdf5',
   },
   {
@@ -154,7 +154,7 @@ function AccordionItem({ question, answer, isOpen, onToggle }) {
     <div
       style={{
         backgroundColor: '#fff',
-        borderRadius: '10px',
+        borderRadius: '12px',
         border: `1px solid ${isOpen ? '#bfdbfe' : '#e2e8f0'}`,
         overflow: 'hidden',
         transition: 'border-color 0.2s',
@@ -221,8 +221,8 @@ export default function HelpSupportPage() {
   const activeFaq = FAQ_CATEGORIES.find((c) => c.category === activeCategory);
 
   return (
-    <div style={{ backgroundColor: '#f4f7f9', minHeight: '100vh', paddingBottom: '4rem' }}>
-      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', paddingBottom: '4rem' }}>
+      <div style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '2rem var(--page-gutter)' }}>
 
         {/* ── Page Header ──────────────────────────────────────────────── */}
         <div style={{ marginBottom: '2.5rem' }}>
@@ -234,7 +234,7 @@ export default function HelpSupportPage() {
               Help & Support
             </h1>
           </div>
-          <p style={{ margin: 0, fontSize: '0.95rem', color: '#64748b', maxWidth: '600px' }}>
+          <p style={{ margin: 0, fontSize: '0.95rem', color: '#475569', maxWidth: '600px' }}>
             Find answers to your questions, get in touch with our support team, or browse our knowledge base.
           </p>
         </div>
@@ -253,7 +253,7 @@ export default function HelpSupportPage() {
               key={channel.title}
               style={{
                 backgroundColor: '#fff',
-                borderRadius: '14px',
+                borderRadius: '16px',
                 padding: '1.5rem',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
                 border: '1px solid #f1f5f9',
@@ -304,13 +304,13 @@ export default function HelpSupportPage() {
                 <h3 style={{ margin: '0 0 0.25rem', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
                   {channel.title}
                 </h3>
-                <p style={{ margin: '0 0 0.5rem', fontSize: '0.82rem', color: '#94a3b8' }}>
+                <p style={{ margin: '0 0 0.5rem', fontSize: '0.82rem', color: '#475569' }}>
                   {channel.description}
                 </p>
                 <p style={{ margin: '0 0 0.15rem', fontSize: '0.9rem', fontWeight: 600, color: channel.color }}>
                   {channel.detail}
                 </p>
-                <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748b' }}>
+                <p style={{ margin: 0, fontSize: '0.78rem', color: '#475569' }}>
                   {channel.detailSecondary}
                 </p>
               </div>
@@ -348,7 +348,7 @@ export default function HelpSupportPage() {
                   borderRadius: '9999px',
                   border: activeCategory === cat.category ? '2px solid #0056b3' : '1px solid #e2e8f0',
                   backgroundColor: activeCategory === cat.category ? '#eff6ff' : '#fff',
-                  color: activeCategory === cat.category ? '#0056b3' : '#64748b',
+                  color: activeCategory === cat.category ? '#0056b3' : '#475569',
                   fontWeight: activeCategory === cat.category ? 700 : 500,
                   fontSize: '0.83rem',
                   cursor: 'pointer',
@@ -436,7 +436,7 @@ export default function HelpSupportPage() {
                   <h4 style={{ margin: '0 0 0.25rem', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
                     {link.label}
                   </h4>
-                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#64748b' }}>{link.desc}</p>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#475569' }}>{link.desc}</p>
                 </div>
                 <FiExternalLink size={18} style={{ color: '#0056b3', flexShrink: 0 }} />
               </div>
@@ -449,7 +449,7 @@ export default function HelpSupportPage() {
           style={{
             marginTop: '2.5rem',
             background: 'linear-gradient(135deg, #0056b3 0%, #0284c7 100%)',
-            borderRadius: '14px',
+            borderRadius: '16px',
             padding: '2rem',
             color: '#fff',
             display: 'flex',

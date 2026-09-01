@@ -142,7 +142,7 @@ export default function CheckStatusPage() {
           transition={{ duration: 0.3 }}
           style={{
             backgroundColor: '#ffffff',
-            borderRadius: '24px',
+            borderRadius: '16px',
             boxShadow: '0 20px 50px rgba(0, 86, 179, 0.07)',
             border: '1px solid #e2e8f0',
             overflow: 'hidden',
@@ -191,13 +191,14 @@ export default function CheckStatusPage() {
                   <input
                     id="reference"
                     type="text"
+                    aria-label="Application reference number"
                     value={reference}
                     onChange={(e) => setReference(e.target.value)}
                     placeholder="Enter Reference Number (e.g. REQ-36670371)"
                     style={{
                       width: '100%',
                       padding: '0.9rem 2.75rem 0.9rem 1.15rem',
-                      borderRadius: '14px',
+                      borderRadius: '16px',
                       border: '1.5px solid #cbd5e1',
                       fontSize: '1rem',
                       fontWeight: 800,
@@ -219,7 +220,7 @@ export default function CheckStatusPage() {
                         transform: 'translateY(-50%)',
                         background: 'none',
                         border: 'none',
-                        color: '#94a3b8',
+                        color: '#475569',
                         cursor: 'pointer',
                         padding: '4px',
                         display: 'flex',
@@ -235,9 +236,9 @@ export default function CheckStatusPage() {
                   disabled={isLoading || !reference.trim()}
                   style={{
                     padding: '0.9rem 2rem',
-                    borderRadius: '14px',
-                    background: isLoading || !reference.trim() ? '#cbd5e1' : 'linear-gradient(135deg, #0056b3 0%, #003b73 100%)',
-                    color: '#ffffff',
+                    borderRadius: '16px',
+                    background: isLoading || !reference.trim() ? '#e2e8f0' : 'var(--brand-gradient-soft)',
+                    color: isLoading || !reference.trim() ? '#475569' : '#ffffff',
                     border: 'none',
                     fontWeight: 800,
                     fontSize: '0.95rem',
@@ -282,7 +283,7 @@ export default function CheckStatusPage() {
                 <div
                   style={{
                     backgroundColor: '#ffffff',
-                    borderRadius: '20px',
+                    borderRadius: '16px',
                     padding: '2rem',
                     border: '1.5px solid #fecaca',
                     boxShadow: '0 8px 30px rgba(220, 38, 38, 0.05)',
@@ -315,7 +316,7 @@ export default function CheckStatusPage() {
                 <div
                   style={{
                     backgroundColor: '#ffffff',
-                    borderRadius: '24px',
+                    borderRadius: '16px',
                     border: '1px solid #e2e8f0',
                     boxShadow: '0 12px 35px rgba(0, 0, 0, 0.06)',
                     overflow: 'hidden',
@@ -623,7 +624,7 @@ export default function CheckStatusPage() {
                         style={{
                           backgroundColor: '#ffffff',
                           border: '1.5px solid #cbd5e1',
-                          borderRadius: '10px',
+                          borderRadius: '12px',
                           padding: '0.55rem 1.25rem',
                           color: '#334155',
                           fontSize: '0.85rem',

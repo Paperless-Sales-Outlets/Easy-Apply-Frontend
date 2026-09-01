@@ -78,7 +78,7 @@ const SearchBar = ({ onSearch, placeholder = 'Search products...' }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              borderRadius: '4px',
+              borderRadius: '8px',
               color: '#64748b',
               transition: 'background-color 0.2s ease',
             }}

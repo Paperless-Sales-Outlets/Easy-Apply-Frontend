@@ -100,7 +100,7 @@ const ProductCard = ({ product }) => {
             left: '12px',
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             padding: '4px 12px',
-            borderRadius: '20px',
+            borderRadius: '16px',
             fontSize: '0.75rem',
             fontWeight: 600,
             color: '#475569',

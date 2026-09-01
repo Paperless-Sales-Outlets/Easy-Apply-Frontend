@@ -123,7 +123,7 @@ export default function CartPage() {
   };
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', padding: '2rem 0 5rem 0' }}>
+    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', padding: '2rem 0 5rem 0' }}>
       <Toast toast={toast} onClose={() => setToast(null)} />
 
       <div className="page-container" style={{ maxWidth: '1380px', margin: '0 auto', padding: '0 1.5rem' }}>
@@ -159,7 +159,7 @@ export default function CartPage() {
               fontWeight: 700,
               fontSize: '0.875rem',
               padding: '0.6rem 1.25rem',
-              borderRadius: '10px',
+              borderRadius: '12px',
               backgroundColor: '#ffffff',
               border: '1.5px solid #0056b3',
               boxShadow: '0 2px 6px rgba(0, 86, 179, 0.08)',
@@ -183,7 +183,7 @@ export default function CartPage() {
               transition={{ duration: 0.3 }}
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '24px',
+                borderRadius: '16px',
                 padding: '4.5rem 2rem',
                 textAlign: 'center',
                 boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)',
@@ -317,10 +317,10 @@ export default function CartPage() {
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
                 {[
-                  { title: 'Free Installation', text: 'On all eligible packages', icon: '⚡' },
-                  { title: '24/7 Customer Support', text: "We're here to help you", icon: '🎧' },
-                  { title: 'Trusted Network', text: "Sri Lanka's No.1 Network", icon: '📡' },
-                  { title: '100% Secure Payments', text: 'Your payments are safe with us', icon: '🔒' },
+                  { title: 'Free Installation', text: 'On all eligible packages', Icon: FiZap },
+                  { title: '24/7 Customer Support', text: "We're here to help you", Icon: FiHeadphones },
+                  { title: 'Trusted Network', text: "Sri Lanka's No.1 Network", Icon: FiWifi },
+                  { title: '100% Secure Payments', text: 'Your payments are safe with us', Icon: FiShield },
                 ].map((benefit) => (
                   <div
                     key={benefit.title}
@@ -341,14 +341,14 @@ export default function CartPage() {
                         height: '48px',
                         borderRadius: '12px',
                         backgroundColor: '#eff6ff',
+                        color: '#0b4a91',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '1.4rem',
                         flexShrink: 0,
                       }}
                     >
-                      {benefit.icon}
+                      <benefit.Icon size={22} aria-hidden="true" />
                     </div>
                     <div>
                       <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.2rem 0' }}>
@@ -405,7 +405,7 @@ export default function CartPage() {
                           style={{
                             width: '140px',
                             height: '140px',
-                            borderRadius: '14px',
+                            borderRadius: '16px',
                             background: 'linear-gradient(135deg, #091e42 0%, #0056b3 100%)',
                             position: 'relative',
                             display: 'flex',
@@ -429,7 +429,7 @@ export default function CartPage() {
                                 fontSize: '0.62rem',
                                 fontWeight: 800,
                                 padding: '0.2rem 0.5rem',
-                                borderRadius: '4px',
+                                borderRadius: '8px',
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.04em',
                               }}
@@ -454,7 +454,7 @@ export default function CartPage() {
                               gap: '0.85rem',
                               backgroundColor: '#f8fafc',
                               padding: '0.6rem 0.85rem',
-                              borderRadius: '10px',
+                              borderRadius: '12px',
                               border: '1px solid #f1f5f9',
                               marginBottom: '1rem',
                               flexWrap: 'wrap',
@@ -530,7 +530,7 @@ export default function CartPage() {
                                 padding: '0.4rem',
                                 display: 'flex',
                                 alignItems: 'center',
-                                borderRadius: '6px',
+                                borderRadius: '8px',
                               }}
                               title="Remove item"
                             >
@@ -553,7 +553,7 @@ export default function CartPage() {
                   style={{
                     backgroundColor: '#eff6ff',
                     border: '1px solid #bfdbfe',
-                    borderRadius: '14px',
+                    borderRadius: '16px',
                     padding: '1rem 1.25rem',
                     display: 'flex',
                     alignItems: 'center',
@@ -592,7 +592,7 @@ export default function CartPage() {
                 <div
                   style={{
                     backgroundColor: '#ffffff',
-                    borderRadius: '20px',
+                    borderRadius: '16px',
                     padding: '1.75rem',
                     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
                     border: '1px solid #e2e8f0',
@@ -637,7 +637,7 @@ export default function CartPage() {
                     style={{
                       backgroundColor: '#ecfdf5',
                       border: '1px solid #a7f3d0',
-                      borderRadius: '10px',
+                      borderRadius: '12px',
                       padding: '0.75rem 0.9rem',
                       fontSize: '0.78rem',
                       color: '#047857',
@@ -709,7 +709,7 @@ export default function CartPage() {
                           style={{
                             backgroundColor: '#f8fafc',
                             border: '1px solid #e2e8f0',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             padding: '0.2rem 0.55rem',
                             fontSize: '0.7rem',
                             fontWeight: 700,
@@ -730,10 +730,10 @@ export default function CartPage() {
             {/* Bottom Benefits Bar (4 items matching Image 3) */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
               {[
-                { title: 'Free Installation', text: 'On all eligible packages', icon: '⚡' },
-                { title: '24/7 Customer Support', text: "We're here to help you", icon: '🎧' },
-                { title: 'Trusted Network', text: "Sri Lanka's No.1 Network", icon: '📡' },
-                { title: '100% Secure Payments', text: 'Your payments are safe with us', icon: '🔒' },
+                { title: 'Free Installation', text: 'On all eligible packages', Icon: FiZap },
+                { title: '24/7 Customer Support', text: "We're here to help you", Icon: FiHeadphones },
+                { title: 'Trusted Network', text: "Sri Lanka's No.1 Network", Icon: FiWifi },
+                { title: '100% Secure Payments', text: 'Your payments are safe with us', Icon: FiShield },
               ].map((benefit) => (
                 <div
                   key={benefit.title}
@@ -754,14 +754,14 @@ export default function CartPage() {
                       height: '46px',
                       borderRadius: '12px',
                       backgroundColor: '#eff6ff',
+                      color: '#0b4a91',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '1.35rem',
                       flexShrink: 0,
                     }}
                   >
-                    {benefit.icon}
+                    <benefit.Icon size={22} aria-hidden="true" />
                   </div>
                   <div>
                     <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.2rem 0' }}>

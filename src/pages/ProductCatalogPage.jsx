@@ -381,8 +381,8 @@ export default function ProductCatalogPage() {
         title: t('catalog.sections.voiceTitle', 'Voice Packages (Compulsory - Max 1)'),
         subtitle: t('catalog.sections.voiceSubtitle', '1 Voice package is required for all connection bundles'),
         icon: <FiPhone />,
-        bgColor: '#e0f2fe',
-        iconColor: '#0284c7',
+        bgColor: '#eff6ff',
+        iconColor: '#0b4a91',
         products: voiceProds,
       });
     }
@@ -393,8 +393,8 @@ export default function ProductCatalogPage() {
         title: t('catalog.sections.broadbandTitle', 'Broadband Packages (Fibre & LTE - Max 1)'),
         subtitle: t('catalog.sections.broadbandSubtitle', 'High-speed internet for home, gaming & business'),
         icon: <FiGlobe />,
-        bgColor: '#e6f4ea',
-        iconColor: '#137333',
+        bgColor: '#eff6ff',
+        iconColor: '#0b4a91',
         products: broadbandProds,
       });
     }
@@ -405,8 +405,8 @@ export default function ProductCatalogPage() {
         title: t('catalog.sections.peoTvTitle', 'PEO TV Packages (Max 1)'),
         subtitle: t('catalog.sections.peoTvSubtitle', 'Live HD channels, catch-up TV & 4K entertainment'),
         icon: <FiTv />,
-        bgColor: '#fef3c7',
-        iconColor: '#d97706',
+        bgColor: '#eff6ff',
+        iconColor: '#0b4a91',
         products: peoTvProds,
       });
     }
@@ -415,7 +415,7 @@ export default function ProductCatalogPage() {
   }, [filteredProducts, activeCategory, t, i18n.language]);
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', paddingBottom: '3rem' }}>
+    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', paddingBottom: '3rem' }}>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Main Container */}
@@ -434,7 +434,7 @@ export default function ProductCatalogPage() {
           style={{
             backgroundColor: cartCategoryAnalysis.hasVoice ? '#f0fdf4' : '#eff6ff',
             border: `1.5px solid ${cartCategoryAnalysis.hasVoice ? '#86efac' : '#93c5fd'}`,
-            borderRadius: '14px',
+            borderRadius: '16px',
             padding: '0.85rem 1.25rem',
             marginTop: '1.25rem',
             marginBottom: '0.5rem',
@@ -447,7 +447,7 @@ export default function ProductCatalogPage() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <span style={{ fontSize: '1.2rem', color: cartCategoryAnalysis.hasVoice ? '#16a34a' : '#1d4ed8' }}>
+            <span style={{ fontSize: '1.2rem', color: cartCategoryAnalysis.hasVoice ? '#0f7a4d' : '#0b4a91' }}>
               {cartCategoryAnalysis.hasVoice ? <FiCheckCircle /> : <FiAlertCircle />}
             </span>
             <div>
@@ -468,7 +468,7 @@ export default function ProductCatalogPage() {
                 fontSize: '0.75rem',
                 fontWeight: 800,
                 backgroundColor: cartCategoryAnalysis.hasVoice ? '#dcfce7' : '#dbeafe',
-                color: cartCategoryAnalysis.hasVoice ? '#15803d' : '#1d4ed8',
+                color: cartCategoryAnalysis.hasVoice ? '#0f7a4d' : '#0b4a91',
               }}
             >
               {t('catalog.bundleRules.voiceLabel', 'Voice:')} {cartCategoryAnalysis.hasVoice ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.requiredCount', 'Required (0/1)')}
@@ -640,7 +640,7 @@ export default function ProductCatalogPage() {
                       backgroundColor: viewMode === 'grid' ? '#0056b3' : 'transparent',
                       color: viewMode === 'grid' ? '#ffffff' : '#64748b',
                       padding: '0.35rem 0.55rem',
-                      borderRadius: '6px',
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -657,7 +657,7 @@ export default function ProductCatalogPage() {
                       backgroundColor: viewMode === 'list' ? '#0056b3' : 'transparent',
                       color: viewMode === 'list' ? '#ffffff' : '#64748b',
                       padding: '0.35rem 0.55rem',
-                      borderRadius: '6px',
+                      borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -691,14 +691,14 @@ export default function ProductCatalogPage() {
                 {categorySections.map((section) => {
                   if (section.products.length === 0) return null;
                   return (
-                    <div key={section.id} style={{ backgroundColor: '#ffffff', borderRadius: '18px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                    <div key={section.id} style={{ backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
                       {/* Section Header — flexWrap lets the "Packages Available" badge
                           drop to its own line on narrow screens instead of being
                           squeezed into a sliver of a column and wrapping into an
                           illegible multi-line blob. */}
                       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', rowGap: '0.65rem', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '2px solid #f1f5f9' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
-                          <div style={{ backgroundColor: section.bgColor, color: section.iconColor, width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 900, flexShrink: 0 }}>
+                          <div style={{ backgroundColor: section.bgColor, color: section.iconColor, width: '38px', height: '38px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 900, flexShrink: 0 }}>
                             {section.icon}
                           </div>
                           <div style={{ minWidth: 0 }}>
@@ -783,7 +783,7 @@ export default function ProductCatalogPage() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#e0f2fe', color: '#0284c7', padding: '0.65rem', borderRadius: '12px' }}>
+            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <FiCheckCircle size={22} />
             </div>
             <div>
@@ -793,7 +793,7 @@ export default function ProductCatalogPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#dcfce7', color: '#16a34a', padding: '0.65rem', borderRadius: '12px' }}>
+            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <FiClock size={22} />
             </div>
             <div>
@@ -803,7 +803,7 @@ export default function ProductCatalogPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#fef3c7', color: '#d97706', padding: '0.65rem', borderRadius: '12px' }}>
+            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <FiShield size={22} />
             </div>
             <div>
@@ -813,7 +813,7 @@ export default function ProductCatalogPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#f3e8ff', color: '#9333ea', padding: '0.65rem', borderRadius: '12px' }}>
+            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <FiSliders size={22} />
             </div>
             <div>
@@ -823,7 +823,7 @@ export default function ProductCatalogPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#fae8ff', color: '#c026d3', padding: '0.65rem', borderRadius: '12px' }}>
+            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <FiLock size={22} />
             </div>
             <div>

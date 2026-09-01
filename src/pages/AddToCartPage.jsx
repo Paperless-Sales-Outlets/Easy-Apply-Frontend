@@ -106,7 +106,7 @@ const AddToCartPage = () => {
   const cartItemCount = getCartItemCount();
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--page-bg)' }}>
       {/* Header */}
       <div
         style={{
@@ -121,7 +121,7 @@ const AddToCartPage = () => {
       >
         <div
           style={{
-            maxWidth: '1400px',
+            maxWidth: 'var(--page-max)',
             margin: '0 auto',
             display: 'flex',
             justifyContent: 'space-between',
@@ -203,7 +203,7 @@ const AddToCartPage = () => {
       {/* Main Content */}
       <div
         style={{
-          maxWidth: '1400px',
+          maxWidth: 'var(--page-max)',
           margin: '0 auto',
           padding: '2rem',
         }}
@@ -275,7 +275,7 @@ const AddToCartPage = () => {
                   color: '#64748b',
                   cursor: 'pointer',
                   padding: '0.5rem',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#e2e8f0';
@@ -344,7 +344,7 @@ const AddToCartPage = () => {
                 fontWeight: 500,
                 cursor: 'pointer',
                 padding: '0.25rem 0.5rem',
-                borderRadius: '4px',
+                borderRadius: '8px',
               }}
             >
               Clear Filters
