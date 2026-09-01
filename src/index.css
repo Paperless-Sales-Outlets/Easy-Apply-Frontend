@@ -1590,6 +1590,13 @@ a {
     display: none;
   }
 
+  /* The account name and Logout also live in the mobile menu below, so the
+     inline copy is redundant here — and at 375px it overflowed the header. */
+  .navbar-auth,
+  .navbar-login-btn {
+    display: none !important; /* beats the component's inline display:flex */
+  }
+
   .hamburger-btn {
     display: flex;
     align-items: center;
@@ -2492,5 +2499,110 @@ a {
   }
   .otp-card-right {
     padding: 2rem 1.5rem;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Shared OTP verification dialog — used by the auth screens and by the
+   in-form phone verification in the wizards.
+   ══════════════════════════════════════════════════════════════════ */
+/* ── OTP verification dialog ──────────────────────────────────────
+   Rendered conditionally rather than through AnimatePresence: an exit
+   animation could leave the closed dialog mounted, where it stayed
+   clickable and still visible to screen readers. */
+.otp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: otp-overlay-in 0.2s ease-out;
+}
+
+.otp-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  padding: 2.25rem 2rem;
+  border-radius: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  animation: otp-dialog-in 0.2s ease-out;
+}
+
+@keyframes otp-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes otp-dialog-in {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otp-overlay,
+  .otp-dialog {
+    animation: none;
+  }
+}
+
+/* ── OTP entry boxes ──────────────────────────────────────────── */
+.otp-boxes {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.otp-box {
+  flex: 1;
+  min-width: 0;
+  height: 54px;
+  border-radius: 12px;
+  border: 1.5px solid #94a3b8;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+}
+
+.otp-box.is-filled {
+  border: 2px solid #0f7a4d;
+  background: #f0fdf4;
+}
+
+.otp-box.is-error {
+  border: 2px solid #b91c1c;
+}
+
+.otp-box:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.otp-box:focus-visible {
+  outline: 3px solid #0f57a8;
+  outline-offset: 2px;
+}
+
+@media (max-width: 680px) {
+  .otp-boxes {
+    gap: 0.35rem;
+  }
+
+  .otp-box {
+    height: 48px;
+    font-size: 1.15rem;
+  }
+
+  .otp-dialog {
+    padding: 2rem 1.25rem;
   }
 }
