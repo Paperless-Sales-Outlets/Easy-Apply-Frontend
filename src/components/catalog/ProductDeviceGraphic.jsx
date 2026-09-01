@@ -101,7 +101,7 @@ function LTEGraphic() {
 
       {/* SLT badge */}
       <rect x="28" y="70" width="39" height="12" rx="4" fill="#0056b3" />
-      <text x="47.5" y="79.5" fontSize="7" fontWeight="800" fill="#fff" textAnchor="middle" fontFamily="system-ui,sans-serif">SLT</text>
+      <text x="47.5" y="79.5" fontSize="7" fontWeight="800" fill="#fff" textAnchor="middle" fontFamily="var(--font-head)">SLT</text>
 
       {/* Ports */}
       <rect x="28" y="87" width="39" height="10" rx="3" fill="#d9e2ec" />
@@ -155,7 +155,7 @@ function PEOTVGraphic() {
       <rect x="8" y="8" width="104" height="64" rx="6" fill={`url(#ts-${uid})`} />
       <rect x="12" y="12" width="96" height="56" rx="4" fill={`url(#sg-${uid})`} />
       <rect x="28" y="26" width="64" height="28" rx="4" fill="#0f172a" opacity="0.6" />
-      <text x="60" y="44" fontSize="11" fontWeight="900" fill="#ff6b35" textAnchor="middle" fontFamily="system-ui,sans-serif">PEO TV</text>
+      <text x="60" y="44" fontSize="11" fontWeight="900" fill="#ff6b35" textAnchor="middle" fontFamily="var(--font-head)">PEO TV</text>
 
       {/* Stand */}
       <rect x="50" y="75" width="20" height="10" rx="1" fill="#1e2a3a" />
@@ -222,7 +222,7 @@ function VoicePhoneGraphic() {
 
       {/* SLT badge */}
       <rect x="76" y="88" width="28" height="9" rx="3" fill="#0056b3" />
-      <text x="90" y="95.5" fontSize="6" fontWeight="800" fill="white" textAnchor="middle" fontFamily="system-ui,sans-serif">SLT</text>
+      <text x="90" y="95.5" fontSize="6" fontWeight="800" fill="white" textAnchor="middle" fontFamily="var(--font-head)">SLT</text>
 
       <ellipse cx="68" cy="106" rx="50" ry="4" fill="black" opacity="0.18" />
     </svg>
@@ -266,7 +266,7 @@ function StaticIPGraphic() {
 
       {/* IP text */}
       <text x="57.5" y="58" fontSize="16" fontWeight="900" fill="#ffffff"
-        textAnchor="middle" fontFamily="system-ui,sans-serif" letterSpacing="1">IP</text>
+        textAnchor="middle" fontFamily="var(--font-head)" letterSpacing="1">IP</text>
 
       {/* Edge highlights */}
       <path d="M57.5 6 L97 22" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" />
