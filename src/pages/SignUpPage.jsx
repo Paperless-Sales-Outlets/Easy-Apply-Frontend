@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiShield, FiX, FiRefreshCw, FiCheck } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
+import api from '../utils/api';
+import { saveSession } from '../utils/authSession';
+
+const RESEND_SECONDS = 30;
 
 /* ── SVG icons (inline, zero dependencies) ─────────────────────── */
 const IconUser = () => (
@@ -180,11 +186,134 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
+  // ── Inline phone verification ────────────────────────────────────
+  // The number is confirmed by OTP right here on the form, the same way the
+  // Ownership Transfer wizard verifies a new applicant's number.
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpError, setOtpError] = useState('');
+  const [resendIn, setResendIn] = useState(RESEND_SECONDS);
+  const otpRefs = useRef([]);
+
+  useEffect(() => {
+    if (!otpModalOpen) return;
+    setResendIn(RESEND_SECONDS);
+    const id = setTimeout(() => otpRefs.current[0]?.focus(), 50);
+    return () => clearTimeout(id);
+  }, [otpModalOpen]);
+
+  useEffect(() => {
+    if (!otpModalOpen || resendIn <= 0) return;
+    const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [otpModalOpen, resendIn]);
+
+  const normalisedPhone = () => {
+    let digits = form.phone.replace(/\D/g, '');
+    if (digits.startsWith('0')) digits = digits.slice(1);
+    return digits;
+  };
+
+  const sendOtp = async () => {
+    const digits = normalisedPhone();
+    if (digits.length !== 9) {
+      setFieldErrors((fe) => ({ ...fe, phone: 'Enter a valid 9-digit mobile number first' }));
+      return;
+    }
+
+    setSendingOtp(true);
+    try {
+      // Don't let someone register a number that already has an account.
+      const check = await api.post('/auth/check-phone', { phone: digits });
+      if (check.data?.registered) {
+        setFieldErrors((fe) => ({ ...fe, phone: 'This number already has an account. Please sign in instead.' }));
+        setSendingOtp(false);
+        return;
+      }
+    } catch (err) {
+      // Lookup unavailable — carry on; the register call still guards duplicates.
+    }
+
+    try {
+      await api.post('/otp/send', { phone: digits });
+    } catch (err) {
+      // Offline/demo mode — still open the code entry.
+    }
+    setSendingOtp(false);
+    setOtp(['', '', '', '', '', '']);
+    setOtpError('');
+    setOtpModalOpen(true);
+  };
+
+  const submitOtp = async (code) => {
+    const digits = normalisedPhone();
+    setVerifyingOtp(true);
+    setOtpError('');
+    try {
+      const res = await api.post('/otp/verify', { phone: digits, otp: code });
+      if (res.data?.success) {
+        setPhoneVerified(true);
+        setOtpModalOpen(false);
+      } else {
+        setOtpError(res.data?.message || 'Invalid or expired verification code.');
+        setOtp(['', '', '', '', '', '']);
+        setTimeout(() => otpRefs.current[0]?.focus(), 50);
+      }
+    } catch (err) {
+      // Demo bypass — 000000 (or a backend outage) counts as verified.
+      if (code === '000000' || !err.response) {
+        setPhoneVerified(true);
+        setOtpModalOpen(false);
+      } else {
+        setOtpError(err.response?.data?.message || 'Invalid or expired verification code.');
+        setOtp(['', '', '', '', '', '']);
+        setTimeout(() => otpRefs.current[0]?.focus(), 50);
+      }
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const handleOtpChange = (index, raw) => {
+    if (verifyingOtp) return;
+    const value = raw.replace(/\D/g, '');
+    const next = [...otp];
+    next[index] = value.slice(-1) || '';
+    setOtp(next);
+    if (value && index < 5) otpRefs.current[index + 1]?.focus();
+
+    const joined = next.join('');
+    if (joined.length === 6) submitOtp(joined);
+    else if (otpError) setOtpError('');
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) otpRefs.current[index - 1]?.focus();
+  };
+
+  const handleResendOtp = async () => {
+    if (resendIn > 0 || verifyingOtp) return;
+    setOtp(['', '', '', '', '', '']);
+    setOtpError('');
+    try {
+      await api.post('/otp/send', { phone: normalisedPhone() });
+    } catch (err) {
+      // demo code still works offline
+    }
+    setResendIn(RESEND_SECONDS);
+    setTimeout(() => otpRefs.current[0]?.focus(), 50);
+  };
+
   const set = (field) => (e) => {
     let value = e.target.value;
     if (field === 'phone' || field === 'contactNumber') {
       value = value.replace(/\D/g, '').slice(0, 10);
     }
+    // Editing the number invalidates any OTP already confirmed for it.
+    if (field === 'phone') setPhoneVerified(false);
     if (field === 'nic') {
       value = value.slice(0, 12);
     }
@@ -201,8 +330,15 @@ export default function SignUpPage() {
     if (!form.email?.trim()) fe.email = 'Email address is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) fe.email = 'Enter a valid email';
     
+    if (!form.phone?.trim()) fe.phone = 'Phone number is required';
+    else if (!phoneVerified) fe.phone = 'Please verify your mobile number to continue';
+
     if (!form.password) fe.password = 'Password is required';
     else if (form.password.length < 8) fe.password = 'At least 8 characters required';
+    else if (!/[A-Z]/.test(form.password)) fe.password = 'Include at least one uppercase letter';
+    else if (!/[a-z]/.test(form.password)) fe.password = 'Include at least one lowercase letter';
+    else if (!/[0-9]/.test(form.password)) fe.password = 'Include at least one number';
+    else if (!/[^A-Za-z0-9]/.test(form.password)) fe.password = 'Include at least one special character';
     
     if (!form.confirmPassword) fe.confirmPassword = 'Please confirm your password';
     else if (form.password !== form.confirmPassword) fe.confirmPassword = 'Passwords do not match';
@@ -292,6 +428,25 @@ export default function SignUpPage() {
       if (!res.ok) {
         setError(data.message || 'Registration failed. Please try again.');
       } else {
+        // Registered and phone-verified — sign them straight in. A brand new
+        // account has no SLT connections yet, so the lookup usually comes back
+        // empty and they'll only be offered New Connection.
+        let accounts = [];
+        try {
+          const lookup = await api.post('/customers/lookup', { phoneNumber: normalisedPhone() });
+          if (lookup.data?.customerExists && Array.isArray(lookup.data.customers)) {
+            accounts = lookup.data.customers;
+          }
+        } catch (lookupErr) {
+          // Non-fatal — they can still apply for a new connection.
+        }
+
+        saveSession({
+          phone: normalisedPhone(),
+          user: data.user || null,
+          accountsList: accounts,
+          tokens: { accessToken: data.accessToken, refreshToken: data.refreshToken },
+        });
         navigate('/', { replace: true });
       }
     } catch {
@@ -396,12 +551,65 @@ export default function SignUpPage() {
                 <div className="signup-row">
                   <div className="signup-field">
                     <label className="signup-label">Mobile Number <span className="signup-required">*</span></label>
-                    <div className={`signup-input-wrap ${fieldErrors.phone ? 'has-error' : ''}`}>
-                      <span className="signup-input-icon"><IconPhone /></span>
-                      <span className="signup-input-prefix">+94</span>
-                      <input type="tel" className="signup-input" placeholder="77 123 4567" value={form.phone} onChange={set('phone')} maxLength="10" />
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                      <div className={`signup-input-wrap ${fieldErrors.phone ? 'has-error' : ''}`} style={{ flex: 1 }}>
+                        <span className="signup-input-icon"><IconPhone /></span>
+                        <span className="signup-input-prefix">+94</span>
+                        <input
+                          type="tel"
+                          className="signup-input"
+                          placeholder="77 123 4567"
+                          value={form.phone}
+                          onChange={set('phone')}
+                          maxLength="10"
+                          readOnly={phoneVerified}
+                        />
+                      </div>
+                      {phoneVerified ? (
+                        <span
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            padding: '0 0.9rem',
+                            borderRadius: '12px',
+                            backgroundColor: '#dcfce7',
+                            color: '#16a34a',
+                            fontSize: '0.8rem',
+                            fontWeight: 800,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <FiCheck size={15} /> Verified
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={sendOtp}
+                          disabled={sendingOtp}
+                          style={{
+                            padding: '0 1.1rem',
+                            borderRadius: '12px',
+                            border: 'none',
+                            backgroundColor: '#0f57a8',
+                            color: '#ffffff',
+                            fontSize: '0.82rem',
+                            fontWeight: 800,
+                            cursor: sendingOtp ? 'wait' : 'pointer',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {sendingOtp ? 'Sending…' : 'Verify'}
+                        </button>
+                      )}
                     </div>
-                    {fieldErrors.phone ? <p className="signup-field-error">{fieldErrors.phone}</p> : <p className="signup-field-help">We'll use this for verification and important updates</p>}
+                    {fieldErrors.phone
+                      ? <p className="signup-field-error">{fieldErrors.phone}</p>
+                      : <p className="signup-field-help">
+                          {phoneVerified
+                            ? 'Mobile number confirmed'
+                            : "Verify this number with a 6-digit code — we'll use it for important updates"}
+                        </p>}
                   </div>
 
                   <div className="signup-field">
@@ -655,12 +863,152 @@ export default function SignUpPage() {
             
             {step === 1 && (
               <p className="signup-footer-text">
-                Already have an account? <Link to="/verify-phone" className="signup-link signup-link--accent">Sign In</Link>
+                Already have an account? <Link to="/login" className="signup-link signup-link--accent">Sign In</Link>
               </p>
             )}
           </form>
         </div>
       </div>
+
+      {/* OTP Verification Modal — blurs everything behind it */}
+      <AnimatePresence>
+        {otpModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 1000,
+              backgroundColor: 'rgba(15, 23, 42, 0.45)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem',
+            }}
+            onClick={() => setOtpModalOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '20px',
+                padding: '2.25rem 2rem',
+                width: '100%',
+                maxWidth: '380px',
+                boxShadow: '0 24px 60px rgba(0, 0, 0, 0.25)',
+                textAlign: 'center',
+                position: 'relative',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setOtpModalOpen(false)}
+                style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex' }}
+                aria-label="Close"
+              >
+                <FiX size={20} />
+              </button>
+
+              <div
+                style={{
+                  backgroundColor: '#dcfce7',
+                  color: '#16a34a',
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.25rem auto',
+                }}
+              >
+                <FiShield size={26} />
+              </div>
+
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.3rem 0' }}>
+                Verify Your Mobile Number
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.5rem', fontWeight: 500 }}>
+                Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {normalisedPhone()}</strong>
+              </p>
+
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => { otpRefs.current[index] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    disabled={verifyingOtp}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    style={{
+                      width: '44px',
+                      height: '52px',
+                      borderRadius: '12px',
+                      border: digit ? '2px solid #10b981' : otpError ? '2px solid #dc2626' : '1.5px solid #cbd5e1',
+                      backgroundColor: digit ? '#f0fdf4' : '#ffffff',
+                      fontSize: '1.3rem',
+                      fontWeight: 900,
+                      color: '#0f172a',
+                      textAlign: 'center',
+                      outline: 'none',
+                    }}
+                  />
+                ))}
+              </div>
+
+              {otpError && (
+                <p style={{ color: '#dc2626', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>
+                  ⚠️ {otpError}
+                </p>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                {resendIn > 0 ? (
+                  <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>
+                    Resend code in <strong style={{ color: '#0f172a' }}>{resendIn}s</strong>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={verifyingOtp}
+                    style={{ background: 'none', border: 'none', color: '#0056b3', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    <FiRefreshCw size={13} />
+                    <span>Resend Code</span>
+                  </button>
+                )}
+
+                <div
+                  style={{
+                    backgroundColor: '#eff6ff',
+                    color: '#1e40af',
+                    padding: '0.35rem 0.8rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    border: '1px solid #bfdbfe',
+                  }}
+                >
+                  💡 Demo Code: <strong>000000</strong>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
