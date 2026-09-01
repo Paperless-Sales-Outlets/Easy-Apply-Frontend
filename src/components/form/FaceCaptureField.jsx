@@ -26,6 +26,7 @@ export default function FaceCaptureField({
   helpText = 'We use this photo to confirm your identity against your NIC.',
 }) {
   const videoRef = useRef(null);
+  const uploadInputRef = useRef(null);
   const canvasRef = useRef(null);
   const analysisCanvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -240,11 +241,16 @@ export default function FaceCaptureField({
   };
 
   return (
-    <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-      <label className="form-label" style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+    <div className="form-group" role="group" aria-labelledby="face-capture-label" style={{ marginBottom: '1.5rem' }}>
+      <span
+        className="form-label"
+        id="face-capture-label"
+        style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+      >
         {label}
-        {required && <span style={{ color: 'var(--danger, #dc3545)' }}>*</span>}
-      </label>
+        {required && <span style={{ color: 'var(--danger, #dc3545)' }} aria-hidden="true">*</span>}
+        {required && <span className="sr-only">(required)</span>}
+      </span>
 
       <div
         style={{
@@ -270,17 +276,17 @@ export default function FaceCaptureField({
             />
             <div>
               <p style={{ margin: '0 0 0.5rem 0', fontWeight: 700, color: 'var(--slt-green, #16a34a)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FiCheckCircle /> Photo captured
+                <FiCheckCircle aria-hidden="true" /> Photo captured
               </p>
               <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                 Make sure your face is clearly visible and not blurred.
               </p>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <button type="button" className="btn btn-secondary btn-sm" onClick={retake} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem' }}>
-                  <FiRefreshCw size={14} /> Retake
+                  <FiRefreshCw size={14} aria-hidden="true" /> Retake
                 </button>
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => onChange && onChange('')} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem', color: 'var(--danger, #dc3545)' }}>
-                  <FiX size={14} /> Remove
+                  <FiX size={14} aria-hidden="true" /> Remove
                 </button>
               </div>
             </div>
@@ -294,6 +300,7 @@ export default function FaceCaptureField({
                 playsInline
                 muted
                 autoPlay
+                aria-label="Live camera preview for your headshot"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
               />
               {/* Oval face guide */}
@@ -313,6 +320,9 @@ export default function FaceCaptureField({
                 }}
               />
               <div
+                id="face-capture-guidance"
+                role="status"
+                aria-live="polite"
                 style={{
                   position: 'absolute',
                   bottom: '0.6rem',
@@ -322,7 +332,7 @@ export default function FaceCaptureField({
                   fontSize: '0.8rem',
                   fontWeight: 700,
                   color: '#ffffff',
-                  backgroundColor: ready ? 'rgba(22, 163, 74, 0.9)' : 'rgba(15, 23, 42, 0.75)',
+                  backgroundColor: ready ? 'rgba(13, 110, 52, 0.95)' : 'rgba(15, 23, 42, 0.85)',
                   borderRadius: '9999px',
                   padding: '0.35rem 0.75rem',
                 }}
@@ -337,12 +347,13 @@ export default function FaceCaptureField({
                 className="btn btn-primary"
                 onClick={capturePhoto}
                 disabled={!ready}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', opacity: ready ? 1 : 0.55 }}
+                aria-describedby="face-capture-guidance"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', opacity: ready ? 1 : 0.6 }}
               >
-                <FiCamera size={16} /> Capture Photo
+                <FiCamera size={16} aria-hidden="true" /> Capture Photo
               </button>
               <button type="button" className="btn btn-secondary" onClick={stopCamera} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FiX size={16} /> Cancel
+                <FiX size={16} aria-hidden="true" /> Cancel
               </button>
             </div>
 
@@ -368,12 +379,13 @@ export default function FaceCaptureField({
                 margin: '0 auto 0.75rem auto',
               }}
             >
-              <FiUser size={30} />
+              <FiUser size={30} aria-hidden="true" />
             </div>
             <p style={{ margin: '0 0 0.25rem 0', fontWeight: 700, color: 'var(--text-primary)' }}>
               Take a photo of your face
             </p>
             <ul
+              role="list"
               style={{
                 listStyle: 'none',
                 padding: 0,
@@ -398,22 +410,33 @@ export default function FaceCaptureField({
                 disabled={starting}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
-                <FiCamera size={16} /> {starting ? 'Opening camera…' : 'Open Camera'}
+                <FiCamera size={16} aria-hidden="true" /> {starting ? 'Opening camera…' : 'Open Camera'}
               </button>
-              <label
+              <button
+                type="button"
                 className="btn btn-secondary"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', margin: 0 }}
+                onClick={() => uploadInputRef.current?.click()}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
-                <FiUpload size={16} /> Upload a Photo
-                <input type="file" accept="image/*" capture="user" onChange={handleUpload} style={{ display: 'none' }} />
-              </label>
+                <FiUpload size={16} aria-hidden="true" /> Upload a Photo
+              </button>
+              <input
+                ref={uploadInputRef}
+                type="file"
+                accept="image/*"
+                capture="user"
+                onChange={handleUpload}
+                tabIndex={-1}
+                aria-hidden="true"
+                style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+              />
             </div>
           </div>
         )}
 
         {cameraError && (
-          <p style={{ marginTop: '0.85rem', marginBottom: 0, fontSize: '0.82rem', color: 'var(--danger, #dc3545)', display: 'flex', alignItems: 'center', gap: '0.35rem', justifyContent: 'center' }}>
-            <FiAlertTriangle size={14} /> {cameraError}
+          <p role="alert" style={{ marginTop: '0.85rem', marginBottom: 0, fontSize: '0.82rem', color: 'var(--danger, #dc3545)', display: 'flex', alignItems: 'center', gap: '0.35rem', justifyContent: 'center' }}>
+            <FiAlertTriangle size={14} aria-hidden="true" /> {cameraError}
           </p>
         )}
 
@@ -422,11 +445,13 @@ export default function FaceCaptureField({
       </div>
 
       {helpText && !error && (
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>{helpText}</div>
+        <div id="face-capture-help" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>{helpText}</div>
       )}
-      {error && (
-        <div style={{ fontSize: '0.8rem', color: 'var(--danger, #dc3545)', marginTop: '0.35rem' }}>{error}</div>
-      )}
+      <div role="alert" aria-live="assertive">
+        {error && (
+          <div style={{ fontSize: '0.8rem', color: 'var(--danger, #dc3545)', marginTop: '0.35rem', fontWeight: 600 }}>{error}</div>
+        )}
+      </div>
     </div>
   );
 }

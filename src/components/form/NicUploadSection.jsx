@@ -24,20 +24,28 @@ export default function NicUploadSection({
   pdfHelpText = 'Upload a single PDF containing both sides of the NIC (max 5MB).',
   formatLabel = 'How would you like to upload your NIC?',
 }) {
+  const groupId = `${idPrefix}-nic-group`;
+
   return (
-    <div>
+    <div role="group" aria-labelledby={groupId}>
+      <span id={groupId} className="sr-only">National Identity Card upload</span>
       <div className="form-group">
         <label className="form-label" htmlFor={`${idPrefix}-format`}>{formatLabel}</label>
         <select
           id={`${idPrefix}-format`}
           className="form-control"
           value={format}
+          aria-describedby={`${idPrefix}-format-help`}
           onChange={(e) => onFormatChange(e.target.value)}
         >
           <option value="pdf">Single PDF (both sides)</option>
           <option value="jpeg">Two JPEG images (front &amp; back)</option>
         </select>
       </div>
+
+      <p id={`${idPrefix}-format-help`} className="sr-only">
+        Choosing a format changes which upload fields are shown below.
+      </p>
 
       {format === 'pdf' ? (
         <FileUploadField

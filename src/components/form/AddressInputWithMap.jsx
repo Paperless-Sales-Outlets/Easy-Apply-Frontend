@@ -151,13 +151,14 @@ export default function AddressInputWithMap({
 
   return (
     <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-      {label && <label className="form-label">{label}</label>}
+      {label && <label className="form-label" htmlFor={`${name}-input`}>{label}</label>}
 
       {/* Hidden <input> for Google Maps Autocomplete widget — must be an HTMLInputElement */}
       {!disabled && !readOnly && (
         <input
           ref={hiddenInputRef}
           type="text"
+          aria-label="Search for an address"
           placeholder="Search for an address..."
           style={{
             width: '100%',
@@ -177,6 +178,7 @@ export default function AddressInputWithMap({
 
       <div style={{ position: 'relative' }}>
         <textarea
+          id={`${name}-input`}
           ref={textareaRef}
           name={name}
           className={className}
