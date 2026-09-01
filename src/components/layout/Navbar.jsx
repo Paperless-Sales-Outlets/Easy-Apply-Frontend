@@ -56,7 +56,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logoutVerifiedSession();
-    navigate('/');
+    navigate('/login', { replace: true });
   };
 
   const isActivePath = (path) =>
@@ -433,7 +433,7 @@ export default function Navbar() {
             ) : (
               <button
                 type="button"
-                onClick={() => navigate('/verify-phone', { state: { redirectTo: '/profile' } })}
+                onClick={() => navigate('/login')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -517,7 +517,7 @@ export default function Navbar() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => navigate('/verify-phone', { state: { redirectTo: '/profile' } })}
+                  onClick={() => navigate('/login')}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#0056b3', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
                 >
                   <FiUser size={16} />

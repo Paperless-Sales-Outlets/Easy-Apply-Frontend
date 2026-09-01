@@ -54,6 +54,9 @@ const initialState = {
   staticIP: 'no',
   declarationAccepted: false,
   signature: '',
+  facePhoto: '',
+  nicFormat: 'pdf',
+  nicPdf: null,
   nicFront: null,
   nicBack: null,
 };
@@ -134,6 +137,13 @@ export default function NewConnectionWizard() {
     dispatch({ type: 'UPDATE_FIELD', payload: { name, value: fileData } });
   };
 
+  // A new customer satisfies the NIC requirement with either a single PDF or
+  // both JPEG sides, depending on the upload format they picked.
+  const hasNicUpload = () =>
+    formData.nicFormat === 'jpeg'
+      ? !!(formData.nicFront && formData.nicBack)
+      : !!formData.nicPdf;
+
   const nextStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);
@@ -148,8 +158,12 @@ export default function NewConnectionWizard() {
     setSubmitError('');
     // Existing customers already have identity documents on file — only new
     // customers (no verified account) need to upload their NIC (BRD 5.1.3).
-    if (currentStep === 1 && !selectedAccount && (!formData.nicFront || !formData.nicBack)) {
-      toast.error('Please upload both sides of your NIC to continue');
+    if (currentStep === 1 && !selectedAccount && !hasNicUpload()) {
+      toast.error(
+        formData.nicFormat === 'jpeg'
+          ? 'Please upload both sides of your NIC to continue'
+          : 'Please upload your NIC PDF to continue'
+      );
       return;
     }
     if (currentStep === 3 && vasStepRef.current && !vasStepRef.current.validate()) return;
