@@ -102,6 +102,7 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
               <input 
                 type="text" 
                 className="form-control"
+                aria-label="Telephone or account number"
                 placeholder="e.g. 0112345678"
                 value={manualLookupNumber}
                 onChange={(e) => setManualLookupNumber(e.target.value)}
@@ -144,7 +145,7 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
               border: '1px solid rgba(255, 255, 255, 0.8)',
-              borderRadius: '24px',
+              borderRadius: '16px',
               padding: '2rem',
               boxShadow: '0 16px 40px rgba(0, 84, 166, 0.1), inset 0 4px 10px rgba(255,255,255,1)',
               position: 'relative', overflow: 'hidden'
@@ -183,7 +184,7 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
               border: '1px solid rgba(255, 255, 255, 0.8)',
-              borderRadius: '24px',
+              borderRadius: '16px',
               padding: '2rem',
               boxShadow: '0 16px 40px rgba(77, 184, 72, 0.1), inset 0 4px 10px rgba(255,255,255,1)',
               position: 'relative', overflow: 'hidden',
@@ -202,8 +203,8 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: 'var(--slt-green)', fontWeight: 700, fontSize: '1.1rem' }}>Total Payable</span>
-                <span style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--slt-green)' }}>
+                <span style={{ color: 'var(--green-text)', fontWeight: 700, fontSize: '1.1rem' }}>Total Payable</span>
+                <span style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--green-text)' }}>
                   Rs. {((vacationData.outstandingBalance || 0) + 500).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
               </div>

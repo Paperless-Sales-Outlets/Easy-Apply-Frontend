@@ -79,7 +79,7 @@ export default function PackageDetailsStep({
               style={{
                 width: '100%',
                 padding: '0.55rem',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 border: (showValidationErrors && !effectiveDate) ? '1px solid #dc2626' : '1px solid #cbd5e1',
               }}
             />
@@ -107,7 +107,7 @@ export default function PackageDetailsStep({
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
             placeholder="Any specific instructions or preferences regarding the package migration..."
-            style={{ width: '100%', padding: '0.55rem', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+            style={{ width: '100%', padding: '0.55rem', borderRadius: '8px', border: '1px solid #cbd5e1' }}
           />
         </div>
       </div>

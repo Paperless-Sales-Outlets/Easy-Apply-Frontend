@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { FiCheckCircle, FiShield, FiX, FiRefreshCw } from 'react-icons/fi';
+import { FiCheckCircle, FiShield, FiX, FiRefreshCw, FiAlertCircle } from 'react-icons/fi';
 import api from '../../utils/api';
 
 const RESEND_SECONDS = 30;
@@ -314,7 +314,7 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                   justifyContent: 'center',
                   width: '40px',
                   height: '40px',
-                  borderRadius: '10px',
+                  borderRadius: '12px',
                 }}
                 aria-label="Close verification dialog"
               >
@@ -367,7 +367,7 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
 
               {otpError && (
                 <p style={{ color: '#dc2626', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>
-                  ⚠️ {otpError}
+                  <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />{otpError}
                 </p>
               )}
 
@@ -388,19 +388,11 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                   </button>
                 )}
 
-                <div
-                  style={{
-                    backgroundColor: '#eff6ff',
-                    color: '#1e40af',
-                    padding: '0.35rem 0.8rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
-                    border: '1px solid #bfdbfe',
-                  }}
-                >
-                  💡 Demo Code: <strong>000000</strong>
-                </div>
+                {import.meta.env.DEV && (
+                  <p className="auth-dev-hint" style={{ margin: 0 }}>
+                    Development only — demo code <strong>000000</strong> is accepted.
+                  </p>
+                )}
               </div>
             </div>
         </div>

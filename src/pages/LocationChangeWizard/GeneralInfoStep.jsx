@@ -79,7 +79,7 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
-          <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FiUser size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
@@ -97,17 +97,18 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
 
         {/* Service Type Selection */}
         <div>
-          <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
-            {t('wizards.locationChange.generalInfo.serviceType', 'Service Type')} <span style={{ color: '#dc2626' }}>*</span>
+          <label htmlFor="lc-serviceType" style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
+            {t('wizards.locationChange.generalInfo.serviceType', 'Service Type')} <span style={{ color: '#dc2626' }} aria-hidden="true">*</span>
           </label>
           <select
+            id="lc-serviceType"
             name="serviceType"
             value={customer.serviceType}
             onChange={handleChange}
             style={{
               width: '100%',
               padding: '0.75rem 1rem',
-              borderRadius: '10px',
+              borderRadius: '12px',
               border: '1px solid #cbd5e1',
               backgroundColor: '#ffffff',
               fontSize: '0.9rem',

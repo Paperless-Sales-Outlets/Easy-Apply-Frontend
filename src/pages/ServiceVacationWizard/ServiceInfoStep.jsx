@@ -288,7 +288,7 @@ const ServiceInfoStep = forwardRef(({ isActive }, ref) => {
         <div className="form-group flex flex-col-mobile gap-4 modern-calendar-wrapper">
           <DatePickerStyles />
           <div style={{ flex: '1' }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Deactivation Date</label>
+            <label className="form-label" htmlFor="sv-deactivationDate" style={{ fontWeight: 600 }}>Deactivation Date</label>
             <DatePicker 
               selected={deactivationDate}
               onChange={(date) => {
@@ -298,6 +298,7 @@ const ServiceInfoStep = forwardRef(({ isActive }, ref) => {
               minDate={new Date(minDeactivationDate)}
               dateFormat="MMMM d, yyyy"
               placeholderText="Select deactivation date"
+              id="sv-deactivationDate"
               className="modern-datepicker-input"
               wrapperClassName="datepicker-full-width"
               required={isActive}
@@ -309,7 +310,7 @@ const ServiceInfoStep = forwardRef(({ isActive }, ref) => {
             />
           </div>
           <div style={{ flex: '1' }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Resume Date</label>
+            <label className="form-label" htmlFor="sv-resumeDate" style={{ fontWeight: 600 }}>Resume Date</label>
             <DatePicker 
               selected={resumeDate}
               onChange={(date) => {
@@ -319,6 +320,7 @@ const ServiceInfoStep = forwardRef(({ isActive }, ref) => {
               minDate={deactivationDate || new Date(minDeactivationDate)}
               dateFormat="MMMM d, yyyy"
               placeholderText="Select resume date"
+              id="sv-resumeDate"
               className="modern-datepicker-input"
               wrapperClassName="datepicker-full-width"
               required={isActive}
