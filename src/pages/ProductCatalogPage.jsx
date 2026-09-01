@@ -480,7 +480,7 @@ export default function ProductCatalogPage() {
                 fontSize: '0.75rem',
                 fontWeight: 800,
                 backgroundColor: cartCategoryAnalysis.hasBroadband ? '#dcfce7' : '#f1f5f9',
-                color: cartCategoryAnalysis.hasBroadband ? '#15803d' : '#64748b',
+                color: cartCategoryAnalysis.hasBroadband ? '#15803d' : '#556070',
               }}
             >
               {t('catalog.bundleRules.broadbandLabel', 'Broadband:')} {cartCategoryAnalysis.hasBroadband ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.optionalCount', 'Optional (0/1)')}
@@ -492,7 +492,7 @@ export default function ProductCatalogPage() {
                 fontSize: '0.75rem',
                 fontWeight: 800,
                 backgroundColor: cartCategoryAnalysis.hasPeoTv ? '#dcfce7' : '#f1f5f9',
-                color: cartCategoryAnalysis.hasPeoTv ? '#15803d' : '#64748b',
+                color: cartCategoryAnalysis.hasPeoTv ? '#15803d' : '#556070',
               }}
             >
               {t('catalog.bundleRules.peoTvLabel', 'PEO TV:')} {cartCategoryAnalysis.hasPeoTv ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.optionalCount', 'Optional (0/1)')}
@@ -611,6 +611,7 @@ export default function ProductCatalogPage() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
+                    aria-label={t('catalog.controls.sortBy', 'Sort by:')}
                     style={{
                       padding: '0.4rem 0.75rem',
                       borderRadius: '8px',

@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { FiShield, FiX, FiRefreshCw, FiCheck } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
@@ -132,8 +131,9 @@ function PasswordStrength({ password }) {
   const colors = ['', '#ef4444', '#f59e0b', '#3b82f6', '#059669'];
 
   return (
-    <div className="signup-pw-strength">
-      <div className="signup-pw-bars">
+    <div className="signup-pw-strength" role="status" aria-live="polite">
+      <span className="sr-only">Password strength: {labels[strength] || 'very weak'}</span>
+      <div className="signup-pw-bars" aria-hidden="true">
         {[1, 2, 3, 4].map(i => (
           <div key={i} className="signup-pw-bar" style={{ background: i <= strength ? colors[strength] : '#e2e8f0' }} />
         ))}
@@ -198,11 +198,50 @@ export default function SignUpPage() {
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
   const otpRefs = useRef([]);
 
+  const verifyBtnRef = useRef(null);
+  const modalRef = useRef(null);
+
   useEffect(() => {
     if (!otpModalOpen) return;
     setResendIn(RESEND_SECONDS);
     const id = setTimeout(() => otpRefs.current[0]?.focus(), 50);
-    return () => clearTimeout(id);
+
+    // Escape closes the dialog, and Tab is kept inside it while it's open.
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setOtpModalOpen(false);
+        return;
+      }
+      if (e.key !== 'Tab' || !modalRef.current) return;
+      const focusable = modalRef.current.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), [href], select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener('keydown', onKeyDown, true);
+    };
+  }, [otpModalOpen]);
+
+  // Send focus back to the Verify button when the dialog closes, so keyboard
+  // users aren't dumped at the top of the page.
+  const wasModalOpen = useRef(false);
+  useEffect(() => {
+    if (wasModalOpen.current && !otpModalOpen) verifyBtnRef.current?.focus();
+    wasModalOpen.current = otpModalOpen;
   }, [otpModalOpen]);
 
   useEffect(() => {
@@ -291,7 +330,15 @@ export default function SignUpPage() {
   };
 
   const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) otpRefs.current[index - 1]?.focus();
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      e.preventDefault();
+      otpRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      e.preventDefault();
+      otpRefs.current[index + 1]?.focus();
+    }
   };
 
   const handleResendOtp = async () => {
@@ -482,21 +529,21 @@ export default function SignUpPage() {
               <div className="signup-feature-item">
                 <div className="signup-feature-icon"><IconShield /></div>
                 <div>
-                  <h4>100% Secure Process</h4>
+                  <p className="signup-feature-title">100% Secure Process</p>
                   <p>Your data is safe with us</p>
                 </div>
               </div>
               <div className="signup-feature-item">
                 <div className="signup-feature-icon"><IconZap /></div>
                 <div>
-                  <h4>Instant Verification</h4>
+                  <p className="signup-feature-title">Instant Verification</p>
                   <p>Quick and easy account setup</p>
                 </div>
               </div>
               <div className="signup-feature-item">
                 <div className="signup-feature-icon"><IconHeadphones /></div>
                 <div>
-                  <h4>24/7 Support</h4>
+                  <p className="signup-feature-title">24/7 Support</p>
                   <p>We're here to help you anytime</p>
                 </div>
               </div>
@@ -541,7 +588,7 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          {error && <div className="signup-error" role="alert">{error}</div>}
+          <div role="alert" aria-live="assertive">{error && <div className="signup-error">{error}</div>}</div>
 
           <form onSubmit={handleSubmit} noValidate className="signup-form">
             
@@ -550,73 +597,62 @@ export default function SignUpPage() {
               <>
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Mobile Number <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-phone">
+                      Mobile Number <span className="signup-required" aria-hidden="true">*</span>
+                    </label>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
                       <div className={`signup-input-wrap ${fieldErrors.phone ? 'has-error' : ''}`} style={{ flex: 1 }}>
-                        <span className="signup-input-icon"><IconPhone /></span>
-                        <span className="signup-input-prefix">+94</span>
+                        <span className="signup-input-icon" aria-hidden="true"><IconPhone /></span>
+                        <span className="signup-input-prefix" aria-hidden="true">+94</span>
                         <input
+                          id="signup-phone"
+                          name="phone"
                           type="tel"
+                          required
+                          inputMode="numeric"
+                          autoComplete="tel-national"
                           className="signup-input"
                           placeholder="77 123 4567"
                           value={form.phone}
                           onChange={set('phone')}
                           maxLength="10"
                           readOnly={phoneVerified}
+                          aria-invalid={!!fieldErrors.phone}
+                          aria-describedby={fieldErrors.phone ? 'signup-phone-error' : 'signup-phone-help'}
                         />
                       </div>
                       {phoneVerified ? (
-                        <span
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.3rem',
-                            padding: '0 0.9rem',
-                            borderRadius: '12px',
-                            backgroundColor: '#dcfce7',
-                            color: '#16a34a',
-                            fontSize: '0.8rem',
-                            fontWeight: 800,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          <FiCheck size={15} /> Verified
+                        <span className="auth-verified-badge">
+                          <FiCheck size={15} aria-hidden="true" /> Verified
                         </span>
                       ) : (
                         <button
                           type="button"
+                          ref={verifyBtnRef}
+                          className="auth-verify-btn"
                           onClick={sendOtp}
                           disabled={sendingOtp}
-                          style={{
-                            padding: '0 1.1rem',
-                            borderRadius: '12px',
-                            border: 'none',
-                            backgroundColor: '#0f57a8',
-                            color: '#ffffff',
-                            fontSize: '0.82rem',
-                            fontWeight: 800,
-                            cursor: sendingOtp ? 'wait' : 'pointer',
-                            whiteSpace: 'nowrap',
-                          }}
+                          aria-busy={sendingOtp}
+                          aria-describedby="signup-phone-help"
                         >
                           {sendingOtp ? 'Sending…' : 'Verify'}
                         </button>
                       )}
                     </div>
                     {fieldErrors.phone
-                      ? <p className="signup-field-error">{fieldErrors.phone}</p>
-                      : <p className="signup-field-help">
+                      ? <p className="signup-field-error" id="signup-phone-error">{fieldErrors.phone}</p>
+                      : <p className="signup-field-help" id="signup-phone-help">
                           {phoneVerified
-                            ? 'Mobile number confirmed'
-                            : "Verify this number with a 6-digit code — we'll use it for important updates"}
+                            ? 'Mobile number confirmed.'
+                            : "Select Verify to receive a 6-digit code. We'll use this number for important updates."}
                         </p>}
                   </div>
 
                   <div className="signup-field">
-                    <label className="signup-label">Email Address <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-email">Email Address <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconMail /></span>
-                      <input type="email" className="signup-input" placeholder="example@email.com" value={form.email} onChange={set('email')} />
+                      <input type="email" className="signup-input" placeholder="example@email.com" id="signup-email" value={form.email} onChange={set('email')} />
                     </div>
                     {fieldErrors.email && <p className="signup-field-error">{fieldErrors.email}</p>}
                   </div>
@@ -624,22 +660,38 @@ export default function SignUpPage() {
                 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Password <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-password">Password <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.password ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconLock /></span>
-                      <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="signup-input" placeholder="••••••••••••" value={form.password} onChange={set('password')} />
-                      <button type="button" className="signup-pw-toggle" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <IconEyeOff /> : <IconEye />}</button>
+                      <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="signup-input" placeholder="••••••••••••" id="signup-password" value={form.password} onChange={set('password')} />
+                      <button
+                        type="button"
+                        className="signup-pw-toggle"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        aria-pressed={showPassword}
+                      >
+                        {showPassword ? <IconEyeOff /> : <IconEye />}
+                      </button>
                     </div>
                     {fieldErrors.password ? <p className="signup-field-error">{fieldErrors.password}</p> : <p className="signup-field-help">Minimum 8 characters with uppercase, lowercase, number and special character</p>}
                     <PasswordStrength password={form.password} />
                   </div>
 
                   <div className="signup-field">
-                    <label className="signup-label">Confirm Password <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-confirm">Confirm Password <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.confirmPassword ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconLock /></span>
-                      <input type={showConfirmPw ? 'text' : 'password'} autoComplete="new-password" className="signup-input" placeholder="••••••••••••" value={form.confirmPassword} onChange={set('confirmPassword')} />
-                      <button type="button" className="signup-pw-toggle" onClick={() => setShowConfirmPw(!showConfirmPw)}>{showConfirmPw ? <IconEyeOff /> : <IconEye />}</button>
+                      <input type={showConfirmPw ? 'text' : 'password'} autoComplete="new-password" className="signup-input" placeholder="••••••••••••" id="signup-confirm" value={form.confirmPassword} onChange={set('confirmPassword')} />
+                      <button
+                        type="button"
+                        className="signup-pw-toggle"
+                        onClick={() => setShowConfirmPw(!showConfirmPw)}
+                        aria-label={showConfirmPw ? 'Hide confirmed password' : 'Show confirmed password'}
+                        aria-pressed={showConfirmPw}
+                      >
+                        {showConfirmPw ? <IconEyeOff /> : <IconEye />}
+                      </button>
                     </div>
                     {fieldErrors.confirmPassword ? <p className="signup-field-error">{fieldErrors.confirmPassword}</p> : <p className="signup-field-help">Please confirm your password</p>}
                   </div>
@@ -652,10 +704,10 @@ export default function SignUpPage() {
               <>
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Title <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-title">Title <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.title ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconUser /></span>
-                      <select className="signup-input signup-select" value={form.title} onChange={set('title')}>
+                      <select className="signup-input signup-select" id="signup-title" value={form.title} onChange={set('title')}>
                         <option value="Mr.">Mr.</option>
                         <option value="Mrs.">Mrs.</option>
                         <option value="Ms.">Ms.</option>
@@ -666,10 +718,10 @@ export default function SignUpPage() {
                     {fieldErrors.title && <p className="signup-field-error">{fieldErrors.title}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">Date of Birth <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-dob">Date of Birth <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.dob ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconCalendar /></span>
-                      <input type="date" className="signup-input" value={form.dob} onChange={set('dob')} />
+                      <input type="date" className="signup-input" id="signup-dob" value={form.dob} onChange={set('dob')} />
                     </div>
                     {fieldErrors.dob && <p className="signup-field-error">{fieldErrors.dob}</p>}
                   </div>
@@ -677,16 +729,16 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Full Name (As per NIC/Passport) <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-fullname">Full Name (As per NIC/Passport) <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.fullName ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconUser /></span>
-                      <input type="text" className="signup-input" placeholder="John Michael Perera" value={form.fullName} onChange={set('fullName')} />
+                      <input type="text" className="signup-input" placeholder="John Michael Perera" id="signup-fullname" value={form.fullName} onChange={set('fullName')} />
                     </div>
                     {fieldErrors.fullName && <p className="signup-field-error">{fieldErrors.fullName}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">Gender <span className="signup-required">*</span></label>
-                    <div className="signup-radio-group">
+                    <span className="signup-label" id="signup-gender-label">Gender <span className="signup-required" aria-hidden="true">*</span></span>
+                    <div className="signup-radio-group" role="radiogroup" aria-labelledby="signup-gender-label">
                       <label className="signup-radio-label">
                         <input type="radio" name="gender" value="Male" checked={form.gender === 'Male'} onChange={set('gender')} /> Male
                       </label>
@@ -703,18 +755,18 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">NIC / Passport / BR Number <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-nic">NIC / Passport / BR Number <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.nic ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconCard /></span>
-                      <input type="text" className="signup-input" placeholder="e.g. 199012345678" value={form.nic} onChange={set('nic')} maxLength="12" />
+                      <input type="text" className="signup-input" placeholder="e.g. 199012345678" id="signup-nic" value={form.nic} onChange={set('nic')} maxLength="12" />
                     </div>
                     {fieldErrors.nic ? <p className="signup-field-error">{fieldErrors.nic}</p> : <p className="signup-field-help">Enter your National Identity Card, Passport or Birth Registration number</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">Nationality <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-nationality">Nationality <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.nationality ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconGlobe /></span>
-                      <select className="signup-input signup-select" value={form.nationality} onChange={set('nationality')}>
+                      <select className="signup-input signup-select" id="signup-nationality" value={form.nationality} onChange={set('nationality')}>
                         <option value="Sri Lankan">Sri Lankan</option>
                         <option value="Other">Other</option>
                       </select>
@@ -725,10 +777,10 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Contact Number (Optional)</label>
+                    <label className="signup-label" htmlFor="signup-contact">Contact Number (Optional)</label>
                     <div className="signup-input-wrap">
                       <span className="signup-input-icon"><IconPhone /></span>
-                      <input type="tel" className="signup-input" placeholder="011 2 345 678" value={form.contactNumber} onChange={set('contactNumber')} maxLength="10" />
+                      <input type="tel" className="signup-input" placeholder="011 2 345 678" id="signup-contact" value={form.contactNumber} onChange={set('contactNumber')} maxLength="10" />
                     </div>
                   </div>
                   <div></div>
@@ -741,35 +793,35 @@ export default function SignUpPage() {
               <>
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Address Line 1 <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-address1">Address Line 1 <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.addressLine1 ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconMapPin /></span>
-                      <input type="text" className="signup-input" placeholder="123, Galle Road" value={form.addressLine1} onChange={set('addressLine1')} />
+                      <input type="text" className="signup-input" placeholder="123, Galle Road" id="signup-address1" value={form.addressLine1} onChange={set('addressLine1')} />
                     </div>
                     {fieldErrors.addressLine1 && <p className="signup-field-error">{fieldErrors.addressLine1}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">Address Line 2 (Optional)</label>
+                    <label className="signup-label" htmlFor="signup-address2">Address Line 2 (Optional)</label>
                     <div className="signup-input-wrap">
-                      <input type="text" className="signup-input" style={{ paddingLeft: '1rem' }} placeholder="Colombo 03" value={form.addressLine2} onChange={set('addressLine2')} />
+                      <input type="text" className="signup-input" style={{ paddingLeft: '1rem' }} placeholder="Colombo 03" id="signup-address2" value={form.addressLine2} onChange={set('addressLine2')} />
                     </div>
                   </div>
                 </div>
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">City <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-city">City <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.city ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
-                      <input type="text" className="signup-input" placeholder="Colombo" value={form.city} onChange={set('city')} />
+                      <input type="text" className="signup-input" placeholder="Colombo" id="signup-city" value={form.city} onChange={set('city')} />
                     </div>
                     {fieldErrors.city && <p className="signup-field-error">{fieldErrors.city}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">District <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-district">District <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.district ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
-                      <select className="signup-input signup-select" value={form.district} onChange={set('district')}>
+                      <select className="signup-input signup-select" id="signup-district" value={form.district} onChange={set('district')}>
                         <option value="Ampara">Ampara</option>
                         <option value="Anuradhapura">Anuradhapura</option>
                         <option value="Badulla">Badulla</option>
@@ -803,25 +855,32 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Postal Code <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-postal">Postal Code <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.postalCode ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
-                      <input type="text" className="signup-input" placeholder="00300" value={form.postalCode} onChange={set('postalCode')} />
+                      <input type="text" className="signup-input" placeholder="00300" id="signup-postal" value={form.postalCode} onChange={set('postalCode')} />
                     </div>
                     {fieldErrors.postalCode && <p className="signup-field-error">{fieldErrors.postalCode}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">Preferred Contact Method <span className="signup-required">*</span></label>
-                    <div className="signup-contact-methods">
-                      <div className={`signup-contact-method ${form.preferredContact === 'Email' ? 'active' : ''}`} onClick={() => setForm({...form, preferredContact: 'Email'})}>
-                        <IconMail /> Email
-                      </div>
-                      <div className={`signup-contact-method ${form.preferredContact === 'SMS' ? 'active' : ''}`} onClick={() => setForm({...form, preferredContact: 'SMS'})}>
-                        <IconPhone /> SMS
-                      </div>
-                      <div className={`signup-contact-method ${form.preferredContact === 'Call' ? 'active' : ''}`} onClick={() => setForm({...form, preferredContact: 'Call'})}>
-                        <IconPhone /> Call
-                      </div>
+                    <span className="signup-label" id="signup-contact-label">Preferred Contact Method <span className="signup-required" aria-hidden="true">*</span></span>
+                    <div className="signup-contact-methods" role="radiogroup" aria-labelledby="signup-contact-label">
+                      {[
+                        { value: 'Email', Icon: IconMail },
+                        { value: 'SMS', Icon: IconPhone },
+                        { value: 'Call', Icon: IconPhone },
+                      ].map(({ value, Icon }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          role="radio"
+                          aria-checked={form.preferredContact === value}
+                          className={`signup-contact-method ${form.preferredContact === value ? 'active' : ''}`}
+                          onClick={() => setForm({ ...form, preferredContact: value })}
+                        >
+                          <Icon aria-hidden="true" /> {value}
+                        </button>
+                      ))}
                     </div>
                     {fieldErrors.preferredContact && <p className="signup-field-error">{fieldErrors.preferredContact}</p>}
                   </div>
@@ -832,7 +891,7 @@ export default function SignUpPage() {
                     <IconShield />
                   </div>
                   <div>
-                    <h5>Your Information is Secure</h5>
+                    <p className="signup-secure-title">Your Information is Secure</p>
                     <p>We use industry-standard encryption to protect your personal data.<br/>Your information will only be used to provide you with our services.</p>
                   </div>
                 </div>
@@ -871,50 +930,24 @@ export default function SignUpPage() {
       </div>
 
       {/* OTP Verification Modal — blurs everything behind it */}
-      <AnimatePresence>
-        {otpModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 1000,
-              backgroundColor: 'rgba(15, 23, 42, 0.45)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '1rem',
-            }}
-            onClick={() => setOtpModalOpen(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2 }}
+      {otpModalOpen && (
+        <div className="otp-overlay" onClick={() => setOtpModalOpen(false)}>
+            <div
+              className="otp-dialog"
               onClick={(e) => e.stopPropagation()}
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '20px',
-                padding: '2.25rem 2rem',
-                width: '100%',
-                maxWidth: '380px',
-                boxShadow: '0 24px 60px rgba(0, 0, 0, 0.25)',
-                textAlign: 'center',
-                position: 'relative',
-              }}
+              ref={modalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="otp-dialog-title"
+              aria-describedby="otp-dialog-desc"
             >
               <button
                 type="button"
                 onClick={() => setOtpModalOpen(false)}
-                style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex' }}
-                aria-label="Close"
+                style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '10px' }}
+                aria-label="Close verification dialog"
               >
-                <FiX size={20} />
+                <FiX size={20} aria-hidden="true" />
               </button>
 
               <div
@@ -930,85 +963,71 @@ export default function SignUpPage() {
                   margin: '0 auto 1.25rem auto',
                 }}
               >
-                <FiShield size={26} />
+                <FiShield size={26} aria-hidden="true" />
               </div>
 
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.3rem 0' }}>
+              <h3 id="otp-dialog-title" style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.3rem 0' }}>
                 Verify Your Mobile Number
               </h3>
-              <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.5rem', fontWeight: 500 }}>
+              <p id="otp-dialog-desc" style={{ fontSize: '0.85rem', color: '#5b6472', marginBottom: '1.5rem', fontWeight: 500 }}>
                 Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {normalisedPhone()}</strong>
               </p>
 
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div
+                role="group"
+                aria-labelledby="otp-dialog-desc"
+                className="otp-boxes"
+                style={{ justifyContent: 'center', marginBottom: '1rem' }}
+              >
                 {otp.map((digit, index) => (
                   <input
                     key={index}
                     ref={(el) => { otpRefs.current[index] = el; }}
                     type="text"
                     inputMode="numeric"
+                    autoComplete={index === 0 ? 'one-time-code' : 'off'}
                     maxLength={1}
                     value={digit}
                     disabled={verifyingOtp}
+                    aria-label={`Verification code digit ${index + 1} of 6`}
+                    aria-invalid={!!otpError}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    style={{
-                      width: '44px',
-                      height: '52px',
-                      borderRadius: '12px',
-                      border: digit ? '2px solid #10b981' : otpError ? '2px solid #dc2626' : '1.5px solid #cbd5e1',
-                      backgroundColor: digit ? '#f0fdf4' : '#ffffff',
-                      fontSize: '1.3rem',
-                      fontWeight: 900,
-                      color: '#0f172a',
-                      textAlign: 'center',
-                      outline: 'none',
-                    }}
+                    className={`otp-box ${digit ? 'is-filled' : ''} ${otpError ? 'is-error' : ''}`}
+                    style={{ flex: '0 0 44px', width: '44px' }}
                   />
                 ))}
               </div>
 
-              {otpError && (
-                <p style={{ color: '#dc2626', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>
-                  ⚠️ {otpError}
-                </p>
-              )}
+              <div role="alert" aria-live="assertive">
+                {otpError && (
+                  <p style={{ color: '#b91c1c', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>
+                    {otpError}
+                  </p>
+                )}
+              </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
                 {resendIn > 0 ? (
-                  <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>
+                  <span style={{ fontSize: '0.8rem', color: '#5b6472', fontWeight: 600 }} aria-live="polite">
                     Resend code in <strong style={{ color: '#0f172a' }}>{resendIn}s</strong>
                   </span>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={handleResendOtp}
-                    disabled={verifyingOtp}
-                    style={{ background: 'none', border: 'none', color: '#0056b3', fontSize: '0.82rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-                  >
-                    <FiRefreshCw size={13} />
+                  <button type="button" className="auth-link-btn" onClick={handleResendOtp} disabled={verifyingOtp}>
+                    <FiRefreshCw size={13} aria-hidden="true" />
                     <span>Resend Code</span>
                   </button>
                 )}
 
-                <div
-                  style={{
-                    backgroundColor: '#eff6ff',
-                    color: '#1e40af',
-                    padding: '0.35rem 0.8rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
-                    border: '1px solid #bfdbfe',
-                  }}
-                >
-                  💡 Demo Code: <strong>000000</strong>
-                </div>
+                {import.meta.env.DEV && (
+                  <p className="auth-dev-hint" style={{ margin: 0 }}>
+                    Development only — demo code <strong>000000</strong> is accepted.
+                  </p>
+                )}
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
