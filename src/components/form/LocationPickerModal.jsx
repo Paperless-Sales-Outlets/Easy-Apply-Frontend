@@ -372,7 +372,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
 
           {/* Hint Overlay */}
           <div style={mapHintStyle}>
-            📍 Click or drag the marker to pinpoint exact address
+            <FiMapPin size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.3rem" }} />Click or drag the marker to pinpoint exact address
           </div>
         </div>
 
@@ -424,7 +424,7 @@ const modalOverlayStyle = {
 
 const modalContentStyle = {
   backgroundColor: '#fff',
-  borderRadius: '14px',
+  borderRadius: '16px',
   width: '100%',
   maxWidth: '700px',
   maxHeight: '92vh',
@@ -449,7 +449,7 @@ const closeButtonStyle = {
   cursor: 'pointer',
   padding: '0.25rem',
   color: '#64748b',
-  borderRadius: '6px',
+  borderRadius: '8px',
 };
 
 const searchContainerStyle = {
@@ -463,7 +463,7 @@ const inputWrapperStyle = {
   alignItems: 'center',
   flex: 1,
   border: '1px solid #cbd5e1',
-  borderRadius: '6px',
+  borderRadius: '8px',
   padding: '0.4rem 0.75rem',
   backgroundColor: '#f8fafc',
 };
@@ -480,7 +480,7 @@ const searchBtnStyle = {
   backgroundColor: '#0056b3',
   color: '#fff',
   border: 'none',
-  borderRadius: '6px',
+  borderRadius: '8px',
   padding: '0.45rem 1.1rem',
   fontSize: '0.85rem',
   fontWeight: 600,
@@ -494,7 +494,7 @@ const locateBtnStyle = {
   backgroundColor: '#f0fdf4',
   color: '#15803d',
   border: '1px solid #bbf7d0',
-  borderRadius: '6px',
+  borderRadius: '8px',
   padding: '0.45rem 0.9rem',
   fontSize: '0.85rem',
   fontWeight: 600,
@@ -508,7 +508,7 @@ const mapHintStyle = {
   transform: 'translateX(-50%)',
   backgroundColor: 'rgba(255, 255, 255, 0.95)',
   padding: '0.35rem 0.9rem',
-  borderRadius: '20px',
+  borderRadius: '16px',
   fontSize: '0.75rem',
   fontWeight: 600,
   color: '#0f172a',
@@ -541,7 +541,7 @@ const cancelBtnStyle = {
   backgroundColor: '#f1f5f9',
   color: '#475569',
   border: '1px solid #cbd5e1',
-  borderRadius: '6px',
+  borderRadius: '8px',
   padding: '0.5rem 1rem',
   fontSize: '0.875rem',
   fontWeight: 500,
@@ -554,7 +554,7 @@ const confirmBtnStyle = {
   backgroundColor: '#059669',
   color: '#fff',
   border: 'none',
-  borderRadius: '6px',
+  borderRadius: '8px',
   padding: '0.5rem 1.15rem',
   fontSize: '0.875rem',
   fontWeight: 600,

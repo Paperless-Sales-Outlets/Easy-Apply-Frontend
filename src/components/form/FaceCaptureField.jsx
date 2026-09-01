@@ -35,6 +35,7 @@ export default function FaceCaptureField({
 
   const [cameraOn, setCameraOn] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [guidance, setGuidance] = useState('Position your face inside the oval');
   const [ready, setReady] = useState(false);
@@ -52,6 +53,7 @@ export default function FaceCaptureField({
     if (videoRef.current) videoRef.current.srcObject = null;
     setCameraOn(false);
     setReady(false);
+    setVideoReady(false);
   }, []);
 
   // Always release the camera when this field goes away.
@@ -142,6 +144,35 @@ export default function FaceCaptureField({
     setReady(true);
   }, []);
 
+  // Attach the live stream once the <video> is actually in the DOM, and only
+  // begin the framing checks once it is producing frames.
+  useEffect(() => {
+    if (!cameraOn) return;
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!video || !stream) return;
+
+    let cancelled = false;
+    video.srcObject = stream;
+
+    const onReady = () => {
+      if (cancelled || !video.videoWidth) return;
+      setVideoReady(true);
+      if (!timerRef.current) timerRef.current = setInterval(analyseFrame, ANALYSIS_INTERVAL);
+    };
+
+    video.addEventListener('loadedmetadata', onReady);
+    video.addEventListener('playing', onReady);
+    video.play().catch(() => {});
+    if (video.readyState >= 2) onReady();
+
+    return () => {
+      cancelled = true;
+      video.removeEventListener('loadedmetadata', onReady);
+      video.removeEventListener('playing', onReady);
+    };
+  }, [cameraOn, analyseFrame]);
+
   const startCamera = async () => {
     setCameraError('');
     setStarting(true);
@@ -155,12 +186,6 @@ export default function FaceCaptureField({
         audio: false,
       });
       streamRef.current = stream;
-      setCameraOn(true);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play().catch(() => {});
-      }
 
       if (!detectorRef.current && typeof window !== 'undefined' && 'FaceDetector' in window) {
         try {
@@ -171,7 +196,10 @@ export default function FaceCaptureField({
         }
       }
 
-      timerRef.current = setInterval(analyseFrame, ANALYSIS_INTERVAL);
+      // The <video> element only exists once this re-render commits, so the
+      // stream is attached in the effect below rather than here — doing it on
+      // this line left the element with no source and a black frame.
+      setCameraOn(true);
     } catch (err) {
       const denied = err?.name === 'NotAllowedError' || err?.name === 'SecurityError';
       setCameraError(
@@ -303,6 +331,29 @@ export default function FaceCaptureField({
                 aria-label="Live camera preview for your headshot"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
               />
+              {!videoReady && (
+                <div
+                  role="status"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.85rem',
+                    backgroundColor: '#0f172a',
+                    color: '#ffffff',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    zIndex: 2,
+                  }}
+                >
+                  <span className="face-capture-spinner" aria-hidden="true" />
+                  Starting camera…
+                </div>
+              )}
+
               {/* Oval face guide */}
               <div
                 aria-hidden="true"
@@ -317,6 +368,7 @@ export default function FaceCaptureField({
                   borderRadius: '50%',
                   boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.45)',
                   transition: 'border-color 0.2s ease',
+                  opacity: videoReady ? 1 : 0,
                 }}
               />
               <div
@@ -335,6 +387,7 @@ export default function FaceCaptureField({
                   backgroundColor: ready ? 'rgba(13, 110, 52, 0.95)' : 'rgba(15, 23, 42, 0.85)',
                   borderRadius: '9999px',
                   padding: '0.35rem 0.75rem',
+                  opacity: videoReady ? 1 : 0,
                 }}
               >
                 {guidance}
@@ -346,9 +399,9 @@ export default function FaceCaptureField({
                 type="button"
                 className="btn btn-primary"
                 onClick={capturePhoto}
-                disabled={!ready}
+                disabled={!ready || !videoReady}
                 aria-describedby="face-capture-guidance"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', opacity: ready ? 1 : 0.6 }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', opacity: ready && videoReady ? 1 : 0.6 }}
               >
                 <FiCamera size={16} aria-hidden="true" /> Capture Photo
               </button>
@@ -357,7 +410,7 @@ export default function FaceCaptureField({
               </button>
             </div>
 
-            {!hasDetector && (
+            {!hasDetector && videoReady && (
               <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, textAlign: 'center' }}>
                 Automatic face detection isn't available in this browser — please centre your face in the oval yourself.
               </p>
@@ -408,9 +461,12 @@ export default function FaceCaptureField({
                 className="btn btn-primary"
                 onClick={startCamera}
                 disabled={starting}
+                aria-busy={starting}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
-                <FiCamera size={16} aria-hidden="true" /> {starting ? 'Opening camera…' : 'Open Camera'}
+                {starting
+                  ? <><span className="face-capture-spinner face-capture-spinner--sm" aria-hidden="true" /> Opening camera…</>
+                  : <><FiCamera size={16} aria-hidden="true" /> Open Camera</>}
               </button>
               <button
                 type="button"

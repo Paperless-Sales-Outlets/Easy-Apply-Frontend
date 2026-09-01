@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FiUploadCloud } from 'react-icons/fi';
+import { FiUploadCloud, FiX } from 'react-icons/fi';
 
 /**
  * Reusable FileUploadField component supporting drag-and-drop,
@@ -138,14 +138,14 @@ export default function FileUploadField({
               <img
                 src={value.data}
                 alt="Preview"
-                style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)' }}
               />
             ) : (
               <div
                 style={{
                   width: '42px',
                   height: '42px',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   backgroundColor: 'var(--slt-blue-light, #e9ecef)',
                   display: 'flex',
                   alignItems: 'center',
@@ -185,13 +185,14 @@ export default function FileUploadField({
               border: 'none',
               color: 'var(--danger, #dc3545)',
               cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '1.1rem',
-              padding: '0.25rem 0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.35rem',
             }}
             aria-label={`Remove ${label || 'file'}`}
           >
-            <span aria-hidden="true">✕</span>
+            <FiX size={16} aria-hidden="true" />
           </button>
         </div>
       ) : (

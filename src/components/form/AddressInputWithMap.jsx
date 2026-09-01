@@ -257,7 +257,7 @@ const actionButtonStyle = {
   gap: '0.4rem',
   backgroundColor: '#f8fafc',
   border: '1px solid #cbd5e1',
-  borderRadius: '6px',
+  borderRadius: '8px',
   padding: '0.35rem 0.75rem',
   fontSize: '0.8rem',
   fontWeight: 500,
