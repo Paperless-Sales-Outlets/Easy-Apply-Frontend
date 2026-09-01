@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiLock, FiUser, FiMapPin, FiPhone, FiMail, FiCalendar, FiFileText } from 'react-icons/fi';
 import AddressInputWithMap from '../../components/form/AddressInputWithMap';
-import FileUploadField from '../../components/form/FileUploadField';
+import NicUploadSection from '../../components/form/NicUploadSection';
 import { useVerifiedContext } from '../../components/verification';
 import { motion } from 'framer-motion';
 
@@ -376,26 +376,23 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, ha
             <FiFileText color="#0056b3" /> Identity Documents
           </h4>
           <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: 0, marginBottom: '1.25rem' }}>
-            Upload both sides of your NIC so we can verify your identity (BRD 5.1.3).
+            Upload your NIC so we can verify your identity (BRD 5.1.3). Existing SLT
+            customers don't need this — we already hold it on file.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-            <FileUploadField
-              name="nicFront"
-              label="NIC Front"
-              required
-              value={formData.nicFront}
-              onChange={handleFileChange}
-              helpText="Upload front side of NIC (PDF, JPG, PNG)"
-            />
-            <FileUploadField
-              name="nicBack"
-              label="NIC Back"
-              required
-              value={formData.nicBack}
-              onChange={handleFileChange}
-              helpText="Upload back side of NIC (PDF, JPG, PNG)"
-            />
-          </div>
+          <NicUploadSection
+            format={formData.nicFormat || 'pdf'}
+            onFormatChange={(fmt) => setFields && setFields({ nicFormat: fmt })}
+            values={formData}
+            onFileChange={handleFileChange}
+            required
+            idPrefix="nc"
+            pdfName="nicPdf"
+            frontName="nicFront"
+            backName="nicBack"
+            pdfLabel="NIC (PDF)"
+            frontLabel="NIC — Front Side"
+            backLabel="NIC — Back Side"
+          />
         </div>
 
       </div>

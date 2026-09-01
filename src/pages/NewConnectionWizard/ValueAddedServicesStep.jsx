@@ -2,16 +2,24 @@ import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import DigitalSignatureCanvas from '../../components/form/DigitalSignatureCanvas';
+import FaceCaptureField from '../../components/form/FaceCaptureField';
 
 const ValueAddedServicesStep = forwardRef(function ValueAddedServicesStep({ formData, handleChange, isActive }, ref) {
   const { t } = useTranslation();
   const [signatureError, setSignatureError] = useState(false);
+  const [faceError, setFaceError] = useState('');
 
-  // Expose validate() so the parent wizard can confirm a signature was
-  // provided before advancing — the backend rejects submissions without one
-  // (BRD 5.1.4) regardless of which path (payment or no-loop) is taken next.
+  // Expose validate() so the parent wizard can confirm the headshot and
+  // signature were provided before advancing — the backend rejects submissions
+  // without them (BRD 5.1.4) regardless of which path (payment or no-loop) is
+  // taken next. Every applicant needs a headshot, new customer or existing.
   useImperativeHandle(ref, () => ({
     validate: () => {
+      if (!formData.facePhoto) {
+        setFaceError('A face photo is required before you can sign.');
+        toast.error('Please take or upload your face photo to proceed');
+        return false;
+      }
       if (!formData.signature) {
         setSignatureError(true);
         toast.error('Please provide your digital signature to proceed');
@@ -91,6 +99,20 @@ const ValueAddedServicesStep = forwardRef(function ValueAddedServicesStep({ form
           /> {t('wizards.newConnection.vas.agreeLabel')}
         </label>
       </div>
+
+      <h4 style={{ marginTop: '2rem', marginBottom: '0.35rem', color: 'var(--text-primary)' }}>Identity Photo</h4>
+      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: 0, marginBottom: '1rem' }}>
+        Take a live photo of your face so we can verify it against your identity documents.
+      </p>
+      <FaceCaptureField
+        required
+        value={formData.facePhoto || ''}
+        error={faceError}
+        onChange={(dataUrl) => {
+          handleChange({ target: { name: 'facePhoto', value: dataUrl } });
+          if (dataUrl) setFaceError('');
+        }}
+      />
 
       <div className="mt-4" style={{ marginTop: '1.5rem' }}>
         <DigitalSignatureCanvas
