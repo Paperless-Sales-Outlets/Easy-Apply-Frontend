@@ -18,23 +18,23 @@ export default function AccountSetupStep({ isActive }) {
           
           <div className="flex flex-col-mobile gap-4" style={{ marginBottom: '1.5rem' }}>
             <div style={{ flex: '1' }}>
-              <label className="form-label" style={{ color: 'var(--text-secondary)' }}>{t('wizards.internetServices.accountSetup.userOp1')}</label>
-              <input type="text" className="form-control" placeholder={t('wizards.internetServices.accountSetup.userPlaceholder')} maxLength={14} minLength={4} />
+              <label className="form-label" htmlFor="is-userOp1" style={{ color: 'var(--text-secondary)' }}>{t('wizards.internetServices.accountSetup.userOp1')}</label>
+              <input id="is-userOp1" type="text" className="form-control" placeholder={t('wizards.internetServices.accountSetup.userPlaceholder')} maxLength={14} minLength={4} />
             </div>
             <div style={{ flex: '1' }}>
-              <label className="form-label" style={{ color: 'var(--text-secondary)' }}>{t('wizards.internetServices.accountSetup.passOp1')}</label>
-              <input type="text" className="form-control" placeholder={t('wizards.internetServices.accountSetup.passPlaceholder')} maxLength={8} minLength={6} />
+              <label className="form-label" htmlFor="is-passOp1" style={{ color: 'var(--text-secondary)' }}>{t('wizards.internetServices.accountSetup.passOp1')}</label>
+              <input id="is-passOp1" type="text" className="form-control" placeholder={t('wizards.internetServices.accountSetup.passPlaceholder')} maxLength={8} minLength={6} />
             </div>
           </div>
           
           <div className="flex flex-col-mobile gap-4">
             <div style={{ flex: '1' }}>
-              <label className="form-label" style={{ color: 'var(--text-secondary)' }}>{t('wizards.internetServices.accountSetup.userOp2')}</label>
-              <input type="text" className="form-control" placeholder={t('wizards.internetServices.accountSetup.userPlaceholder')} maxLength={14} minLength={4} />
+              <label className="form-label" htmlFor="is-userOp2" style={{ color: 'var(--text-secondary)' }}>{t('wizards.internetServices.accountSetup.userOp2')}</label>
+              <input id="is-userOp2" type="text" className="form-control" placeholder={t('wizards.internetServices.accountSetup.userPlaceholder')} maxLength={14} minLength={4} />
             </div>
             <div style={{ flex: '1' }}>
-              <label className="form-label" style={{ color: 'var(--text-secondary)' }}>{t('wizards.internetServices.accountSetup.passOp2')}</label>
-              <input type="text" className="form-control" placeholder={t('wizards.internetServices.accountSetup.passPlaceholder')} maxLength={8} minLength={6} />
+              <label className="form-label" htmlFor="is-passOp2" style={{ color: 'var(--text-secondary)' }}>{t('wizards.internetServices.accountSetup.passOp2')}</label>
+              <input id="is-passOp2" type="text" className="form-control" placeholder={t('wizards.internetServices.accountSetup.passPlaceholder')} maxLength={8} minLength={6} />
             </div>
           </div>
           
@@ -54,7 +54,7 @@ export default function AccountSetupStep({ isActive }) {
 
         {needInstall === 'yes' && (
           <div className="card" style={{ padding: '1rem', backgroundColor: 'rgba(0, 166, 80, 0.05)', border: '1px solid var(--slt-green)', boxShadow: 'none' }}>
-            <p style={{ fontSize: '0.9rem', color: 'var(--slt-green)', fontWeight: '500', marginBottom: '0.5rem' }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--green-text)', fontWeight: '500', marginBottom: '0.5rem' }}>
               {t('wizards.internetServices.accountSetup.installNote')}
             </p>
             <ul style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginLeft: '1.5rem', lineHeight: '1.8' }}>

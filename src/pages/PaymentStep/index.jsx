@@ -259,10 +259,10 @@ export default function PaymentStep({
 
         {phase === 'verified' && (
           <motion.div key="verified" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(0,166,80,0.1)', color: 'var(--slt-green)', display: 'grid', placeItems: 'center', margin: '0 auto 1.5rem' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(0,166,80,0.1)', color: 'var(--green-text)', display: 'grid', placeItems: 'center', margin: '0 auto 1.5rem' }}>
               <Icon name="check-circle" size={32} />
             </div>
-            <h3 style={{ color: 'var(--slt-green)', marginBottom: '0.5rem' }}>Mobile Verified!</h3>
+            <h3 style={{ color: 'var(--green-text)', marginBottom: '0.5rem' }}>Mobile Verified!</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem' }}>Your request is ready to be submitted.</p>
 
             <div 
