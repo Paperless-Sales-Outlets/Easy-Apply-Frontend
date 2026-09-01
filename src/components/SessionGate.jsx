@@ -53,8 +53,9 @@ export default function SessionGate({ children, requireExistingCustomer }) {
   // them, so point them at the one that is.
   if (needsExisting && !session.customerExists) {
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
+      <main style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
         <motion.div
+          role="alert"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
@@ -82,7 +83,7 @@ export default function SessionGate({ children, requireExistingCustomer }) {
               margin: '0 auto 1.25rem auto',
             }}
           >
-            <FiPackage size={28} />
+            <FiPackage size={28} aria-hidden="true" />
           </div>
 
           <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.5rem 0' }}>
@@ -102,7 +103,7 @@ export default function SessionGate({ children, requireExistingCustomer }) {
               onClick={() => navigate('/new-connection/products')}
               style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}
             >
-              <FiShoppingCart size={16} /> Browse Packages
+              <FiShoppingCart size={16} aria-hidden="true" /> Browse Packages
             </button>
             <button
               type="button"
@@ -110,18 +111,18 @@ export default function SessionGate({ children, requireExistingCustomer }) {
               onClick={() => navigate('/new-connection')}
               style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}
             >
-              Apply for a New Connection <FiArrowRight size={16} />
+              Apply for a New Connection <FiArrowRight size={16} aria-hidden="true" />
             </button>
           </div>
         </motion.div>
-      </div>
+      </main>
     );
   }
 
   // Several connections on one number — let them say which one this request is for.
   if (session.customerExists && session.accountsList.length > 1 && !session.selectedAccount) {
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
+      <main style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -161,7 +162,7 @@ export default function SessionGate({ children, requireExistingCustomer }) {
                   cursor: 'pointer',
                 }}
               >
-                <FiUser size={20} color="#0056b3" />
+                <FiUser size={20} color="#0056b3" aria-hidden="true" />
                 <span>
                   <strong style={{ display: 'block', color: '#0f172a', fontSize: '0.95rem' }}>
                     {account.fullName || account.customerName || 'SLT Account'}
@@ -174,7 +175,7 @@ export default function SessionGate({ children, requireExistingCustomer }) {
             ))}
           </div>
         </motion.div>
-      </div>
+      </main>
     );
   }
 

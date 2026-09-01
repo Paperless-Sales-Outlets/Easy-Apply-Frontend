@@ -433,6 +433,7 @@ export default function Navbar() {
             ) : (
               <button
                 type="button"
+                className="navbar-login-btn"
                 onClick={() => navigate('/login')}
                 style={{
                   display: 'flex',
