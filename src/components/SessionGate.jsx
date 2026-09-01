@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiPackage, FiShoppingCart, FiUser, FiArrowRight } from 'react-icons/fi';
+import { FiPackage, FiShoppingCart, FiUser } from 'react-icons/fi';
 import { VerificationContext } from './verification';
 import { AUTH_UPDATED_EVENT, getSession, isAuthenticated, selectAccount } from '../utils/authSession';
 
@@ -96,22 +96,14 @@ export default function SessionGate({ children, requireExistingCustomer }) {
             once you have an active SLT connection. You can apply for one now.
           </p>
 
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => navigate('/new-connection/products')}
+              onClick={() => navigate('/')}
               style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}
             >
               <FiShoppingCart size={16} aria-hidden="true" /> Browse Packages
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => navigate('/new-connection')}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}
-            >
-              Apply for a New Connection <FiArrowRight size={16} aria-hidden="true" />
             </button>
           </div>
         </motion.div>

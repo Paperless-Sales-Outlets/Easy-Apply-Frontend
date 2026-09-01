@@ -271,11 +271,11 @@ export default function FaceCaptureField({
                 height: '150px',
                 objectFit: 'cover',
                 borderRadius: '12px',
-                border: '2px solid var(--slt-green, #28a745)',
+                border: '2px solid #0f7a4d',
               }}
             />
             <div>
-              <p style={{ margin: '0 0 0.5rem 0', fontWeight: 700, color: 'var(--slt-green, #16a34a)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <p style={{ margin: '0 0 0.5rem 0', fontWeight: 700, color: '#0f7a4d', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <FiCheckCircle aria-hidden="true" /> Photo captured
               </p>
               <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>

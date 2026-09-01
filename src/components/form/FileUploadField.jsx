@@ -128,7 +128,7 @@ export default function FileUploadField({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '0.75rem 1rem',
-            border: '1px solid var(--slt-green, #28a745)',
+            border: '1px solid #0f7a4d',
             borderRadius: '8px',
             backgroundColor: 'var(--surface-color, #f8f9fa)',
           }}
