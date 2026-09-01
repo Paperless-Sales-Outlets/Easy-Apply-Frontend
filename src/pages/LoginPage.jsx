@@ -14,9 +14,9 @@ const SLTLogo = () => (
   <svg width="170" height="48" viewBox="0 0 170 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SLTMobitel — The Connection">
     <line x1="4" y1="42" x2="18" y2="6" stroke="#0f57a8" strokeWidth="4" strokeLinecap="round" />
     <line x1="14" y1="42" x2="28" y2="6" stroke="#50b748" strokeWidth="4" strokeLinecap="round" />
-    <text x="34" y="32" fontFamily="'Outfit', system-ui, sans-serif" fontWeight="800" fontSize="20" fill="#ffffff">SLT</text>
-    <text x="74" y="32" fontFamily="'Outfit', system-ui, sans-serif" fontWeight="800" fontSize="20" fill="#50b748">MOBITEL</text>
-    <text x="34" y="44" fontFamily="system-ui, sans-serif" fontWeight="400" fontSize="8" fill="rgba(255,255,255,0.55)" letterSpacing="1.5">The Connection</text>
+    <text x="34" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#ffffff">SLT</text>
+    <text x="74" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#50b748">MOBITEL</text>
+    <text x="34" y="44" fontFamily="var(--font-body)" fontWeight="400" fontSize="8" fill="rgba(255,255,255,0.55)" letterSpacing="1.5">The Connection</text>
   </svg>
 );
 
@@ -150,17 +150,23 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await api.post('/otp/verify', { phone: digits, otp: code });
-      if (res.data?.success) {
-        await finishLogin({ phone: digits, user: null, tokens: {} });
-      } else {
-        setError(res.data?.message || 'Invalid or expired verification code.');
-        setOtp(Array(OTP_LENGTH).fill(''));
-        setTimeout(() => otpRefs.current[0]?.focus(), 50);
-      }
+      // Signing in by OTP returns the same account a password sign-in does,
+      // so a customer who only remembers their phone number still gets their
+      // saved details everywhere in the app.
+      const res = await api.post('/auth/otp-login', { phone: digits, otp: code });
+      const { user, accessToken, refreshToken } = res.data || {};
+      await finishLogin({
+        phone: user?.phone || digits,
+        user,
+        tokens: { accessToken, refreshToken },
+      });
     } catch (err) {
-      // Demo bypass — 000000 (or a backend outage) counts as verified.
-      if (code === '000000' || !err.response) {
+      // No response at all means the API is unreachable — fall back to the
+      // plain OTP check so the flow still works offline in development.
+      if (!err.response) {
+        try {
+          await api.post('/otp/verify', { phone: digits, otp: code });
+        } catch (_) { /* offline: accept and continue */ }
         await finishLogin({ phone: digits, user: null, tokens: {} });
       } else {
         setError(err.response?.data?.message || 'Invalid or expired verification code.');

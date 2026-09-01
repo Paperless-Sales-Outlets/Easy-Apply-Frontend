@@ -68,7 +68,9 @@ function accountToProfile(account, mobileNumber, user) {
 
     // Contact & address — editable
     email: pick(account?.email, user?.email),
-    contactNumber: pick(user?.contactNumber, account?.telephone),
+    // Fall back to the verified mobile rather than showing NA — it is a
+    // contact number we definitely hold.
+    contactNumber: pick(user?.contactNumber, account?.telephone, account?.mobileNumber, user?.phone, mobileNumber),
     address: street,
     addressLine1: pick(account?.addressLine1, user?.addressLine1, account?.address),
     addressLine2: pick(account?.addressLine2, user?.addressLine2),
@@ -170,7 +172,7 @@ function EditableField({ label, name, value, onChange, type = 'text' }) {
           width: '100%',
           padding: '0.65rem 0.85rem',
           border: '1.5px solid #cbd5e1',
-          borderRadius: '10px',
+          borderRadius: '12px',
           fontSize: '0.95rem',
           color: '#1e293b',
           fontWeight: 600,
@@ -305,7 +307,7 @@ export default function MyProfilePage() {
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
-    borderRadius: '24px',
+    borderRadius: '16px',
     padding: '2rem',
     boxShadow: '10px 10px 30px rgba(200, 208, 220, 0.5), -10px -10px 30px rgba(255, 255, 255, 0.9)',
     border: '1px solid rgba(255, 255, 255, 0.8)',
@@ -316,8 +318,8 @@ export default function MyProfilePage() {
   };
 
   return (
-    <div style={{ backgroundColor: '#eef2f6', minHeight: '100vh', paddingBottom: '4rem' }}>
-      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', paddingBottom: '4rem' }}>
+      <div style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '2.5rem var(--page-gutter)' }}>
 
         {/* ── Page Header ──────────────────────────────────────────────── */}
         <div style={{ marginBottom: '2.5rem' }}>
@@ -340,8 +342,8 @@ export default function MyProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
           style={{
-            background: 'linear-gradient(135deg, #001f3f 0%, #003b73 45%, #004d38 85%, #01291e 100%)',
-            borderRadius: '24px',
+            background: 'var(--brand-gradient)',
+            borderRadius: '16px',
             padding: '2.5rem',
             color: '#fff',
             display: 'flex',
@@ -430,7 +432,7 @@ export default function MyProfilePage() {
                   color: '#0f172a',
                 }}
               >
-                <div style={{ background: 'linear-gradient(135deg, rgb(0, 31, 63) 0%, rgb(0, 59, 115) 45%, rgb(0, 77, 56) 85%, rgb(1, 41, 30) 100%)', padding: '0.4rem', borderRadius: '8px', color: '#fff' }}>
+                <div style={{ background: 'var(--brand-gradient)', width: '34px', height: '34px', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <FiUser size={18} />
                 </div>
                 Personal Details
@@ -445,7 +447,7 @@ export default function MyProfilePage() {
                     alignItems: 'center',
                     gap: '0.4rem',
                     padding: '0.5rem 1rem',
-                    borderRadius: '10px',
+                    borderRadius: '12px',
                     border: '1px solid rgba(0, 86, 179, 0.2)',
                     background: 'rgba(0, 86, 179, 0.05)',
                     color: '#0056b3',
@@ -466,7 +468,7 @@ export default function MyProfilePage() {
                       alignItems: 'center',
                       gap: '0.35rem',
                       padding: '0.5rem 1rem',
-                      borderRadius: '10px',
+                      borderRadius: '12px',
                       border: 'none',
                       background: '#0f7a4d',
                       color: '#fff',
@@ -484,7 +486,7 @@ export default function MyProfilePage() {
                       alignItems: 'center',
                       gap: '0.35rem',
                       padding: '0.5rem 1rem',
-                      borderRadius: '10px',
+                      borderRadius: '12px',
                       border: '1px solid #cbd5e1',
                       background: '#fff',
                       color: '#475569',
@@ -500,7 +502,7 @@ export default function MyProfilePage() {
             </div>
 
             {saveError && (
-              <div role="alert" style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '10px', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: '0.85rem', fontWeight: 600 }}>
+              <div role="alert" style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: '0.85rem', fontWeight: 600 }}>
                 {saveError}
               </div>
             )}
@@ -569,7 +571,7 @@ export default function MyProfilePage() {
                   color: '#0f172a',
                 }}
               >
-                <div style={{ background: 'linear-gradient(135deg, rgb(0, 31, 63) 0%, rgb(0, 59, 115) 45%, rgb(0, 77, 56) 85%, rgb(1, 41, 30) 100%)', padding: '0.4rem', borderRadius: '8px', color: '#fff' }}>
+                <div style={{ background: 'var(--brand-gradient)', width: '34px', height: '34px', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <FiCreditCard size={18} />
                 </div>
                 Account Details
@@ -585,7 +587,7 @@ export default function MyProfilePage() {
                       alignItems: 'center',
                       gap: '0.4rem',
                       padding: '0.5rem 0.85rem',
-                      borderRadius: '10px',
+                      borderRadius: '12px',
                       border: '1px solid rgba(0, 86, 179, 0.3)',
                       background: 'rgba(0, 86, 179, 0.05)',
                       color: '#0056b3',
@@ -662,7 +664,7 @@ export default function MyProfilePage() {
                 style={{
                   marginBottom: '1.25rem',
                   padding: '0.85rem 1rem',
-                  borderRadius: '10px',
+                  borderRadius: '12px',
                   background: '#eff6ff',
                   border: '1px solid #bfdbfe',
                   color: '#1e40af',
@@ -718,7 +720,7 @@ export default function MyProfilePage() {
                     padding: '0.85rem 1rem',
                     borderRadius: '12px',
                     border: 'none',
-                    background: 'linear-gradient(135deg, #0056b3, #003b73)',
+                    background: 'var(--brand-gradient-soft)',
                     color: '#fff',
                     fontWeight: 800,
                     fontSize: '0.85rem',
@@ -762,7 +764,7 @@ export default function MyProfilePage() {
                 color: '#0f172a',
               }}
             >
-              <div style={{ background: 'linear-gradient(135deg, #059669, #10b981)', padding: '0.4rem', borderRadius: '8px', color: '#fff' }}>
+              <div style={{ background: 'var(--brand-gradient)', width: '34px', height: '34px', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <FiFileText size={18} />
               </div>
               Application History
@@ -774,7 +776,7 @@ export default function MyProfilePage() {
                 alignItems: 'center',
                 gap: '0.4rem',
                 padding: '0.5rem 1rem',
-                borderRadius: '10px',
+                borderRadius: '12px',
                 border: '1px solid rgba(0, 0, 0, 0.05)',
                 background: '#ffffff',
                 color: '#0f172a',
@@ -1008,7 +1010,7 @@ export default function MyProfilePage() {
                     boxSizing: 'border-box',
                     boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                     border: '1px solid #cbd5e1',
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     overflow: 'hidden',
                   }}
                 >
@@ -1096,7 +1098,7 @@ export default function MyProfilePage() {
                 width: '100%',
                 maxWidth: '450px',
                 backgroundColor: '#ffffff',
-                borderRadius: '20px',
+                borderRadius: '16px',
                 padding: '2rem',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
                 border: '1px solid #e2e8f0',
@@ -1125,7 +1127,7 @@ export default function MyProfilePage() {
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                <div style={{ background: 'linear-gradient(135deg, rgb(0, 31, 63) 0%, rgb(0, 59, 115) 45%, rgb(0, 77, 56) 85%, rgb(1, 41, 30) 100%)', padding: '0.6rem', borderRadius: '12px', color: '#fff' }}>
+                <div style={{ background: 'var(--brand-gradient)', padding: '0.6rem', borderRadius: '12px', color: '#fff' }}>
                   <FiMessageSquare size={22} />
                 </div>
                 <div>

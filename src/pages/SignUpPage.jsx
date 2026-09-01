@@ -110,9 +110,9 @@ const SLTLogo = () => (
   <svg width="170" height="48" viewBox="0 0 170 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <line x1="4" y1="42" x2="18" y2="6" stroke="#0f57a8" strokeWidth="4" strokeLinecap="round"/>
     <line x1="14" y1="42" x2="28" y2="6" stroke="#50b748" strokeWidth="4" strokeLinecap="round"/>
-    <text x="34" y="32" fontFamily="'Outfit', system-ui, sans-serif" fontWeight="800" fontSize="20" fill="#ffffff">SLT</text>
-    <text x="74" y="32" fontFamily="'Outfit', system-ui, sans-serif" fontWeight="800" fontSize="20" fill="#50b748">MOBITEL</text>
-    <text x="34" y="44" fontFamily="system-ui, sans-serif" fontWeight="400" fontSize="8" fill="rgba(255,255,255,0.45)" letterSpacing="1.5">The Connection</text>
+    <text x="34" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#ffffff">SLT</text>
+    <text x="74" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#50b748">MOBITEL</text>
+    <text x="34" y="44" fontFamily="var(--font-body)" fontWeight="400" fontSize="8" fill="rgba(255,255,255,0.45)" letterSpacing="1.5">The Connection</text>
   </svg>
 );
 
@@ -943,7 +943,7 @@ export default function SignUpPage() {
               <button
                 type="button"
                 onClick={() => setOtpModalOpen(false)}
-                style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '10px' }}
+                style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '12px' }}
                 aria-label="Close verification dialog"
               >
                 <FiX size={20} aria-hidden="true" />

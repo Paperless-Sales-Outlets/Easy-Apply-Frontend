@@ -3,7 +3,8 @@
    Light Theme Exact Match to UI Design
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;700;900&display=swap');
+/* Typography comes from the shared tokens in index.css (Raleway + Inter,
+   loaded once in index.html) so the auth screens match every other page. */
 
 /* ── Root / Background ────────────────────────────────────────── */
 .signup-root {
@@ -12,8 +13,8 @@
   align-items: center;
   justify-content: center;
   padding: 4rem 1rem;
-  background-color: #f8fafc;
-  font-family: 'Inter', sans-serif;
+  background-color: var(--page-bg);
+  font-family: var(--font-body);
   color: #334155;
 }
 
@@ -68,7 +69,7 @@
 }
 
 .signup-sidebar-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-head);
   font-size: 2.8rem;
   font-weight: 700;
   margin: 1.5rem 0 0.8rem;
@@ -216,7 +217,7 @@
 
 .signup-form-header h2 {
   margin: 0 0 0.25rem;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-head);
   font-size: 1.4rem;
   color: #1e293b;
   font-weight: 700;
