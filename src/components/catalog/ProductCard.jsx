@@ -259,10 +259,17 @@ export default function ProductCard({
           )}
 
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onToggleFavorite(_id || id);
             }}
+            aria-label={
+              isFavorite
+                ? t('catalog.card.removeFavorite', 'Remove {{name}} from favourites', { name })
+                : t('catalog.card.addFavorite', 'Add {{name}} to favourites', { name })
+            }
+            aria-pressed={!!isFavorite}
             style={{
               background: 'rgba(255, 255, 255, 0.15)',
               border: 'none',
@@ -276,7 +283,7 @@ export default function ProductCard({
               color: isFavorite ? '#f87171' : '#ffffff',
             }}
           >
-            {isFavorite ? <FaHeart size={13} /> : <FiHeart size={13} />}
+            {isFavorite ? <FaHeart size={13} aria-hidden="true" /> : <FiHeart size={13} aria-hidden="true" />}
           </button>
         </div>
 
