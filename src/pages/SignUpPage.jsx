@@ -633,7 +633,6 @@ export default function SignUpPage() {
                           onClick={sendOtp}
                           disabled={sendingOtp}
                           aria-busy={sendingOtp}
-                          aria-describedby="signup-phone-help"
                         >
                           {sendingOtp ? 'Sending…' : 'Verify'}
                         </button>

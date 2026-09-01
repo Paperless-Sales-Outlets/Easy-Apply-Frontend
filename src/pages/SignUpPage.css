@@ -131,6 +131,9 @@
   display: flex;
   flex-direction: column;
   background: #ffffff;
+  /* Never let wide content (e.g. the 6 OTP inputs) push this column
+     past the card and collapse the sidebar. */
+  min-width: 0;
 }
 
 /* ── Stepper Header ──────────────────────────────────────────── */
@@ -147,13 +150,13 @@
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  color: #94a3b8;
+  color: #5b6472;
   position: relative;
   z-index: 2;
 }
 
 .signup-step.active {
-  color: #059669;
+  color: #047857;
 }
 
 .signup-step-num {
@@ -276,7 +279,8 @@
 
 .signup-field-error {
   font-size: 0.75rem;
-  color: #ef4444;
+  color: #b91c1c;
+  font-weight: 600;
   margin: 0.25rem 0 0 0;
 }
 
@@ -425,6 +429,17 @@
   color: #0f57a8;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.signup-btn-secondary--auto {
+  /* The base style is flex:1 so Cancel/Continue can split the action row.
+     Standalone buttons (e.g. Change Number) should size to their label. */
+  flex: 0 0 auto;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .signup-btn-secondary:hover {

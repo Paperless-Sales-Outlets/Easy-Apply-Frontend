@@ -471,7 +471,7 @@ export default function LoginPage() {
           )}
 
           {method === 'otp' && phase === 'otp' && (
-            <div className="signup-form" id="panel-otp" role="tabpanel" aria-labelledby="tab-otp">
+            <div className="signup-form" role="group" aria-labelledby="otp-instructions">
               <p style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '1.25rem' }} id="otp-instructions">
                 Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {phone}</strong>
               </p>
@@ -504,7 +504,7 @@ export default function LoginPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginTop: '1.25rem' }}>
                 <button
                   type="button"
-                  className="signup-btn-secondary"
+                  className="signup-btn-secondary signup-btn-secondary--auto"
                   onClick={() => { setPhase('phone'); setError(''); }}
                   disabled={loading}
                 >
