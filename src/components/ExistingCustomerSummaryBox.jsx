@@ -1,3 +1,4 @@
+import { FiCheck } from 'react-icons/fi';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,7 +17,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
         style={{
           backgroundColor: '#f0fdf4',
           border: '1.5px solid #86efac',
-          borderRadius: '14px',
+          borderRadius: '16px',
           padding: '1.25rem 1.5rem',
           marginBottom: '1.5rem',
           boxShadow: '0 4px 15px rgba(16,185,129,0.08)',
@@ -49,7 +50,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
                 fontWeight: 900,
               }}
             >
-              ✓
+              <FiCheck size={13} aria-hidden="true" />
             </div>
             <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#14532d' }}>
               Customer Information Verified
@@ -147,7 +148,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
                 border: '1px solid rgba(255, 255, 255, 0.8)',
-                borderRadius: '24px',
+                borderRadius: '16px',
                 padding: '2.5rem 2rem',
                 width: '90%',
                 maxWidth: '450px',

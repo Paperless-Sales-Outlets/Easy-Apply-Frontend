@@ -16,7 +16,7 @@ const ProtectedRoute = ({ children }) => {
           minHeight: '100vh',
           background: '#0b1d33',
           color: '#ffffff',
-          fontFamily: 'sans-serif',
+          fontFamily: 'var(--font-body)',
         }}
       >
         <div style={{ textAlign: 'center' }}>
