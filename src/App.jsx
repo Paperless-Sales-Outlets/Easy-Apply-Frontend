@@ -54,10 +54,12 @@ import { CartProvider } from './context/CartContext';
 const PageWrapper = ({ children, fullBleed = false, form = false }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.2 }}
+      // A plain cross-fade. The previous version also slid the page 12px
+      // vertically, which read as a jump on every navigation.
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
       className={fullBleed ? undefined : form ? 'page-shell--form' : 'page-shell'}
       style={{ width: '100%' }}
     >
