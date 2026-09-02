@@ -5,8 +5,10 @@ import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
+import IdentityCaptureField from '../components/form/IdentityCaptureField';
 
 const RESEND_SECONDS = 30;
+const TOTAL_STEPS = 4;
 
 /* ── SVG icons (inline, zero dependencies) ─────────────────────── */
 const IconUser = () => (
@@ -166,7 +168,11 @@ export default function SignUpPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    // Step 2
+    // Step 2 — identity documents
+    nicFront: '',
+    nicBack: '',
+    facePhoto: '',
+    // Step 3
     title: 'Mr.',
     fullName: '',
     dob: '',
@@ -174,7 +180,7 @@ export default function SignUpPage() {
     nic: '',
     nationality: 'Sri Lankan',
     contactNumber: '',
-    // Step 3
+    // Step 4
     addressLine1: '',
     addressLine2: '',
     city: '',
@@ -393,7 +399,17 @@ export default function SignUpPage() {
     return fe;
   };
 
+  // Identity documents are captured here, at registration, so the customer is
+  // never asked for them again when applying for a service.
   const validateStep2 = () => {
+    const fe = {};
+    if (!form.nicFront) fe.nicFront = 'A photo of the front of your NIC is required';
+    if (!form.nicBack) fe.nicBack = 'A photo of the back of your NIC is required';
+    if (!form.facePhoto) fe.facePhoto = 'A headshot is required';
+    return fe;
+  };
+
+  const validateStep3 = () => {
     const fe = {};
     if (!form.title) fe.title = 'Title is required';
     if (!form.fullName?.trim()) fe.fullName = 'Full Name is required';
@@ -404,7 +420,7 @@ export default function SignUpPage() {
     return fe;
   };
 
-  const validateStep3 = () => {
+  const validateStep4 = () => {
     const fe = {};
     if (!form.addressLine1?.trim()) fe.addressLine1 = 'Address Line 1 is required';
     if (!form.city?.trim()) fe.city = 'City is required';
@@ -418,12 +434,13 @@ export default function SignUpPage() {
     let fe = {};
     if (step === 1) fe = validateStep1();
     if (step === 2) fe = validateStep2();
+    if (step === 3) fe = validateStep3();
     
     if (Object.keys(fe).length > 0) {
       setFieldErrors(fe);
       return;
     }
-    setStep(s => Math.min(s + 1, 3));
+    setStep(s => Math.min(s + 1, TOTAL_STEPS));
     window.scrollTo(0, 0);
   };
 
@@ -434,9 +451,9 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (step < 3) return nextStep();
+    if (step < TOTAL_STEPS) return nextStep();
 
-    const fe = validateStep3();
+    const fe = validateStep4();
     if (Object.keys(fe).length > 0) { 
       setFieldErrors(fe); 
       return; 
@@ -466,7 +483,12 @@ export default function SignUpPage() {
           city: form.city.trim(),
           district: form.district,
           postalCode: form.postalCode.trim(),
-          preferredContact: form.preferredContact
+          preferredContact: form.preferredContact,
+          // Identity documents captured in step 2. The API stores these in
+          // GridFS and keeps only the file ids on the user record.
+          nicFront: form.nicFront,
+          nicBack: form.nicBack,
+          facePhoto: form.facePhoto
         }),
       });
 
@@ -556,34 +578,41 @@ export default function SignUpPage() {
           
           {/* Stepper Header */}
           <div className="signup-stepper">
-            <div className={`signup-step ${step >= 1 ? 'active' : ''}`}>
-              <div className="signup-step-num">1</div>
-              <span>Account Details</span>
-            </div>
-            <div className={`signup-step-line ${step >= 2 ? 'active-line' : ''}`}></div>
-            <div className={`signup-step ${step >= 2 ? 'active' : ''}`}>
-              <div className="signup-step-num">2</div>
-              <span>Personal Details</span>
-            </div>
-            <div className={`signup-step-line ${step >= 3 ? 'active-line' : ''}`}></div>
-            <div className={`signup-step ${step >= 3 ? 'active' : ''}`}>
-              <div className="signup-step-num">3</div>
-              <span>Address Details</span>
-            </div>
+            {[
+              { n: 1, label: 'Account Details' },
+              { n: 2, label: 'Identity' },
+              { n: 3, label: 'Personal Details' },
+              { n: 4, label: 'Address Details' },
+            ].map(({ n, label }) => (
+              <React.Fragment key={n}>
+                {n > 1 && <div className={`signup-step-line ${step >= n ? 'active-line' : ''}`}></div>}
+                <div className={`signup-step ${step >= n ? 'active' : ''}`}>
+                  <div className="signup-step-num">{n}</div>
+                  <span>{label}</span>
+                </div>
+              </React.Fragment>
+            ))}
           </div>
 
           <div className="signup-form-header">
             <div className="signup-form-header-icon">
               {step === 1 && <IconUser />}
-              {step === 2 && <IconUser />}
-              {step === 3 && <IconMapPin />}
+              {step === 2 && <IconCard />}
+              {step === 3 && <IconUser />}
+              {step === 4 && <IconMapPin />}
             </div>
             <div>
-              <h2>{step === 1 ? 'Account Information' : step === 2 ? 'Personal Information' : 'Address Information'}</h2>
+              <h2>{
+                step === 1 ? 'Account Information'
+                : step === 2 ? 'Identity Verification'
+                : step === 3 ? 'Personal Information'
+                : 'Address Information'
+              }</h2>
               <p>
-                {step === 1 ? 'Please fill in your details to create your account' : 
-                 step === 2 ? 'Please provide your personal details' : 
-                 'Please provide your address details'}
+                {step === 1 ? 'Please fill in your details to create your account'
+                 : step === 2 ? 'Upload or photograph your NIC and a headshot'
+                 : step === 3 ? 'Please provide your personal details'
+                 : 'Please provide your address details'}
               </p>
             </div>
           </div>
@@ -701,6 +730,58 @@ export default function SignUpPage() {
             {/* STEP 2 FIELDS */}
             {step === 2 && (
               <>
+                <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.88rem', color: '#475569' }}>
+                  We need to see your NIC and a photo of you to confirm your identity.
+                  Capturing them now means you won't be asked again when you apply for a service.
+                </p>
+
+                <IdentityCaptureField
+                  label="NIC — Front Side"
+                  variant="document"
+                  required
+                  value={form.nicFront}
+                  error={fieldErrors.nicFront}
+                  onChange={(v) => { setForm(f => ({ ...f, nicFront: v })); setFieldErrors(fe => ({ ...fe, nicFront: undefined })); }}
+                  instructions={[
+                    'Place the front of your NIC on a flat, dark surface',
+                    'Make sure all four corners are inside the frame',
+                    'Avoid glare — the photo and number must be readable',
+                  ]}
+                  helpText="Use the back camera for the clearest result."
+                />
+
+                <IdentityCaptureField
+                  label="NIC — Back Side"
+                  variant="document"
+                  required
+                  value={form.nicBack}
+                  error={fieldErrors.nicBack}
+                  onChange={(v) => { setForm(f => ({ ...f, nicBack: v })); setFieldErrors(fe => ({ ...fe, nicBack: undefined })); }}
+                  instructions={[
+                    'Turn the card over and capture the reverse side',
+                    'Keep the whole card inside the frame',
+                  ]}
+                />
+
+                <IdentityCaptureField
+                  label="Your Photo (Headshot)"
+                  variant="face"
+                  required
+                  value={form.facePhoto}
+                  error={fieldErrors.facePhoto}
+                  onChange={(v) => { setForm(f => ({ ...f, facePhoto: v })); setFieldErrors(fe => ({ ...fe, facePhoto: undefined })); }}
+                  instructions={[
+                    'Look straight at the camera in good, even lighting',
+                    'Centre your face in the oval and fill the frame',
+                    'No hat, sunglasses or face covering — prescription glasses are fine',
+                  ]}
+                  helpText="We check this against your NIC photo."
+                />
+              </>
+            )}
+
+            {step === 3 && (
+              <>
                 <div className="signup-row">
                   <div className="signup-field">
                     <label className="signup-label" htmlFor="signup-title">Title <span className="signup-required" aria-hidden="true">*</span></label>
@@ -788,7 +869,7 @@ export default function SignUpPage() {
             )}
 
             {/* STEP 3 FIELDS */}
-            {step === 3 && (
+            {step === 4 && (
               <>
                 <div className="signup-row">
                   <div className="signup-field">
@@ -912,7 +993,7 @@ export default function SignUpPage() {
                     <IconArrowLeft /> Back
                   </button>
                   <button type="submit" className={`signup-btn ${loading ? 'loading' : ''}`} disabled={loading}>
-                    {loading ? <div className="signup-spinner" /> : (step === 3 ? 'Create Account' : 'Continue')}
+                    {loading ? <div className="signup-spinner" /> : (step === TOTAL_STEPS ? 'Create Account' : 'Continue')}
                     {!loading && <IconArrowRight />}
                   </button>
                 </>
