@@ -4,7 +4,12 @@
 // and OTP again.
 export const AUTH_UPDATED_EVENT = 'easyapply:auth-updated';
 
+// Everything a signed-in customer leaves behind in this browser. On a shared
+// teleshop terminal the next customer must not inherit any of it — that
+// includes the shopping cart and the cart's server-side session id, not just
+// the identity keys.
 const SESSION_KEYS = [
+  // Identity / session
   'verifiedPhone',
   'customerExists',
   'accountsList',
@@ -13,7 +18,16 @@ const SESSION_KEYS = [
   'authUser',
   'accessToken',
   'refreshToken',
+  // Cart — 'slt_session_id' ties this browser to a cart document in MongoDB,
+  // so leaving it behind would hand the next customer the previous basket.
+  'easy_apply_cart',
+  'slt_session_id',
+  'selectedProduct',
+  // Left over from an abandoned sign-up
+  'signupPhone',
 ];
+
+const SESSION_STORAGE_KEYS = ['selectedProduct'];
 
 export function getVerifiedPhone() {
   return localStorage.getItem('verifiedPhone') || '';
@@ -107,7 +121,41 @@ export function notifyAuthUpdated() {
   window.dispatchEvent(new Event(AUTH_UPDATED_EVENT));
 }
 
+/**
+ * Sign the customer out and leave the browser clean.
+ *
+ * Local state is cleared synchronously so nothing is readable the moment the
+ * user is logged out, then the server-side cart is emptied in the background —
+ * a failed network call must never leave a customer stuck signed in.
+ */
 export function logoutVerifiedSession() {
-  SESSION_KEYS.forEach((key) => localStorage.removeItem(key));
+  // Capture the cart's session id before wiping storage, and send the delete
+  // with it explicitly. Going through the axios instance would re-create the
+  // id, because its request interceptor mints a new one whenever it's absent.
+  let sessionId = null;
+  try { sessionId = localStorage.getItem('slt_session_id'); } catch (err) { /* private mode */ }
+
+  if (sessionId) {
+    const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api';
+    // Best-effort and deliberately not awaited — the local wipe below is what
+    // actually protects the next customer on a shared terminal.
+    fetch(`${base}/cart/clear`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'x-session-id': sessionId },
+      keepalive: true,
+    }).catch(() => {});
+  }
+
+  SESSION_KEYS.forEach((key) => {
+    try { localStorage.removeItem(key); } catch (err) { /* private mode */ }
+  });
+  SESSION_STORAGE_KEYS.forEach((key) => {
+    try { sessionStorage.removeItem(key); } catch (err) { /* private mode */ }
+  });
+
+  // Tell the cart badge and catalogue the basket is now empty.
+  try { window.dispatchEvent(new Event('easyapply:cart-updated')); } catch (err) { /* ignore */ }
+
   notifyAuthUpdated();
 }

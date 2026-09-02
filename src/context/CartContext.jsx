@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getCart, addToCart, updateCartItem, removeCartItem, clearCart } from '../services/cartService';
+import { AUTH_UPDATED_EVENT, isAuthenticated } from '../utils/authSession';
 
 const CartContext = createContext(null);
 
@@ -21,6 +22,20 @@ export const CartProvider = ({ children }) => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
+
+  // Drop the in-memory basket the moment the customer signs out. Clearing
+  // storage alone isn't enough — this state would otherwise keep rendering the
+  // previous customer's items until the page happened to reload.
+  useEffect(() => {
+    const onAuthChange = () => {
+      if (!isAuthenticated()) {
+        setCart(null);
+        setError(null);
+      }
+    };
+    window.addEventListener(AUTH_UPDATED_EVENT, onAuthChange);
+    return () => window.removeEventListener(AUTH_UPDATED_EVENT, onAuthChange);
+  }, []);
 
   const fetchCart = async () => {
     setLoading(true);
