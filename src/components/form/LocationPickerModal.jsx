@@ -228,7 +228,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
   };
 
   const handleSearch = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     if (!searchQuery.trim()) return;
     setIsSearching(true);
     try {
@@ -304,9 +304,9 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
         {/* Modal Header */}
         <div style={headerStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiMapPin style={{ color: '#0056b3', fontSize: '1.25rem' }} />
+            <FiMapPin style={{ color: '#0056b3', fontSize: '1.25rem' }} aria-hidden="true" />
             <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b', fontWeight: 600 }}>
-              Select Location on Google Maps
+              Select Location on Map
             </h3>
           </div>
           <button onClick={onClose} style={closeButtonStyle} aria-label="Close modal">
@@ -316,22 +316,31 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
 
         {/* Search Bar & Geolocation */}
         <div style={searchContainerStyle}>
-          <form onSubmit={handleSearch} style={{ display: 'flex', flex: '1', gap: '0.5rem' }}>
+          <div role="search" style={{ display: 'flex', flex: '1', gap: '0.5rem' }}>
             <div style={inputWrapperStyle}>
-              <FiSearch style={{ color: '#888', marginRight: '0.4rem' }} />
+              <FiSearch style={{ color: '#888', marginRight: '0.4rem' }} aria-hidden="true" />
               <input
                 ref={autocompleteInputRef}
                 type="text"
+                aria-label="Search for a location"
                 placeholder="Search city, street or landmark..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    // Stop this from reaching the wizard form that wraps the modal.
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSearch();
+                  }
+                }}
                 style={searchInputStyle}
               />
             </div>
-            <button type="submit" disabled={isSearching} style={searchBtnStyle}>
+            <button type="button" onClick={handleSearch} disabled={isSearching} style={searchBtnStyle}>
               {isSearching ? 'Searching...' : 'Search'}
             </button>
-          </form>
+          </div>
           <button
             type="button"
             onClick={handleLocateMe}
