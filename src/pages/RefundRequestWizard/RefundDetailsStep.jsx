@@ -12,13 +12,13 @@ export default function RefundDetailsStep({ isActive }) {
 
       <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'none', marginBottom: '1.5rem' }}>
         <div className="form-group">
-          <label className="form-label">{t('wizards.refundRequest.refundDetails.paidAmount')}</label>
-          <input type="number" name="paidAmount" className="form-control" required={isActive} />
+          <label className="form-label" htmlFor="refund-paidAmount">{t('wizards.refundRequest.refundDetails.paidAmount')}</label>
+          <input id="refund-paidAmount" type="number" name="paidAmount" className="form-control" required={isActive} />
         </div>
 
         <div className="form-group mt-4">
-          <label className="form-label">{t('wizards.refundRequest.refundDetails.reason')}</label>
-          <textarea name="reason" className="form-control" rows="3" required={isActive}></textarea>
+          <label className="form-label" htmlFor="refund-reason">{t('wizards.refundRequest.refundDetails.reason')}</label>
+          <textarea id="refund-reason" name="reason" className="form-control" rows="3" required={isActive}></textarea>
         </div>
 
         <div className="form-group mt-4">

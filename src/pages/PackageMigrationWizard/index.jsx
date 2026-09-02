@@ -373,7 +373,7 @@ export default function PackageMigrationWizard() {
                   style={{
                     width: '100%',
                     padding: '0.6rem',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     border: isSamePackageError ? '1px solid #dc2626' : '1px solid #cbd5e1',
                     backgroundColor: isSamePackageError ? '#fef2f2' : '#ffffff',
                   }}

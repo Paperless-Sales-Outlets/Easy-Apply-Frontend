@@ -5,23 +5,20 @@ import { FiCheck, FiHeart, FiShoppingCart } from 'react-icons/fi';
 import { FaHeart } from 'react-icons/fa';
 import ProductDeviceGraphic from './ProductDeviceGraphic';
 
-const CARD_GRADIENTS = {
-  '500 Mbps Fibre Broadband': 'linear-gradient(135deg, #1d074d 0%, #120435 100%)',
-  '300 Mbps Fibre Broadband': 'linear-gradient(135deg, #003e92 0%, #002256 100%)',
-  '1 Gbps Fibre Broadband': 'linear-gradient(135deg, #013e28 0%, #002316 100%)',
-  'LTE Home 150 GB': 'linear-gradient(135deg, #371866 0%, #1e0b3c 100%)',
-  'LTE Home 300 GB': 'linear-gradient(135deg, #5c0717 0%, #34020b 100%)',
-  'Fibre Voice Home': 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-  'Voice Unlimited': 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-  'Megaline Voice Basic': 'linear-gradient(135deg, #0284c7 0%, #075985 100%)',
-  'Voice Business Prime': 'linear-gradient(135deg, #4338ca 0%, #3730a3 100%)',
-  'PEO TV Gold Pack': 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
-  'PEO TV Starter Pack': 'linear-gradient(135deg, #c026d3 0%, #86198f 100%)',
-  'PEO TV Entertainment': 'linear-gradient(135deg, #d97706 0%, #92400e 100%)',
-  'PEO TV Titanium': 'linear-gradient(135deg, #be123c 0%, #881337 100%)',
+// Cards are tinted by product family, using four depths of the SLT navy →
+// green identity rather than a different hue per product. Category still reads
+// at a glance, but the catalogue looks like one product instead of a swatch
+// book.
+const CATEGORY_GRADIENTS = {
+  Broadband: 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)',
+  Fibre: 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)',
+  LTE: 'linear-gradient(135deg, #0b4a91 0%, #00305e 100%)',
+  Voice: 'linear-gradient(135deg, #00566b 0%, #012f3d 100%)',
+  'PEO TV': 'linear-gradient(135deg, #004d38 0%, #01291e 100%)',
+  PEOTV: 'linear-gradient(135deg, #004d38 0%, #01291e 100%)',
 };
 
-const DEFAULT_GRADIENT = 'linear-gradient(135deg, #0056b3 0%, #002b66 100%)';
+const DEFAULT_GRADIENT = 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)';
 
 export default function ProductCard({
   product,
@@ -48,7 +45,7 @@ export default function ProductCard({
     popular = false,
   } = product;
 
-  const cardGradient = CARD_GRADIENTS[name] || DEFAULT_GRADIENT;
+  const cardGradient = CATEGORY_GRADIENTS[category] || DEFAULT_GRADIENT;
 
   if (viewMode === 'list') {
     return (
@@ -57,7 +54,7 @@ export default function ProductCard({
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
         style={{
           backgroundColor: '#ffffff',
-          borderRadius: '14px',
+          borderRadius: '16px',
           border: isSelected ? '2px solid #0056b3' : '1px solid #e2e8f0',
           overflow: 'hidden',
           boxShadow: isSelected ? '0 8px 25px rgba(0,86,179,0.2)' : '0 2px 10px rgba(0,0,0,0.03)',
@@ -72,7 +69,7 @@ export default function ProductCard({
         <div
           style={{
             background: cardGradient,
-            borderRadius: '10px',
+            borderRadius: '12px',
             width: '92px',
             minWidth: '92px',
             display: 'flex',
@@ -259,10 +256,17 @@ export default function ProductCard({
           )}
 
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onToggleFavorite(_id || id);
             }}
+            aria-label={
+              isFavorite
+                ? t('catalog.card.removeFavorite', 'Remove {{name}} from favourites', { name })
+                : t('catalog.card.addFavorite', 'Add {{name}} to favourites', { name })
+            }
+            aria-pressed={!!isFavorite}
             style={{
               background: 'rgba(255, 255, 255, 0.15)',
               border: 'none',
@@ -276,7 +280,7 @@ export default function ProductCard({
               color: isFavorite ? '#f87171' : '#ffffff',
             }}
           >
-            {isFavorite ? <FaHeart size={13} /> : <FiHeart size={13} />}
+            {isFavorite ? <FaHeart size={13} aria-hidden="true" /> : <FiHeart size={13} aria-hidden="true" />}
           </button>
         </div>
 
@@ -326,7 +330,7 @@ export default function ProductCard({
                     fontWeight: 500,
                   }}
                 >
-                  <FiCheck size={12} style={{ color: '#34d399', flexShrink: 0 }} />
+                  <FiCheck size={12} style={{ color: '#ffffff', flexShrink: 0 }} />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanText}</span>
                 </li>
               );
@@ -377,7 +381,7 @@ export default function ProductCard({
             }}
           >
             {isInCart ? <FiCheck size={16} /> : <FiShoppingCart size={15} />}
-            <span>{isInCart ? `${t('catalog.card.inCart', 'In Cart')} ✓` : disabled ? disabledReason : t('catalog.card.addToCart', 'Add to Cart')}</span>
+            <span>{isInCart ? t('catalog.card.inCart', 'In Cart') : disabled ? disabledReason : t('catalog.card.addToCart', 'Add to Cart')}</span>
           </button>
 
           <button

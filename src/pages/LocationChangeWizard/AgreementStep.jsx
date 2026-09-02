@@ -136,7 +136,7 @@ export default function AgreementStep({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
-          <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FiClipboard size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
@@ -212,7 +212,7 @@ export default function AgreementStep({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
-          <div style={{ backgroundColor: '#f0fdf4', color: '#16a34a', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: '#f0fdf4', color: '#16a34a', width: '34px', height: '34px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FiFileText size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
@@ -235,7 +235,7 @@ export default function AgreementStep({
                 padding: '0.85rem 1.15rem',
                 backgroundColor: file ? '#f0fdf4' : '#f8fafc',
                 border: file ? '1px solid #bbf7d0' : '1px solid #e2e8f0',
-                borderRadius: '10px',
+                borderRadius: '12px',
               }}
             >
               <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#1e293b' }}>{label}</span>
@@ -264,7 +264,7 @@ export default function AgreementStep({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
-          <div style={{ backgroundColor: '#fef3c7', color: '#d97706', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: '#fef3c7', color: '#d97706', width: '34px', height: '34px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FiShield size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
@@ -322,7 +322,7 @@ export default function AgreementStep({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
-          <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FiEdit3 size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
@@ -365,7 +365,7 @@ export default function AgreementStep({
 
         {signatureMethod === 'digital' ? (
           <div>
-            <div style={{ border: '2px dashed #93c5fd', borderRadius: '14px', backgroundColor: '#f8fafc', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ border: '2px dashed #93c5fd', borderRadius: '16px', backgroundColor: '#f8fafc', position: 'relative', overflow: 'hidden' }}>
               <canvas
                 ref={canvasRef}
                 width={650}

@@ -75,7 +75,7 @@ const FilterPanel = ({ categories, onFilterChange, onPriceRangeChange }) => {
               fontWeight: 500,
               cursor: 'pointer',
               padding: '0.25rem 0.5rem',
-              borderRadius: '4px',
+              borderRadius: '8px',
               transition: 'background-color 0.2s ease',
             }}
             onMouseEnter={(e) => {
@@ -112,7 +112,7 @@ const FilterPanel = ({ categories, onFilterChange, onPriceRangeChange }) => {
                 style={{
                   padding: '0.5rem 1rem',
                   border: `1px solid ${selectedCategory === category ? '#0056b3' : '#e2e8f0'}`,
-                  borderRadius: '20px',
+                  borderRadius: '16px',
                   backgroundColor: selectedCategory === category ? '#0056b3' : '#ffffff',
                   color: selectedCategory === category ? '#ffffff' : '#475569',
                   fontSize: '0.85rem',
@@ -167,7 +167,7 @@ const FilterPanel = ({ categories, onFilterChange, onPriceRangeChange }) => {
                 width: '100%',
                 padding: '0.6rem 0.75rem',
                 border: '1px solid #e2e8f0',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 fontSize: '0.85rem',
                 transition: 'border-color 0.2s ease',
               }}
@@ -191,7 +191,7 @@ const FilterPanel = ({ categories, onFilterChange, onPriceRangeChange }) => {
                 width: '100%',
                 padding: '0.6rem 0.75rem',
                 border: '1px solid #e2e8f0',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 fontSize: '0.85rem',
                 transition: 'border-color 0.2s ease',
               }}

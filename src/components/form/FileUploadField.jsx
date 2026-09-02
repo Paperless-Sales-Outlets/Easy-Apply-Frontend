@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FiUploadCloud } from 'react-icons/fi';
+import { FiUploadCloud, FiX } from 'react-icons/fi';
 
 /**
  * Reusable FileUploadField component supporting drag-and-drop,
@@ -19,6 +19,8 @@ export default function FileUploadField({
   const [dragActive, setDragActive] = useState(false);
   const [internalError, setInternalError] = useState('');
   const inputRef = useRef(null);
+  const labelId = `${name}-label`;
+  const helpId = `${name}-help`;
 
   const error = externalError || internalError;
 
@@ -112,19 +114,21 @@ export default function FileUploadField({
 
   return (
     <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-      <label className="form-label" style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+      <span className="form-label" id={labelId} style={{ fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
         {label}
-        {required && <span style={{ color: 'var(--danger, #dc3545)' }}>*</span>}
-      </label>
+        {required && <span style={{ color: 'var(--danger, #dc3545)' }} aria-hidden="true">*</span>}
+        {required && <span className="sr-only">(required)</span>}
+      </span>
 
       {value ? (
         <div
+          role="status"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '0.75rem 1rem',
-            border: '1px solid var(--slt-green, #28a745)',
+            border: '1px solid #0f7a4d',
             borderRadius: '8px',
             backgroundColor: 'var(--surface-color, #f8f9fa)',
           }}
@@ -134,14 +138,14 @@ export default function FileUploadField({
               <img
                 src={value.data}
                 alt="Preview"
-                style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                style={{ width: '42px', height: '42px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color)' }}
               />
             ) : (
               <div
                 style={{
                   width: '42px',
                   height: '42px',
-                  borderRadius: '4px',
+                  borderRadius: '8px',
                   backgroundColor: 'var(--slt-blue-light, #e9ecef)',
                   display: 'flex',
                   alignItems: 'center',
@@ -181,13 +185,14 @@ export default function FileUploadField({
               border: 'none',
               color: 'var(--danger, #dc3545)',
               cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '1.1rem',
-              padding: '0.25rem 0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.35rem',
             }}
-            title="Remove file"
+            aria-label={`Remove ${label || 'file'}`}
           >
-            ✕
+            <FiX size={16} aria-hidden="true" />
           </button>
         </div>
       ) : (
@@ -199,7 +204,8 @@ export default function FileUploadField({
           onClick={() => inputRef.current?.click()}
           role="button"
           tabIndex={0}
-          aria-label={`Upload ${label || 'file'}`}
+          aria-labelledby={labelId}
+          aria-describedby={helpId}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
@@ -222,6 +228,8 @@ export default function FileUploadField({
             name={name}
             accept={accept}
             onChange={handleFileChange}
+            tabIndex={-1}
+            aria-hidden="true"
             style={{ display: 'none' }}
           />
 
@@ -231,8 +239,8 @@ export default function FileUploadField({
           <div style={{ fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-primary)' }}>
             Drag & drop your file here or <span style={{ color: 'var(--slt-blue)', textDecoration: 'underline' }}>browse</span>
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-            Supports PDF, JPG, PNG (Max {maxSizeMB}MB)
+          <div id={helpId} style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            Supports {accept.replace(/\./g, '').toUpperCase().replace(/,/g, ', ')} (Max {maxSizeMB}MB)
           </div>
         </div>
       )}
@@ -243,11 +251,13 @@ export default function FileUploadField({
         </div>
       )}
 
-      {error && (
-        <div style={{ fontSize: '0.8rem', color: 'var(--danger, #dc3545)', marginTop: '0.25rem' }}>
-          {error}
-        </div>
-      )}
+      <div role="alert" aria-live="assertive">
+        {error && (
+          <div style={{ fontSize: '0.8rem', color: 'var(--danger, #dc3545)', marginTop: '0.25rem', fontWeight: 600 }}>
+            {error}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

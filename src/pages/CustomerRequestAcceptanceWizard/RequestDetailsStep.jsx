@@ -29,7 +29,7 @@ const RichCard = ({ id, icon, label, checked, onChange, type = 'radio', name }) 
     
     {icon && (
       <div style={{ 
-        width: '40px', height: '40px', borderRadius: '10px', display: 'grid', placeItems: 'center', 
+        width: '40px', height: '40px', borderRadius: '12px', display: 'grid', placeItems: 'center', 
         backgroundColor: checked ? 'var(--slt-blue)' : 'rgba(15, 87, 168, 0.08)', 
         color: checked ? '#ffffff' : 'var(--slt-blue)', 
         transition: 'all 0.2s ease' 
@@ -273,11 +273,22 @@ const RequestDetailsStep = forwardRef(({ isActive }, ref) => {
             }
           }}
           onClick={() => fileInputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          aria-label="Upload supporting document"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
         >
           <input 
             type="file" 
             name="requestDocument" 
             accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+            tabIndex={-1}
+            aria-hidden="true"
             style={{ display: 'none' }}
             ref={fileInputRef}
             onChange={(e) => {

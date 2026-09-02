@@ -288,7 +288,7 @@ const STYLES = `
   .cp-btn:active { opacity: 0.82; }
 
   .cp-btn-primary {
-    background: linear-gradient(135deg, #0056b3 0%, #003b73 100%);
+    background: var(--brand-gradient-soft);
     color: #ffffff;
     box-shadow: 0 4px 16px rgba(0,86,179,0.3);
   }

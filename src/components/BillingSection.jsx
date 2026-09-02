@@ -234,7 +234,7 @@ const BillingSection = ({ selectedPackage, onAddToCart }) => {
           padding: '0.75rem',
           backgroundColor: '#fffbeb',
           border: '1px solid #fef08a',
-          borderRadius: '6px',
+          borderRadius: '8px',
           fontSize: '0.8rem',
           color: '#92400e',
           display: 'flex',

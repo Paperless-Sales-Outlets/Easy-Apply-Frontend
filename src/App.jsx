@@ -37,14 +37,16 @@ import CartPage from './pages/CartPage';
 import HelpSupportPage from './pages/HelpSupportPage';
 import MyProfilePage from './pages/MyProfilePage';
 import SignUpPage from './pages/SignUpPage';
+import LoginPage from './pages/LoginPage';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import FloatingCartButton from './components/layout/FloatingCartButton';
 import ErrorBoundary from './components/ErrorBoundary';
-import OtpProtectedForm from './components/OtpProtectedForm';
+import SessionGate from './components/SessionGate';
 
 import ProtectedRoute from './components/ProtectedRoute';
+import { isAuthenticated } from './utils/authSession';
 import AdminLoginPage from './pages/Admin/pages/AdminLoginPage';
 import { AdminAuthProvider } from './pages/Admin/context/AdminAuthContext';
 import { CartProvider } from './context/CartContext';
@@ -52,10 +54,12 @@ import { CartProvider } from './context/CartContext';
 const PageWrapper = ({ children, fullBleed = false, form = false }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.2 }}
+      // A plain cross-fade. The previous version also slid the page 12px
+      // vertically, which read as a jump on every navigation.
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
       className={fullBleed ? undefined : form ? 'page-shell--form' : 'page-shell'}
       style={{ width: '100%' }}
     >
@@ -64,23 +68,17 @@ const PageWrapper = ({ children, fullBleed = false, form = false }) => {
   );
 };
 
-const VerifyPhonePage = () => {
-  const navigate = useNavigate();
+/**
+ * Everything a signed-in customer can reach. Anyone who isn't signed in is
+ * bounced to the auth screen, which is where phone/OTP or email/password
+ * verification now happens — once, instead of on every form.
+ */
+const RequireAuth = ({ children }) => {
   const location = useLocation();
-
-  const targetRoute = location.state?.redirectTo || '/profile';
-
-  return (
-    <OtpProtectedForm
-      onVerified={() =>
-        navigate(targetRoute, {
-          state: location.state,
-        })
-      }
-    >
-      <div />
-    </OtpProtectedForm>
-  );
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
+  }
+  return children;
 };
 
 const AnimatedRoutes = () => {
@@ -93,9 +91,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/"
           element={
-            <PageWrapper fullBleed>
-              <Dashboard />
-            </PageWrapper>
+            <RequireAuth>
+              <PageWrapper fullBleed>
+                <Dashboard />
+              </PageWrapper>
+            </RequireAuth>
           }
         />
 
@@ -103,9 +103,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/new-connection/products"
           element={
-            <PageWrapper fullBleed>
-              <ProductCatalogPage />
-            </PageWrapper>
+            <RequireAuth>
+              <PageWrapper fullBleed>
+                <ProductCatalogPage />
+              </PageWrapper>
+            </RequireAuth>
           }
         />
 
@@ -113,18 +115,22 @@ const AnimatedRoutes = () => {
         <Route
           path="/services"
           element={
-            <PageWrapper fullBleed>
-              <ServicesPage />
-            </PageWrapper>
+            <RequireAuth>
+              <PageWrapper fullBleed>
+                <ServicesPage />
+              </PageWrapper>
+            </RequireAuth>
           }
         />
 
         <Route
           path="/new-connection/product/:id"
           element={
-            <PageWrapper>
-              <ProductDetailPage />
-            </PageWrapper>
+            <RequireAuth>
+              <PageWrapper>
+                <ProductDetailPage />
+              </PageWrapper>
+            </RequireAuth>
           }
         />
 
@@ -132,9 +138,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/cart"
           element={
-            <PageWrapper fullBleed>
-              <CartPage />
-            </PageWrapper>
+            <RequireAuth>
+              <PageWrapper fullBleed>
+                <CartPage />
+              </PageWrapper>
+            </RequireAuth>
           }
         />
 
@@ -144,24 +152,17 @@ const AnimatedRoutes = () => {
           element={<Navigate to="/new-connection" replace />}
         />
 
-        {/* Phone Verification */}
-        <Route
-          path="/verify-phone"
-          element={
-            <PageWrapper fullBleed>
-              <VerifyPhonePage />
-            </PageWrapper>
-          }
-        />
+        {/* Legacy phone-verification entry point — sign-in lives on /login now */}
+        <Route path="/verify-phone" element={<Navigate to="/login" replace />} />
 
         {/* Customer Request Wizards */}
         <Route
           path="/new-connection"
           element={
             <PageWrapper form>
-              <OtpProtectedForm>
+              <SessionGate requireExistingCustomer={false}>
                 <NewConnectionWizard />
-              </OtpProtectedForm>
+              </SessionGate>
             </PageWrapper>
           }
         />
@@ -170,9 +171,9 @@ const AnimatedRoutes = () => {
           path="/reconnection"
           element={
             <PageWrapper form>
-              <OtpProtectedForm>
+              <SessionGate>
                 <ReconnectionWizard />
-              </OtpProtectedForm>
+              </SessionGate>
             </PageWrapper>
           }
         />
@@ -181,9 +182,9 @@ const AnimatedRoutes = () => {
           path="/ownership-change"
           element={
             <PageWrapper form>
-              <OtpProtectedForm>
+              <SessionGate>
                 <OwnershipChangeWizard />
-              </OtpProtectedForm>
+              </SessionGate>
             </PageWrapper>
           }
         />
@@ -192,9 +193,9 @@ const AnimatedRoutes = () => {
           path="/location-change"
           element={
             <PageWrapper form>
-              <OtpProtectedForm>
+              <SessionGate>
                 <LocationChangeWizard />
-              </OtpProtectedForm>
+              </SessionGate>
             </PageWrapper>
           }
         />
@@ -203,9 +204,9 @@ const AnimatedRoutes = () => {
           path="/termination"
           element={
             <PageWrapper form>
-              <OtpProtectedForm>
+              <SessionGate>
                 <TerminationWizard />
-              </OtpProtectedForm>
+              </SessionGate>
             </PageWrapper>
           }
         />
@@ -214,9 +215,9 @@ const AnimatedRoutes = () => {
           path="/package-migration"
           element={
             <PageWrapper form>
-              <OtpProtectedForm>
+              <SessionGate>
                 <PackageMigrationWizard />
-              </OtpProtectedForm>
+              </SessionGate>
             </PageWrapper>
           }
         />
@@ -225,9 +226,9 @@ const AnimatedRoutes = () => {
           path="/service-vacation"
           element={
             <PageWrapper form>
-              <OtpProtectedForm>
+              <SessionGate>
                 <ServiceVacationWizard />
-              </OtpProtectedForm>
+              </SessionGate>
             </PageWrapper>
           }
         />
@@ -236,9 +237,9 @@ const AnimatedRoutes = () => {
           path="/refund-request"
           element={
             <PageWrapper form>
-              <OtpProtectedForm>
+              <SessionGate>
                 <RefundRequestWizard />
-              </OtpProtectedForm>
+              </SessionGate>
             </PageWrapper>
           }
         />
@@ -247,9 +248,9 @@ const AnimatedRoutes = () => {
           path="/customer-request-acceptance"
           element={
             <PageWrapper form>
-              <OtpProtectedForm>
+              <SessionGate>
                 <CustomerRequestAcceptanceWizard />
-              </OtpProtectedForm>
+              </SessionGate>
             </PageWrapper>
           }
         />
@@ -258,18 +259,16 @@ const AnimatedRoutes = () => {
           path="/internet-services"
           element={
             <PageWrapper form>
-              <OtpProtectedForm>
+              <SessionGate>
                 <InternetServicesWizard />
-              </OtpProtectedForm>
+              </SessionGate>
             </PageWrapper>
           }
         />
 
-        {/* Auth */}
-        <Route
-          path="/signup"
-          element={<SignUpPage />}
-        />
+        {/* Auth — rendered without the site header/footer */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
 
         {/* General Pages */}
         <Route
@@ -283,20 +282,22 @@ const AnimatedRoutes = () => {
         <Route
           path="/profile"
           element={
-            <PageWrapper>
-              <OtpProtectedForm>
+            <SessionGate requireExistingCustomer={false}>
+              <PageWrapper>
                 <MyProfilePage />
-              </OtpProtectedForm>
-            </PageWrapper>
+              </PageWrapper>
+            </SessionGate>
           }
         />
 
         <Route
           path="/check-status"
           element={
-            <PageWrapper>
-              <CheckStatusPage />
-            </PageWrapper>
+            <RequireAuth>
+              <PageWrapper>
+                <CheckStatusPage />
+              </PageWrapper>
+            </RequireAuth>
           }
         />
 
@@ -340,9 +341,11 @@ const AnimatedRoutes = () => {
         <Route
           path="/add-to-cart"
           element={
-            <PageWrapper fullBleed>
-              <AddToCartPage />
-            </PageWrapper>
+            <RequireAuth>
+              <PageWrapper fullBleed>
+                <AddToCartPage />
+              </PageWrapper>
+            </RequireAuth>
           }
         />
 
@@ -437,10 +440,12 @@ const AnimatedRoutes = () => {
 
 const NavigationLayout = ({ children }) => {
   const location = useLocation();
-  const isAdmin  = location.pathname.startsWith('/admin');
-  const isSignup = location.pathname === '/signup';
+  const isAdmin = location.pathname.startsWith('/admin');
+  // Sign-in and registration are shown on their own — no site header, footer or
+  // cart button competing with the form.
+  const isAuthScreen = ['/login', '/signup'].includes(location.pathname);
 
-  if (isAdmin) {
+  if (isAdmin || isAuthScreen) {
     return (
       <div
         style={{

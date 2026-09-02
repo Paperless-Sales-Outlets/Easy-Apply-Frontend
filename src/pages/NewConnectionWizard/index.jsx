@@ -54,8 +54,6 @@ const initialState = {
   staticIP: 'no',
   declarationAccepted: false,
   signature: '',
-  nicFront: null,
-  nicBack: null,
 };
 
 export default function NewConnectionWizard() {
@@ -146,12 +144,6 @@ export default function NewConnectionWizard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitError('');
-    // Existing customers already have identity documents on file — only new
-    // customers (no verified account) need to upload their NIC (BRD 5.1.3).
-    if (currentStep === 1 && !selectedAccount && (!formData.nicFront || !formData.nicBack)) {
-      toast.error('Please upload both sides of your NIC to continue');
-      return;
-    }
     if (currentStep === 3 && vasStepRef.current && !vasStepRef.current.validate()) return;
     if (currentStep < totalSteps) nextStep();
   };

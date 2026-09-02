@@ -17,7 +17,7 @@ export default function WizardStepper({ currentStep, steps }) {
         zIndex: 0
       }}>
         {/* Empty Track */}
-        <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--line)', borderRadius: '2px' }} />
+        <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--line)', borderRadius: '8px' }} />
         {/* Animated Fill Track */}
         <motion.div 
           initial={{ width: 0 }}
@@ -29,7 +29,7 @@ export default function WizardStepper({ currentStep, steps }) {
             left: 0, 
             height: '100%', 
             backgroundColor: 'var(--blue)', 
-            borderRadius: '2px',
+            borderRadius: '8px',
             boxShadow: '0 0 8px rgba(15, 87, 168, 0.4)'
           }} 
         />

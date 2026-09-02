@@ -77,8 +77,8 @@ export default function ServicesPage() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ backgroundColor: '#f4f7f9', minHeight: '100vh', paddingBottom: '4rem' }}>
-      <div style={{ padding: '2rem 4rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', paddingBottom: '4rem' }}>
+      <div style={{ padding: '2rem var(--page-gutter)', maxWidth: 'var(--page-max)', margin: '0 auto' }}>
         {/* Header bar area */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -166,7 +166,7 @@ export default function ServicesPage() {
                 backgroundColor: '#f1f5f9',
                 width: '52px',
                 height: '52px',
-                borderRadius: '10px',
+                borderRadius: '12px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

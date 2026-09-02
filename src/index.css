@@ -11,7 +11,7 @@
   --blue-deep: #0a3f7e;
   --green: #50b748;
   --green-deep: #3a9636;
-  --paper: #f3f6fb;
+  --paper: #ffffff;
   --surface: #ffffff;
   --line: #d9e2ef;
   --text: #16233a;
@@ -38,6 +38,29 @@
   /* Matches slt.lk: Raleway for headings, Inter for body copy */
   --font-head: 'Raleway', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* ── Layout & surface system ──────────────────────────────────
+     One content width, one card treatment and one gradient family,
+     so every page reads as the same product. */
+  --page-max: 1400px;
+  --page-bg: #ffffff;
+  --page-gutter: clamp(1rem, 4vw, 2rem);
+
+  --radius-card: 16px;
+  --radius-control: 12px;
+
+  /* Icons are a single brand blue. Colour is used to convey state
+     (error, success), never for decoration. */
+  --icon-color: var(--blue);
+
+  /* The brand green (#50b748) is only 2.56:1 on white — fine for logos and
+     fills, unusable for text. This is its accessible counterpart. */
+  --green-text: #0f7a4d;
+
+  /* The two approved gradients: the SLT brand sweep for feature
+     surfaces, and a flat blue for primary controls. */
+  --brand-gradient: linear-gradient(135deg, #001f3f 0%, #003b73 45%, #004d38 85%, #01291e 100%);
+  --brand-gradient-soft: linear-gradient(135deg, #0b4a91 0%, #003b73 100%);
 
   /* Brand slash gradient (dual-tone, hard break) */
   --slash-gradient: linear-gradient(104deg, var(--blue) 0 62%, var(--green) 62% 100%);
@@ -97,6 +120,16 @@ body {
   color: var(--text);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Form controls do not inherit the page font by default — without this every
+   button, input and select on the site renders in the browser's own face
+   instead of the SLT typeface. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 /* Typography */
@@ -194,14 +227,16 @@ a {
    with fixed padding, which reads better on narrow screens. */
 .page-shell {
   width: 100%;
-  max-width: 90%;
+  max-width: var(--page-max);
   margin: 0 auto;
+  padding-inline: var(--page-gutter);
 }
 
 .page-shell--form {
   width: 100%;
-  max-width: 80%;
+  max-width: var(--page-max);
   margin: 0 auto;
+  padding-inline: var(--page-gutter);
   /* Wizard steps end in a Back/Next Step footer that's the last thing in
      the page — without this the site Footer sits flush against it. */
   padding-bottom: 3rem;
@@ -1590,6 +1625,13 @@ a {
     display: none;
   }
 
+  /* The account name and Logout also live in the mobile menu below, so the
+     inline copy is redundant here — and at 375px it overflowed the header. */
+  .navbar-auth,
+  .navbar-login-btn {
+    display: none !important; /* beats the component's inline display:flex */
+  }
+
   .hamburger-btn {
     display: flex;
     align-items: center;
@@ -2493,4 +2535,136 @@ a {
   .otp-card-right {
     padding: 2rem 1.5rem;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Shared OTP verification dialog — used by the auth screens and by the
+   in-form phone verification in the wizards.
+   ══════════════════════════════════════════════════════════════════ */
+/* ── OTP verification dialog ──────────────────────────────────────
+   Rendered conditionally rather than through AnimatePresence: an exit
+   animation could leave the closed dialog mounted, where it stayed
+   clickable and still visible to screen readers. */
+.otp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: otp-overlay-in 0.2s ease-out;
+}
+
+.otp-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  padding: 2.25rem 2rem;
+  border-radius: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  animation: otp-dialog-in 0.2s ease-out;
+}
+
+@keyframes otp-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes otp-dialog-in {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otp-overlay,
+  .otp-dialog {
+    animation: none;
+  }
+}
+
+/* ── OTP entry boxes ──────────────────────────────────────────── */
+.otp-boxes {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 360px;
+}
+
+.otp-box {
+  flex: 1;
+  min-width: 0;
+  height: 54px;
+  border-radius: 12px;
+  border: 1.5px solid #94a3b8;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+}
+
+.otp-box.is-filled {
+  border: 2px solid #0f7a4d;
+  background: #f0fdf4;
+}
+
+.otp-box.is-error {
+  border: 2px solid #b91c1c;
+}
+
+.otp-box:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.otp-box:focus-visible {
+  outline: 3px solid #0f57a8;
+  outline-offset: 2px;
+}
+
+@media (max-width: 680px) {
+  .otp-boxes {
+    gap: 0.35rem;
+  }
+
+  .otp-box {
+    height: 48px;
+    font-size: 1.15rem;
+  }
+
+  .otp-dialog {
+    padding: 2rem 1.25rem;
+  }
+}
+
+/* ── Face capture: camera warm-up indicator ──────────────────── */
+.face-capture-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: face-capture-spin 0.8s linear infinite;
+}
+
+.face-capture-spinner--sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+  border-color: rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+}
+
+@keyframes face-capture-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .face-capture-spinner { animation-duration: 2s; }
 }

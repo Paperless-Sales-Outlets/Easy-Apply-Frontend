@@ -151,7 +151,7 @@ export default function AddressInputWithMap({
 
   return (
     <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-      {label && <label className="form-label">{label}</label>}
+      {label && <label className="form-label" htmlFor={`${name}-input`}>{label}</label>}
 
       {/* Hidden <input> for Google Maps Autocomplete widget — must be an HTMLInputElement */}
       {!disabled && !readOnly && (
@@ -177,6 +177,7 @@ export default function AddressInputWithMap({
 
       <div style={{ position: 'relative' }}>
         <textarea
+          id={`${name}-input`}
           ref={textareaRef}
           name={name}
           className={className}
@@ -255,7 +256,7 @@ const actionButtonStyle = {
   gap: '0.4rem',
   backgroundColor: '#f8fafc',
   border: '1px solid #cbd5e1',
-  borderRadius: '6px',
+  borderRadius: '8px',
   padding: '0.35rem 0.75rem',
   fontSize: '0.8rem',
   fontWeight: 500,

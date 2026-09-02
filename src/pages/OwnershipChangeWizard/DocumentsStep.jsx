@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import FileUploadField from '../../components/form/FileUploadField';
+import NicUploadSection from '../../components/form/NicUploadSection';
 
 export default function DocumentsStep({ isActive }) {
   const { t } = useTranslation();
@@ -121,53 +122,22 @@ export default function DocumentsStep({ isActive }) {
               helpText={t('wizards.ownershipChange.documents.consentHelp')}
             />
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="oc-nicFormat">{t('wizards.ownershipChange.documents.nicFormatLabel')}</label>
-              <select
-                id="oc-nicFormat"
-                className="form-control"
-                value={nicFormat}
-                onChange={(e) => setNicFormat(e.target.value)}
-              >
-                <option value="pdf">{t('wizards.ownershipChange.documents.nicFormatPdf')}</option>
-                <option value="jpeg">{t('wizards.ownershipChange.documents.nicFormatJpeg')}</option>
-              </select>
-            </div>
-
-            {nicFormat === 'pdf' ? (
-              <FileUploadField
-                name="newOwnerNicPdf"
-                label={t('wizards.ownershipChange.documents.docs.newOwnerNic')}
-                accept=".pdf"
-                required={isActive}
-                value={uploads.newOwnerNicPdf}
-                onChange={handleFileChange}
-                helpText={t('wizards.ownershipChange.documents.nicPdfHelp')}
-              />
-            ) : (
-              <div className="form-group flex flex-col-mobile gap-4">
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <FileUploadField
-                    name="newOwnerNicFront"
-                    label={t('wizards.ownershipChange.documents.nicFront')}
-                    accept=".jpg,.jpeg"
-                    required={isActive}
-                    value={uploads.newOwnerNicFront}
-                    onChange={handleFileChange}
-                  />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <FileUploadField
-                    name="newOwnerNicBack"
-                    label={t('wizards.ownershipChange.documents.nicBack')}
-                    accept=".jpg,.jpeg"
-                    required={isActive}
-                    value={uploads.newOwnerNicBack}
-                    onChange={handleFileChange}
-                  />
-                </div>
-              </div>
-            )}
+            <NicUploadSection
+              format={nicFormat}
+              onFormatChange={setNicFormat}
+              values={uploads}
+              onFileChange={handleFileChange}
+              required={isActive}
+              idPrefix="oc"
+              pdfName="newOwnerNicPdf"
+              frontName="newOwnerNicFront"
+              backName="newOwnerNicBack"
+              pdfLabel={t('wizards.ownershipChange.documents.docs.newOwnerNic')}
+              frontLabel={t('wizards.ownershipChange.documents.nicFront')}
+              backLabel={t('wizards.ownershipChange.documents.nicBack')}
+              pdfHelpText={t('wizards.ownershipChange.documents.nicPdfHelp')}
+              formatLabel={t('wizards.ownershipChange.documents.nicFormatLabel')}
+            />
 
             {Object.entries(uploads).map(([key, val]) => (
               val ? <input key={key} type="hidden" name={key} value={val.data} /> : null

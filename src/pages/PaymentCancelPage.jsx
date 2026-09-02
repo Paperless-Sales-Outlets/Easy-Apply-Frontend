@@ -21,7 +21,7 @@ export default function PaymentCancelPage() {
           width: '100%',
           textAlign: 'center',
           background: '#fff',
-          borderRadius: '24px',
+          borderRadius: '16px',
           padding: '3rem 2rem',
           boxShadow: '0 20px 50px rgba(0,0,0,0.07)',
           border: '1px solid #e2e8f0',

@@ -24,12 +24,12 @@ export default function ServiceDetailsStep({ isActive }) {
           <div className="card" style={{ padding: '1rem', backgroundColor: 'var(--bg-color)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
             <div className="flex flex-col-mobile gap-4">
               <div style={{ flex: '1' }}>
-                <label className="form-label">{t('wizards.internetServices.serviceDetails.existingUser')}</label>
-                <input type="text" className="form-control" />
+                <label className="form-label" htmlFor="is-existingUser">{t('wizards.internetServices.serviceDetails.existingUser')}</label>
+                <input id="is-existingUser" type="text" className="form-control" />
               </div>
               <div style={{ flex: '1' }}>
-                <label className="form-label">{t('wizards.internetServices.serviceDetails.existingPkg')}</label>
-                <input type="text" className="form-control" />
+                <label className="form-label" htmlFor="is-existingPkg">{t('wizards.internetServices.serviceDetails.existingPkg')}</label>
+                <input id="is-existingPkg" type="text" className="form-control" />
               </div>
             </div>
           </div>
@@ -40,8 +40,8 @@ export default function ServiceDetailsStep({ isActive }) {
         <label className="form-label">{t('wizards.internetServices.serviceDetails.svcType')}</label>
         
         <div style={{ marginBottom: '1rem' }}>
-          <label className="form-label" style={{ fontWeight: 'normal' }}>{t('wizards.internetServices.serviceDetails.domainName')}</label>
-          <input type="text" className="form-control" />
+          <label className="form-label" htmlFor="is-domainName" style={{ fontWeight: 'normal' }}>{t('wizards.internetServices.serviceDetails.domainName')}</label>
+          <input id="is-domainName" type="text" className="form-control" />
         </div>
 
         <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--border-color)', boxShadow: 'none', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -55,8 +55,8 @@ export default function ServiceDetailsStep({ isActive }) {
               <input type="checkbox" className="checkbox-input" /> {t('wizards.internetServices.serviceDetails.virtualMail')}
             </label>
             <div className="flex items-center gap-2" style={{ flex: '2' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{t('wizards.internetServices.serviceDetails.internetPkg')}</span>
-              <input type="text" className="form-control" style={{ padding: '0.5rem' }} />
+              <label htmlFor="is-internetPkg" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{t('wizards.internetServices.serviceDetails.internetPkg')}</label>
+              <input id="is-internetPkg" name="internetPkg" type="text" className="form-control" style={{ padding: '0.5rem' }} />
             </div>
           </div>
 
@@ -69,8 +69,8 @@ export default function ServiceDetailsStep({ isActive }) {
               <input type="checkbox" className="checkbox-input" /> {t('wizards.internetServices.serviceDetails.virtualWeb')}
             </label>
             <div className="flex items-center gap-2" style={{ flex: '2' }}>
-              <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{t('wizards.internetServices.serviceDetails.webCapacity')}</span>
-              <input type="number" className="form-control" style={{ padding: '0.5rem' }} />
+              <label htmlFor="is-webCapacity" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{t('wizards.internetServices.serviceDetails.webCapacity')}</label>
+              <input id="is-webCapacity" name="webCapacity" type="number" className="form-control" style={{ padding: '0.5rem' }} />
             </div>
           </div>
 

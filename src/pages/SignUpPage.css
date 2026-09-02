@@ -3,7 +3,8 @@
    Light Theme Exact Match to UI Design
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;700;900&display=swap');
+/* Typography comes from the shared tokens in index.css (Raleway + Inter,
+   loaded once in index.html) so the auth screens match every other page. */
 
 /* ── Root / Background ────────────────────────────────────────── */
 .signup-root {
@@ -12,8 +13,8 @@
   align-items: center;
   justify-content: center;
   padding: 4rem 1rem;
-  background-color: #f8fafc;
-  font-family: 'Inter', sans-serif;
+  background-color: var(--page-bg);
+  font-family: var(--font-body);
   color: #334155;
 }
 
@@ -68,7 +69,7 @@
 }
 
 .signup-sidebar-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-head);
   font-size: 2.8rem;
   font-weight: 700;
   margin: 1.5rem 0 0.8rem;
@@ -110,7 +111,8 @@
   color: #ffffff;
 }
 
-.signup-feature-item h4 {
+.signup-feature-item h4,
+.signup-feature-title {
   margin: 0 0 0.2rem;
   font-size: 1rem;
   font-weight: 600;
@@ -120,7 +122,7 @@
 .signup-feature-item p {
   margin: 0;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 /* ── Split Layout: Form Section ──────────────────────────────── */
@@ -130,6 +132,9 @@
   display: flex;
   flex-direction: column;
   background: #ffffff;
+  /* Never let wide content (e.g. the 6 OTP inputs) push this column
+     past the card and collapse the sidebar. */
+  min-width: 0;
 }
 
 /* ── Stepper Header ──────────────────────────────────────────── */
@@ -146,13 +151,13 @@
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  color: #94a3b8;
+  color: #5b6472;
   position: relative;
   z-index: 2;
 }
 
 .signup-step.active {
-  color: #059669;
+  color: #047857;
 }
 
 .signup-step-num {
@@ -212,7 +217,7 @@
 
 .signup-form-header h2 {
   margin: 0 0 0.25rem;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-head);
   font-size: 1.4rem;
   color: #1e293b;
   font-weight: 700;
@@ -275,7 +280,8 @@
 
 .signup-field-error {
   font-size: 0.75rem;
-  color: #ef4444;
+  color: #b91c1c;
+  font-weight: 600;
   margin: 0.25rem 0 0 0;
 }
 
@@ -350,15 +356,18 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #94a3b8;
+  color: #64748b;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 0 1rem;
-  height: 100%;
+  min-height: 44px;
+  min-width: 44px;
+  align-self: stretch;
 }
 
 .signup-pw-toggle:hover {
-  color: #475569;
+  color: #334155;
 }
 
 /* ── Checkbox row ─────────────────────────────────────────────── */
@@ -399,7 +408,7 @@
 }
 
 .signup-link--accent {
-  color: #059669;
+  color: #047857;
 }
 
 /* ── Action Buttons Row ───────────────────────────────────────── */
@@ -421,6 +430,17 @@
   color: #0f57a8;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.signup-btn-secondary--auto {
+  /* The base style is flex:1 so Cancel/Continue can split the action row.
+     Standalone buttons (e.g. Change Number) should size to their label. */
+  flex: 0 0 auto;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .signup-btn-secondary:hover {
@@ -487,7 +507,7 @@
 .signup-footer-text {
   text-align: center;
   font-size: 0.95rem;
-  color: #64748b;
+  color: #475569;
   margin: 1.5rem 0 0;
 }
 
@@ -635,10 +655,12 @@
   flex-shrink: 0;
 }
 
-.signup-secure-box h5 {
+.signup-secure-box h5,
+.signup-secure-title {
   margin: 0 0 0.2rem;
   color: #065f46;
   font-size: 0.95rem;
+  font-weight: 700;
 }
 
 .signup-secure-box p {
@@ -667,7 +689,7 @@
   text-align: center;
   margin-top: 1.5rem;
   font-size: 0.95rem;
-  color: #94a3b8;
+  color: #475569;
 }
 
 /* ── Responsive ───────────────────────────────────────────────── */
@@ -721,5 +743,194 @@
 
   .signup-stepper {
     display: none;
+  }
+}
+/* ══════════════════════════════════════════════════════════════════
+   Auth screens — sign-in method tabs, OTP entry, shared a11y bits
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Every interactive control on the auth screens gets a clearly visible
+   keyboard focus ring. :focus-visible keeps it out of the way of mouse
+   users while remaining fully visible to anyone navigating by keyboard. */
+.auth-tab:focus-visible,
+.otp-box:focus-visible,
+.auth-link-btn:focus-visible,
+.signup-btn:focus-visible,
+.signup-btn-secondary:focus-visible,
+.signup-pw-toggle:focus-visible,
+.signup-link:focus-visible,
+.auth-verify-btn:focus-visible {
+  outline: 3px solid #0f57a8;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ── Sign-in method tabs ──────────────────────────────────────── */
+.auth-tabs {
+  display: flex;
+  gap: 0.35rem;
+  background: #eef2f7;
+  padding: 0.35rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #4a5567;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-tab:hover:not(.is-active) {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.auth-tab.is-active {
+  background: #ffffff;
+  color: #0b4a91;
+  box-shadow: 0 2px 6px rgba(15, 87, 168, 0.15);
+}
+
+/* ── Inline text button (resend, etc.) ────────────────────────── */
+.auth-link-btn {
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  color: #0b4a91;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.auth-link-btn:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.auth-link-btn:disabled {
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+/* ── Verify button beside the phone field ─────────────────────── */
+.auth-verify-btn {
+  padding: 0 1.1rem;
+  border: none;
+  border-radius: 12px;
+  background: #0b4a91;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.auth-verify-btn:hover:not(:disabled) {
+  background: #0a3f7c;
+}
+
+.auth-verify-btn:disabled {
+  background: #64748b;
+  cursor: wait;
+}
+
+.auth-verified-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0 0.9rem;
+  border-radius: 12px;
+  background: #dcfce7;
+  color: #0f7a4d;
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ── Development-only hint ────────────────────────────────────── */
+.auth-dev-hint {
+  margin-top: 1.25rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px dashed #94a3b8;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ── Reduced motion ───────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .auth-tab,
+  .auth-verify-btn,
+  .signup-btn,
+  .signup-btn-secondary {
+    transition: none;
+  }
+  .signup-spinner {
+    animation-duration: 2s;
+  }
+}
+
+/* ── Mobile: keep the form above the fold ─────────────────────────
+   The brand panel stacks on top below 1024px. Left at desktop
+   proportions it filled the whole first screen, pushing the actual
+   form out of sight, so it is condensed to a compact header. */
+@media (max-width: 680px) {
+  .signup-sidebar-inner {
+    padding: 1.5rem 1.5rem 1.75rem;
+  }
+
+  .signup-sidebar-title {
+    font-size: 1.75rem;
+    line-height: 1.2;
+    margin-top: 0.75rem;
+  }
+
+  .signup-sidebar-desc {
+    font-size: 0.9rem;
+    margin-top: 0.4rem;
+  }
+
+  .signup-badge {
+    margin-top: 0.75rem !important;
+  }
+
+  .signup-form-section {
+    padding: 1.75rem 1.25rem 2rem;
+  }
+
+  /* Two tabs side by side get very narrow at 375px — stack the label
+     under the icon instead of wrapping mid-phrase. */
+  .auth-tab {
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.82rem;
+    line-height: 1.2;
+  }
+}
+
+/* Very narrow phones */
+@media (max-width: 380px) {
+  .signup-sidebar-title {
+    font-size: 1.5rem;
   }
 }

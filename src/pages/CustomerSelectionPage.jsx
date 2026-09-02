@@ -24,7 +24,7 @@ export default function CustomerSelectionPage() {
   };
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', padding: '2.5rem 0 4rem 0' }}>
+    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', padding: '2.5rem 0 4rem 0' }}>
       <div className="page-container" style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 1.5rem' }}>
         
         {/* Navigation Breadcrumb */}
@@ -94,7 +94,7 @@ export default function CustomerSelectionPage() {
           <div
             style={{
               backgroundColor: '#ffffff',
-              borderRadius: '20px',
+              borderRadius: '16px',
               border: '2px solid #e2e8f0',
               padding: '2.5rem 2rem',
               display: 'flex',
@@ -158,7 +158,7 @@ export default function CustomerSelectionPage() {
           <div
             style={{
               backgroundColor: '#ffffff',
-              borderRadius: '20px',
+              borderRadius: '16px',
               border: '2px solid #10b981',
               padding: '2.5rem 2rem',
               display: 'flex',

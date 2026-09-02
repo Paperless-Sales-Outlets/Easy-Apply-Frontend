@@ -44,11 +44,12 @@ export default function ProductDetailPage() {
 
   const handleBuyNow = async (prod, qty) => {
     await handleAddToCart(prod, qty);
-    navigate('/verify-phone');
+    // The customer is already signed in by this point — straight to the form.
+    navigate('/new-connection');
   };
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', padding: '2rem 0' }}>
+    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', padding: '2rem 0' }}>
       <Toast toast={toast} onClose={() => setToast(null)} />
       <div className="page-container" style={{ maxWidth: '900px', margin: '0 auto' }}>
         <nav style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

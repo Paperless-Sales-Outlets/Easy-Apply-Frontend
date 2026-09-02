@@ -10,12 +10,12 @@ export default function CustomerDetailsStep({ isActive }) {
 
       <div className="form-group flex flex-col-mobile gap-4">
         <div style={{ flex: '1' }}>
-          <label className="form-label">{t('wizards.refundRequest.customerDetails.bankName')}</label>
-          <input name="bankName" type="text" className="form-control" required={isActive} />
+          <label className="form-label" htmlFor="custom-bankName">{t('wizards.refundRequest.customerDetails.bankName')}</label>
+          <input id="custom-bankName" name="bankName" type="text" className="form-control" required={isActive} />
         </div>
         <div style={{ flex: '1' }}>
-          <label className="form-label">{t('wizards.refundRequest.customerDetails.bankBranch')}</label>
-          <input name="bankBranch" type="text" className="form-control" required={isActive} />
+          <label className="form-label" htmlFor="custom-bankBranch">{t('wizards.refundRequest.customerDetails.bankBranch')}</label>
+          <input id="custom-bankBranch" name="bankBranch" type="text" className="form-control" required={isActive} />
         </div>
       </div>
     </div>

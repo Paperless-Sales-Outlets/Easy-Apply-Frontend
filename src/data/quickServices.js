@@ -8,6 +8,9 @@ import {
   FiFileText,
 } from 'react-icons/fi';
 
+// Icons use the single brand blue on a neutral tile — colour is reserved for
+// conveying state, not for decorating each service differently.
+//
 // Shared between the landing-page quick-service tiles (HeroBannerCarousel)
 // and the navbar's mobile "Services" dropdown, so both stay in sync.
 // Track Application is deliberately excluded — it's already the
@@ -20,8 +23,8 @@ export const QUICK_SERVICES = [
     desc: 'Reconnect your disconnected service',
     route: '/reconnection',
     icon: FiRefreshCw,
-    bgColor: '#e6f4ea',
-    iconColor: '#137333',
+    bgColor: '#eff6ff',
+    iconColor: '#0b4a91',
   },
   {
     id: 'relocation',
@@ -29,8 +32,8 @@ export const QUICK_SERVICES = [
     desc: 'Move your connection to a new address',
     route: '/location-change',
     icon: FiMapPin,
-    bgColor: '#e8f0fe',
-    iconColor: '#1a73e8',
+    bgColor: '#eff6ff',
+    iconColor: '#0b4a91',
   },
   {
     id: 'transfer',
@@ -38,8 +41,8 @@ export const QUICK_SERVICES = [
     desc: 'Transfer ownership of an existing connection',
     route: '/ownership-change',
     icon: FiRepeat,
-    bgColor: '#f3e8ff',
-    iconColor: '#9333ea',
+    bgColor: '#eff6ff',
+    iconColor: '#0b4a91',
   },
   {
     id: 'package-migration',
@@ -47,8 +50,8 @@ export const QUICK_SERVICES = [
     desc: 'Migrate or upgrade to a new package',
     route: '/package-migration',
     icon: FiTrendingUp,
-    bgColor: '#ffedd5',
-    iconColor: '#ea580c',
+    bgColor: '#eff6ff',
+    iconColor: '#0b4a91',
   },
   {
     id: 'service-vacation',
@@ -56,8 +59,8 @@ export const QUICK_SERVICES = [
     desc: 'Apply for temporary service vacation',
     route: '/service-vacation',
     icon: FiSun,
-    bgColor: '#fae8ff',
-    iconColor: '#c026d3',
+    bgColor: '#eff6ff',
+    iconColor: '#0b4a91',
   },
   {
     id: 'refund-request',
@@ -65,8 +68,8 @@ export const QUICK_SERVICES = [
     desc: 'Request a refund for deposits or overpayments',
     route: '/refund-request',
     icon: FiDollarSign,
-    bgColor: '#fef3c7',
-    iconColor: '#d97706',
+    bgColor: '#eff6ff',
+    iconColor: '#0b4a91',
   },
   {
     id: 'customer-request',
@@ -74,7 +77,7 @@ export const QUICK_SERVICES = [
     desc: 'Submit general requests or service inquiries',
     route: '/customer-request-acceptance',
     icon: FiFileText,
-    bgColor: '#dcfce7',
-    iconColor: '#16a34a',
+    bgColor: '#eff6ff',
+    iconColor: '#0b4a91',
   },
 ];

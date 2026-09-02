@@ -1,3 +1,4 @@
+import { FiPackage } from 'react-icons/fi';
 import React from 'react';
 import ProductCard from './ProductCard';
 
@@ -33,7 +34,7 @@ const ProductList = ({ products, loading }) => {
           border: '1px dashed #cbd5e1',
         }}
       >
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📦</div>
+        <div style={{ marginBottom: '1rem', color: '#0b4a91' }} aria-hidden="true"><FiPackage size={44} /></div>
         <h3 style={{ color: '#64748b', marginBottom: '0.5rem' }}>No Products Found</h3>
         <p style={{ color: '#94a3b8' }}>
           Try adjusting your search or filter criteria to find what you're looking for.

@@ -12,7 +12,6 @@ import {
   FiCheckCircle,
   FiAlertCircle,
   FiChevronRight,
-  FiUserPlus,
   FiChevronDown,
   FiEye,
   FiMessageSquare,
@@ -21,6 +20,7 @@ import {
   FiBox,
 } from 'react-icons/fi';
 import { useVerifiedContext } from '../components/verification';
+import { getAuthUser, notifyAuthUpdated } from '../utils/authSession';
 import api from '../utils/api';
 
 const SERVICE_TYPE_LABELS = {
@@ -38,21 +38,70 @@ const SERVICE_TYPE_LABELS = {
   'internet-services': 'Internet Services',
 };
 
-function accountToProfile(account, mobileNumber) {
+/**
+ * Builds the profile from two sources:
+ *   - `account`  the SLT connection, when the customer has one
+ *   - `user`     the registered EasyApply account, captured at sign-up
+ *
+ * A customer who has just registered has no SLT connection yet, so their
+ * details come entirely from `user` — without this they'd see an empty page
+ * despite having typed everything in during sign-up. Connection data wins
+ * where both exist, since SLT's records are authoritative.
+ */
+function accountToProfile(account, mobileNumber, user) {
+  const pick = (...values) => values.find((v) => v !== undefined && v !== null && String(v).trim() !== '') || '';
+
+  const street = pick(
+    account?.address,
+    account?.addressLine1,
+    [user?.addressLine1, user?.addressLine2].filter(Boolean).join(', ')
+  );
+
   return {
-    fullName: account?.fullName || account?.customerName || '',
-    email: account?.email || '',
-    phone: account?.mobileNumber || account?.phoneNumber || mobileNumber || '',
-    nic: account?.nic || '',
-    address: account?.address || account?.addressLine1 || '',
-    accountNumber: account?.accountNumber || '',
-    connectionType: account?.serviceType || account?.package || '',
-    packageName: account?.packageName || account?.package || '',
+    // Identity — verified, not editable here
+    fullName: pick(account?.fullName, account?.customerName, user?.name),
+    nic: pick(account?.nic, user?.NIC),
+    dob: pick(user?.dob),
+    gender: pick(user?.gender),
+    nationality: pick(user?.nationality),
+    phone: pick(account?.mobileNumber, account?.phoneNumber, user?.phone, mobileNumber),
+
+    // Contact & address — editable
+    email: pick(account?.email, user?.email),
+    // Fall back to the verified mobile rather than showing NA — it is a
+    // contact number we definitely hold.
+    contactNumber: pick(user?.contactNumber, account?.telephone, account?.mobileNumber, user?.phone, mobileNumber),
+    address: street,
+    addressLine1: pick(account?.addressLine1, user?.addressLine1, account?.address),
+    addressLine2: pick(account?.addressLine2, user?.addressLine2),
+    city: pick(account?.city, user?.city),
+    district: pick(account?.district, user?.district),
+    postalCode: pick(account?.postalCode, user?.postalCode),
+    preferredContact: pick(user?.preferredContact),
+
+    // SLT connection — only exists for customers who hold a product
+    accountNumber: pick(account?.accountNumber),
+    connectionType: pick(account?.serviceType, account?.package),
+    packageName: pick(account?.packageName, account?.package),
     registeredDate: account?.registeredDate
       ? new Date(account.registeredDate).toISOString().split('T')[0]
       : '',
   };
 }
+
+// Fields the customer may change themselves. Name, NIC, date of birth and the
+// OTP-verified mobile number are deliberately excluded: they're identity data,
+// and the mobile number is the sign-in credential.
+const EDITABLE_FIELDS = [
+  'email',
+  'contactNumber',
+  'addressLine1',
+  'addressLine2',
+  'city',
+  'district',
+  'postalCode',
+  'preferredContact',
+];
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
 function formatKey(key) {
@@ -89,7 +138,7 @@ function InfoField({ label, value }) {
           color: '#1e293b',
         }}
       >
-        {value || '—'}
+        {value || <span style={{ color: '#64748b', fontWeight: 600 }}>NA</span>}
       </div>
     </div>
   );
@@ -123,7 +172,7 @@ function EditableField({ label, name, value, onChange, type = 'text' }) {
           width: '100%',
           padding: '0.65rem 0.85rem',
           border: '1.5px solid #cbd5e1',
-          borderRadius: '10px',
+          borderRadius: '12px',
           fontSize: '0.95rem',
           color: '#1e293b',
           fontWeight: 600,
@@ -150,21 +199,40 @@ function EditableField({ label, name, value, onChange, type = 'text' }) {
 export default function MyProfilePage() {
   const navigate = useNavigate();
   const { mobileNumber, customerExists, selectedAccount, accountsList, switchAccount } = useVerifiedContext();
+  const [authUser, setAuthUser] = useState(getAuthUser);
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState(() => accountToProfile(selectedAccount, mobileNumber));
-  const [editDraft, setEditDraft] = useState(() => accountToProfile(selectedAccount, mobileNumber));
+  const [profile, setProfile] = useState(() => accountToProfile(selectedAccount, mobileNumber, getAuthUser()));
+  const [editDraft, setEditDraft] = useState(() => accountToProfile(selectedAccount, mobileNumber, getAuthUser()));
+  const [saveError, setSaveError] = useState('');
   const [applications, setApplications] = useState([]);
   const [loadingApplications, setLoadingApplications] = useState(true);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [selectedAppForView, setSelectedAppForView] = useState(null);
   const [selectedAppForComments, setSelectedAppForComments] = useState(null);
 
-  // Re-sync from the verified account whenever it changes
+  // Re-sync whenever the SLT account or the registered user changes
   useEffect(() => {
-    const mapped = accountToProfile(selectedAccount, mobileNumber);
+    const mapped = accountToProfile(selectedAccount, mobileNumber, authUser);
     setProfile(mapped);
     setEditDraft(mapped);
-  }, [selectedAccount, mobileNumber]);
+  }, [selectedAccount, mobileNumber, authUser]);
+
+  // Signed in by email and password but the stored user is missing (e.g. an
+  // older session): pull the registered details back from the API.
+  useEffect(() => {
+    if (authUser || !localStorage.getItem('accessToken')) return;
+    let alive = true;
+    api
+      .get('/auth/me')
+      .then((res) => {
+        if (alive && res.data?.user) {
+          localStorage.setItem('authUser', JSON.stringify(res.data.user));
+          setAuthUser(res.data.user);
+        }
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [authUser]);
 
   // Fetch real application history for the verified phone number
   useEffect(() => {
@@ -196,6 +264,30 @@ export default function MyProfilePage() {
   };
 
   const handleSave = () => {
+    setSaveError('');
+
+    if (editDraft.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editDraft.email)) {
+      setSaveError('Enter a valid email address.');
+      return;
+    }
+
+    // Persist the editable fields onto the stored account so they survive a
+    // reload. There is no profile-update endpoint on the backend yet, so this
+    // is local to the browser until one exists.
+    const updated = { ...(authUser || {}) };
+    EDITABLE_FIELDS.forEach((f) => {
+      if (f === 'email') updated.email = editDraft.email;
+      else updated[f] = editDraft[f];
+    });
+    try {
+      localStorage.setItem('authUser', JSON.stringify(updated));
+      setAuthUser(updated);
+      notifyAuthUpdated();
+    } catch (err) {
+      setSaveError('Could not save your changes in this browser.');
+      return;
+    }
+
     setProfile(editDraft);
     setIsEditing(false);
     // In a real app, you would POST this to the backend to update user profile
@@ -206,58 +298,16 @@ export default function MyProfilePage() {
     setIsEditing(false);
   };
 
-  if (!customerExists) {
-    return (
-      <div style={{ backgroundColor: '#f4f7f9', minHeight: '100vh', paddingBottom: '4rem' }}>
-        <div style={{ maxWidth: '640px', margin: '0 auto', padding: '4rem 1.5rem', textAlign: 'center' }}>
-          <div
-            style={{
-              width: '72px',
-              height: '72px',
-              borderRadius: '50%',
-              background: '#eff6ff',
-              color: '#0056b3',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.5rem',
-            }}
-          >
-            <FiUserPlus size={32} />
-          </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>
-            No SLT Account Found
-          </h1>
-          <p style={{ color: '#64748b', marginBottom: '2rem' }}>
-            We couldn't find an existing SLT connection registered to {mobileNumber ? `+94 ${mobileNumber}` : 'this number'}.
-            Get a new connection to start using SLTMobitel EasyApply.
-          </p>
-          <button
-            onClick={() => navigate('/new-connection/products')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              borderRadius: '10px',
-              border: 'none',
-              background: '#0056b3',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              cursor: 'pointer',
-            }}
-          >
-            Browse Products & Get Connected
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // A customer who has registered but has no SLT connection yet still has a
+  // profile worth showing — their sign-up details. The connection-specific
+  // fields simply read NA until they take out a product.
 
   // Soft UI / Claymorphism card style
   const cardStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
-    borderRadius: '24px',
+    borderRadius: '16px',
     padding: '2rem',
     boxShadow: '10px 10px 30px rgba(200, 208, 220, 0.5), -10px -10px 30px rgba(255, 255, 255, 0.9)',
     border: '1px solid rgba(255, 255, 255, 0.8)',
@@ -268,8 +318,8 @@ export default function MyProfilePage() {
   };
 
   return (
-    <div style={{ backgroundColor: '#eef2f6', minHeight: '100vh', paddingBottom: '4rem' }}>
-      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', paddingBottom: '4rem' }}>
+      <div style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '2.5rem var(--page-gutter)' }}>
 
         {/* ── Page Header ──────────────────────────────────────────────── */}
         <div style={{ marginBottom: '2.5rem' }}>
@@ -281,7 +331,7 @@ export default function MyProfilePage() {
               My Profile
             </h1>
           </div>
-          <p style={{ margin: 0, color: '#64748b', fontWeight: 600, fontSize: '0.95rem' }}>
+          <p style={{ margin: 0, color: '#475569', fontWeight: 600, fontSize: '0.95rem' }}>
             Manage your personal information and view your service applications.
           </p>
         </div>
@@ -292,8 +342,8 @@ export default function MyProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
           style={{
-            background: 'linear-gradient(135deg, #001f3f 0%, #003b73 45%, #004d38 85%, #01291e 100%)',
-            borderRadius: '24px',
+            background: 'var(--brand-gradient)',
+            borderRadius: '16px',
             padding: '2.5rem',
             color: '#fff',
             display: 'flex',
@@ -335,13 +385,21 @@ export default function MyProfilePage() {
               {profile.fullName || 'SLTMobitel Customer'}
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-              <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255,255,255,0.8)' }}>
-                Account: <strong style={{ color: '#fff' }}>{profile.accountNumber || '—'}</strong>
-              </p>
-              <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
-              <p style={{ margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.75)' }}>
-                {profile.connectionType || 'SLT Connection'}{profile.registeredDate ? ` • Member since ${profile.registeredDate}` : ''}
-              </p>
+              {customerExists ? (
+                <>
+                  <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255,255,255,0.85)' }}>
+                    Account: <strong style={{ color: '#fff' }}>{profile.accountNumber || 'NA'}</strong>
+                  </p>
+                  <span style={{ color: 'rgba(255,255,255,0.4)' }} aria-hidden="true">|</span>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)' }}>
+                    {profile.connectionType || 'SLT Connection'}{profile.registeredDate ? ` • Member since ${profile.registeredDate}` : ''}
+                  </p>
+                </>
+              ) : (
+                <p style={{ margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)' }}>
+                  Registered account • No SLT connection yet
+                </p>
+              )}
             </div>
           </div>
         </motion.div>
@@ -374,7 +432,7 @@ export default function MyProfilePage() {
                   color: '#0f172a',
                 }}
               >
-                <div style={{ background: 'linear-gradient(135deg, rgb(0, 31, 63) 0%, rgb(0, 59, 115) 45%, rgb(0, 77, 56) 85%, rgb(1, 41, 30) 100%)', padding: '0.4rem', borderRadius: '8px', color: '#fff' }}>
+                <div style={{ background: 'var(--brand-gradient)', width: '34px', height: '34px', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <FiUser size={18} />
                 </div>
                 Personal Details
@@ -389,7 +447,7 @@ export default function MyProfilePage() {
                     alignItems: 'center',
                     gap: '0.4rem',
                     padding: '0.5rem 1rem',
-                    borderRadius: '10px',
+                    borderRadius: '12px',
                     border: '1px solid rgba(0, 86, 179, 0.2)',
                     background: 'rgba(0, 86, 179, 0.05)',
                     color: '#0056b3',
@@ -410,9 +468,9 @@ export default function MyProfilePage() {
                       alignItems: 'center',
                       gap: '0.35rem',
                       padding: '0.5rem 1rem',
-                      borderRadius: '10px',
+                      borderRadius: '12px',
                       border: 'none',
-                      background: '#10b981',
+                      background: '#0f7a4d',
                       color: '#fff',
                       fontWeight: 700,
                       fontSize: '0.85rem',
@@ -428,7 +486,7 @@ export default function MyProfilePage() {
                       alignItems: 'center',
                       gap: '0.35rem',
                       padding: '0.5rem 1rem',
-                      borderRadius: '10px',
+                      borderRadius: '12px',
                       border: '1px solid #cbd5e1',
                       background: '#fff',
                       color: '#475569',
@@ -443,22 +501,52 @@ export default function MyProfilePage() {
               )}
             </div>
 
+            {saveError && (
+              <div role="alert" style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: '0.85rem', fontWeight: 600 }}>
+                {saveError}
+              </div>
+            )}
+
             {isEditing ? (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <EditableField label="Full Name" name="fullName" value={editDraft.fullName} onChange={handleEditChange} />
+                {/* Verified identity — shown for context, not editable here */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0.5rem 1.5rem' }}>
+                  <InfoField label="Full Name" value={profile.fullName} />
+                  <InfoField label="NIC / Passport" value={profile.nic} />
+                  <InfoField label="Date of Birth" value={profile.dob} />
+                  <InfoField label="Mobile Number" value={profile.phone} />
+                </div>
+                <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.78rem', color: '#5b6472', fontWeight: 600 }}>
+                  Your name, NIC, date of birth and verified mobile number can't be changed here —
+                  contact SLT support if any of these are wrong.
+                </p>
+
                 <EditableField label="Email" name="email" value={editDraft.email} onChange={handleEditChange} type="email" />
-                <EditableField label="Phone" name="phone" value={editDraft.phone} onChange={handleEditChange} type="tel" />
-                <EditableField label="NIC Number" name="nic" value={editDraft.nic} onChange={handleEditChange} />
-                <EditableField label="Address" name="address" value={editDraft.address} onChange={handleEditChange} />
+                <EditableField label="Contact Number" name="contactNumber" value={editDraft.contactNumber} onChange={handleEditChange} type="tel" />
+                <EditableField label="Address Line 1" name="addressLine1" value={editDraft.addressLine1} onChange={handleEditChange} />
+                <EditableField label="Address Line 2" name="addressLine2" value={editDraft.addressLine2} onChange={handleEditChange} />
+                <EditableField label="City" name="city" value={editDraft.city} onChange={handleEditChange} />
+                <EditableField label="District" name="district" value={editDraft.district} onChange={handleEditChange} />
+                <EditableField label="Postal Code" name="postalCode" value={editDraft.postalCode} onChange={handleEditChange} />
+                <EditableField label="Preferred Contact Method" name="preferredContact" value={editDraft.preferredContact} onChange={handleEditChange} />
               </motion.div>
             ) : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0.5rem 1.5rem' }}>
                   <InfoField label="Full Name" value={profile.fullName} />
+                  <InfoField label="NIC / Passport" value={profile.nic} />
+                  <InfoField label="Date of Birth" value={profile.dob} />
+                  <InfoField label="Gender" value={profile.gender} />
+                  <InfoField label="Nationality" value={profile.nationality} />
+                  <InfoField label="Mobile Number" value={profile.phone} />
                   <InfoField label="Email" value={profile.email} />
-                  <InfoField label="Phone" value={profile.phone} />
-                  <InfoField label="NIC Number" value={profile.nic} />
-                  <InfoField label="Address" value={profile.address} />
+                  <InfoField label="Contact Number" value={profile.contactNumber} />
+                  <InfoField label="Address Line 1" value={profile.addressLine1} />
+                  <InfoField label="Address Line 2" value={profile.addressLine2} />
+                  <InfoField label="City" value={profile.city} />
+                  <InfoField label="District" value={profile.district} />
+                  <InfoField label="Postal Code" value={profile.postalCode} />
+                  <InfoField label="Preferred Contact Method" value={profile.preferredContact} />
                 </div>
               </motion.div>
             )}
@@ -483,7 +571,7 @@ export default function MyProfilePage() {
                   color: '#0f172a',
                 }}
               >
-                <div style={{ background: 'linear-gradient(135deg, rgb(0, 31, 63) 0%, rgb(0, 59, 115) 45%, rgb(0, 77, 56) 85%, rgb(1, 41, 30) 100%)', padding: '0.4rem', borderRadius: '8px', color: '#fff' }}>
+                <div style={{ background: 'var(--brand-gradient)', width: '34px', height: '34px', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <FiCreditCard size={18} />
                 </div>
                 Account Details
@@ -499,7 +587,7 @@ export default function MyProfilePage() {
                       alignItems: 'center',
                       gap: '0.4rem',
                       padding: '0.5rem 0.85rem',
-                      borderRadius: '10px',
+                      borderRadius: '12px',
                       border: '1px solid rgba(0, 86, 179, 0.3)',
                       background: 'rgba(0, 86, 179, 0.05)',
                       color: '#0056b3',
@@ -571,6 +659,24 @@ export default function MyProfilePage() {
               )}
             </div>
 
+            {!customerExists && (
+              <div
+                style={{
+                  marginBottom: '1.25rem',
+                  padding: '0.85rem 1rem',
+                  borderRadius: '12px',
+                  background: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  color: '#1e40af',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                }}
+              >
+                You don't have an SLT connection on this number yet, so these details are not
+                available. Browse the packages below to apply for one.
+              </div>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0.5rem 1.5rem', marginBottom: '1.5rem' }}>
               <InfoField label="Account Number" value={profile.accountNumber} />
               <InfoField label="Connection Type" value={profile.connectionType} />
@@ -581,7 +687,7 @@ export default function MyProfilePage() {
             {/* Quick Action Buttons */}
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: 'auto' }}>
               <button
-                onClick={() => navigate('/new-connection/products')}
+                onClick={() => navigate('/')}
                 style={{
                   flex: 1,
                   display: 'flex',
@@ -602,28 +708,30 @@ export default function MyProfilePage() {
               >
                 <FiBox size={16} /> View Packages
               </button>
-              <button
-                onClick={() => navigate('/package-migration')}
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.4rem',
-                  padding: '0.85rem 1rem',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #0056b3, #003b73)',
-                  color: '#fff',
-                  fontWeight: 800,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  boxShadow: '0 4px 12px rgba(0, 86, 179, 0.25)',
-                }}
-              >
-                <FiZap size={16} /> Upgrade Package
-              </button>
+              {customerExists && (
+                <button
+                  onClick={() => navigate('/package-migration')}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
+                    padding: '0.85rem 1rem',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: 'var(--brand-gradient-soft)',
+                    color: '#fff',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    boxShadow: '0 4px 12px rgba(0, 86, 179, 0.25)',
+                  }}
+                >
+                  <FiZap size={16} /> Upgrade Package
+                </button>
+              )}
             </div>
           </motion.div>
         </div>
@@ -656,7 +764,7 @@ export default function MyProfilePage() {
                 color: '#0f172a',
               }}
             >
-              <div style={{ background: 'linear-gradient(135deg, #059669, #10b981)', padding: '0.4rem', borderRadius: '8px', color: '#fff' }}>
+              <div style={{ background: 'var(--brand-gradient)', width: '34px', height: '34px', borderRadius: '8px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <FiFileText size={18} />
               </div>
               Application History
@@ -668,7 +776,7 @@ export default function MyProfilePage() {
                 alignItems: 'center',
                 gap: '0.4rem',
                 padding: '0.5rem 1rem',
-                borderRadius: '10px',
+                borderRadius: '12px',
                 border: '1px solid rgba(0, 0, 0, 0.05)',
                 background: '#ffffff',
                 color: '#0f172a',
@@ -902,7 +1010,7 @@ export default function MyProfilePage() {
                     boxSizing: 'border-box',
                     boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                     border: '1px solid #cbd5e1',
-                    borderRadius: '4px',
+                    borderRadius: '8px',
                     overflow: 'hidden',
                   }}
                 >
@@ -990,7 +1098,7 @@ export default function MyProfilePage() {
                 width: '100%',
                 maxWidth: '450px',
                 backgroundColor: '#ffffff',
-                borderRadius: '20px',
+                borderRadius: '16px',
                 padding: '2rem',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
                 border: '1px solid #e2e8f0',
@@ -1019,7 +1127,7 @@ export default function MyProfilePage() {
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                <div style={{ background: 'linear-gradient(135deg, rgb(0, 31, 63) 0%, rgb(0, 59, 115) 45%, rgb(0, 77, 56) 85%, rgb(1, 41, 30) 100%)', padding: '0.6rem', borderRadius: '12px', color: '#fff' }}>
+                <div style={{ background: 'var(--brand-gradient)', padding: '0.6rem', borderRadius: '12px', color: '#fff' }}>
                   <FiMessageSquare size={22} />
                 </div>
                 <div>

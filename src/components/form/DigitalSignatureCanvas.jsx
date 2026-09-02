@@ -160,7 +160,7 @@ export default function DigitalSignatureCanvas({
             touchAction: 'none',
             cursor: 'crosshair',
             backgroundColor: '#ffffff',
-            borderRadius: '4px',
+            borderRadius: '8px',
           }}
         />
 

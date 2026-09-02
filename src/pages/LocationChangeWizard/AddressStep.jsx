@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { FiMapPin, FiHome, FiUploadCloud, FiCheckCircle, FiNavigation, FiFileText, FiCheck, FiX } from "react-icons/fi";
+import { FiMapPin, FiHome, FiUploadCloud, FiCheckCircle, FiNavigation, FiFileText, FiCheck, FiX, FiAlertCircle } from "react-icons/fi";
 import AddressInputWithMap from "../../components/form/AddressInputWithMap";
 
 // Fix default Leaflet marker icon paths in React environments
@@ -571,7 +571,7 @@ export default function AddressStep({
               </select>
               {shouldShowError("district", isDistrictValid) && (
                 <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
-                  ⚠️ District is required.
+                  <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />District is required.
                 </span>
               )}
             </div>
@@ -627,7 +627,7 @@ export default function AddressStep({
               )}
               {shouldShowError("city", isCityValid) && (
                 <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
-                  ⚠️ City / Town is required.
+                  <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />City / Town is required.
                 </span>
               )}
             </div>
@@ -659,7 +659,7 @@ export default function AddressStep({
             />
             {shouldShowError("postalCode", isPostalCodeValid) && (
               <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
-                ⚠️ {!relocationAddress.postalCode ? "Postal Code is required." : "Postal Code must be exactly 5 numeric digits."}
+                <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />{!relocationAddress.postalCode ? "Postal Code is required." : "Postal Code must be exactly 5 numeric digits."}
               </span>
             )}
           </div>
@@ -689,7 +689,7 @@ export default function AddressStep({
             />
             {shouldShowError("address1", isAddress1Valid) && (
               <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
-                ⚠️ Address Line 1 is required.
+                <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />Address Line 1 is required.
               </span>
             )}
           </div>
@@ -750,7 +750,7 @@ export default function AddressStep({
             style={{
               padding: "0.75rem 1.75rem",
               borderRadius: "10px",
-              background: "linear-gradient(135deg, #0056b3 0%, #003b73 100%)",
+              background: "var(--brand-gradient-soft)",
               color: "#ffffff",
               border: "none",
               cursor: "pointer",
@@ -771,14 +771,14 @@ export default function AddressStep({
               <FiCheckCircle size={18} style={{ color: "#16a34a" }} />
               <div>
                 <strong>Selected Coordinates:</strong> {selectedPlaceName ? `${selectedPlaceName} — ` : ""}
-                ({coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}) ✓
+                ({coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}) <FiCheck size={12} aria-hidden="true" style={{ verticalAlign: "-1px" }} />
               </div>
             </div>
           )}
 
           {shouldShowError("map", isMapPinned) && (
             <span style={{ display: "block", marginTop: "0.75rem", fontSize: "0.8rem", color: "#dc2626", fontWeight: 700 }}>
-              ⚠️ Please pick a location on the map to set the exact installation point.
+              <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />Please pick a location on the map to set the exact installation point.
             </span>
           )}
         </div>
@@ -918,7 +918,7 @@ export default function AddressStep({
                           color: "#1e293b",
                         }}
                       >
-                        📍 {item.display_name}
+                        <FiMapPin size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.3rem" }} />{item.display_name}
                       </li>
                     ))}
                   </ul>
@@ -1012,7 +1012,7 @@ export default function AddressStep({
             />
             {shouldShowError("landmark", isLandmarkValid) && (
               <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
-                ⚠️ Nearest Landmark is required.
+                <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />Nearest Landmark is required.
               </span>
             )}
           </div>
@@ -1049,9 +1049,9 @@ export default function AddressStep({
                 {proofFile ? (
                   <div style={{ textAlign: "center" }}>
                     <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#15803d", display: "block" }}>
-                      📄 {proofFile.name}
+                      <FiFileText size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.3rem" }} />{proofFile.name}
                     </span>
-                    <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>File Uploaded ✓</span>
+                    <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>File Uploaded <FiCheck size={12} aria-hidden="true" style={{ verticalAlign: "-1px" }} /></span>
                   </div>
                 ) : (
                   <div style={{ textAlign: "center" }}>
@@ -1063,10 +1063,10 @@ export default function AddressStep({
                 )}
               </label>
 
-              {proofError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}>⚠️ {proofError}</div>}
+              {proofError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}><FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />{proofError}</div>}
               {showValidationErrors && !proofFile && !proofError && (
                 <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}>
-                  ⚠️ Proof of new address document is required.
+                  <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />Proof of new address document is required.
                 </div>
               )}
             </div>
@@ -1101,9 +1101,9 @@ export default function AddressStep({
                 {sketchFile ? (
                   <div style={{ textAlign: "center" }}>
                     <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#15803d", display: "block" }}>
-                      📄 {sketchFile.name}
+                      <FiFileText size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.3rem" }} />{sketchFile.name}
                     </span>
-                    <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>File Uploaded ✓</span>
+                    <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>File Uploaded <FiCheck size={12} aria-hidden="true" style={{ verticalAlign: "-1px" }} /></span>
                   </div>
                 ) : (
                   <div style={{ textAlign: "center" }}>
@@ -1114,7 +1114,7 @@ export default function AddressStep({
                   </div>
                 )}
               </label>
-              {sketchError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}>⚠️ {sketchError}</div>}
+              {sketchError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}><FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />{sketchError}</div>}
             </div>
 
             {/* Authorization Letter Upload Dropzone */}
@@ -1147,9 +1147,9 @@ export default function AddressStep({
                 {authorizationLetterFile ? (
                   <div style={{ textAlign: "center" }}>
                     <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#15803d", display: "block" }}>
-                      📄 {authorizationLetterFile.name}
+                      <FiFileText size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.3rem" }} />{authorizationLetterFile.name}
                     </span>
-                    <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>File Uploaded ✓</span>
+                    <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>File Uploaded <FiCheck size={12} aria-hidden="true" style={{ verticalAlign: "-1px" }} /></span>
                   </div>
                 ) : (
                   <div style={{ textAlign: "center" }}>
@@ -1160,7 +1160,7 @@ export default function AddressStep({
                   </div>
                 )}
               </label>
-              {authorizationLetterError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}>⚠️ {authorizationLetterError}</div>}
+              {authorizationLetterError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}><FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />{authorizationLetterError}</div>}
             </div>
           </div>
         </div>

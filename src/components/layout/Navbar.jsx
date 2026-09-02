@@ -56,7 +56,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logoutVerifiedSession();
-    navigate('/');
+    navigate('/login', { replace: true });
   };
 
   const isActivePath = (path) =>
@@ -258,7 +258,7 @@ export default function Navbar() {
                   gap: '0.35rem',
                   backgroundColor: servicesOpen ? '#eff6ff' : '#f8fafc',
                   border: `1px solid ${servicesOpen ? '#bfdbfe' : '#e2e8f0'}`,
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   padding: '0.4rem 0.65rem',
                   fontSize: '0.82rem',
                   fontWeight: 700,
@@ -352,7 +352,7 @@ export default function Navbar() {
                 gap: '0.35rem',
                 backgroundColor: '#f8fafc',
                 padding: '0.35rem 0.65rem',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 border: '1px solid #e2e8f0',
               }}
             >
@@ -433,7 +433,8 @@ export default function Navbar() {
             ) : (
               <button
                 type="button"
-                onClick={() => navigate('/verify-phone', { state: { redirectTo: '/profile' } })}
+                className="navbar-login-btn"
+                onClick={() => navigate('/login')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -517,7 +518,7 @@ export default function Navbar() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => navigate('/verify-phone', { state: { redirectTo: '/profile' } })}
+                  onClick={() => navigate('/login')}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#0056b3', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
                 >
                   <FiUser size={16} />

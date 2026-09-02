@@ -32,7 +32,7 @@ export default function LoopCheckStep({ formData, onAvailable, onUnavailable, su
       <div
         style={{
           backgroundColor: '#ffffff',
-          borderRadius: '20px',
+          borderRadius: '16px',
           padding: '2.75rem 2rem',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.03)',
           border: '1px solid #e2e8f0',

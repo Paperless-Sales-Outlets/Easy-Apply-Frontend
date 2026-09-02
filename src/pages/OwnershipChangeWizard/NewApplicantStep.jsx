@@ -1,8 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { FiCheckCircle, FiShield, FiX, FiRefreshCw } from 'react-icons/fi';
+import { FiCheckCircle, FiShield, FiX, FiRefreshCw, FiAlertCircle } from 'react-icons/fi';
 import api from '../../utils/api';
 
 const RESEND_SECONDS = 30;
@@ -20,11 +19,48 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
   const inputRefs = useRef([]);
 
+  const modalRef = useRef(null);
+  const verifyBtnRef = useRef(null);
+
   useEffect(() => {
     if (!modalOpen) return;
     setResendIn(RESEND_SECONDS);
     const id = setTimeout(() => inputRefs.current[0]?.focus(), 50);
-    return () => clearTimeout(id);
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setModalOpen(false);
+        return;
+      }
+      if (e.key !== 'Tab' || !modalRef.current) return;
+      const focusable = modalRef.current.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), [href], select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener('keydown', onKeyDown, true);
+    };
+  }, [modalOpen]);
+
+  // Return focus to the Verify button when the dialog closes.
+  const wasModalOpen = useRef(false);
+  useEffect(() => {
+    if (wasModalOpen.current && !modalOpen) verifyBtnRef.current?.focus();
+    wasModalOpen.current = modalOpen;
   }, [modalOpen]);
 
   useEffect(() => {
@@ -108,6 +144,12 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
   const handleKeyDown = (index, e) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      e.preventDefault();
+      inputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      e.preventDefault();
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
@@ -157,7 +199,7 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                   borderRadius: '12px 0 0 12px',
                   padding: '0.85rem 0.75rem',
                   fontWeight: 800,
-                  color: verified ? '#94a3b8' : '#0f172a',
+                  color: verified ? '#475569' : '#0f172a',
                   fontSize: '0.95rem',
                   display: 'flex',
                   alignItems: 'center',
@@ -208,6 +250,7 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
             ) : (
               <button
                 type="button"
+                ref={verifyBtnRef}
                 onClick={sendOtp}
                 disabled={sending || contactNo.length !== 9}
                 className="btn btn-primary"
@@ -220,7 +263,7 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
           {/* Hidden field so the parent form's FormData scrape captures verification status */}
           <input type="hidden" name="contactNoVerified" value={verified ? 'true' : 'false'} />
           {!verified && (
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.35rem', display: 'block' }}>
+            <span style={{ fontSize: '0.78rem', color: '#5b6472', marginTop: '0.35rem', display: 'block' }}>
               We'll text a 6-digit code to confirm this number belongs to the new applicant.
             </span>
           )}
@@ -240,43 +283,20 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
         <textarea id="na-remarks" name="newRemarks" className="form-control" rows="3"></textarea>
       </div>
 
-      {/* OTP Verification Modal — blurs everything behind it */}
-      <AnimatePresence>
-        {modalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 1000,
-              backgroundColor: 'rgba(15, 23, 42, 0.45)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '1rem',
-            }}
-            onClick={() => setModalOpen(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2 }}
+      {/* OTP Verification Modal — blurs everything behind it.
+          Rendered conditionally rather than through AnimatePresence, whose
+          exit animation left the closed dialog mounted: an invisible overlay
+          kept intercepting clicks and screen readers still saw the dialog. */}
+      {modalOpen && (
+        <div className="otp-overlay" onClick={() => setModalOpen(false)}>
+            <div
+              className="otp-dialog"
+              ref={modalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="na-otp-title"
+              aria-describedby="na-otp-desc"
               onClick={(e) => e.stopPropagation()}
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '20px',
-                padding: '2.25rem 2rem',
-                width: '100%',
-                maxWidth: '380px',
-                boxShadow: '0 24px 60px rgba(0, 0, 0, 0.25)',
-                textAlign: 'center',
-                position: 'relative',
-              }}
             >
               <button
                 type="button"
@@ -287,11 +307,16 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                   right: '1rem',
                   background: 'none',
                   border: 'none',
-                  color: '#94a3b8',
+                  color: '#64748b',
                   cursor: 'pointer',
                   display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
                 }}
-                aria-label="Close"
+                aria-label="Close verification dialog"
               >
                 <FiX size={20} />
               </button>
@@ -312,44 +337,37 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                 <FiShield size={26} />
               </div>
 
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.3rem 0' }}>
+              <h3 id="na-otp-title" style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.3rem 0' }}>
                 Verify New Applicant's Number
               </h3>
-              <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1.5rem', fontWeight: 500 }}>
+              <p id="na-otp-desc" style={{ fontSize: '0.85rem', color: '#5b6472', marginBottom: '1.5rem', fontWeight: 500 }}>
                 Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {contactNo}</strong>
               </p>
 
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div role="group" aria-labelledby="na-otp-desc" className="otp-boxes" style={{ justifyContent: 'center', marginBottom: '1rem' }}>
                 {otp.map((digit, index) => (
                   <input
                     key={index}
                     ref={(el) => { inputRefs.current[index] = el; }}
                     type="text"
                     inputMode="numeric"
+                    autoComplete={index === 0 ? 'one-time-code' : 'off'}
                     maxLength={1}
                     value={digit}
                     disabled={verifying}
+                    aria-label={`Verification code digit ${index + 1} of 6`}
+                    aria-invalid={!!otpError}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    style={{
-                      width: '44px',
-                      height: '52px',
-                      borderRadius: '12px',
-                      border: digit ? '2px solid #10b981' : otpError ? '2px solid #dc2626' : '1.5px solid #cbd5e1',
-                      backgroundColor: digit ? '#f0fdf4' : '#ffffff',
-                      fontSize: '1.3rem',
-                      fontWeight: 900,
-                      color: '#0f172a',
-                      textAlign: 'center',
-                      outline: 'none',
-                    }}
+                    className={`otp-box ${digit ? 'is-filled' : ''} ${otpError ? 'is-error' : ''}`}
+                    style={{ flex: '0 0 44px', width: '44px' }}
                   />
                 ))}
               </div>
 
               {otpError && (
                 <p style={{ color: '#dc2626', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>
-                  ⚠️ {otpError}
+                  <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />{otpError}
                 </p>
               )}
 
@@ -370,24 +388,15 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                   </button>
                 )}
 
-                <div
-                  style={{
-                    backgroundColor: '#eff6ff',
-                    color: '#1e40af',
-                    padding: '0.35rem 0.8rem',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
-                    border: '1px solid #bfdbfe',
-                  }}
-                >
-                  💡 Demo Code: <strong>000000</strong>
-                </div>
+                {import.meta.env.DEV && (
+                  <p className="auth-dev-hint" style={{ margin: 0 }}>
+                    Development only — demo code <strong>000000</strong> is accepted.
+                  </p>
+                )}
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+        </div>
+      )}
     </div>
   );
 });

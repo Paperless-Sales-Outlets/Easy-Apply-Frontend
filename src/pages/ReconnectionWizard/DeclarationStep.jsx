@@ -234,8 +234,8 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
             I have already paid
           </button>
           {/* Hidden inputs to preserve form submission */}
-          <input type="radio" name="paymentIntention" value="online" checked={paymentIntention === 'online'} readOnly style={{ display: 'none' }} />
-          <input type="radio" name="paymentIntention" value="paid" checked={paymentIntention === 'paid'} readOnly style={{ display: 'none' }} />
+          <input type="radio" name="paymentIntention" value="online" checked={paymentIntention === 'online'} readOnly tabIndex={-1} aria-hidden="true" style={{ display: 'none' }} />
+          <input type="radio" name="paymentIntention" value="paid" checked={paymentIntention === 'paid'} readOnly tabIndex={-1} aria-hidden="true" style={{ display: 'none' }} />
         </div>
 
         {paymentIntention === 'paid' && (
@@ -277,7 +277,7 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
               }}
               style={{
                 position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                border: '2px solid', borderRadius: '6px',
+                border: '2px solid', borderRadius: '8px',
                 display: 'grid', placeItems: 'center', pointerEvents: 'none'
               }}
             >

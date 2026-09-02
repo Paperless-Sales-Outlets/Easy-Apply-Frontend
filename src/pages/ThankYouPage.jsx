@@ -83,7 +83,7 @@ export default function ThankYouPage() {
               background: '#dcfce7',
               color: '#15803d',
               padding: '0.25rem 0.75rem',
-              borderRadius: '20px',
+              borderRadius: '16px',
               fontSize: '0.82rem',
               fontWeight: 600,
               display: 'inline-flex',

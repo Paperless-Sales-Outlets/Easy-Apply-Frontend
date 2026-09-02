@@ -21,23 +21,18 @@ import {
 } from 'react-icons/fi';
 import { FaHeart } from 'react-icons/fa';
 
-const HERO_GRADIENTS = {
-  '500 Mbps Fibre Broadband': 'linear-gradient(135deg, #1d074d 0%, #120435 100%)',
-  '300 Mbps Fibre Broadband': 'linear-gradient(135deg, #003e92 0%, #002256 100%)',
-  '1 Gbps Fibre Broadband': 'linear-gradient(135deg, #013e28 0%, #002316 100%)',
-  'LTE Home 150 GB': 'linear-gradient(135deg, #371866 0%, #1e0b3c 100%)',
-  'LTE Home 300 GB': 'linear-gradient(135deg, #5c0717 0%, #34020b 100%)',
-  'Fibre Voice Home': 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-  'Voice Unlimited': 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-  'Megaline Voice Basic': 'linear-gradient(135deg, #0284c7 0%, #075985 100%)',
-  'Voice Business Prime': 'linear-gradient(135deg, #4338ca 0%, #3730a3 100%)',
-  'PEO TV Gold Pack': 'linear-gradient(135deg, #b45309 0%, #78350f 100%)',
-  'PEO TV Starter Pack': 'linear-gradient(135deg, #c026d3 0%, #86198f 100%)',
-  'PEO TV Entertainment': 'linear-gradient(135deg, #d97706 0%, #92400e 100%)',
-  'PEO TV Titanium': 'linear-gradient(135deg, #be123c 0%, #881337 100%)',
+// Matches ProductCard: four depths of the SLT identity by product family,
+// so a product looks the same in the grid and on its detail panel.
+const CATEGORY_HERO_GRADIENTS = {
+  Broadband: 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)',
+  Fibre: 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)',
+  LTE: 'linear-gradient(135deg, #0b4a91 0%, #00305e 100%)',
+  Voice: 'linear-gradient(135deg, #00566b 0%, #012f3d 100%)',
+  'PEO TV': 'linear-gradient(135deg, #004d38 0%, #01291e 100%)',
+  PEOTV: 'linear-gradient(135deg, #004d38 0%, #01291e 100%)',
 };
 
-const DEFAULT_HERO_GRADIENT = 'linear-gradient(135deg, #0056b3 0%, #002b66 100%)';
+const DEFAULT_HERO_GRADIENT = 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)';
 
 export default function ProductDetailsPanel({
   product,
@@ -76,7 +71,7 @@ export default function ProductDetailsPanel({
 
   const productId = _id || id;
   const catLower = (category || name || '').toLowerCase();
-  const heroGradient = HERO_GRADIENTS[name] || DEFAULT_HERO_GRADIENT;
+  const heroGradient = CATEGORY_HERO_GRADIENTS[category] || DEFAULT_HERO_GRADIENT;
 
   const handleDecrease = () => {
     if (quantity > 1) setQuantity(quantity - 1);
@@ -111,7 +106,7 @@ export default function ProductDetailsPanel({
         transition={{ duration: 0.25, ease: 'easeOut' }}
         style={{
           backgroundColor: '#ffffff',
-          borderRadius: '24px',
+          borderRadius: '16px',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
           border: '1px solid #e2e8f0',
           padding: '2rem',
@@ -132,7 +127,7 @@ export default function ProductDetailsPanel({
           <div
             style={{
               background: heroGradient,
-              borderRadius: '20px',
+              borderRadius: '16px',
               padding: '1.5rem',
               color: '#ffffff',
               display: 'flex',
@@ -301,8 +296,8 @@ export default function ProductDetailsPanel({
                     ]
                 ).map((feat, idx) => (
                   <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.88rem', color: '#1e293b', fontWeight: 700 }}>
-                    <div style={{ backgroundColor: '#dcfce7', color: '#15803d', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>
-                      ✓
+                    <div style={{ backgroundColor: '#dcfce7', color: '#0f7a4d', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <FiCheck size={12} aria-hidden="true" />
                     </div>
                     <span>{feat}</span>
                   </div>
@@ -322,7 +317,7 @@ export default function ProductDetailsPanel({
                   padding: '0.85rem 1.25rem',
                   borderRadius: '12px',
                   border: 'none',
-                  background: 'linear-gradient(135deg, #0056b3 0%, #003b73 100%)',
+                  background: 'var(--brand-gradient-soft)',
                   color: '#ffffff',
                   fontSize: '0.92rem',
                   fontWeight: 800,
@@ -394,7 +389,7 @@ export default function ProductDetailsPanel({
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.85rem' }}>
-                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
                   <FiTv style={{ color: '#0056b3', fontSize: '1.3rem' }} />
                   <div>
                     <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Service Type</div>
@@ -402,7 +397,7 @@ export default function ProductDetailsPanel({
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
                   <FiWifi style={{ color: '#0056b3', fontSize: '1.3rem' }} />
                   <div>
                     <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Quality</div>
@@ -410,7 +405,7 @@ export default function ProductDetailsPanel({
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
                   <FiSmartphone style={{ color: '#0056b3', fontSize: '1.3rem' }} />
                   <div>
                     <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Activation</div>
@@ -418,7 +413,7 @@ export default function ProductDetailsPanel({
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
                   <FiFileText style={{ color: '#0056b3', fontSize: '1.3rem' }} />
                   <div>
                     <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Contract</div>
@@ -439,9 +434,9 @@ export default function ProductDetailsPanel({
 
           {activeTab === "What's Included" && (
             <div style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.7, fontWeight: 500 }}>
-              <p style={{ margin: '0 0 0.4rem 0' }}>✓ Official SLTMobitel line registration & digital provisioning.</p>
-              <p style={{ margin: '0 0 0.4rem 0' }}>✓ Standard wiring & installation cable connection.</p>
-              <p style={{ margin: 0 }}>✓ 24/7 dedicated SLTMobitel customer helpline access.</p>
+              <p style={{ margin: '0 0 0.4rem 0' }}><FiCheck size={13} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: '0.3rem' }} />Official SLTMobitel line registration &amp; digital provisioning.</p>
+              <p style={{ margin: '0 0 0.4rem 0' }}><FiCheck size={13} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: '0.3rem' }} />Standard wiring &amp; installation cable connection.</p>
+              <p style={{ margin: 0 }}><FiCheck size={13} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: '0.3rem' }} />24/7 dedicated SLTMobitel customer helpline access.</p>
             </div>
           )}
 

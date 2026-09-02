@@ -94,7 +94,7 @@ export default function PreferencesStep({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
-          <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FiCalendar size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
@@ -116,7 +116,7 @@ export default function PreferencesStep({
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
-                borderRadius: '10px',
+                borderRadius: '12px',
                 border: showValidationErrors && !relocationDate ? '1.5px solid #dc2626' : '1px solid #cbd5e1',
                 backgroundColor: showValidationErrors && !relocationDate ? '#fef2f2' : '#ffffff',
                 fontSize: '0.9rem',
@@ -144,7 +144,7 @@ export default function PreferencesStep({
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
-                borderRadius: '10px',
+                borderRadius: '12px',
                 border: showValidationErrors && !disconnectDate ? '1.5px solid #dc2626' : '1px solid #cbd5e1',
                 backgroundColor: showValidationErrors && !disconnectDate ? '#fef2f2' : '#ffffff',
                 fontSize: '0.9rem',
@@ -176,7 +176,7 @@ export default function PreferencesStep({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
-          <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FiSliders size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
@@ -191,7 +191,7 @@ export default function PreferencesStep({
             style={{
               backgroundColor: disconnectAction === 'all' ? '#eff6ff' : '#ffffff',
               border: disconnectAction === 'all' ? '2px solid #0056b3' : '1.5px solid #cbd5e1',
-              borderRadius: '14px',
+              borderRadius: '16px',
               padding: '1.15rem 1.25rem',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
@@ -224,7 +224,7 @@ export default function PreferencesStep({
             style={{
               backgroundColor: disconnectAction === 'keep' ? '#eff6ff' : '#ffffff',
               border: disconnectAction === 'keep' ? '2px solid #0056b3' : '1.5px solid #cbd5e1',
-              borderRadius: '14px',
+              borderRadius: '16px',
               padding: '1.15rem 1.25rem',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
@@ -279,7 +279,7 @@ export default function PreferencesStep({
                   padding: '0.65rem 0.85rem',
                   backgroundColor: keptServices[key] ? '#dcfce7' : '#ffffff',
                   border: keptServices[key] ? '1.5px solid #16a34a' : '1px solid #cbd5e1',
-                  borderRadius: '10px',
+                  borderRadius: '12px',
                   cursor: 'pointer',
                   fontSize: '0.85rem',
                   fontWeight: 700,
@@ -314,7 +314,7 @@ export default function PreferencesStep({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
-          <div style={{ backgroundColor: '#fef3c7', color: '#d97706', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: '#fef3c7', color: '#d97706', width: '34px', height: '34px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FiPhoneCall size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
@@ -360,7 +360,7 @@ export default function PreferencesStep({
         </div>
 
         {callForwarding === 'yes' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '10px', border: '1px solid #cbd5e1' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #cbd5e1' }}>
             <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#334155' }}>
               Forwarding Duration Required:
             </span>
@@ -404,7 +404,7 @@ export default function PreferencesStep({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
-            <div style={{ backgroundColor: '#f0fdf4', color: '#16a34a', width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ backgroundColor: '#f0fdf4', color: '#16a34a', width: '34px', height: '34px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <FiUserCheck size={18} />
             </div>
             <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>

@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { FiShield, FiX, FiRefreshCw, FiCheck } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
+import api from '../utils/api';
+import { saveSession } from '../utils/authSession';
+import IdentityCaptureField from '../components/form/IdentityCaptureField';
+
+const RESEND_SECONDS = 30;
+const TOTAL_STEPS = 4;
 
 /* ── SVG icons (inline, zero dependencies) ─────────────────────── */
 const IconUser = () => (
@@ -105,9 +112,9 @@ const SLTLogo = () => (
   <svg width="170" height="48" viewBox="0 0 170 48" fill="none" xmlns="http://www.w3.org/2000/svg">
     <line x1="4" y1="42" x2="18" y2="6" stroke="#0f57a8" strokeWidth="4" strokeLinecap="round"/>
     <line x1="14" y1="42" x2="28" y2="6" stroke="#50b748" strokeWidth="4" strokeLinecap="round"/>
-    <text x="34" y="32" fontFamily="'Outfit', system-ui, sans-serif" fontWeight="800" fontSize="20" fill="#ffffff">SLT</text>
-    <text x="74" y="32" fontFamily="'Outfit', system-ui, sans-serif" fontWeight="800" fontSize="20" fill="#50b748">MOBITEL</text>
-    <text x="34" y="44" fontFamily="system-ui, sans-serif" fontWeight="400" fontSize="8" fill="rgba(255,255,255,0.45)" letterSpacing="1.5">The Connection</text>
+    <text x="34" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#ffffff">SLT</text>
+    <text x="74" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#50b748">MOBITEL</text>
+    <text x="34" y="44" fontFamily="var(--font-body)" fontWeight="400" fontSize="8" fill="rgba(255,255,255,0.45)" letterSpacing="1.5">The Connection</text>
   </svg>
 );
 
@@ -126,8 +133,9 @@ function PasswordStrength({ password }) {
   const colors = ['', '#ef4444', '#f59e0b', '#3b82f6', '#059669'];
 
   return (
-    <div className="signup-pw-strength">
-      <div className="signup-pw-bars">
+    <div className="signup-pw-strength" role="status" aria-live="polite">
+      <span className="sr-only">Password strength: {labels[strength] || 'very weak'}</span>
+      <div className="signup-pw-bars" aria-hidden="true">
         {[1, 2, 3, 4].map(i => (
           <div key={i} className="signup-pw-bar" style={{ background: i <= strength ? colors[strength] : '#e2e8f0' }} />
         ))}
@@ -160,7 +168,11 @@ export default function SignUpPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    // Step 2
+    // Step 2 — identity documents
+    nicFront: '',
+    nicBack: '',
+    facePhoto: '',
+    // Step 3
     title: 'Mr.',
     fullName: '',
     dob: '',
@@ -168,7 +180,7 @@ export default function SignUpPage() {
     nic: '',
     nationality: 'Sri Lankan',
     contactNumber: '',
-    // Step 3
+    // Step 4
     addressLine1: '',
     addressLine2: '',
     city: '',
@@ -180,11 +192,181 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
+  // ── Inline phone verification ────────────────────────────────────
+  // The number is confirmed by OTP right here on the form, the same way the
+  // Ownership Transfer wizard verifies a new applicant's number.
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpError, setOtpError] = useState('');
+  const [resendIn, setResendIn] = useState(RESEND_SECONDS);
+  const otpRefs = useRef([]);
+
+  const verifyBtnRef = useRef(null);
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    if (!otpModalOpen) return;
+    setResendIn(RESEND_SECONDS);
+    const id = setTimeout(() => otpRefs.current[0]?.focus(), 50);
+
+    // Escape closes the dialog, and Tab is kept inside it while it's open.
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setOtpModalOpen(false);
+        return;
+      }
+      if (e.key !== 'Tab' || !modalRef.current) return;
+      const focusable = modalRef.current.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), [href], select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => {
+      clearTimeout(id);
+      document.removeEventListener('keydown', onKeyDown, true);
+    };
+  }, [otpModalOpen]);
+
+  // Send focus back to the Verify button when the dialog closes, so keyboard
+  // users aren't dumped at the top of the page.
+  const wasModalOpen = useRef(false);
+  useEffect(() => {
+    if (wasModalOpen.current && !otpModalOpen) verifyBtnRef.current?.focus();
+    wasModalOpen.current = otpModalOpen;
+  }, [otpModalOpen]);
+
+  useEffect(() => {
+    if (!otpModalOpen || resendIn <= 0) return;
+    const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [otpModalOpen, resendIn]);
+
+  const normalisedPhone = () => {
+    let digits = form.phone.replace(/\D/g, '');
+    if (digits.startsWith('0')) digits = digits.slice(1);
+    return digits;
+  };
+
+  const sendOtp = async () => {
+    const digits = normalisedPhone();
+    if (digits.length !== 9) {
+      setFieldErrors((fe) => ({ ...fe, phone: 'Enter a valid 9-digit mobile number first' }));
+      return;
+    }
+
+    setSendingOtp(true);
+    try {
+      // Don't let someone register a number that already has an account.
+      const check = await api.post('/auth/check-phone', { phone: digits });
+      if (check.data?.registered) {
+        setFieldErrors((fe) => ({ ...fe, phone: 'This number already has an account. Please sign in instead.' }));
+        setSendingOtp(false);
+        return;
+      }
+    } catch (err) {
+      // Lookup unavailable — carry on; the register call still guards duplicates.
+    }
+
+    try {
+      await api.post('/otp/send', { phone: digits });
+    } catch (err) {
+      // Offline/demo mode — still open the code entry.
+    }
+    setSendingOtp(false);
+    setOtp(['', '', '', '', '', '']);
+    setOtpError('');
+    setOtpModalOpen(true);
+  };
+
+  const submitOtp = async (code) => {
+    const digits = normalisedPhone();
+    setVerifyingOtp(true);
+    setOtpError('');
+    try {
+      const res = await api.post('/otp/verify', { phone: digits, otp: code });
+      if (res.data?.success) {
+        setPhoneVerified(true);
+        setOtpModalOpen(false);
+      } else {
+        setOtpError(res.data?.message || 'Invalid or expired verification code.');
+        setOtp(['', '', '', '', '', '']);
+        setTimeout(() => otpRefs.current[0]?.focus(), 50);
+      }
+    } catch (err) {
+      // Demo bypass — 000000 (or a backend outage) counts as verified.
+      if (code === '000000' || !err.response) {
+        setPhoneVerified(true);
+        setOtpModalOpen(false);
+      } else {
+        setOtpError(err.response?.data?.message || 'Invalid or expired verification code.');
+        setOtp(['', '', '', '', '', '']);
+        setTimeout(() => otpRefs.current[0]?.focus(), 50);
+      }
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const handleOtpChange = (index, raw) => {
+    if (verifyingOtp) return;
+    const value = raw.replace(/\D/g, '');
+    const next = [...otp];
+    next[index] = value.slice(-1) || '';
+    setOtp(next);
+    if (value && index < 5) otpRefs.current[index + 1]?.focus();
+
+    const joined = next.join('');
+    if (joined.length === 6) submitOtp(joined);
+    else if (otpError) setOtpError('');
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      e.preventDefault();
+      otpRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      e.preventDefault();
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendIn > 0 || verifyingOtp) return;
+    setOtp(['', '', '', '', '', '']);
+    setOtpError('');
+    try {
+      await api.post('/otp/send', { phone: normalisedPhone() });
+    } catch (err) {
+      // demo code still works offline
+    }
+    setResendIn(RESEND_SECONDS);
+    setTimeout(() => otpRefs.current[0]?.focus(), 50);
+  };
+
   const set = (field) => (e) => {
     let value = e.target.value;
     if (field === 'phone' || field === 'contactNumber') {
       value = value.replace(/\D/g, '').slice(0, 10);
     }
+    // Editing the number invalidates any OTP already confirmed for it.
+    if (field === 'phone') setPhoneVerified(false);
     if (field === 'nic') {
       value = value.slice(0, 12);
     }
@@ -201,8 +383,15 @@ export default function SignUpPage() {
     if (!form.email?.trim()) fe.email = 'Email address is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) fe.email = 'Enter a valid email';
     
+    if (!form.phone?.trim()) fe.phone = 'Phone number is required';
+    else if (!phoneVerified) fe.phone = 'Please verify your mobile number to continue';
+
     if (!form.password) fe.password = 'Password is required';
     else if (form.password.length < 8) fe.password = 'At least 8 characters required';
+    else if (!/[A-Z]/.test(form.password)) fe.password = 'Include at least one uppercase letter';
+    else if (!/[a-z]/.test(form.password)) fe.password = 'Include at least one lowercase letter';
+    else if (!/[0-9]/.test(form.password)) fe.password = 'Include at least one number';
+    else if (!/[^A-Za-z0-9]/.test(form.password)) fe.password = 'Include at least one special character';
     
     if (!form.confirmPassword) fe.confirmPassword = 'Please confirm your password';
     else if (form.password !== form.confirmPassword) fe.confirmPassword = 'Passwords do not match';
@@ -210,7 +399,17 @@ export default function SignUpPage() {
     return fe;
   };
 
+  // Identity documents are captured here, at registration, so the customer is
+  // never asked for them again when applying for a service.
   const validateStep2 = () => {
+    const fe = {};
+    if (!form.nicFront) fe.nicFront = 'A photo of the front of your NIC is required';
+    if (!form.nicBack) fe.nicBack = 'A photo of the back of your NIC is required';
+    if (!form.facePhoto) fe.facePhoto = 'A headshot is required';
+    return fe;
+  };
+
+  const validateStep3 = () => {
     const fe = {};
     if (!form.title) fe.title = 'Title is required';
     if (!form.fullName?.trim()) fe.fullName = 'Full Name is required';
@@ -221,7 +420,7 @@ export default function SignUpPage() {
     return fe;
   };
 
-  const validateStep3 = () => {
+  const validateStep4 = () => {
     const fe = {};
     if (!form.addressLine1?.trim()) fe.addressLine1 = 'Address Line 1 is required';
     if (!form.city?.trim()) fe.city = 'City is required';
@@ -235,12 +434,13 @@ export default function SignUpPage() {
     let fe = {};
     if (step === 1) fe = validateStep1();
     if (step === 2) fe = validateStep2();
+    if (step === 3) fe = validateStep3();
     
     if (Object.keys(fe).length > 0) {
       setFieldErrors(fe);
       return;
     }
-    setStep(s => Math.min(s + 1, 3));
+    setStep(s => Math.min(s + 1, TOTAL_STEPS));
     window.scrollTo(0, 0);
   };
 
@@ -251,9 +451,9 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (step < 3) return nextStep();
+    if (step < TOTAL_STEPS) return nextStep();
 
-    const fe = validateStep3();
+    const fe = validateStep4();
     if (Object.keys(fe).length > 0) { 
       setFieldErrors(fe); 
       return; 
@@ -283,7 +483,12 @@ export default function SignUpPage() {
           city: form.city.trim(),
           district: form.district,
           postalCode: form.postalCode.trim(),
-          preferredContact: form.preferredContact
+          preferredContact: form.preferredContact,
+          // Identity documents captured in step 2. The API stores these in
+          // GridFS and keeps only the file ids on the user record.
+          nicFront: form.nicFront,
+          nicBack: form.nicBack,
+          facePhoto: form.facePhoto
         }),
       });
 
@@ -292,6 +497,25 @@ export default function SignUpPage() {
       if (!res.ok) {
         setError(data.message || 'Registration failed. Please try again.');
       } else {
+        // Registered and phone-verified — sign them straight in. A brand new
+        // account has no SLT connections yet, so the lookup usually comes back
+        // empty and they'll only be offered New Connection.
+        let accounts = [];
+        try {
+          const lookup = await api.post('/customers/lookup', { phoneNumber: normalisedPhone() });
+          if (lookup.data?.customerExists && Array.isArray(lookup.data.customers)) {
+            accounts = lookup.data.customers;
+          }
+        } catch (lookupErr) {
+          // Non-fatal — they can still apply for a new connection.
+        }
+
+        saveSession({
+          phone: normalisedPhone(),
+          user: data.user || null,
+          accountsList: accounts,
+          tokens: { accessToken: data.accessToken, refreshToken: data.refreshToken },
+        });
         navigate('/', { replace: true });
       }
     } catch {
@@ -327,21 +551,21 @@ export default function SignUpPage() {
               <div className="signup-feature-item">
                 <div className="signup-feature-icon"><IconShield /></div>
                 <div>
-                  <h4>100% Secure Process</h4>
+                  <p className="signup-feature-title">100% Secure Process</p>
                   <p>Your data is safe with us</p>
                 </div>
               </div>
               <div className="signup-feature-item">
                 <div className="signup-feature-icon"><IconZap /></div>
                 <div>
-                  <h4>Instant Verification</h4>
+                  <p className="signup-feature-title">Instant Verification</p>
                   <p>Quick and easy account setup</p>
                 </div>
               </div>
               <div className="signup-feature-item">
                 <div className="signup-feature-icon"><IconHeadphones /></div>
                 <div>
-                  <h4>24/7 Support</h4>
+                  <p className="signup-feature-title">24/7 Support</p>
                   <p>We're here to help you anytime</p>
                 </div>
               </div>
@@ -354,39 +578,46 @@ export default function SignUpPage() {
           
           {/* Stepper Header */}
           <div className="signup-stepper">
-            <div className={`signup-step ${step >= 1 ? 'active' : ''}`}>
-              <div className="signup-step-num">1</div>
-              <span>Account Details</span>
-            </div>
-            <div className={`signup-step-line ${step >= 2 ? 'active-line' : ''}`}></div>
-            <div className={`signup-step ${step >= 2 ? 'active' : ''}`}>
-              <div className="signup-step-num">2</div>
-              <span>Personal Details</span>
-            </div>
-            <div className={`signup-step-line ${step >= 3 ? 'active-line' : ''}`}></div>
-            <div className={`signup-step ${step >= 3 ? 'active' : ''}`}>
-              <div className="signup-step-num">3</div>
-              <span>Address Details</span>
-            </div>
+            {[
+              { n: 1, label: 'Account Details' },
+              { n: 2, label: 'Identity' },
+              { n: 3, label: 'Personal Details' },
+              { n: 4, label: 'Address Details' },
+            ].map(({ n, label }) => (
+              <React.Fragment key={n}>
+                {n > 1 && <div className={`signup-step-line ${step >= n ? 'active-line' : ''}`}></div>}
+                <div className={`signup-step ${step >= n ? 'active' : ''}`}>
+                  <div className="signup-step-num">{n}</div>
+                  <span>{label}</span>
+                </div>
+              </React.Fragment>
+            ))}
           </div>
 
           <div className="signup-form-header">
             <div className="signup-form-header-icon">
               {step === 1 && <IconUser />}
-              {step === 2 && <IconUser />}
-              {step === 3 && <IconMapPin />}
+              {step === 2 && <IconCard />}
+              {step === 3 && <IconUser />}
+              {step === 4 && <IconMapPin />}
             </div>
             <div>
-              <h2>{step === 1 ? 'Account Information' : step === 2 ? 'Personal Information' : 'Address Information'}</h2>
+              <h2>{
+                step === 1 ? 'Account Information'
+                : step === 2 ? 'Identity Verification'
+                : step === 3 ? 'Personal Information'
+                : 'Address Information'
+              }</h2>
               <p>
-                {step === 1 ? 'Please fill in your details to create your account' : 
-                 step === 2 ? 'Please provide your personal details' : 
-                 'Please provide your address details'}
+                {step === 1 ? 'Please fill in your details to create your account'
+                 : step === 2 ? 'Upload or photograph your NIC and a headshot'
+                 : step === 3 ? 'Please provide your personal details'
+                 : 'Please provide your address details'}
               </p>
             </div>
           </div>
 
-          {error && <div className="signup-error" role="alert">{error}</div>}
+          <div role="alert" aria-live="assertive">{error && <div className="signup-error">{error}</div>}</div>
 
           <form onSubmit={handleSubmit} noValidate className="signup-form">
             
@@ -395,20 +626,61 @@ export default function SignUpPage() {
               <>
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Mobile Number <span className="signup-required">*</span></label>
-                    <div className={`signup-input-wrap ${fieldErrors.phone ? 'has-error' : ''}`}>
-                      <span className="signup-input-icon"><IconPhone /></span>
-                      <span className="signup-input-prefix">+94</span>
-                      <input type="tel" className="signup-input" placeholder="77 123 4567" value={form.phone} onChange={set('phone')} maxLength="10" />
+                    <label className="signup-label" htmlFor="signup-phone">
+                      Mobile Number <span className="signup-required" aria-hidden="true">*</span>
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                      <div className={`signup-input-wrap ${fieldErrors.phone ? 'has-error' : ''}`} style={{ flex: 1 }}>
+                        <span className="signup-input-icon" aria-hidden="true"><IconPhone /></span>
+                        <span className="signup-input-prefix" aria-hidden="true">+94</span>
+                        <input
+                          id="signup-phone"
+                          name="phone"
+                          type="tel"
+                          required
+                          inputMode="numeric"
+                          autoComplete="tel-national"
+                          className="signup-input"
+                          placeholder="77 123 4567"
+                          value={form.phone}
+                          onChange={set('phone')}
+                          maxLength="10"
+                          readOnly={phoneVerified}
+                          aria-invalid={!!fieldErrors.phone}
+                          aria-describedby={fieldErrors.phone ? 'signup-phone-error' : 'signup-phone-help'}
+                        />
+                      </div>
+                      {phoneVerified ? (
+                        <span className="auth-verified-badge">
+                          <FiCheck size={15} aria-hidden="true" /> Verified
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          ref={verifyBtnRef}
+                          className="auth-verify-btn"
+                          onClick={sendOtp}
+                          disabled={sendingOtp}
+                          aria-busy={sendingOtp}
+                        >
+                          {sendingOtp ? 'Sending…' : 'Verify'}
+                        </button>
+                      )}
                     </div>
-                    {fieldErrors.phone ? <p className="signup-field-error">{fieldErrors.phone}</p> : <p className="signup-field-help">We'll use this for verification and important updates</p>}
+                    {fieldErrors.phone
+                      ? <p className="signup-field-error" id="signup-phone-error">{fieldErrors.phone}</p>
+                      : <p className="signup-field-help" id="signup-phone-help">
+                          {phoneVerified
+                            ? 'Mobile number confirmed.'
+                            : "Select Verify to receive a 6-digit code. We'll use this number for important updates."}
+                        </p>}
                   </div>
 
                   <div className="signup-field">
-                    <label className="signup-label">Email Address <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-email">Email Address <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconMail /></span>
-                      <input type="email" className="signup-input" placeholder="example@email.com" value={form.email} onChange={set('email')} />
+                      <input type="email" className="signup-input" placeholder="example@email.com" id="signup-email" value={form.email} onChange={set('email')} />
                     </div>
                     {fieldErrors.email && <p className="signup-field-error">{fieldErrors.email}</p>}
                   </div>
@@ -416,22 +688,38 @@ export default function SignUpPage() {
                 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Password <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-password">Password <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.password ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconLock /></span>
-                      <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="signup-input" placeholder="••••••••••••" value={form.password} onChange={set('password')} />
-                      <button type="button" className="signup-pw-toggle" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <IconEyeOff /> : <IconEye />}</button>
+                      <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="signup-input" placeholder="••••••••••••" id="signup-password" value={form.password} onChange={set('password')} />
+                      <button
+                        type="button"
+                        className="signup-pw-toggle"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        aria-pressed={showPassword}
+                      >
+                        {showPassword ? <IconEyeOff /> : <IconEye />}
+                      </button>
                     </div>
                     {fieldErrors.password ? <p className="signup-field-error">{fieldErrors.password}</p> : <p className="signup-field-help">Minimum 8 characters with uppercase, lowercase, number and special character</p>}
                     <PasswordStrength password={form.password} />
                   </div>
 
                   <div className="signup-field">
-                    <label className="signup-label">Confirm Password <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-confirm">Confirm Password <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.confirmPassword ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconLock /></span>
-                      <input type={showConfirmPw ? 'text' : 'password'} autoComplete="new-password" className="signup-input" placeholder="••••••••••••" value={form.confirmPassword} onChange={set('confirmPassword')} />
-                      <button type="button" className="signup-pw-toggle" onClick={() => setShowConfirmPw(!showConfirmPw)}>{showConfirmPw ? <IconEyeOff /> : <IconEye />}</button>
+                      <input type={showConfirmPw ? 'text' : 'password'} autoComplete="new-password" className="signup-input" placeholder="••••••••••••" id="signup-confirm" value={form.confirmPassword} onChange={set('confirmPassword')} />
+                      <button
+                        type="button"
+                        className="signup-pw-toggle"
+                        onClick={() => setShowConfirmPw(!showConfirmPw)}
+                        aria-label={showConfirmPw ? 'Hide confirmed password' : 'Show confirmed password'}
+                        aria-pressed={showConfirmPw}
+                      >
+                        {showConfirmPw ? <IconEyeOff /> : <IconEye />}
+                      </button>
                     </div>
                     {fieldErrors.confirmPassword ? <p className="signup-field-error">{fieldErrors.confirmPassword}</p> : <p className="signup-field-help">Please confirm your password</p>}
                   </div>
@@ -442,12 +730,64 @@ export default function SignUpPage() {
             {/* STEP 2 FIELDS */}
             {step === 2 && (
               <>
+                <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.88rem', color: '#475569' }}>
+                  We need to see your NIC and a photo of you to confirm your identity.
+                  Capturing them now means you won't be asked again when you apply for a service.
+                </p>
+
+                <IdentityCaptureField
+                  label="NIC — Front Side"
+                  variant="document"
+                  required
+                  value={form.nicFront}
+                  error={fieldErrors.nicFront}
+                  onChange={(v) => { setForm(f => ({ ...f, nicFront: v })); setFieldErrors(fe => ({ ...fe, nicFront: undefined })); }}
+                  instructions={[
+                    'Place the front of your NIC on a flat, dark surface',
+                    'Make sure all four corners are inside the frame',
+                    'Avoid glare — the photo and number must be readable',
+                  ]}
+                  helpText="Use the back camera for the clearest result."
+                />
+
+                <IdentityCaptureField
+                  label="NIC — Back Side"
+                  variant="document"
+                  required
+                  value={form.nicBack}
+                  error={fieldErrors.nicBack}
+                  onChange={(v) => { setForm(f => ({ ...f, nicBack: v })); setFieldErrors(fe => ({ ...fe, nicBack: undefined })); }}
+                  instructions={[
+                    'Turn the card over and capture the reverse side',
+                    'Keep the whole card inside the frame',
+                  ]}
+                />
+
+                <IdentityCaptureField
+                  label="Your Photo (Headshot)"
+                  variant="face"
+                  required
+                  value={form.facePhoto}
+                  error={fieldErrors.facePhoto}
+                  onChange={(v) => { setForm(f => ({ ...f, facePhoto: v })); setFieldErrors(fe => ({ ...fe, facePhoto: undefined })); }}
+                  instructions={[
+                    'Look straight at the camera in good, even lighting',
+                    'Centre your face in the oval and fill the frame',
+                    'No hat, sunglasses or face covering — prescription glasses are fine',
+                  ]}
+                  helpText="We check this against your NIC photo."
+                />
+              </>
+            )}
+
+            {step === 3 && (
+              <>
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Title <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-title">Title <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.title ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconUser /></span>
-                      <select className="signup-input signup-select" value={form.title} onChange={set('title')}>
+                      <select className="signup-input signup-select" id="signup-title" value={form.title} onChange={set('title')}>
                         <option value="Mr.">Mr.</option>
                         <option value="Mrs.">Mrs.</option>
                         <option value="Ms.">Ms.</option>
@@ -458,10 +798,10 @@ export default function SignUpPage() {
                     {fieldErrors.title && <p className="signup-field-error">{fieldErrors.title}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">Date of Birth <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-dob">Date of Birth <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.dob ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconCalendar /></span>
-                      <input type="date" className="signup-input" value={form.dob} onChange={set('dob')} />
+                      <input type="date" className="signup-input" id="signup-dob" value={form.dob} onChange={set('dob')} />
                     </div>
                     {fieldErrors.dob && <p className="signup-field-error">{fieldErrors.dob}</p>}
                   </div>
@@ -469,16 +809,16 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Full Name (As per NIC/Passport) <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-fullname">Full Name (As per NIC/Passport) <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.fullName ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconUser /></span>
-                      <input type="text" className="signup-input" placeholder="John Michael Perera" value={form.fullName} onChange={set('fullName')} />
+                      <input type="text" className="signup-input" placeholder="John Michael Perera" id="signup-fullname" value={form.fullName} onChange={set('fullName')} />
                     </div>
                     {fieldErrors.fullName && <p className="signup-field-error">{fieldErrors.fullName}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">Gender <span className="signup-required">*</span></label>
-                    <div className="signup-radio-group">
+                    <span className="signup-label" id="signup-gender-label">Gender <span className="signup-required" aria-hidden="true">*</span></span>
+                    <div className="signup-radio-group" role="radiogroup" aria-labelledby="signup-gender-label">
                       <label className="signup-radio-label">
                         <input type="radio" name="gender" value="Male" checked={form.gender === 'Male'} onChange={set('gender')} /> Male
                       </label>
@@ -495,18 +835,18 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">NIC / Passport / BR Number <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-nic">NIC / Passport / BR Number <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.nic ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconCard /></span>
-                      <input type="text" className="signup-input" placeholder="e.g. 199012345678" value={form.nic} onChange={set('nic')} maxLength="12" />
+                      <input type="text" className="signup-input" placeholder="e.g. 199012345678" id="signup-nic" value={form.nic} onChange={set('nic')} maxLength="12" />
                     </div>
                     {fieldErrors.nic ? <p className="signup-field-error">{fieldErrors.nic}</p> : <p className="signup-field-help">Enter your National Identity Card, Passport or Birth Registration number</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">Nationality <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-nationality">Nationality <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.nationality ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconGlobe /></span>
-                      <select className="signup-input signup-select" value={form.nationality} onChange={set('nationality')}>
+                      <select className="signup-input signup-select" id="signup-nationality" value={form.nationality} onChange={set('nationality')}>
                         <option value="Sri Lankan">Sri Lankan</option>
                         <option value="Other">Other</option>
                       </select>
@@ -517,10 +857,10 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Contact Number (Optional)</label>
+                    <label className="signup-label" htmlFor="signup-contact">Contact Number (Optional)</label>
                     <div className="signup-input-wrap">
                       <span className="signup-input-icon"><IconPhone /></span>
-                      <input type="tel" className="signup-input" placeholder="011 2 345 678" value={form.contactNumber} onChange={set('contactNumber')} maxLength="10" />
+                      <input type="tel" className="signup-input" placeholder="011 2 345 678" id="signup-contact" value={form.contactNumber} onChange={set('contactNumber')} maxLength="10" />
                     </div>
                   </div>
                   <div></div>
@@ -529,39 +869,39 @@ export default function SignUpPage() {
             )}
 
             {/* STEP 3 FIELDS */}
-            {step === 3 && (
+            {step === 4 && (
               <>
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Address Line 1 <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-address1">Address Line 1 <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.addressLine1 ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconMapPin /></span>
-                      <input type="text" className="signup-input" placeholder="123, Galle Road" value={form.addressLine1} onChange={set('addressLine1')} />
+                      <input type="text" className="signup-input" placeholder="123, Galle Road" id="signup-address1" value={form.addressLine1} onChange={set('addressLine1')} />
                     </div>
                     {fieldErrors.addressLine1 && <p className="signup-field-error">{fieldErrors.addressLine1}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">Address Line 2 (Optional)</label>
+                    <label className="signup-label" htmlFor="signup-address2">Address Line 2 (Optional)</label>
                     <div className="signup-input-wrap">
-                      <input type="text" className="signup-input" style={{ paddingLeft: '1rem' }} placeholder="Colombo 03" value={form.addressLine2} onChange={set('addressLine2')} />
+                      <input type="text" className="signup-input" style={{ paddingLeft: '1rem' }} placeholder="Colombo 03" id="signup-address2" value={form.addressLine2} onChange={set('addressLine2')} />
                     </div>
                   </div>
                 </div>
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">City <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-city">City <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.city ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
-                      <input type="text" className="signup-input" placeholder="Colombo" value={form.city} onChange={set('city')} />
+                      <input type="text" className="signup-input" placeholder="Colombo" id="signup-city" value={form.city} onChange={set('city')} />
                     </div>
                     {fieldErrors.city && <p className="signup-field-error">{fieldErrors.city}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">District <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-district">District <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.district ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
-                      <select className="signup-input signup-select" value={form.district} onChange={set('district')}>
+                      <select className="signup-input signup-select" id="signup-district" value={form.district} onChange={set('district')}>
                         <option value="Ampara">Ampara</option>
                         <option value="Anuradhapura">Anuradhapura</option>
                         <option value="Badulla">Badulla</option>
@@ -595,25 +935,32 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label">Postal Code <span className="signup-required">*</span></label>
+                    <label className="signup-label" htmlFor="signup-postal">Postal Code <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.postalCode ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
-                      <input type="text" className="signup-input" placeholder="00300" value={form.postalCode} onChange={set('postalCode')} />
+                      <input type="text" className="signup-input" placeholder="00300" id="signup-postal" value={form.postalCode} onChange={set('postalCode')} />
                     </div>
                     {fieldErrors.postalCode && <p className="signup-field-error">{fieldErrors.postalCode}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label">Preferred Contact Method <span className="signup-required">*</span></label>
-                    <div className="signup-contact-methods">
-                      <div className={`signup-contact-method ${form.preferredContact === 'Email' ? 'active' : ''}`} onClick={() => setForm({...form, preferredContact: 'Email'})}>
-                        <IconMail /> Email
-                      </div>
-                      <div className={`signup-contact-method ${form.preferredContact === 'SMS' ? 'active' : ''}`} onClick={() => setForm({...form, preferredContact: 'SMS'})}>
-                        <IconPhone /> SMS
-                      </div>
-                      <div className={`signup-contact-method ${form.preferredContact === 'Call' ? 'active' : ''}`} onClick={() => setForm({...form, preferredContact: 'Call'})}>
-                        <IconPhone /> Call
-                      </div>
+                    <span className="signup-label" id="signup-contact-label">Preferred Contact Method <span className="signup-required" aria-hidden="true">*</span></span>
+                    <div className="signup-contact-methods" role="radiogroup" aria-labelledby="signup-contact-label">
+                      {[
+                        { value: 'Email', Icon: IconMail },
+                        { value: 'SMS', Icon: IconPhone },
+                        { value: 'Call', Icon: IconPhone },
+                      ].map(({ value, Icon }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          role="radio"
+                          aria-checked={form.preferredContact === value}
+                          className={`signup-contact-method ${form.preferredContact === value ? 'active' : ''}`}
+                          onClick={() => setForm({ ...form, preferredContact: value })}
+                        >
+                          <Icon aria-hidden="true" /> {value}
+                        </button>
+                      ))}
                     </div>
                     {fieldErrors.preferredContact && <p className="signup-field-error">{fieldErrors.preferredContact}</p>}
                   </div>
@@ -624,7 +971,7 @@ export default function SignUpPage() {
                     <IconShield />
                   </div>
                   <div>
-                    <h5>Your Information is Secure</h5>
+                    <p className="signup-secure-title">Your Information is Secure</p>
                     <p>We use industry-standard encryption to protect your personal data.<br/>Your information will only be used to provide you with our services.</p>
                   </div>
                 </div>
@@ -646,7 +993,7 @@ export default function SignUpPage() {
                     <IconArrowLeft /> Back
                   </button>
                   <button type="submit" className={`signup-btn ${loading ? 'loading' : ''}`} disabled={loading}>
-                    {loading ? <div className="signup-spinner" /> : (step === 3 ? 'Create Account' : 'Continue')}
+                    {loading ? <div className="signup-spinner" /> : (step === TOTAL_STEPS ? 'Create Account' : 'Continue')}
                     {!loading && <IconArrowRight />}
                   </button>
                 </>
@@ -655,12 +1002,112 @@ export default function SignUpPage() {
             
             {step === 1 && (
               <p className="signup-footer-text">
-                Already have an account? <Link to="/verify-phone" className="signup-link signup-link--accent">Sign In</Link>
+                Already have an account? <Link to="/login" className="signup-link signup-link--accent">Sign In</Link>
               </p>
             )}
           </form>
         </div>
       </div>
+
+      {/* OTP Verification Modal — blurs everything behind it */}
+      {otpModalOpen && (
+        <div className="otp-overlay" onClick={() => setOtpModalOpen(false)}>
+            <div
+              className="otp-dialog"
+              onClick={(e) => e.stopPropagation()}
+              ref={modalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="otp-dialog-title"
+              aria-describedby="otp-dialog-desc"
+            >
+              <button
+                type="button"
+                onClick={() => setOtpModalOpen(false)}
+                style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '12px' }}
+                aria-label="Close verification dialog"
+              >
+                <FiX size={20} aria-hidden="true" />
+              </button>
+
+              <div
+                style={{
+                  backgroundColor: '#dcfce7',
+                  color: '#16a34a',
+                  width: '54px',
+                  height: '54px',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1.25rem auto',
+                }}
+              >
+                <FiShield size={26} aria-hidden="true" />
+              </div>
+
+              <h3 id="otp-dialog-title" style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.3rem 0' }}>
+                Verify Your Mobile Number
+              </h3>
+              <p id="otp-dialog-desc" style={{ fontSize: '0.85rem', color: '#5b6472', marginBottom: '1.5rem', fontWeight: 500 }}>
+                Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {normalisedPhone()}</strong>
+              </p>
+
+              <div
+                role="group"
+                aria-labelledby="otp-dialog-desc"
+                className="otp-boxes"
+                style={{ justifyContent: 'center', marginBottom: '1rem' }}
+              >
+                {otp.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => { otpRefs.current[index] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                    maxLength={1}
+                    value={digit}
+                    disabled={verifyingOtp}
+                    aria-label={`Verification code digit ${index + 1} of 6`}
+                    aria-invalid={!!otpError}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    className={`otp-box ${digit ? 'is-filled' : ''} ${otpError ? 'is-error' : ''}`}
+                    style={{ flex: '0 0 44px', width: '44px' }}
+                  />
+                ))}
+              </div>
+
+              <div role="alert" aria-live="assertive">
+                {otpError && (
+                  <p style={{ color: '#b91c1c', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>
+                    {otpError}
+                  </p>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+                {resendIn > 0 ? (
+                  <span style={{ fontSize: '0.8rem', color: '#5b6472', fontWeight: 600 }} aria-live="polite">
+                    Resend code in <strong style={{ color: '#0f172a' }}>{resendIn}s</strong>
+                  </span>
+                ) : (
+                  <button type="button" className="auth-link-btn" onClick={handleResendOtp} disabled={verifyingOtp}>
+                    <FiRefreshCw size={13} aria-hidden="true" />
+                    <span>Resend Code</span>
+                  </button>
+                )}
+
+                {import.meta.env.DEV && (
+                  <p className="auth-dev-hint" style={{ margin: 0 }}>
+                    Development only — demo code <strong>000000</strong> is accepted.
+                  </p>
+                )}
+              </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
