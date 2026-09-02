@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FiLock, FiUser, FiMapPin, FiPhone, FiMail, FiCalendar, FiFileText } from 'react-icons/fi';
 import AddressInputWithMap from '../../components/form/AddressInputWithMap';
-import NicUploadSection from '../../components/form/NicUploadSection';
 import { useVerifiedContext } from '../../components/verification';
 import { getAuthUser } from '../../utils/authSession';
 import { motion } from 'framer-motion';
@@ -276,33 +275,6 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, ha
             </InputWrapper>
           </div>
 
-          {/* Identity documents are a separate requirement from identity data —
-              an existing SLT customer already has these on file, a newly
-              registered one does not. */}
-          {!isReadOnly && (
-            <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
-              <h4 style={{ margin: '0 0 0.35rem 0', fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FiFileText color="#0056b3" aria-hidden="true" /> Identity Documents
-              </h4>
-              <p style={{ color: '#475569', fontSize: '0.85rem', marginTop: 0, marginBottom: '1.25rem' }}>
-                Upload your NIC so we can verify your identity (BRD 5.1.3).
-              </p>
-              <NicUploadSection
-                format={formData.nicFormat || 'pdf'}
-                onFormatChange={(fmt) => setFields && setFields({ nicFormat: fmt })}
-                values={formData}
-                onFileChange={handleFileChange}
-                required
-                idPrefix="nc"
-                pdfName="nicPdf"
-                frontName="nicFront"
-                backName="nicBack"
-                pdfLabel="NIC (PDF)"
-                frontLabel="NIC — Front Side"
-                backLabel="NIC — Back Side"
-              />
-            </div>
-          )}
         </div>
       </motion.div>
     );
@@ -531,30 +503,6 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, ha
         <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <FiMail size={14} /> {t('wizards.newConnection.customerInfo.mobileNote')}
         </p>
-
-        <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
-          <h4 style={{ margin: '0 0 0.35rem 0', fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiFileText color="#0056b3" /> Identity Documents
-          </h4>
-          <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: 0, marginBottom: '1.25rem' }}>
-            Upload your NIC so we can verify your identity (BRD 5.1.3). Existing SLT
-            customers don't need this — we already hold it on file.
-          </p>
-          <NicUploadSection
-            format={formData.nicFormat || 'pdf'}
-            onFormatChange={(fmt) => setFields && setFields({ nicFormat: fmt })}
-            values={formData}
-            onFileChange={handleFileChange}
-            required
-            idPrefix="nc"
-            pdfName="nicPdf"
-            frontName="nicFront"
-            backName="nicBack"
-            pdfLabel="NIC (PDF)"
-            frontLabel="NIC — Front Side"
-            backLabel="NIC — Back Side"
-          />
-        </div>
 
       </div>
     </motion.div>
