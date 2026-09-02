@@ -190,7 +190,6 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, ha
                 <ReadOnlyDetail label="Name" value={knownProfile.nameFull} />
                 <ReadOnlyDetail label="NIC / Passport" value={knownProfile.nic} />
                 <ReadOnlyDetail label="Date of Birth" value={knownProfile.dob} />
-                <ReadOnlyDetail label="Email" value={knownProfile.email} />
                 <ReadOnlyDetail label="Mobile Number" value={knownProfile.mobileNumber} />
               </div>
 
@@ -198,6 +197,31 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, ha
                 Taken from your account. If anything is wrong, update it in{' '}
                 <Link to="/profile" style={{ color: '#0b4a91', fontWeight: 700 }}>My Profile</Link>.
               </p>
+
+              {/* Email is editable here: it is not verified during registration
+                  at the moment, so this is the customer's chance to correct it
+                  before the application is submitted. */}
+              <div style={{ marginTop: '1.5rem' }}>
+                <Label icon={FiMail} htmlFor="nc-email">
+                  {t('wizards.newConnection.customerInfo.email')}
+                </Label>
+                <InputWrapper icon={FiMail}>
+                  <input
+                    id="nc-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="example@email.com"
+                    value={formData.email || ''}
+                    onChange={handleChange}
+                    style={getStyle()}
+                    required
+                  />
+                </InputWrapper>
+                <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.78rem', color: '#475569' }}>
+                  We'll send your bill and application updates here.
+                </p>
+              </div>
             </section>
           )}
 

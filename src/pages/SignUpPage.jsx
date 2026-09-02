@@ -162,6 +162,16 @@ export default function SignUpPage() {
   });
 
 
+  /* ──────────────────────────────────────────────────────────────────
+   * EMAIL VERIFICATION — TEMPORARILY DISABLED
+   *
+   * SLT asked for this to come out of registration for now, but the BRD still
+   * requires email verification, so the implementation is kept here rather
+   * than deleted. To re-enable: uncomment this block, the dialog further down,
+   * the Verify button on the email field, and the emailVerified check in
+   * validateStep1 — all four are marked with this same banner.
+   * ────────────────────────────────────────────────────────────────── */
+/*
   // ── Inline email verification ────────────────────────────────────
   // Mirrors the phone flow. Sending a real email is not wired up yet, so the
   // code is accepted locally — swap sendEmailOtp/submitEmailOtp for API calls
@@ -268,6 +278,7 @@ export default function SignUpPage() {
     setEmailResendIn(RESEND_SECONDS);
     setTimeout(() => emailOtpRefs.current[0]?.focus(), 50);
   };
+*/
 
   // ── Inline phone verification ────────────────────────────────────
   // The number is confirmed by OTP right here on the form, the same way the
@@ -444,7 +455,8 @@ export default function SignUpPage() {
     }
     // Editing either contact invalidates the code already confirmed for it.
     if (field === 'phone') setPhoneVerified(false);
-    if (field === 'email') setEmailVerified(false);
+    // EMAIL VERIFICATION — TEMPORARILY DISABLED (see banner near the top)
+    // if (field === 'email') setEmailVerified(false);
     if (field === 'nic') {
       value = value.slice(0, 12);
     }
@@ -458,9 +470,11 @@ export default function SignUpPage() {
     if (!form.phone?.trim()) fe.phone = 'Phone number is required';
     else if (!/^\d{9,10}$/.test(form.phone.replace(/[\s+\-()]/g, ''))) fe.phone = 'Enter a valid phone number';
     
-    if (!form.email?.trim()) fe.email = 'Email address is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) fe.email = 'Enter a valid email';
-    else if (!emailVerified) fe.email = 'Please verify your email address to continue';
+    // EMAIL ADDRESS — TEMPORARILY REMOVED FROM REGISTRATION (see the note in step 1)
+    // if (!form.email?.trim()) fe.email = 'Email address is required';
+    // else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) fe.email = 'Enter a valid email';
+    // EMAIL VERIFICATION — TEMPORARILY DISABLED (see banner near the top)
+    // else if (!emailVerified) fe.email = 'Please verify your email address to continue';
     
     if (!form.phone?.trim()) fe.phone = 'Phone number is required';
     else if (!phoneVerified) fe.phone = 'Please verify your mobile number to continue';
@@ -538,7 +552,10 @@ export default function SignUpPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: `${form.title} ${form.fullName.trim()}`,
-          email: form.email.trim(),
+          // EMAIL ADDRESS — TEMPORARILY REMOVED FROM REGISTRATION (see step 1).
+          // The account is created without one; the customer supplies it on the
+          // New Connection form. Restore this line with the field.
+          // email: form.email.trim(),
           phone: form.phone.replace(/[\s+\-()]/g, ''),
           NIC: form.nic.trim().toUpperCase(),
           role: 'Customer',
@@ -693,7 +710,14 @@ export default function SignUpPage() {
             {/* STEP 1 FIELDS */}
             {step === 1 && (
               <>
-                <div className="signup-row">
+                {/* EMAIL ADDRESS — TEMPORARILY REMOVED FROM REGISTRATION.
+                    SLT asked for the email field to come out of sign-up for now; the
+                    address is collected on the New Connection form instead. The BRD
+                    still requires it, so the markup is commented out below rather than
+                    deleted. While it is out this two-column row holds only the phone
+                    field, so it is forced to a single column — drop the style prop
+                    when the email field is restored. */}
+                <div className="signup-row" style={{ gridTemplateColumns: '1fr' }}>
                   <div className="signup-field">
                     <label className="signup-label" htmlFor="signup-phone">
                       Mobile Number <span className="signup-required" aria-hidden="true">*</span>
@@ -745,51 +769,58 @@ export default function SignUpPage() {
                         </p>}
                   </div>
 
-                  <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-email">
-                      Email Address <span className="signup-required" aria-hidden="true">*</span>
-                    </label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
-                      <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`} style={{ flex: 1 }}>
-                        <span className="signup-input-icon" aria-hidden="true"><IconMail /></span>
-                        <input
-                          type="email"
-                          className="signup-input"
-                          placeholder="example@email.com"
-                          id="signup-email"
-                          autoComplete="email"
-                          value={form.email}
-                          onChange={set('email')}
-                          readOnly={emailVerified}
-                          aria-invalid={!!fieldErrors.email}
-                          aria-describedby={fieldErrors.email ? 'signup-email-error' : 'signup-email-help'}
-                        />
+                  {/* ────────────────────────────────────────────────────────────
+                      EMAIL ADDRESS FIELD — TEMPORARILY REMOVED (see the note above).
+                      Two variants are kept here: (A) the plain field as it stood
+                      before this change, and (B) the same field with inline email
+                      verification, which the BRD asks for. Restore A to bring the
+                      field back, or B to bring back verification as well — B also
+                      needs the four EMAIL VERIFICATION blocks near the top of this
+                      file, the email checks in validateStep1, and the email key in
+                      the register payload.
+
+                      (A) plain email field
+                      <div className="signup-field">
+                        <label className="signup-label" htmlFor="signup-email">
+                          Email Address <span className="signup-required" aria-hidden="true">*</span>
+                        </label>
+                        <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`}>
+                          <span className="signup-input-icon" aria-hidden="true"><IconMail /></span>
+                          <input
+                            type="email"
+                            className="signup-input"
+                            placeholder="example@email.com"
+                            id="signup-email"
+                            autoComplete="email"
+                            value={form.email}
+                            onChange={set('email')}
+                            aria-invalid={!!fieldErrors.email}
+                            aria-describedby={fieldErrors.email ? 'signup-email-error' : undefined}
+                          />
+                        </div>
+                        {fieldErrors.email && <p className="signup-field-error" id="signup-email-error">{fieldErrors.email}</p>}
                       </div>
-                      {emailVerified ? (
-                        <span className="auth-verified-badge">
-                          <FiCheck size={15} aria-hidden="true" /> Verified
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          ref={verifyEmailBtnRef}
-                          className="auth-verify-btn"
-                          onClick={sendEmailOtp}
-                          disabled={sendingEmailOtp}
-                          aria-busy={sendingEmailOtp}
-                        >
-                          {sendingEmailOtp ? 'Sending…' : 'Verify'}
-                        </button>
-                      )}
-                    </div>
-                    {fieldErrors.email
-                      ? <p className="signup-field-error" id="signup-email-error">{fieldErrors.email}</p>
-                      : <p className="signup-field-help" id="signup-email-help">
-                          {emailVerified
-                            ? 'Email address confirmed.'
-                            : 'Select Verify to receive a 6-digit code at this address.'}
-                        </p>}
-                  </div>
+
+                      (B) email field with inline verification
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                        <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`} style={{ flex: 1 }}>
+                          <span className="signup-input-icon" aria-hidden="true"><IconMail /></span>
+                          <input type="email" className="signup-input" placeholder="example@email.com" id="signup-email"
+                            autoComplete="email" value={form.email} onChange={set('email')} readOnly={emailVerified} />
+                        </div>
+                        {emailVerified ? (
+                          <span className="auth-verified-badge"><FiCheck size={15} aria-hidden="true" /> Verified</span>
+                        ) : (
+                          <button type="button" ref={verifyEmailBtnRef} className="auth-verify-btn"
+                            onClick={sendEmailOtp} disabled={sendingEmailOtp} aria-busy={sendingEmailOtp}>
+                            {sendingEmailOtp ? 'Sending…' : 'Verify'}
+                          </button>
+                        )}
+                      </div>
+                      <p className="signup-field-help" id="signup-email-help">
+                        {emailVerified ? 'Email address confirmed.' : 'Select Verify to receive a 6-digit code at this address.'}
+                      </p>
+                      ──────────────────────────────────────────────────────────── */}
                 </div>
                 
               </>
@@ -1077,8 +1108,10 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* Email verification dialog */}
-      {emailModalOpen && (
+      {/* EMAIL VERIFICATION — TEMPORARILY DISABLED (see banner near the top).
+          The dialog below is intact and only needs uncommenting. */}
+      {/*
+            {emailModalOpen && (
         <div className="otp-overlay" onClick={() => setEmailModalOpen(false)}>
           <div
             className="otp-dialog"
@@ -1157,6 +1190,7 @@ export default function SignUpPage() {
           </div>
         </div>
       )}
+      */}
 
       {/* OTP Verification Modal — blurs everything behind it */}
       {otpModalOpen && (
