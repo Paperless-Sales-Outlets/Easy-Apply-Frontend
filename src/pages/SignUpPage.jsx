@@ -121,32 +121,6 @@ const SLTLogo = () => (
 /* ── Helpers ─────────────────────────────────────────────────────── */
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api';
 
-function PasswordStrength({ password }) {
-  if (!password) return null;
-  let strength = 0;
-  if (password.length >= 8) strength++;
-  if (/[A-Z]/.test(password)) strength++;
-  if (/[0-9]/.test(password)) strength++;
-  if (/[^A-Za-z0-9]/.test(password)) strength++;
-
-  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-  const colors = ['', '#ef4444', '#f59e0b', '#3b82f6', '#059669'];
-
-  return (
-    <div className="signup-pw-strength" role="status" aria-live="polite">
-      <span className="sr-only">Password strength: {labels[strength] || 'very weak'}</span>
-      <div className="signup-pw-bars" aria-hidden="true">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="signup-pw-bar" style={{ background: i <= strength ? colors[strength] : '#e2e8f0' }} />
-        ))}
-      </div>
-      {strength > 0 && (
-        <span className="signup-pw-strength-text" style={{ color: colors[strength] }}>{labels[strength]}</span>
-      )}
-    </div>
-  );
-}
-
 /* ── Main Component ──────────────────────────────────────────────── */
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -166,8 +140,6 @@ export default function SignUpPage() {
     // Step 1
     phone: prefilledPhone,
     email: '',
-    password: '',
-    confirmPassword: '',
     // Step 2 — identity documents
     nicFront: '',
     nicBack: '',
@@ -189,8 +161,113 @@ export default function SignUpPage() {
     preferredContact: 'SMS',
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPw, setShowConfirmPw] = useState(false);
+
+  // ── Inline email verification ────────────────────────────────────
+  // Mirrors the phone flow. Sending a real email is not wired up yet, so the
+  // code is accepted locally — swap sendEmailOtp/submitEmailOtp for API calls
+  // once the mail service exists.
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [sendingEmailOtp, setSendingEmailOtp] = useState(false);
+  const [verifyingEmailOtp, setVerifyingEmailOtp] = useState(false);
+  const [emailOtp, setEmailOtp] = useState(['', '', '', '', '', '']);
+  const [emailOtpError, setEmailOtpError] = useState('');
+  const [emailResendIn, setEmailResendIn] = useState(RESEND_SECONDS);
+  const emailOtpRefs = useRef([]);
+  const verifyEmailBtnRef = useRef(null);
+  const emailModalRef = useRef(null);
+
+  useEffect(() => {
+    if (!emailModalOpen) return;
+    setEmailResendIn(RESEND_SECONDS);
+    const id = setTimeout(() => emailOtpRefs.current[0]?.focus(), 50);
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') { e.stopPropagation(); setEmailModalOpen(false); return; }
+      if (e.key !== 'Tab' || !emailModalRef.current) return;
+      const focusable = emailModalRef.current.querySelectorAll(
+        'button:not([disabled]), input:not([disabled]), [href], select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => { clearTimeout(id); document.removeEventListener('keydown', onKeyDown, true); };
+  }, [emailModalOpen]);
+
+  const wasEmailModalOpen = useRef(false);
+  useEffect(() => {
+    if (wasEmailModalOpen.current && !emailModalOpen) verifyEmailBtnRef.current?.focus();
+    wasEmailModalOpen.current = emailModalOpen;
+  }, [emailModalOpen]);
+
+  useEffect(() => {
+    if (!emailModalOpen || emailResendIn <= 0) return;
+    const id = setTimeout(() => setEmailResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(id);
+  }, [emailModalOpen, emailResendIn]);
+
+  const sendEmailOtp = async () => {
+    const address = (form.email || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) {
+      setFieldErrors((fe) => ({ ...fe, email: 'Enter a valid email address first' }));
+      return;
+    }
+    setSendingEmailOtp(true);
+    // No mail service yet — this is where the send request will go.
+    await new Promise((r) => setTimeout(r, 400));
+    setSendingEmailOtp(false);
+    setEmailOtp(['', '', '', '', '', '']);
+    setEmailOtpError('');
+    setEmailModalOpen(true);
+  };
+
+  const submitEmailOtp = (code) => {
+    setVerifyingEmailOtp(true);
+    setEmailOtpError('');
+    // Until email delivery is wired up, the demo code stands in for a real one.
+    setTimeout(() => {
+      if (code === '000000') {
+        setEmailVerified(true);
+        setEmailModalOpen(false);
+        setFieldErrors((fe) => ({ ...fe, email: undefined }));
+      } else {
+        setEmailOtpError('Invalid or expired verification code.');
+        setEmailOtp(['', '', '', '', '', '']);
+        setTimeout(() => emailOtpRefs.current[0]?.focus(), 50);
+      }
+      setVerifyingEmailOtp(false);
+    }, 300);
+  };
+
+  const handleEmailOtpChange = (index, raw) => {
+    if (verifyingEmailOtp) return;
+    const value = raw.replace(/\D/g, '');
+    const next = [...emailOtp];
+    next[index] = value.slice(-1) || '';
+    setEmailOtp(next);
+    if (value && index < 5) emailOtpRefs.current[index + 1]?.focus();
+    const joined = next.join('');
+    if (joined.length === 6) submitEmailOtp(joined);
+    else if (emailOtpError) setEmailOtpError('');
+  };
+
+  const handleEmailOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !emailOtp[index] && index > 0) emailOtpRefs.current[index - 1]?.focus();
+    else if (e.key === 'ArrowLeft' && index > 0) { e.preventDefault(); emailOtpRefs.current[index - 1]?.focus(); }
+    else if (e.key === 'ArrowRight' && index < 5) { e.preventDefault(); emailOtpRefs.current[index + 1]?.focus(); }
+  };
+
+  const handleResendEmailOtp = () => {
+    if (emailResendIn > 0 || verifyingEmailOtp) return;
+    setEmailOtp(['', '', '', '', '', '']);
+    setEmailOtpError('');
+    setEmailResendIn(RESEND_SECONDS);
+    setTimeout(() => emailOtpRefs.current[0]?.focus(), 50);
+  };
 
   // ── Inline phone verification ────────────────────────────────────
   // The number is confirmed by OTP right here on the form, the same way the
@@ -365,8 +442,9 @@ export default function SignUpPage() {
     if (field === 'phone' || field === 'contactNumber') {
       value = value.replace(/\D/g, '').slice(0, 10);
     }
-    // Editing the number invalidates any OTP already confirmed for it.
+    // Editing either contact invalidates the code already confirmed for it.
     if (field === 'phone') setPhoneVerified(false);
+    if (field === 'email') setEmailVerified(false);
     if (field === 'nic') {
       value = value.slice(0, 12);
     }
@@ -382,20 +460,12 @@ export default function SignUpPage() {
     
     if (!form.email?.trim()) fe.email = 'Email address is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) fe.email = 'Enter a valid email';
+    else if (!emailVerified) fe.email = 'Please verify your email address to continue';
     
     if (!form.phone?.trim()) fe.phone = 'Phone number is required';
     else if (!phoneVerified) fe.phone = 'Please verify your mobile number to continue';
 
-    if (!form.password) fe.password = 'Password is required';
-    else if (form.password.length < 8) fe.password = 'At least 8 characters required';
-    else if (!/[A-Z]/.test(form.password)) fe.password = 'Include at least one uppercase letter';
-    else if (!/[a-z]/.test(form.password)) fe.password = 'Include at least one lowercase letter';
-    else if (!/[0-9]/.test(form.password)) fe.password = 'Include at least one number';
-    else if (!/[^A-Za-z0-9]/.test(form.password)) fe.password = 'Include at least one special character';
-    
-    if (!form.confirmPassword) fe.confirmPassword = 'Please confirm your password';
-    else if (form.password !== form.confirmPassword) fe.confirmPassword = 'Passwords do not match';
-    
+
     return fe;
   };
 
@@ -471,7 +541,6 @@ export default function SignUpPage() {
           email: form.email.trim(),
           phone: form.phone.replace(/[\s+\-()]/g, ''),
           NIC: form.nic.trim().toUpperCase(),
-          password: form.password,
           role: 'Customer',
           title: form.title,
           dob: form.dob,
@@ -677,53 +746,52 @@ export default function SignUpPage() {
                   </div>
 
                   <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-email">Email Address <span className="signup-required" aria-hidden="true">*</span></label>
-                    <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`}>
-                      <span className="signup-input-icon"><IconMail /></span>
-                      <input type="email" className="signup-input" placeholder="example@email.com" id="signup-email" value={form.email} onChange={set('email')} />
+                    <label className="signup-label" htmlFor="signup-email">
+                      Email Address <span className="signup-required" aria-hidden="true">*</span>
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
+                      <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`} style={{ flex: 1 }}>
+                        <span className="signup-input-icon" aria-hidden="true"><IconMail /></span>
+                        <input
+                          type="email"
+                          className="signup-input"
+                          placeholder="example@email.com"
+                          id="signup-email"
+                          autoComplete="email"
+                          value={form.email}
+                          onChange={set('email')}
+                          readOnly={emailVerified}
+                          aria-invalid={!!fieldErrors.email}
+                          aria-describedby={fieldErrors.email ? 'signup-email-error' : 'signup-email-help'}
+                        />
+                      </div>
+                      {emailVerified ? (
+                        <span className="auth-verified-badge">
+                          <FiCheck size={15} aria-hidden="true" /> Verified
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          ref={verifyEmailBtnRef}
+                          className="auth-verify-btn"
+                          onClick={sendEmailOtp}
+                          disabled={sendingEmailOtp}
+                          aria-busy={sendingEmailOtp}
+                        >
+                          {sendingEmailOtp ? 'Sending…' : 'Verify'}
+                        </button>
+                      )}
                     </div>
-                    {fieldErrors.email && <p className="signup-field-error">{fieldErrors.email}</p>}
+                    {fieldErrors.email
+                      ? <p className="signup-field-error" id="signup-email-error">{fieldErrors.email}</p>
+                      : <p className="signup-field-help" id="signup-email-help">
+                          {emailVerified
+                            ? 'Email address confirmed.'
+                            : 'Select Verify to receive a 6-digit code at this address.'}
+                        </p>}
                   </div>
                 </div>
                 
-                <div className="signup-row">
-                  <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-password">Password <span className="signup-required" aria-hidden="true">*</span></label>
-                    <div className={`signup-input-wrap ${fieldErrors.password ? 'has-error' : ''}`}>
-                      <span className="signup-input-icon"><IconLock /></span>
-                      <input type={showPassword ? 'text' : 'password'} autoComplete="new-password" className="signup-input" placeholder="••••••••••••" id="signup-password" value={form.password} onChange={set('password')} />
-                      <button
-                        type="button"
-                        className="signup-pw-toggle"
-                        onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                        aria-pressed={showPassword}
-                      >
-                        {showPassword ? <IconEyeOff /> : <IconEye />}
-                      </button>
-                    </div>
-                    {fieldErrors.password ? <p className="signup-field-error">{fieldErrors.password}</p> : <p className="signup-field-help">Minimum 8 characters with uppercase, lowercase, number and special character</p>}
-                    <PasswordStrength password={form.password} />
-                  </div>
-
-                  <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-confirm">Confirm Password <span className="signup-required" aria-hidden="true">*</span></label>
-                    <div className={`signup-input-wrap ${fieldErrors.confirmPassword ? 'has-error' : ''}`}>
-                      <span className="signup-input-icon"><IconLock /></span>
-                      <input type={showConfirmPw ? 'text' : 'password'} autoComplete="new-password" className="signup-input" placeholder="••••••••••••" id="signup-confirm" value={form.confirmPassword} onChange={set('confirmPassword')} />
-                      <button
-                        type="button"
-                        className="signup-pw-toggle"
-                        onClick={() => setShowConfirmPw(!showConfirmPw)}
-                        aria-label={showConfirmPw ? 'Hide confirmed password' : 'Show confirmed password'}
-                        aria-pressed={showConfirmPw}
-                      >
-                        {showConfirmPw ? <IconEyeOff /> : <IconEye />}
-                      </button>
-                    </div>
-                    {fieldErrors.confirmPassword ? <p className="signup-field-error">{fieldErrors.confirmPassword}</p> : <p className="signup-field-help">Please confirm your password</p>}
-                  </div>
-                </div>
               </>
             )}
 
@@ -1008,6 +1076,87 @@ export default function SignUpPage() {
           </form>
         </div>
       </div>
+
+      {/* Email verification dialog */}
+      {emailModalOpen && (
+        <div className="otp-overlay" onClick={() => setEmailModalOpen(false)}>
+          <div
+            className="otp-dialog"
+            ref={emailModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="email-otp-title"
+            aria-describedby="email-otp-desc"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setEmailModalOpen(false)}
+              style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '8px' }}
+              aria-label="Close verification dialog"
+            >
+              <FiX size={20} aria-hidden="true" />
+            </button>
+
+            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem auto' }}>
+              <IconMail />
+            </div>
+
+            <h3 id="email-otp-title" style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.3rem 0' }}>
+              Verify Your Email Address
+            </h3>
+            <p id="email-otp-desc" style={{ fontSize: '0.85rem', color: '#5b6472', marginBottom: '1.5rem', fontWeight: 500 }}>
+              Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>{form.email}</strong>
+            </p>
+
+            <div role="group" aria-labelledby="email-otp-desc" className="otp-boxes" style={{ justifyContent: 'center', marginBottom: '1rem' }}>
+              {emailOtp.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => { emailOtpRefs.current[index] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                  maxLength={1}
+                  value={digit}
+                  disabled={verifyingEmailOtp}
+                  aria-label={`Email verification code digit ${index + 1} of 6`}
+                  aria-invalid={!!emailOtpError}
+                  onChange={(e) => handleEmailOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleEmailOtpKeyDown(index, e)}
+                  className={`otp-box ${digit ? 'is-filled' : ''} ${emailOtpError ? 'is-error' : ''}`}
+                  style={{ flex: '0 0 44px', width: '44px' }}
+                />
+              ))}
+            </div>
+
+            <div role="alert" aria-live="assertive">
+              {emailOtpError && (
+                <p style={{ color: '#b91c1c', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>{emailOtpError}</p>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+              {emailResendIn > 0 ? (
+                <span style={{ fontSize: '0.8rem', color: '#5b6472', fontWeight: 600 }} aria-live="polite">
+                  Resend code in <strong style={{ color: '#0f172a' }}>{emailResendIn}s</strong>
+                </span>
+              ) : (
+                <button type="button" className="auth-link-btn" onClick={handleResendEmailOtp} disabled={verifyingEmailOtp}>
+                  <FiRefreshCw size={13} aria-hidden="true" />
+                  <span>Resend Code</span>
+                </button>
+              )}
+
+              {import.meta.env.DEV && (
+                <p className="auth-dev-hint" style={{ margin: 0 }}>
+                  Email delivery is not wired up yet — use code <strong>000000</strong>.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* OTP Verification Modal — blurs everything behind it */}
       {otpModalOpen && (
