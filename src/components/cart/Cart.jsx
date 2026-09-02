@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../context/useCart';
 import CartItem from './CartItem';
 import PayHereButton from '../PayHereButton';
 import Icon from '../Icon';

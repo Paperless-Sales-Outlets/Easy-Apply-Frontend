@@ -158,7 +158,6 @@ export default function AddressInputWithMap({
         <input
           ref={hiddenInputRef}
           type="text"
-          aria-label="Search for an address"
           placeholder="Search for an address..."
           style={{
             width: '100%',

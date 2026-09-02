@@ -18,7 +18,7 @@ import { AUTH_UPDATED_EVENT, getSession, isAuthenticated, selectAccount } from '
 // New Connection is the one service open to customers with no SLT product yet.
 const OPEN_TO_NEW_CUSTOMERS = ['/new-connection'];
 
-export function requiresExistingAccount(pathname) {
+function requiresExistingAccount(pathname) {
   return !OPEN_TO_NEW_CUSTOMERS.some((path) => pathname.startsWith(path));
 }
 

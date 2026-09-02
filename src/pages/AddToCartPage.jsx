@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../context/useCart';
 import { getProducts } from '../services/cartService';
 import ProductList from '../components/products/ProductList';
 import SearchBar from '../components/common/SearchBar';
