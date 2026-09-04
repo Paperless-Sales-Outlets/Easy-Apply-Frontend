@@ -37,13 +37,23 @@ export default function ProductCard({
   const {
     _id,
     id,
-    name,
-    monthlyPrice,
+    name: rawName,
+    productName,
+    monthlyPrice: rawMonthlyPrice,
+    price,
     installationFee = 2500,
-    features = [],
+    features: rawFeatures = [],
     category = 'Broadband',
     popular = false,
+    bannerUrl,
+    description,
   } = product;
+
+  const name = rawName || productName || 'SLTMobitel Connection';
+  const monthlyPrice = rawMonthlyPrice !== undefined ? rawMonthlyPrice : (price !== undefined ? price : 0);
+  const features = Array.isArray(rawFeatures) && rawFeatures.length > 0 
+    ? rawFeatures 
+    : (description ? [description] : ['High-speed connectivity', '24/7 SLT Customer Support']);
 
   const cardGradient = CATEGORY_GRADIENTS[category] || DEFAULT_GRADIENT;
 
@@ -78,8 +88,17 @@ export default function ProductCard({
             position: 'relative',
           }}
         >
-          <div style={{ width: '56px', height: '56px' }}>
-            <ProductDeviceGraphic name={name} category={category} />
+          <div style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {bannerUrl ? (
+              <img
+                src={bannerUrl}
+                alt={name}
+                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            ) : (
+              <ProductDeviceGraphic name={name} category={category} />
+            )}
           </div>
           {popular && (
             <span
@@ -221,25 +240,62 @@ export default function ProductCard({
         height: '100%',
       }}
     >
-      {/* Top Banner with Gradient */}
+      {/* Top Visual Showcase (Hero Image with Ambient Blurred Backdrop) */}
       <div
         style={{
-          background: cardGradient,
-          padding: '1.25rem 1.1rem 1rem 1.1rem',
-          color: '#ffffff',
+          height: '165px',
+          backgroundColor: '#0f172a',
+          borderBottom: '1px solid #e2e8f0',
           position: 'relative',
           display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          minHeight: '230px',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
         }}
       >
-        {/* Top Badges Row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', zIndex: 2 }}>
-          {popular ? (
+        {/* Layer 1: Ambient Blurred Background */}
+        {bannerUrl ? (
+          <>
+            <div
+              style={{
+                position: 'absolute',
+                inset: '-20px',
+                backgroundImage: `url(${bannerUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'blur(26px) saturate(2) brightness(0.7)',
+                opacity: 0.65,
+                transform: 'scale(1.3)',
+                pointerEvents: 'none',
+              }}
+            />
+            {/* Subtle Gradient Overlay for depth */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.45) 100%)',
+                pointerEvents: 'none',
+              }}
+            />
+          </>
+        ) : (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: cardGradient,
+              opacity: 0.9,
+            }}
+          />
+        )}
+
+        {/* Floating Badges */}
+        <div style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', zIndex: 3 }}>
+          {popular && (
             <span
               style={{
-                backgroundColor: '#047857',
+                backgroundColor: '#10b981',
                 color: '#ffffff',
                 fontSize: '0.62rem',
                 fontWeight: 900,
@@ -247,164 +303,198 @@ export default function ProductCard({
                 borderRadius: '9999px',
                 letterSpacing: '0.04em',
                 textTransform: 'uppercase',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
               }}
             >
               {t('catalog.card.popular', 'POPULAR')}
             </span>
-          ) : (
-            <span />
           )}
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFavorite(_id || id);
-            }}
-            aria-label={
-              isFavorite
-                ? t('catalog.card.removeFavorite', 'Remove {{name}} from favourites', { name })
-                : t('catalog.card.addFavorite', 'Add {{name}} to favourites', { name })
-            }
-            aria-pressed={!!isFavorite}
-            style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              border: 'none',
-              borderRadius: '50%',
-              width: '28px',
-              height: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: isFavorite ? '#f87171' : '#ffffff',
-            }}
-          >
-            {isFavorite ? <FaHeart size={13} aria-hidden="true" /> : <FiHeart size={13} aria-hidden="true" />}
-          </button>
         </div>
 
-        {/* 3D Device Graphic Positioned Top Right */}
-        <div
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite(_id || id);
+          }}
+          aria-label={
+            isFavorite
+              ? t('catalog.card.removeFavorite', 'Remove {{name}} from favourites', { name })
+              : t('catalog.card.addFavorite', 'Add {{name}} to favourites', { name })
+          }
+          aria-pressed={!!isFavorite}
           style={{
             position: 'absolute',
+            top: '0.75rem',
             right: '0.75rem',
-            top: '2.2rem',
-            width: '80px',
-            height: '80px',
-            zIndex: 1,
+            zIndex: 3,
+            background: 'rgba(255, 255, 255, 0.85)',
+            backdropFilter: 'blur(8px)',
+            border: 'none',
+            borderRadius: '50%',
+            width: '30px',
+            height: '30px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+            color: isFavorite ? '#ef4444' : '#64748b',
+            transition: 'all 0.15s ease',
           }}
         >
-          <ProductDeviceGraphic name={name} category={category} />
-        </div>
+          {isFavorite ? <FaHeart size={13} aria-hidden="true" /> : <FiHeart size={13} aria-hidden="true" />}
+        </button>
 
-        {/* Product Title */}
-        <div style={{ zIndex: 2, paddingRight: '75px', marginBottom: '0.75rem' }}>
+        {/* Foreground Centered Sharp Graphic */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 2,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0.85rem 1rem',
+          }}
+        >
+          {bannerUrl ? (
+            <img
+              src={bannerUrl}
+              alt={name}
+              style={{
+                maxHeight: '135px',
+                maxWidth: '92%',
+                objectFit: 'contain',
+                borderRadius: '8px',
+                filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.4))',
+                transition: 'transform 0.25s ease',
+              }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          ) : (
+            <div style={{ width: '85px', height: '85px', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.25))' }}>
+              <ProductDeviceGraphic name={name} category={category} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Card Body */}
+      <div style={{ padding: '1.15rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#ffffff' }}>
+        <div>
+          {/* Category Chip */}
+          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#0056b3', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.35rem' }}>
+            {category}
+          </div>
+
+          {/* Product Title */}
           <h3
             style={{
               fontSize: '1.05rem',
               fontWeight: 800,
-              lineHeight: 1.25,
-              color: '#ffffff',
-              margin: 0,
+              lineHeight: 1.3,
+              color: '#0f172a',
+              margin: '0 0 0.65rem 0',
             }}
           >
             {name}
           </h3>
-        </div>
 
-        {/* Features List */}
-        <div style={{ zIndex: 2 }}>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+          {/* Features List */}
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem 0', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
             {features.slice(0, 3).map((feat, idx) => {
               const cleanText = String(feat).replace(/^[✓✔]\s*/, '');
               return (
                 <li
                   key={idx}
                   style={{
-                    fontSize: '0.74rem',
+                    fontSize: '0.76rem',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.35rem',
-                    color: 'rgba(255, 255, 255, 0.95)',
+                    gap: '0.4rem',
+                    color: '#475569',
                     fontWeight: 500,
                   }}
                 >
-                  <FiCheck size={12} style={{ color: '#ffffff', flexShrink: 0 }} />
+                  <FiCheck size={13} style={{ color: '#16a34a', flexShrink: 0 }} />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanText}</span>
                 </li>
               );
             })}
           </ul>
         </div>
-      </div>
 
-      {/* Bottom Card Body */}
-      <div style={{ padding: '1.1rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#ffffff' }}>
+        {/* Pricing & Actions */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', marginBottom: '0.2rem' }}>
-            <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>
-              Rs. {monthlyPrice ? monthlyPrice.toLocaleString() : '0'}
-            </span>
-            <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.card.perMonth', '/month')}</span>
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem', marginBottom: '0.65rem' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', marginBottom: '0.2rem' }}>
+              <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>
+                Rs. {monthlyPrice ? monthlyPrice.toLocaleString() : '0'}
+              </span>
+              <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.card.perMonth', '/month')}</span>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+              {t('catalog.card.installation', 'Installation:')} Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
+            </div>
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.5rem' }}>
-            {t('catalog.card.installation', 'Installation:')} Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+            <button
+              onClick={() => {
+                if (disabled) return;
+                if (isInCart) onRemoveFromCart(product);
+                else onAddToCart(product);
+              }}
+              disabled={disabled}
+              title={isInCart ? t('catalog.card.removeFromCart', 'Remove from cart') : undefined}
+              style={{
+                width: '100%',
+                backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
+                color: isInCart ? '#ffffff' : disabled ? '#475569' : '#ffffff',
+                border: disabled ? '1px solid #cbd5e1' : 'none',
+                borderRadius: '8px',
+                padding: '0.55rem 0.75rem',
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                cursor: disabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.45rem',
+                boxShadow: disabled ? 'none' : '0 3px 10px rgba(0,86,179,0.25)',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {isInCart ? <FiCheck size={16} /> : <FiShoppingCart size={15} />}
+              <span>{isInCart ? t('catalog.card.inCart', 'In Cart') : disabled ? disabledReason : t('catalog.card.addToCart', 'Add to Cart')}</span>
+            </button>
+
+            <button
+              onClick={() => onSelect(product)}
+              style={{
+                width: '100%',
+                backgroundColor: '#f8fafc',
+                color: '#0056b3',
+                border: '1px solid #cbd5e1',
+                borderRadius: '8px',
+                padding: '0.45rem 0.75rem',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.35rem',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {t('catalog.card.viewDetails', 'View Details')}
+            </button>
           </div>
-        </div>
-
-        <div style={{ marginTop: '0.65rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-          <button
-            onClick={() => {
-              if (disabled) return;
-              if (isInCart) onRemoveFromCart(product);
-              else onAddToCart(product);
-            }}
-            disabled={disabled}
-            title={isInCart ? t('catalog.card.removeFromCart', 'Remove from cart') : undefined}
-            style={{
-              width: '100%',
-              backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
-              color: isInCart ? '#ffffff' : disabled ? '#475569' : '#ffffff',
-              border: disabled ? '1px solid #cbd5e1' : 'none',
-              borderRadius: '8px',
-              padding: '0.55rem 0.75rem',
-              fontWeight: 800,
-              fontSize: '0.82rem',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.45rem',
-              boxShadow: disabled ? 'none' : '0 3px 10px rgba(0,86,179,0.25)',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            {isInCart ? <FiCheck size={16} /> : <FiShoppingCart size={15} />}
-            <span>{isInCart ? t('catalog.card.inCart', 'In Cart') : disabled ? disabledReason : t('catalog.card.addToCart', 'Add to Cart')}</span>
-          </button>
-
-          <button
-            onClick={() => onSelect(product)}
-            style={{
-              width: '100%',
-              backgroundColor: '#f8fafc',
-              color: '#0056b3',
-              border: '1px solid #cbd5e1',
-              borderRadius: '8px',
-              padding: '0.45rem 0.75rem',
-              fontWeight: 700,
-              fontSize: '0.78rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.35rem',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            {t('catalog.card.viewDetails', 'View Details')}
-          </button>
         </div>
       </div>
     </motion.div>
