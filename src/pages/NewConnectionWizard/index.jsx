@@ -239,6 +239,7 @@ export default function NewConnectionWizard() {
               handleChange={handleChange}
               handleFileChange={handleFileChange}
               setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
+              selectedProduct={selectedProduct}
             />
           )}
           {currentStep === 2 && (

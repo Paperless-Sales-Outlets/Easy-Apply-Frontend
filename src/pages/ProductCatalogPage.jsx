@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiAlertCircle } from 'react-icons/fi';
@@ -327,6 +328,42 @@ export default function ProductCatalogPage() {
     showToast('Selection reset. All packages are now unselected.', 'info');
   };
 
+  const location = useLocation();
+
+  // Sync search query from URL parameter or navbar custom event
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get('search');
+    if (q) {
+      setSearchQuery(q);
+    }
+  }, [location.search]);
+
+  useEffect(() => {
+    const handleCustomSearch = (e) => {
+      if (e.detail) {
+        setSearchQuery(e.detail);
+      }
+    };
+    window.addEventListener('easyapply:search', handleCustomSearch);
+    return () => window.removeEventListener('easyapply:search', handleCustomSearch);
+  }, []);
+
+  // Speed string parser helper (converts "500 Mbps", "1 Gbps", "100 Mbps" to numeric Mbps)
+  const parseSpeedMbps = (speedStr) => {
+    if (!speedStr) return 0;
+    const lower = String(speedStr).toLowerCase();
+    if (lower.includes('gbps') || lower.includes('gb')) {
+      const val = parseFloat(lower);
+      return isNaN(val) ? 1000 : val * 1000;
+    }
+    if (lower.includes('mbps') || lower.includes('mb')) {
+      const val = parseFloat(lower);
+      return isNaN(val) ? 0 : val;
+    }
+    return 0;
+  };
+
   const filteredProducts = useMemo(() => {
     let list = products.filter((p) => {
       // Category filter
@@ -344,12 +381,25 @@ export default function ProductCatalogPage() {
         });
         if (!matchType) return false;
       }
+      // Connection Speed checkbox filter logic
+      if (selectedSpeeds.length > 0) {
+        const speedVal = parseSpeedMbps(p.speed || p.name);
+        const matchSpeed = selectedSpeeds.some((speedId) => {
+          if (speedId === 'up_to_100') return speedVal > 0 && speedVal <= 100;
+          if (speedId === '100_300') return speedVal > 100 && speedVal <= 300;
+          if (speedId === '300_500') return speedVal > 300 && speedVal <= 500;
+          if (speedId === 'above_500') return speedVal > 500;
+          return false;
+        });
+        if (!matchSpeed) return false;
+      }
       // Search query filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const nameMatch = p.name.toLowerCase().includes(q);
         const catMatch = (p.category || '').toLowerCase().includes(q);
-        if (!nameMatch && !catMatch) return false;
+        const speedMatch = (p.speed || '').toLowerCase().includes(q);
+        if (!nameMatch && !catMatch && !speedMatch) return false;
       }
       return true;
     });
@@ -362,7 +412,7 @@ export default function ProductCatalogPage() {
     }
 
     return list;
-  }, [products, activeCategory, selectedTypes, searchQuery, sortBy]);
+  }, [products, activeCategory, selectedTypes, selectedSpeeds, searchQuery, sortBy]);
 
   // Group filtered products into Category Sections (Voice, Broadband, PEO TV)
   const categorySections = useMemo(() => {

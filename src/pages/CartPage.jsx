@@ -474,7 +474,7 @@ export default function CartPage() {
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '0.68rem', color: '#475569', textAlign: 'center' }}>
                               <FiTag size={15} color="#0056b3" />
-                              <span style={{ marginTop: '0.2rem', fontWeight: 600 }}>Free Setup</span>
+                              <span style={{ marginTop: '0.2rem', fontWeight: 600 }}>{instFee === 0 ? 'Free Setup' : 'Standard Setup'}</span>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '0.68rem', color: '#475569', textAlign: 'center' }}>
                               <FiHeadphones size={15} color="#0056b3" />
@@ -489,7 +489,7 @@ export default function CartPage() {
                             </span>
                             <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>/month</span>
                             <span style={{ fontSize: '0.825rem', color: '#475569', fontWeight: 600, marginLeft: '0.5rem' }}>
-                              Installation Fee: Rs. {instFee.toLocaleString()} (One-time)
+                              {instFee === 0 ? 'Installation Fee: Free' : `Installation Fee: Rs. ${instFee.toLocaleString()} (One-time)`}
                             </span>
                           </div>
                         </div>

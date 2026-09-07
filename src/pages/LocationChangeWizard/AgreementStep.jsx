@@ -194,13 +194,13 @@ export default function AgreementStep({
             </div>
             <div>
               <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>CALL FORWARDING</div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>{formData.callForwarding ? 'Activated' : 'Not Requested'}</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>{formData.callForwarding === 'yes' ? 'Activated' : 'Not Requested'}</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 2. UPLOADED DOCUMENTS SUMMARY CARD */}
+      {/* UPLOADED DOCUMENTS SUMMARY CARD */}
       <div
         style={{
           backgroundColor: '#ffffff',
@@ -223,6 +223,8 @@ export default function AgreementStep({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           {[
             { label: 'Proof of New Address (Mandatory)', file: formData.proofOfAddress },
+            { label: 'Route Sketch', file: formData.sketchFile },
+            { label: 'Premises / Site Photo', file: formData.premisesPhoto },
             { label: 'Authorization Letter', file: formData.authorizationLetter },
             { label: 'Business Registration Certificate (BRC)', file: formData.brc },
           ].map(({ label, file }, idx) => (
