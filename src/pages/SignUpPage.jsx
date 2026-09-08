@@ -1,11 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiShield, FiX, FiRefreshCw, FiCheck } from 'react-icons/fi';
+import { FiShield, FiX, FiRefreshCw, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
 import IdentityCaptureField from '../components/form/IdentityCaptureField';
+import { parseSriLankanAddress } from '../utils/nicParser';
+import { getPostalCodeByCity } from '../utils/sriLankaPostalCodes';
+
+// ============================================================================
+// OCR ENGINE SELECTION:
+// 1. Tesseract.js (Active): 100% Client-Side & Private (Zero external data exposure)
+// 2. Gemini Flash Vision: Cloud AI via Backend API
+// To switch engines, comment one import and uncomment the other:
+// ============================================================================
+import { scanNICTesseract as scanNIC } from '../services/tesseractNicService';
+// import { scanNICGemini as scanNIC } from '../services/geminiNicService';
 
 const RESEND_SECONDS = 30;
 const TOTAL_STEPS = 4;
@@ -160,6 +171,123 @@ export default function SignUpPage() {
     postalCode: '',
     preferredContact: 'SMS',
   });
+
+  // OCR state for AI NIC scanning & Auto-population
+  const [ocrScanning, setOcrScanning] = useState(false);
+  const [ocrStatus, setOcrStatus] = useState(null); // { type: 'loading' | 'success' | 'error', message: string }
+  const [autoFilledFields, setAutoFilledFields] = useState(new Set());
+  const scanSeqRef = useRef(0);
+  const nicFrontRef = useRef(form.nicFront);
+  const nicBackRef = useRef(form.nicBack);
+
+  useEffect(() => {
+    nicFrontRef.current = form.nicFront;
+  }, [form.nicFront]);
+
+  useEffect(() => {
+    nicBackRef.current = form.nicBack;
+  }, [form.nicBack]);
+
+  const triggerNicScan = async (frontImg, backImg) => {
+    const activeFront = frontImg || nicFrontRef.current;
+    const activeBack = backImg || nicBackRef.current;
+    if (!activeFront) return;
+
+    const currentSeq = ++scanSeqRef.current;
+    setOcrScanning(true);
+    setOcrStatus({ type: 'loading', message: 'Fetching your details...' });
+
+    try {
+      const result = await scanNIC({
+        nicFront: activeFront,
+        nicBack: activeBack,
+        onStatusChange: (st) => {
+          if (scanSeqRef.current !== currentSeq) return;
+          const statusType = st.status === 'ERROR' ? 'error' : st.status === 'SUCCESS' ? 'success' : 'loading';
+          setOcrStatus({ type: statusType, message: st.message || 'Fetching your details...' });
+        },
+      });
+
+      // Ignore if a newer scan was initiated while waiting
+      if (scanSeqRef.current !== currentSeq) return;
+
+      if (result && result.success) {
+        // Parse address components
+        const parsedAddress = parseSriLankanAddress(result.address, result.city, result.district);
+
+        setAutoFilledFields((prevFilled) => {
+          const filled = new Set(prevFilled);
+          if (result.fullName) filled.add('fullName');
+          if (result.nicNumber) filled.add('nic');
+          if (result.dob) filled.add('dob');
+          if (result.gender) filled.add('gender');
+          if (result.suggestedTitle) filled.add('title');
+          if (parsedAddress.addressLine1) filled.add('addressLine1');
+          if (parsedAddress.addressLine2) filled.add('addressLine2');
+          if (parsedAddress.city) filled.add('city');
+          if (parsedAddress.district) filled.add('district');
+          if (parsedAddress.postalCode) filled.add('postalCode');
+          return filled;
+        });
+
+        setForm((prev) => {
+          const updated = { ...prev };
+          if (result.fullName) {
+            updated.fullName = result.fullName;
+          }
+          if (result.nicNumber) {
+            updated.nic = result.nicNumber;
+          }
+          if (result.dob) {
+            updated.dob = result.dob;
+          }
+          if (result.gender) {
+            updated.gender = result.gender;
+          }
+          if (result.suggestedTitle) {
+            updated.title = result.suggestedTitle;
+          }
+          if (parsedAddress.addressLine1) {
+            updated.addressLine1 = parsedAddress.addressLine1;
+          }
+          if (parsedAddress.addressLine2) {
+            updated.addressLine2 = parsedAddress.addressLine2;
+          }
+          if (parsedAddress.city) {
+            updated.city = parsedAddress.city;
+          }
+          if (parsedAddress.district) {
+            updated.district = parsedAddress.district;
+          }
+          if (parsedAddress.postalCode) {
+            updated.postalCode = parsedAddress.postalCode;
+          }
+          return updated;
+        });
+
+        setOcrStatus({
+          type: 'success',
+          message: 'Details fetched successfully. You can review and edit them in the next steps.',
+        });
+      } else {
+        setOcrStatus({
+          type: 'error',
+          message: result?.message || 'Could not auto-extract details. You can enter them manually.',
+        });
+      }
+    } catch (err) {
+      if (scanSeqRef.current !== currentSeq) return;
+      console.warn('OCR error:', err);
+      setOcrStatus({
+        type: 'error',
+        message: 'Could not auto-extract details. You can enter them manually.',
+      });
+    } finally {
+      if (scanSeqRef.current === currentSeq) {
+        setOcrScanning(false);
+      }
+    }
+  };
 
 
   /* ──────────────────────────────────────────────────────────────────
@@ -460,7 +588,19 @@ export default function SignUpPage() {
     if (field === 'nic') {
       value = value.slice(0, 12);
     }
-    setForm(f => ({ ...f, [field]: value }));
+    if (field === 'postalCode') {
+      value = value.replace(/\D/g, '').slice(0, 5);
+    }
+    setForm(f => {
+      const updated = { ...f, [field]: value };
+      if (field === 'city' && value.trim()) {
+        const detectedPostal = getPostalCodeByCity(value, f.district);
+        if (detectedPostal) {
+          updated.postalCode = detectedPostal;
+        }
+      }
+      return updated;
+    });
     setFieldErrors(fe => ({ ...fe, [field]: undefined }));
     setError('');
   };
@@ -489,7 +629,6 @@ export default function SignUpPage() {
     const fe = {};
     if (!form.nicFront) fe.nicFront = 'A photo of the front of your NIC is required';
     if (!form.nicBack) fe.nicBack = 'A photo of the back of your NIC is required';
-    if (!form.facePhoto) fe.facePhoto = 'A headshot is required';
     return fe;
   };
 
@@ -768,61 +907,7 @@ export default function SignUpPage() {
                             : "Select Verify to receive a 6-digit code. We'll use this number for important updates."}
                         </p>}
                   </div>
-
-                  {/* ────────────────────────────────────────────────────────────
-                      EMAIL ADDRESS FIELD — TEMPORARILY REMOVED (see the note above).
-                      Two variants are kept here: (A) the plain field as it stood
-                      before this change, and (B) the same field with inline email
-                      verification, which the BRD asks for. Restore A to bring the
-                      field back, or B to bring back verification as well — B also
-                      needs the four EMAIL VERIFICATION blocks near the top of this
-                      file, the email checks in validateStep1, and the email key in
-                      the register payload.
-
-                      (A) plain email field
-                      <div className="signup-field">
-                        <label className="signup-label" htmlFor="signup-email">
-                          Email Address <span className="signup-required" aria-hidden="true">*</span>
-                        </label>
-                        <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`}>
-                          <span className="signup-input-icon" aria-hidden="true"><IconMail /></span>
-                          <input
-                            type="email"
-                            className="signup-input"
-                            placeholder="example@email.com"
-                            id="signup-email"
-                            autoComplete="email"
-                            value={form.email}
-                            onChange={set('email')}
-                            aria-invalid={!!fieldErrors.email}
-                            aria-describedby={fieldErrors.email ? 'signup-email-error' : undefined}
-                          />
-                        </div>
-                        {fieldErrors.email && <p className="signup-field-error" id="signup-email-error">{fieldErrors.email}</p>}
-                      </div>
-
-                      (B) email field with inline verification
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
-                        <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`} style={{ flex: 1 }}>
-                          <span className="signup-input-icon" aria-hidden="true"><IconMail /></span>
-                          <input type="email" className="signup-input" placeholder="example@email.com" id="signup-email"
-                            autoComplete="email" value={form.email} onChange={set('email')} readOnly={emailVerified} />
-                        </div>
-                        {emailVerified ? (
-                          <span className="auth-verified-badge"><FiCheck size={15} aria-hidden="true" /> Verified</span>
-                        ) : (
-                          <button type="button" ref={verifyEmailBtnRef} className="auth-verify-btn"
-                            onClick={sendEmailOtp} disabled={sendingEmailOtp} aria-busy={sendingEmailOtp}>
-                            {sendingEmailOtp ? 'Sending…' : 'Verify'}
-                          </button>
-                        )}
-                      </div>
-                      <p className="signup-field-help" id="signup-email-help">
-                        {emailVerified ? 'Email address confirmed.' : 'Select Verify to receive a 6-digit code at this address.'}
-                      </p>
-                      ──────────────────────────────────────────────────────────── */}
                 </div>
-                
               </>
             )}
 
@@ -830,9 +915,24 @@ export default function SignUpPage() {
             {step === 2 && (
               <>
                 <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.88rem', color: '#475569' }}>
-                  We need to see your NIC and a photo of you to confirm your identity.
-                  Capturing them now means you won't be asked again when you apply for a service.
+                  Please upload or photograph the front and back of your National Identity Card (NIC).
+                  Our system will automatically fetch your details to save your time.
                 </p>
+
+                {ocrStatus && (
+                  <div className={`nic-scan-banner ${ocrStatus.type}`}>
+                    {ocrStatus.type === 'loading' && (
+                      <span className="nic-scan-icon-spin"><FiRefreshCw size={18} /></span>
+                    )}
+                    {ocrStatus.type === 'success' && (
+                      <FiCheck size={18} />
+                    )}
+                    {ocrStatus.type === 'error' && (
+                      <FiAlertCircle size={18} />
+                    )}
+                    <span>{ocrStatus.message}</span>
+                  </div>
+                )}
 
                 <IdentityCaptureField
                   label="NIC — Front Side"
@@ -840,7 +940,12 @@ export default function SignUpPage() {
                   required
                   value={form.nicFront}
                   error={fieldErrors.nicFront}
-                  onChange={(v) => { setForm(f => ({ ...f, nicFront: v })); setFieldErrors(fe => ({ ...fe, nicFront: undefined })); }}
+                  onChange={(v) => {
+                    nicFrontRef.current = v;
+                    setForm((f) => ({ ...f, nicFront: v }));
+                    setFieldErrors((fe) => ({ ...fe, nicFront: undefined }));
+                    if (v) triggerNicScan(v, nicBackRef.current);
+                  }}
                   instructions={[
                     'Place the front of your NIC on a flat, dark surface',
                     'Make sure all four corners are inside the frame',
@@ -855,7 +960,12 @@ export default function SignUpPage() {
                   required
                   value={form.nicBack}
                   error={fieldErrors.nicBack}
-                  onChange={(v) => { setForm(f => ({ ...f, nicBack: v })); setFieldErrors(fe => ({ ...fe, nicBack: undefined })); }}
+                  onChange={(v) => {
+                    nicBackRef.current = v;
+                    setForm((f) => ({ ...f, nicBack: v }));
+                    setFieldErrors((fe) => ({ ...fe, nicBack: undefined }));
+                    if (v && nicFrontRef.current) triggerNicScan(nicFrontRef.current, v);
+                  }}
                   instructions={[
                     'Turn the card over and capture the reverse side',
                     'Keep the whole card inside the frame',
@@ -863,18 +973,21 @@ export default function SignUpPage() {
                 />
 
                 <IdentityCaptureField
-                  label="Your Photo (Headshot)"
+                  label="Your Photo (Headshot) — Optional"
                   variant="face"
-                  required
+                  required={false}
                   value={form.facePhoto}
                   error={fieldErrors.facePhoto}
-                  onChange={(v) => { setForm(f => ({ ...f, facePhoto: v })); setFieldErrors(fe => ({ ...fe, facePhoto: undefined })); }}
+                  onChange={(v) => {
+                    setForm((f) => ({ ...f, facePhoto: v }));
+                    setFieldErrors((fe) => ({ ...fe, facePhoto: undefined }));
+                  }}
                   instructions={[
                     'Look straight at the camera in good, even lighting',
                     'Centre your face in the oval and fill the frame',
                     'No hat, sunglasses or face covering — prescription glasses are fine',
                   ]}
-                  helpText="We check this against your NIC photo."
+                  helpText="Optional headshot for secondary verification."
                 />
               </>
             )}
@@ -883,7 +996,12 @@ export default function SignUpPage() {
               <>
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-title">Title <span className="signup-required" aria-hidden="true">*</span></label>
+                    <label className="signup-label" htmlFor="signup-title">
+                      Title <span className="signup-required" aria-hidden="true">*</span>
+                      {autoFilledFields.has('title') && (
+                        <span className="autofill-badge"><FiCheck size={10} /> Auto-filled</span>
+                      )}
+                    </label>
                     <div className={`signup-input-wrap ${fieldErrors.title ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconUser /></span>
                       <select className="signup-input signup-select" id="signup-title" value={form.title} onChange={set('title')}>
@@ -897,7 +1015,12 @@ export default function SignUpPage() {
                     {fieldErrors.title && <p className="signup-field-error">{fieldErrors.title}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-dob">Date of Birth <span className="signup-required" aria-hidden="true">*</span></label>
+                    <label className="signup-label" htmlFor="signup-dob">
+                      Date of Birth <span className="signup-required" aria-hidden="true">*</span>
+                      {autoFilledFields.has('dob') && (
+                        <span className="autofill-badge"><FiCheck size={10} /> Auto-filled</span>
+                      )}
+                    </label>
                     <div className={`signup-input-wrap ${fieldErrors.dob ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconCalendar /></span>
                       <input type="date" className="signup-input" id="signup-dob" value={form.dob} onChange={set('dob')} />
@@ -908,7 +1031,12 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-fullname">Full Name (As per NIC/Passport) <span className="signup-required" aria-hidden="true">*</span></label>
+                    <label className="signup-label" htmlFor="signup-fullname">
+                      Full Name (As per NIC/Passport) <span className="signup-required" aria-hidden="true">*</span>
+                      {autoFilledFields.has('fullName') && (
+                        <span className="autofill-badge"><FiCheck size={10} /> Auto-filled</span>
+                      )}
+                    </label>
                     <div className={`signup-input-wrap ${fieldErrors.fullName ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconUser /></span>
                       <input type="text" className="signup-input" placeholder="John Michael Perera" id="signup-fullname" value={form.fullName} onChange={set('fullName')} />
@@ -916,7 +1044,12 @@ export default function SignUpPage() {
                     {fieldErrors.fullName && <p className="signup-field-error">{fieldErrors.fullName}</p>}
                   </div>
                   <div className="signup-field">
-                    <span className="signup-label" id="signup-gender-label">Gender <span className="signup-required" aria-hidden="true">*</span></span>
+                    <span className="signup-label" id="signup-gender-label">
+                      Gender <span className="signup-required" aria-hidden="true">*</span>
+                      {autoFilledFields.has('gender') && (
+                        <span className="autofill-badge"><FiCheck size={10} /> Auto-filled</span>
+                      )}
+                    </span>
                     <div className="signup-radio-group" role="radiogroup" aria-labelledby="signup-gender-label">
                       <label className="signup-radio-label">
                         <input type="radio" name="gender" value="Male" checked={form.gender === 'Male'} onChange={set('gender')} /> Male
@@ -934,7 +1067,12 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-nic">NIC / Passport / BR Number <span className="signup-required" aria-hidden="true">*</span></label>
+                    <label className="signup-label" htmlFor="signup-nic">
+                      NIC / Passport / BR Number <span className="signup-required" aria-hidden="true">*</span>
+                      {autoFilledFields.has('nic') && (
+                        <span className="autofill-badge"><FiCheck size={10} /> Auto-filled</span>
+                      )}
+                    </label>
                     <div className={`signup-input-wrap ${fieldErrors.nic ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconCard /></span>
                       <input type="text" className="signup-input" placeholder="e.g. 199012345678" id="signup-nic" value={form.nic} onChange={set('nic')} maxLength="12" />
@@ -967,12 +1105,17 @@ export default function SignUpPage() {
               </>
             )}
 
-            {/* STEP 3 FIELDS */}
+            {/* STEP 4 FIELDS */}
             {step === 4 && (
               <>
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-address1">Address Line 1 <span className="signup-required" aria-hidden="true">*</span></label>
+                    <label className="signup-label" htmlFor="signup-address1">
+                      Address Line 1 <span className="signup-required" aria-hidden="true">*</span>
+                      {autoFilledFields.has('addressLine1') && (
+                        <span className="autofill-badge"><FiCheck size={10} /> Auto-filled</span>
+                      )}
+                    </label>
                     <div className={`signup-input-wrap ${fieldErrors.addressLine1 ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconMapPin /></span>
                       <input type="text" className="signup-input" placeholder="123, Galle Road" id="signup-address1" value={form.addressLine1} onChange={set('addressLine1')} />
@@ -980,7 +1123,12 @@ export default function SignUpPage() {
                     {fieldErrors.addressLine1 && <p className="signup-field-error">{fieldErrors.addressLine1}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-address2">Address Line 2 (Optional)</label>
+                    <label className="signup-label" htmlFor="signup-address2">
+                      Address Line 2 (Optional)
+                      {autoFilledFields.has('addressLine2') && (
+                        <span className="autofill-badge"><FiCheck size={10} /> Auto-filled</span>
+                      )}
+                    </label>
                     <div className="signup-input-wrap">
                       <input type="text" className="signup-input" style={{ paddingLeft: '1rem' }} placeholder="Colombo 03" id="signup-address2" value={form.addressLine2} onChange={set('addressLine2')} />
                     </div>
@@ -989,7 +1137,12 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-city">City <span className="signup-required" aria-hidden="true">*</span></label>
+                    <label className="signup-label" htmlFor="signup-city">
+                      City <span className="signup-required" aria-hidden="true">*</span>
+                      {autoFilledFields.has('city') && (
+                        <span className="autofill-badge"><FiCheck size={10} /> Auto-filled</span>
+                      )}
+                    </label>
                     <div className={`signup-input-wrap ${fieldErrors.city ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
                       <input type="text" className="signup-input" placeholder="Colombo" id="signup-city" value={form.city} onChange={set('city')} />
@@ -997,7 +1150,12 @@ export default function SignUpPage() {
                     {fieldErrors.city && <p className="signup-field-error">{fieldErrors.city}</p>}
                   </div>
                   <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-district">District <span className="signup-required" aria-hidden="true">*</span></label>
+                    <label className="signup-label" htmlFor="signup-district">
+                      District <span className="signup-required" aria-hidden="true">*</span>
+                      {autoFilledFields.has('district') && (
+                        <span className="autofill-badge"><FiCheck size={10} /> Auto-filled</span>
+                      )}
+                    </label>
                     <div className={`signup-input-wrap ${fieldErrors.district ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
                       <select className="signup-input signup-select" id="signup-district" value={form.district} onChange={set('district')}>
@@ -1034,7 +1192,12 @@ export default function SignUpPage() {
 
                 <div className="signup-row">
                   <div className="signup-field">
-                    <label className="signup-label" htmlFor="signup-postal">Postal Code <span className="signup-required" aria-hidden="true">*</span></label>
+                    <label className="signup-label" htmlFor="signup-postal">
+                      Postal Code <span className="signup-required" aria-hidden="true">*</span>
+                      {autoFilledFields.has('postalCode') && (
+                        <span className="autofill-badge"><FiCheck size={10} /> Auto-filled</span>
+                      )}
+                    </label>
                     <div className={`signup-input-wrap ${fieldErrors.postalCode ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
                       <input type="text" className="signup-input" placeholder="00300" id="signup-postal" value={form.postalCode} onChange={set('postalCode')} />
