@@ -116,15 +116,17 @@ export async function scanNICTesseract({ nicFront, nicBack, onStatusChange }) {
       onStatusChange({ status: 'SUCCESS', message: 'Details verified locally.' });
     }
 
-    console.log('[Tesseract.js RAW Front]:', frontText);
-    if (nicBack) console.log('[Tesseract.js RAW Back]:', rawBack);
-    console.log('[Tesseract.js Extracted]:', {
-      nic: mathNIC.nic,
-      fullName,
-      address,
-      dob: mathNIC.dob,
-      gender: mathNIC.gender,
-    });
+    if (import.meta.env.DEV) {
+      console.log('[Tesseract.js RAW Front]:', frontText);
+      if (nicBack) console.log('[Tesseract.js RAW Back]:', rawBack);
+      console.log('[Tesseract.js Extracted]:', {
+        nic: mathNIC.nic,
+        fullName,
+        address,
+        dob: mathNIC.dob,
+        gender: mathNIC.gender,
+      });
+    }
 
     return {
       success: true,
@@ -137,6 +139,7 @@ export async function scanNICTesseract({ nicFront, nicBack, onStatusChange }) {
       dob: mathNIC.dob,
       gender: mathNIC.gender,
       suggestedTitle: mathNIC.suggestedTitle,
+      warnings: mathNIC.warnings || [],
     };
   } catch (err) {
     await worker.terminate();
