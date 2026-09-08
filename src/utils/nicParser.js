@@ -1,122 +1,26 @@
 import { getPostalCodeByCity } from './sriLankaPostalCodes.js';
 
 /**
- * Sri Lankan NIC Day-of-Year to Month/Day mapping table (366-day leap year baseline used by DRP)
+ * The NIC number itself is modelled in ./sriLankaNic.js — decoding, validation,
+ * old<->new conversion and OCR-tolerant extraction all live there, with tests in
+ * ./__tests__/sriLankaNic.test.js. It is re-exported here so existing imports
+ * from this module keep working.
+ *
+ * What stays in this file is the softer, heuristic half: pulling a name and an
+ * address out of raw OCR text, and mapping a town to its district and postcode.
  */
-const MONTH_RANGES = [
-  { month: 1, name: 'January', days: 31 },
-  { month: 2, name: 'February', days: 29 },
-  { month: 3, name: 'March', days: 31 },
-  { month: 4, name: 'April', days: 30 },
-  { month: 5, name: 'May', days: 31 },
-  { month: 6, name: 'June', days: 30 },
-  { month: 7, name: 'July', days: 31 },
-  { month: 8, name: 'August', days: 31 },
-  { month: 9, name: 'September', days: 30 },
-  { month: 10, name: 'October', days: 31 },
-  { month: 11, name: 'November', days: 30 },
-  { month: 12, name: 'December', days: 31 },
-];
-
-/**
- * Converts day of the year (1-366) to Month (1-12) and Day (1-31)
- */
-function getMonthAndDay(dayOfYear) {
-  let remainingDays = dayOfYear;
-  for (const item of MONTH_RANGES) {
-    if (remainingDays <= item.days) {
-      return {
-        month: item.month,
-        day: remainingDays,
-      };
-    }
-    remainingDays -= item.days;
-  }
-  return null;
-}
-
-/**
- * Mathematically decodes Sri Lankan NIC (both 12-digit New format & 9-digit Old format)
- * @param {string} rawNic - Raw extracted NIC string
- * @returns {Object|null} Decoded NIC details or null if invalid
- */
-export function parseSriLankanNIC(rawNic) {
-  if (!rawNic || typeof rawNic !== 'string') return null;
-
-  const cleanNic = rawNic.replace(/[\s\-_]/g, '').trim().toUpperCase();
-
-  let year = null;
-  let dayOfYear = null;
-  let isOldFormat = false;
-
-  // New NIC: 12 digits (e.g. 199513312345)
-  if (/^\d{12}$/.test(cleanNic)) {
-    year = parseInt(cleanNic.substring(0, 4), 10);
-    dayOfYear = parseInt(cleanNic.substring(4, 7), 10);
-    isOldFormat = false;
-  }
-  // Old NIC: 9 digits followed by V or X (e.g. 951331234V)
-  else if (/^\d{9}[VX]$/.test(cleanNic)) {
-    const yy = parseInt(cleanNic.substring(0, 2), 10);
-    year = 1900 + yy;
-    dayOfYear = parseInt(cleanNic.substring(2, 5), 10);
-    isOldFormat = true;
-  } else {
-    return null;
-  }
-
-  // Determine Gender: If dayOfYear > 500, Female and actual days = dayOfYear - 500
-  let gender = 'Male';
-  let actualDayOfYear = dayOfYear;
-
-  if (dayOfYear > 500) {
-    gender = 'Female';
-    actualDayOfYear = dayOfYear - 500;
-  }
-
-  // Validate day of year range (1 to 366)
-  if (actualDayOfYear < 1 || actualDayOfYear > 366) {
-    return null;
-  }
-
-  const monthDay = getMonthAndDay(actualDayOfYear);
-  if (!monthDay) return null;
-
-  const mm = String(monthDay.month).padStart(2, '0');
-  const dd = String(monthDay.day).padStart(2, '0');
-  const dobFormatted = `${year}-${mm}-${dd}`;
-
-  return {
-    isValid: true,
-    nic: cleanNic,
-    format: isOldFormat ? 'OLD_NIC' : 'NEW_NIC',
-    year,
-    dayOfYear: actualDayOfYear,
-    dob: dobFormatted, // YYYY-MM-DD
-    gender, // 'Male' | 'Female'
-    suggestedTitle: gender === 'Male' ? 'Mr.' : 'Ms.',
-  };
-}
-
-/**
- * Extracts and parses NIC from unformatted OCR raw text
- */
-export function extractNICFromText(text) {
-  if (!text || typeof text !== 'string') return null;
-
-  // Match 12-digit new NIC or 9-digit old NIC with V/X
-  const matches = text.match(/\b(\d{12}|\d{9}[vVxX])\b/g);
-  if (!matches || matches.length === 0) return null;
-
-  for (const candidate of matches) {
-    const parsed = parseSriLankanNIC(candidate);
-    if (parsed && parsed.isValid) {
-      return parsed;
-    }
-  }
-
-  return null;
-}
+export {
+  parseSriLankanNIC,
+  parseNIC,
+  extractNICFromText,
+  validateNIC,
+  toNewFormat,
+  toOldFormat,
+  formatNIC,
+  cleanNIC,
+  NIC_FORMAT,
+  NIC_ERROR,
+} from './sriLankaNic.js';
 
 export const SRI_LANKAN_DISTRICTS = [
   'Ampara', 'Anuradhapura', 'Badulla', 'Batticaloa', 'Colombo',
