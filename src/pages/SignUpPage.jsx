@@ -6,17 +6,15 @@ import signupBgImage from '../assets/team_laptop.jpg';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
 import IdentityCaptureField from '../components/form/IdentityCaptureField';
-import { parseSriLankanAddress } from '../utils/nicParser';
+import { parseSriLankanAddress, validateNIC, cleanNIC } from '../utils/nicParser';
 import { getPostalCodeByCity } from '../utils/sriLankaPostalCodes';
 
 // ============================================================================
-// OCR ENGINE SELECTION:
-// 1. Tesseract.js (Active): 100% Client-Side & Private (Zero external data exposure)
-// 2. Gemini Flash Vision: Cloud AI via Backend API
-// To switch engines, comment one import and uncomment the other:
+// NIC OCR ENGINE — Tesseract.js, in the browser, and nothing else.
+// The card image never leaves the device and no third party ever sees it, which
+// is what lets this run on SLT infrastructure without a data-residency review.
 // ============================================================================
 import { scanNICTesseract as scanNIC } from '../services/tesseractNicService';
-// import { scanNICGemini as scanNIC } from '../services/geminiNicService';
 
 const RESEND_SECONDS = 30;
 const TOTAL_STEPS = 4;
@@ -267,7 +265,9 @@ export default function SignUpPage() {
 
         setOcrStatus({
           type: 'success',
-          message: 'Details fetched successfully. You can review and edit them in the next steps.',
+          message: result.warnings?.length
+            ? `Details fetched. ${result.warnings[0]}`
+            : 'Details fetched successfully. You can review and edit them in the next steps.',
         });
       } else {
         setOcrStatus({
@@ -638,7 +638,14 @@ export default function SignUpPage() {
     if (!form.fullName?.trim()) fe.fullName = 'Full Name is required';
     if (!form.dob) fe.dob = 'Date of birth is required';
     if (!form.gender) fe.gender = 'Gender is required';
-    if (!form.nic?.trim()) fe.nic = 'NIC / Passport is required';
+    if (!form.nic?.trim()) {
+      fe.nic = 'NIC / Passport is required';
+    } else if (/^\d{8,13}[VX]?$/.test(cleanNIC(form.nic))) {
+      // Looks like an attempted NIC rather than a passport or BR number, so hold
+      // it to the real format and say what is wrong rather than just "invalid".
+      const check = validateNIC(form.nic);
+      if (!check.valid) fe.nic = check.message;
+    }
     if (!form.nationality) fe.nationality = 'Nationality is required';
     return fe;
   };
