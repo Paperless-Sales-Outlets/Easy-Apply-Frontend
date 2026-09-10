@@ -202,7 +202,11 @@ export default function SignUpPage() {
         onStatusChange: (st) => {
           if (scanSeqRef.current !== currentSeq) return;
           const statusType = st.status === 'ERROR' ? 'error' : st.status === 'SUCCESS' ? 'success' : 'loading';
-          setOcrStatus({ type: statusType, message: st.message || 'Fetching your details...' });
+          setOcrStatus({
+            type: statusType,
+            message: st.message || 'Fetching your details...',
+            progress: typeof st.progress === 'number' ? st.progress : null,
+          });
         },
       });
 
@@ -757,6 +761,10 @@ export default function SignUpPage() {
     }
   };
 
+  // The scan fills in steps 3 and 4, so moving on while it is still running is
+  // how a customer ends up typing into fields that are about to be overwritten.
+  const scanBusy = ocrScanning && step === 2;
+
   return (
     <div className="signup-root">
       <div className="signup-card">
@@ -937,7 +945,28 @@ export default function SignUpPage() {
                     {ocrStatus.type === 'error' && (
                       <FiAlertCircle size={18} />
                     )}
-                    <span>{ocrStatus.message}</span>
+                    <span className="nic-scan-text">
+                      {ocrStatus.message}
+                      {ocrStatus.type === 'loading' && (
+                        <span
+                          className="nic-scan-progress"
+                          role="progressbar"
+                          aria-label="Reading your NIC"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={ocrStatus.progress === null || ocrStatus.progress === undefined
+                            ? undefined
+                            : Math.round(ocrStatus.progress * 100)}
+                        >
+                          <span
+                            className={`nic-scan-progress-fill ${ocrStatus.progress === null || ocrStatus.progress === undefined ? 'is-indeterminate' : ''}`}
+                            style={ocrStatus.progress === null || ocrStatus.progress === undefined
+                              ? undefined
+                              : { width: `${Math.round(ocrStatus.progress * 100)}%` }}
+                          />
+                        </span>
+                      )}
+                    </span>
                   </div>
                 )}
 
@@ -1261,9 +1290,19 @@ export default function SignUpPage() {
                   <button type="button" className="signup-btn-secondary" onClick={prevStep}>
                     <IconArrowLeft /> Back
                   </button>
-                  <button type="submit" className={`signup-btn ${loading ? 'loading' : ''}`} disabled={loading}>
-                    {loading ? <div className="signup-spinner" /> : (step === TOTAL_STEPS ? 'Create Account' : 'Continue')}
-                    {!loading && <IconArrowRight />}
+                  <button
+                    type="submit"
+                    className={`signup-btn ${loading || scanBusy ? 'loading' : ''}`}
+                    disabled={loading || scanBusy}
+                    aria-busy={loading || scanBusy}
+                  >
+                    {loading || scanBusy ? <div className="signup-spinner" /> : null}
+                    {scanBusy
+                      ? 'Reading your NIC\u2026'
+                      : loading
+                        ? null
+                        : (step === TOTAL_STEPS ? 'Create Account' : 'Continue')}
+                    {!loading && !scanBusy && <IconArrowRight />}
                   </button>
                 </>
               )}

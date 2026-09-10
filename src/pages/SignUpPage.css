@@ -1026,6 +1026,58 @@
   color: #d46b08;
 }
 
+/* The banner sits beside a spinning icon; the text column carries the message
+   and, while a scan is running, a progress bar under it. */
+.nic-scan-banner {
+  align-items: flex-start;
+}
+
+.nic-scan-text {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.nic-scan-progress {
+  display: block;
+  height: 4px;
+  margin-top: 0.45rem;
+  border-radius: 999px;
+  background: rgba(0, 80, 179, 0.15);
+  overflow: hidden;
+}
+
+.nic-scan-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #0050b3;
+  transition: width 0.25s ease;
+}
+
+/* Tesseract reports some phases without a percentage — slide a short bar so the
+   customer can still see that something is happening. */
+.nic-scan-progress-fill.is-indeterminate {
+  width: 35%;
+  animation: nicScanSlide 1.2s ease-in-out infinite;
+}
+
+@keyframes nicScanSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nic-scan-progress-fill.is-indeterminate {
+    animation: none;
+    width: 100%;
+    opacity: 0.4;
+  }
+  .nic-scan-icon-spin {
+    animation-duration: 2.5s;
+  }
+}
+
 .nic-scan-icon-spin {
   animation: nicSpin 1s linear infinite;
   display: inline-flex;
