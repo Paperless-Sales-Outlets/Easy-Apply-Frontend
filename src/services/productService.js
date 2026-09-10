@@ -2,7 +2,7 @@ import axios from 'axios';
 import api from '../utils/api';
 import { mapHubTemplateToProductCard } from '../utils/productHubAdapter';
 
-const TEMPLATES_API_URL = import.meta.env.VITE_PRODUCT_HUB_API_URL || 'https://product-hub-api-7hkn.onrender.com/templates';
+const TEMPLATES_API_URL = import.meta.env.VITE_PRODUCT_HUB_API_URL || 'https://dpdlab1.slt.lk:703/api/templates';
 
 // Generate or retrieve session ID for anonymous cart tracking
 const getSessionId = () => {
