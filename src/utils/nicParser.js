@@ -379,19 +379,29 @@ const NAME_WORD = /^[A-Z]{3,}(?:[-'][A-Z]{2,})*$/;
 /** True when a token can plausibly be part of a name. */
 function isNameToken(token) {
   const bare = token.replace(/\./g, '');
+  if (bare !== bare.toUpperCase()) return false; // mixed case => not the printed name
   if (NAME_STOPWORDS.has(bare)) return false;
   if (NAME_PARTICLES.has(bare)) return true;
   return INITIALS.test(token) || NAME_WORD.test(token);
 }
 
+/** "Name:" printed with the value on the same line. */
+const NAME_LABEL_INLINE = /\bNames?\s*[:.]\s*(.+)$/i;
+/** "Name" or "Name:" alone on its own line, value underneath. */
+const NAME_LABEL_ALONE = /^\s*Names?\s*[:.]?\s*$/i;
+
 /**
  * Reduces one OCR line to the name tokens it contains.
- * Stray single characters ("e", "IC") and punctuation noise are dropped.
+ *
+ * Deliberately case-sensitive. The English name is the only thing on the card
+ * printed in block capitals; the Sinhala and Tamil lines above it are not Latin
+ * text at all, and an `eng` engine renders them as mixed-case nonsense
+ * ("Com Shfm Evisens"). Upper-casing the line first — as this used to — turned
+ * every one of those into a valid-looking name word.
  */
 function nameTokensIn(line) {
   return line
-    .toUpperCase()
-    .replace(/[^A-Z.\-' ]+/g, ' ')
+    .replace(/[^A-Za-z.\-' ]+/g, ' ')
     .split(/\s+/)
     .map((t) => t.replace(/^[-']+|[-'.]+$/g, (m) => (m.includes('.') ? '.' : '')))
     .filter(Boolean)
@@ -440,7 +450,28 @@ export function extractFullNameFromOCR(text) {
 
   const lines = text.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
 
-  // Group consecutive lines that yield name tokens into blocks.
+  // The card labels the English name outright ("Name: KESAVAN AVANEESH"), which
+  // beats any amount of guessing. Trust it when it is there — scoring blocks by
+  // size let six words of misread Sinhala outrank the two real ones.
+  for (let i = 0; i < lines.length; i += 1) {
+    const inline = lines[i].match(NAME_LABEL_INLINE);
+    const alone = NAME_LABEL_ALONE.test(lines[i]);
+    if (!inline && !alone) continue;
+
+    let tokens = inline ? nameTokensIn(inline[1]) : [];
+    // A long name spills onto the next line or two. Keep taking lines until one
+    // stops looking like part of the name — a field label, a place, or anything
+    // that is not printed in capitals.
+    for (let j = i + 1; j <= i + 2 && j < lines.length; j += 1) {
+      if (FIELD_LABELS.test(lines[j])) break;
+      const next = nameTokensIn(lines[j]);
+      if (next.length === 0 || looksLikePlace(next)) break;
+      tokens = tokens.concat(next);
+    }
+    if (tokens.length > 0) return toNameCase(tokens.slice(0, 6).join(' '));
+  }
+
+  // No usable label — fall back to grouping consecutive name-like lines.
   const blocks = [];
   let current = null;
   lines.forEach((line, index) => {
@@ -480,72 +511,82 @@ export function extractFullNameFromOCR(text) {
   return toNameCase(winner.join(' '));
 }
 
+/** Everything below this on the reverse of the card is legal boilerplate. */
+const ADDRESS_STOP = /(?:Registration of Persons|Commissioner General|Place of Birth|Date of Issue|\d{4}\/\d{2}\/\d{2})/i;
+
+/** The card labels the address block. */
+const ADDRESS_LABEL = /\bAddress\s*[:.]?\s*(.*)$/i;
+
+/** Trailing OCR debris that clings to the end of an address line. */
+function tidyAddressLine(line) {
+  return line
+    .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley)\b.*$/i, '')
+    .replace(/[£§©®™|\\_~@#^*=[\]{}]/g, '')
+    .replace(/^[^\dA-Za-z]+/, '')
+    .replace(/\s+/g, ' ')
+    .replace(/,\s*,/g, ',')
+    .replace(/\s+,/g, ',')
+    .replace(/,([A-Za-z0-9])/g, ', $1')
+    .replace(/[.\s]+$/, '')
+    .trim();
+}
+
 /**
- * Heuristically extracts Address text from OCR raw text on Sri Lankan NIC reverse side
+ * True when a line is the English rendering of the address.
+ *
+ * The address is printed three times — Sinhala, Tamil, then English — and an
+ * `eng` engine turns the first two into mixed-case noise. The English line is
+ * the one in capitals, so case is the cleanest way to pick it out. A house
+ * number is not necessarily numeric either ("C26/2/2"), which is why this looks
+ * for a known town or a comma-separated list rather than a leading digit.
+ */
+function looksLikeEnglishAddress(line) {
+  const clean = (line || '').trim();
+  if (clean.length < 8 || ADDRESS_STOP.test(clean)) return false;
+
+  const letters = clean.replace(/[^A-Za-z]/g, '');
+  if (letters.length < 6) return false;
+  const upperRatio = letters.replace(/[^A-Z]/g, '').length / letters.length;
+  if (upperRatio < 0.8) return false;
+
+  const words = clean.toUpperCase().match(/[A-Z]{3,}/g) || [];
+  if (words.length === 0) return false;
+  const hasTown = words.some((w) => SRI_LANKA_TOWN_DISTRICT_MAP[w])
+    || words.some((w) => SRI_LANKAN_DISTRICTS.some((d) => d.toUpperCase() === w));
+
+  return hasTown || (clean.includes(',') && words.length >= 2);
+}
+
+/**
+ * Pulls the holder's address in English out of OCR text from the back of the card.
+ *
+ * @param {string} text
+ * @returns {string} The address line, or '' if none was recognised.
  */
 export function extractAddressFromOCR(text) {
   if (!text || typeof text !== 'string') return '';
 
-  const lines = text
-    .split(/[\r\n]+/)
-    .map((l) => l.trim())
-    .filter(Boolean);
+  const lines = text.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
 
-  const addressKeywords = [
-    'ROAD', 'STREET', 'MAWATHA', 'DIVISION', 'LANE', 'AVENUE', 'ESTATE',
-    'GARDENS', 'WATTE', 'TOWN', 'NAGAR', 'THOTTAM', 'GAMAYA', 'VILLAGE',
-    'SCHEME', 'HOUSING', 'COLOMBO', 'KANDY', 'GALLE', 'MATARA', 'JAFFNA',
-    'KURUNEGALA', 'GAMPAHA', 'DICKOYA', 'HATTON', 'NUWARA', 'BADULLA',
-    'RATNAPURA', 'KEGALLE', 'KALUTARA', 'AMPARA', 'BATTICALOA', 'TRINCOMALEE',
-    'ANURADHAPURA', 'POLONNARUWA', 'MATALE', 'PUTTALAM', 'VAVUNIYA', 'MANNAR',
-    'MULLAITIVU', 'KILINOCHCHI', 'HAMBANTOTA', 'NO.', 'NO'
-  ];
+  // Prefer the block introduced by the "Address" label, skipping the Sinhala
+  // and Tamil renderings that sit between the label and the English one.
+  for (let i = 0; i < lines.length; i += 1) {
+    const match = lines[i].match(ADDRESS_LABEL);
+    if (!match) continue;
 
-  // 1. First priority: look for a line containing clear Sri Lankan address keywords (e.g. "153,BATHFORD DIVISION, DICKOYA peo SE")
-  for (const rawLine of lines) {
-    // Stop if we hit official Act or Date markers
-    if (/(?:Registration of Persons|Commissioner General|Place of Birth|Date of Issue|\d{4}\/\d{2}\/\d{2})/i.test(rawLine)) {
-      break;
+    if (looksLikeEnglishAddress(match[1])) return tidyAddressLine(match[1]);
+
+    for (let j = i + 1; j <= i + 5 && j < lines.length; j += 1) {
+      if (ADDRESS_STOP.test(lines[j])) break;
+      if (looksLikeEnglishAddress(lines[j])) return tidyAddressLine(lines[j]);
     }
-
-    const upper = rawLine.toUpperCase();
-    const hasAddressKeyword = addressKeywords.some((kw) => upper.includes(kw));
-
-    if (hasAddressKeyword) {
-      // Clean leading & trailing noise
-      let clean = rawLine
-        .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley)\b.*$/i, '')
-        .replace(/^[^\dA-Za-z]+/, '')
-        .replace(/\b[A-Z0-9]{2,4}[0-9A-Z]{4,8}(?:-[A-Z0-9])?\b/g, '')
-        .replace(/\b[0-9a-fA-F]{6,10}\b/g, '')
-        .replace(/[£§©®™|\\_~@#^*=\[\]\{\}]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-      // Extract the continuous uppercase address block (e.g., "153, BATHFORD DIVISION, DICKOYA")
-      const addressPatternMatch = clean.match(/(\d+[\/\-A-Za-z0-9]*,?\s*(?:[A-Za-z0-9]{2,}[\s,]+)+[A-Za-z]{3,})/);
-      if (addressPatternMatch && addressPatternMatch[1]) {
-        let extracted = addressPatternMatch[1].trim().replace(/,\s*,/g, ',').replace(/\s+,/g, ',');
-        // Ensure proper spacing after comma: "153,BATHFORD" -> "153, BATHFORD"
-        extracted = extracted.replace(/,([A-Za-z0-9])/g, ', $1');
-        return extracted;
-      }
-
-      if (clean.length >= 8) {
-        return clean.replace(/,([A-Za-z0-9])/g, ', $1');
-      }
-    }
+    break;
   }
 
-  // 2. Fallback: Search for lines starting with number + comma (e.g. "153, ...") before official footer
-  for (const rawLine of lines) {
-    if (/(?:Registration of Persons|Commissioner General|Place of Birth|Date of Issue|\d{4}\/\d{2}\/\d{2})/i.test(rawLine)) {
-      break;
-    }
-    const matchNo = rawLine.match(/^(\d{1,4}[A-Za-z]?[\s,]+[A-Za-z\s,]{5,40})/);
-    if (matchNo && matchNo[1]) {
-      return matchNo[1].trim().replace(/,([A-Za-z0-9])/g, ', $1');
-    }
+  // No label survived the scan — take the first address-shaped line instead.
+  for (const line of lines) {
+    if (ADDRESS_STOP.test(line)) break;
+    if (looksLikeEnglishAddress(line)) return tidyAddressLine(line);
   }
 
   return '';

@@ -1,7 +1,12 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { extractFullNameFromOCR, toNameCase } from '../nicParser.js';
+import {
+  extractFullNameFromOCR,
+  toNameCase,
+  extractAddressFromOCR,
+  parseSriLankanAddress,
+} from '../nicParser.js';
 
 describe('toNameCase', () => {
   test('turns block capitals into ordinary name case', () => {
@@ -62,6 +67,29 @@ describe('extractFullNameFromOCR', () => {
     assert.equal(extractFullNameFromOCR(text), 'Anoma Wijesinghe');
   });
 
+  test('reads the labelled English name off a real card, not the Sinhala misreads', () => {
+    // Regression from a real 2004 card. An `eng` engine renders the Sinhala and
+    // Tamil lines as mixed-case nonsense; the old code upper-cased every line
+    // first, so those six junk words outscored the two real ones and the form
+    // was filled with "Com Shfm Evisens Bad Fem Wren".
+    const text = [
+      'Ke) Bo emes',
+      'Com Shfm',
+      'Evisens Bad',
+      'Fem Wren',
+      'SRI LANKA  NATIONAL IDENTITY CARD',
+      'No.: 200410111562',
+      'Name: KESAVAN AVANEESH',
+      '/ Sex / Male',
+      'Date of Birth : 2004/04/10',
+    ].join('\n');
+    assert.equal(extractFullNameFromOCR(text), 'Kesavan Avaneesh');
+  });
+
+  test('mixed-case OCR debris never counts as a name', () => {
+    assert.equal(extractFullNameFromOCR('Com Shfm Evisens Bad Fem Wren'), '');
+  });
+
   test('returns empty when the text is only card boilerplate', () => {
     assert.equal(extractFullNameFromOCR('DEMOCRATIC SOCIALIST REPUBLIC OF SRI LANKA'), '');
     assert.equal(extractFullNameFromOCR(''), '');
@@ -71,5 +99,51 @@ describe('extractFullNameFromOCR', () => {
   test('caps the number of parts so a paragraph cannot become a name', () => {
     const text = 'ALPHA BRAVO CHARLIE DELTA ECHO FOXTROT GOLF HOTEL INDIA';
     assert.equal(extractFullNameFromOCR(text).split(' ').length, 6);
+  });
+});
+
+describe('extractAddressFromOCR', () => {
+  // The reverse of a real card: the address is printed in Sinhala, then Tamil,
+  // then English, and an `eng` engine mangles the first two.
+  const back = [
+    'P  A6P86G03 - N',
+    'Address :',
+    'C26/2/2, \u0dc3\u0ddc\u0dba\u0dd2\u0dc3\u0dcf \u0db8\u0dc4\u0dbd\u0dca, \u0db8\u0ddc\u0dbb\u0da7\u0dd4\u0dc0. 036MM-828',
+    'C26/2/2, Comm QsTLiTLoM. QsTuFTL Ln, QLDTMLGmen.',
+    'C26/2/2, SOYSA FLATS, SOYSAPURA, MORATUWA.',
+    'Date of Issue : 2020/05/19  Place of Birth: COLOMBO',
+    'Registration of Persons Act, No. 32 of 1968',
+  ].join('\n');
+
+  test('picks the English rendering, not the Sinhala or Tamil one', () => {
+    // Regression: the old keyword list had no entry matching "FLATS",
+    // "SOYSAPURA" or "MORATUWA", and its fallback needed a leading digit — but
+    // this house number starts with a letter. The result was no address at all.
+    assert.equal(extractAddressFromOCR(back), 'C26/2/2, SOYSA FLATS, SOYSAPURA, MORATUWA');
+  });
+
+  test('the extracted line parses into the form fields', () => {
+    const parsed = parseSriLankanAddress(extractAddressFromOCR(back));
+    assert.equal(parsed.addressLine1, 'C26/2/2, SOYSA FLATS');
+    assert.equal(parsed.city, 'MORATUWA');
+    assert.equal(parsed.district, 'Colombo');
+    assert.equal(parsed.postalCode, '10400');
+  });
+
+  test('works without an Address label', () => {
+    assert.equal(
+      extractAddressFromOCR('45, GALLE ROAD, DEHIWALA.'),
+      '45, GALLE ROAD, DEHIWALA'
+    );
+  });
+
+  test('stops at the legal boilerplate', () => {
+    assert.equal(extractAddressFromOCR('Registration of Persons Act, No. 32 of 1968'), '');
+  });
+
+  test('returns empty for junk input', () => {
+    assert.equal(extractAddressFromOCR(''), '');
+    assert.equal(extractAddressFromOCR(null), '');
+    assert.equal(extractAddressFromOCR('Comm QsTLiTLoM QsTuFTL'), '');
   });
 });
