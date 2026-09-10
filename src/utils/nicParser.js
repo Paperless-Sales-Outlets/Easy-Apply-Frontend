@@ -321,163 +321,64 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
 /**
  * Heuristically extracts Full Name in English from OCR raw text on Sri Lankan NICs
  */
-/**
- * Words that appear on the card but are never part of a person's name.
- */
-const NAME_STOPWORDS = new Set([
-  'DEMOCRATIC', 'SOCIALIST', 'REPUBLIC', 'SRI', 'LANKA', 'SRILANKA', 'LANKAN', 'SRILANKAN',
-  'NATIONAL', 'IDENTITY', 'CARD', 'DEPARTMENT', 'REGISTRATION', 'PERSONS', 'REGISTRAR',
-  'DATE', 'BIRTH', 'GENDER', 'SEX', 'MALE', 'FEMALE', 'HOLDER', 'SIGNATURE',
-  'PLACE', 'COUNTRY', 'MINISTRY', 'DEFENCE', 'OFFICIAL', 'SECRETARY',
-  'COMMISSIONER', 'GENERAL', 'ACT', 'ISSUE', 'ISSUED', 'VALID', 'AUTHORITY',
-  'NAME', 'NAMES', 'SURNAME', 'ADDRESS', 'PROFESSION', 'OCCUPATION',
-  'SINHALA', 'TAMIL', 'ENGLISH', 'NIC', 'NO', 'ID',
-  'OF', 'THE', 'AND', 'IN', 'ON', 'AT', 'TO', 'BY', 'FOR',
-]);
-
-/**
- * Lines carrying one of these are field labels, not names. They end whatever
- * name block was being collected, so "Date of Birth" sitting under the name
- * cannot bleed a stray word into it.
- */
-const FIELD_LABELS = /\b(?:DATE|BIRTH|SEX|GENDER|ADDRESS|ISSUE[D]?|PLACE|PROFESSION|OCCUPATION|SIGNATURE|AUTHORITY|COMMISSIONER)\b/i;
-
-/**
- * Two-letter words that really are name particles. Everything else of that
- * length on a card is OCR debris ("e IC", "No", "ID"), so plain name words must
- * otherwise be at least three letters.
- */
-const NAME_PARTICLES = new Set(['DE', 'LA', 'LE']);
-
-/** Words that mark a line as geography rather than a person. */
-const PLACE_WORDS = new Set([
-  'PROVINCE', 'DISTRICT', 'NORTH', 'SOUTH', 'EAST', 'WEST',
-  'NORTHERN', 'SOUTHERN', 'EASTERN', 'WESTERN', 'CENTRAL',
-  'UVA', 'SABARAGAMUWA', 'ROAD', 'STREET', 'MAWATHA', 'LANE', 'ESTATE',
-]);
-
-/**
- * True when most of a line's words are places — a town, a district or a word
- * like "Province". The address sits directly under the name on the card, so
- * without this the two run together into one block.
- */
-function looksLikePlace(tokens) {
-  if (tokens.length === 0) return false;
-  const places = tokens.filter(
-    (t) => PLACE_WORDS.has(t)
-      || SRI_LANKA_TOWN_DISTRICT_MAP[t]
-      || SRI_LANKAN_DISTRICTS.some((d) => d.toUpperCase() === t)
-  );
-  return places.length * 2 >= tokens.length;
-}
-
-/** A run of initials, e.g. "K." or "K.A.D." */
-const INITIALS = /^(?:[A-Z]\.){1,5}$/;
-/** An ordinary name word. Allows internal hyphens and apostrophes. */
-const NAME_WORD = /^[A-Z]{3,}(?:[-'][A-Z]{2,})*$/;
-
-/** True when a token can plausibly be part of a name. */
-function isNameToken(token) {
-  const bare = token.replace(/\./g, '');
-  if (NAME_STOPWORDS.has(bare)) return false;
-  if (NAME_PARTICLES.has(bare)) return true;
-  return INITIALS.test(token) || NAME_WORD.test(token);
-}
-
-/**
- * Reduces one OCR line to the name tokens it contains.
- * Stray single characters ("e", "IC") and punctuation noise are dropped.
- */
-function nameTokensIn(line) {
-  return line
-    .toUpperCase()
-    .replace(/[^A-Z.\-' ]+/g, ' ')
-    .split(/\s+/)
-    .map((t) => t.replace(/^[-']+|[-'.]+$/g, (m) => (m.includes('.') ? '.' : '')))
-    .filter(Boolean)
-    .filter(isNameToken);
-}
-
-/**
- * Re-cases a name that OCR read off the card in block capitals.
- *
- * Initials stay upper ("K.A.D."), every other part gets a single leading
- * capital, including after a hyphen or apostrophe ("PERERA-SILVA" ->
- * "Perera-Silva"). Anything already mixed-case is left alone.
- *
- * @param {string} name
- * @returns {string}
- */
-export function toNameCase(name) {
-  if (!name || typeof name !== 'string') return '';
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((word) => {
-      const upper = word.toUpperCase();
-      if (INITIALS.test(upper) || /^[A-Z]$/.test(upper)) return upper;
-      return upper
-        .toLowerCase()
-        .replace(/(^|[-'])([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
-    })
-    .join(' ');
-}
-
-/**
- * Pulls the holder's full name in English out of raw OCR text from the front of
- * the card.
- *
- * Names routinely wrap across two or three printed lines, so this collects
- * *runs* of consecutive name-like lines rather than picking a single best line —
- * taking only the longest line is why a two-line name used to come back as just
- * the first part.
- *
- * @param {string} text
- * @returns {string} The name in title case, or '' if nothing convincing was found.
- */
 export function extractFullNameFromOCR(text) {
   if (!text || typeof text !== 'string') return '';
 
-  const lines = text.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+  const ignoredKeywords = [
+    'DEMOCRATIC', 'SOCIALIST', 'REPUBLIC', 'SRI', 'LANKA', 'SRILANKA',
+    'NATIONAL', 'IDENTITY', 'CARD', 'DEPARTMENT', 'REGISTRATION',
+    'PERSONS', 'DATE', 'BIRTH', 'GENDER', 'SEX', 'MALE', 'FEMALE',
+    'HOLDER', 'SIGNATURE', 'PLACE', 'COUNTRY', 'LANKAN', 'SRILANKAN',
+    'MINISTRY', 'DEFENCE', 'OFFICIAL', 'SECRETARY'
+  ];
 
-  // Group consecutive lines that yield name tokens into blocks.
-  const blocks = [];
-  let current = null;
-  lines.forEach((line, index) => {
-    const tokens = FIELD_LABELS.test(line) ? [] : nameTokensIn(line);
-    // A label line, a place line, or a line with nothing name-like all end the
-    // run. A printed name never wraps past three lines either.
-    if (tokens.length === 0 || looksLikePlace(tokens)) {
-      current = null;
-      return;
+  const lines = text
+    .split(/[\r\n]+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  let bestCandidate = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+
+    // 1. Direct Regex match for 2 to 5 uppercase words (e.g. "MAHALINGAM DAWANHAREN" in "e IC MAHALINGAM DAWANHAREN")
+    const matchUpperWords = rawLine.match(/\b([A-Z]{3,}(?:\s+[A-Z]{2,}){1,4})\b/);
+    if (matchUpperWords && matchUpperWords[1]) {
+      const candidate = matchUpperWords[1].trim();
+      const words = candidate.split(/\s+/);
+      const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
+      if (!isIgnored && candidate.length > bestCandidate.length) {
+        bestCandidate = candidate;
+        continue;
+      }
     }
-    if (!current || current.lineCount >= 3) {
-      current = { tokens: [], startLine: index, lineCount: 0 };
-      blocks.push(current);
+
+    // 2. Names with initials (e.g. "M. DAWANHAREN" or "K.A.D. PERERA")
+    const matchInitials = rawLine.match(/\b((?:[A-Z]\.?\s*){1,3}[A-Z]{3,}(?:\s+[A-Z]{3,})?)\b/);
+    if (matchInitials && matchInitials[1]) {
+      const candidate = matchInitials[1].trim();
+      const words = candidate.split(/\s+/);
+      const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
+      if (!isIgnored && candidate.length > bestCandidate.length) {
+        bestCandidate = candidate;
+        continue;
+      }
     }
-    current.tokens.push(...tokens);
-    current.lineCount += 1;
-  });
 
-  if (blocks.length === 0) return '';
+    // 3. Check if line is preceded by "Name" or "Names" label
+    const nameMatch = rawLine.match(/(?:Name|Full\s*Name|Names)[\s\:\-\/]+([A-Za-z\s\.\-]{4,})/i);
+    if (nameMatch && nameMatch[1]) {
+      const candidate = nameMatch[1].replace(/[^A-Za-z\s\.\-]/g, '').trim().toUpperCase();
+      const words = candidate.split(/\s+/).filter((w) => w.length > 1);
+      const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
+      if (!isIgnored && candidate.length > bestCandidate.length) {
+        bestCandidate = candidate;
+      }
+    }
+  }
 
-  // Prefer a block introduced by a "Name" label, then the one with the most
-  // parts — a real name is two or more words far more often than one.
-  const labelled = new Set();
-  lines.forEach((line, index) => {
-    if (/\bNAMES?\b/i.test(line)) labelled.add(index).add(index + 1);
-  });
-
-  const scored = blocks.map((block) => ({
-    block,
-    score: Math.min(block.tokens.length, 6) + (labelled.has(block.startLine) ? 3 : 0),
-  }));
-  scored.sort((a, b) => b.score - a.score);
-
-  const winner = scored[0].block.tokens.slice(0, 6);
-  if (winner.length === 0) return '';
-
-  return toNameCase(winner.join(' '));
+  return bestCandidate;
 }
 
 /**

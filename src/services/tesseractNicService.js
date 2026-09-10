@@ -53,19 +53,6 @@ function preprocessImageForOCR(base64Image) {
 }
 
 /**
- * Human-readable labels for the phases Tesseract reports. Anything not listed
- * is internal chatter and is not worth showing.
- */
-const PROGRESS_LABELS = {
-  'loading tesseract core': 'Starting the scanner\u2026',
-  'initializing tesseract': 'Starting the scanner\u2026',
-  'loading language traineddata': 'Loading the text model \u2014 slower the first time\u2026',
-  'loaded language traineddata': 'Text model ready\u2026',
-  'initializing api': 'Preparing to read your card\u2026',
-  'recognizing text': 'Reading your card\u2026',
-};
-
-/**
  * Scans NIC on the client device using in-browser Tesseract.js WebAssembly worker.
  * Guarantees that citizen identity documents never leave the user's browser.
  *
@@ -86,24 +73,7 @@ export async function scanNICTesseract({ nicFront, nicBack, onStatusChange }) {
 
   // Dynamically import tesseract.js so it only loads into memory when needed
   const { createWorker } = await import('tesseract.js');
-
-  // On a device's first scan Tesseract pulls down its WebAssembly core and the
-  // English model — tens of megabytes, and slow on a phone connection. Report
-  // the real phase and percentage rather than showing a spinner that never
-  // moves, so nobody assumes it has hung and starts typing over the autofill.
-  const worker = await createWorker('eng', 1, {
-    logger: (m) => {
-      if (!onStatusChange || !m) return;
-      const label = PROGRESS_LABELS[m.status];
-      if (!label) return;
-      onStatusChange({
-        status: 'SCANNING',
-        message: label,
-        phase: m.status,
-        progress: typeof m.progress === 'number' ? m.progress : null,
-      });
-    },
-  });
+  const worker = await createWorker('eng');
 
   try {
     // 1. Preprocess and recognize text from front side
