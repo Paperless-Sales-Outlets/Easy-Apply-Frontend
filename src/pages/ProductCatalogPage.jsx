@@ -204,12 +204,27 @@ export default function ProductCatalogPage() {
         const res = await getProducts({ limit: 100 });
         const list = res.data || res.products || res || [];
         if (Array.isArray(list) && list.length > 0) {
-          setProducts(list);
+          // Normalize and use live products directly
+          const normalized = list.map((p) => {
+            const mock = DEFAULT_MOCKUP_PRODUCTS.find(
+              (m) => m.name?.toLowerCase().trim() === (p.name || p.productName || '').toLowerCase().trim()
+            );
+            return {
+              ...p,
+              name: p.name || p.productName || 'SLT Package',
+              monthlyPrice: p.monthlyPrice ?? p.price ?? 0,
+              features: Array.isArray(p.features) && p.features.length > 0 ? p.features : (mock?.features || ['High-speed connectivity', 'Unlimited Entertainment', '24/7 SLT Support']),
+              category: p.category || mock?.category || 'Broadband',
+              speed: p.speed || mock?.speed || null,
+              popular: p.popular ?? (mock?.popular || false),
+            };
+          });
+          setProducts(normalized);
         } else {
           setProducts(DEFAULT_MOCKUP_PRODUCTS);
         }
       } catch (err) {
-        console.warn('Using mockup products:', err);
+        console.warn('Using mockup products fallback:', err);
         setProducts(DEFAULT_MOCKUP_PRODUCTS);
       } finally {
         setLoading(false);

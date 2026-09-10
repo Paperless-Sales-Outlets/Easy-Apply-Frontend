@@ -131,60 +131,21 @@ export const normalizeBackendProduct = (p) => {
  */
 export const getProducts = async (params = {}) => {
   try {
-    const token = import.meta.env.VITE_PRODUCT_HUB_TOKEN;
+    const response = await api.get('/products', { params });
+    const count = response.data?.data?.length ?? response.data?.products?.length ?? 0;
+    const hubUrl = response.data?.hubUrl || 'https://dpdlab1.slt.lk:703/api/templates';
+    const source = response.data?.source === 'LIVE_PRODUCT_HUB' ? 'LIVE PRODUCT HUB' : 'LOCAL DATABASE';
 
-    const response = await axios.get(TEMPLATES_API_URL, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      params,
-    });
+    console.log(
+      `%c[Product Hub API]%c Connected! %c${count} Live Products Loaded %c| Source: ${source} | %c${hubUrl}`,
+      'background: #0f57a8; color: #fff; font-weight: bold; padding: 2px 6px; border-radius: 3px;',
+      'color: #16a34a; font-weight: bold; padding-left: 4px;',
+      'background: #dcfce7; color: #166534; font-weight: bold; padding: 2px 6px; border-radius: 3px;',
+      'color: #64748b; font-weight: 500;',
+      'color: #2563eb; text-decoration: underline;'
+    );
 
-    const items = response.data?.data || response.data || [];
-
-    // Filter product entries: ONLY valid service packages with a price/monthly rental > 0
-    // and belonging to core telecom packages (Voice, Broadband, PEO TV),
-    // while filtering out standalone hardware devices / router photos.
-    const productEntries = Array.isArray(items)
-      ? items.filter((item) => {
-          const t = item.template || {};
-          const fv = t.fieldValues || t.effectiveFieldValues || {};
-          const price = Number(t.price) || Number(fv['Monthly Rental']) || Number(fv['Package Monthly Rental']) || 0;
-
-          // Must have an active package price > 0
-          if (price <= 0) return false;
-
-          const nameLower = (t.name || '').toLowerCase();
-          if (nameLower.includes('router') || nameLower.includes('splitter') || nameLower.includes('cable') || nameLower.includes('adapter')) {
-            return false;
-          }
-
-          return true;
-        })
-      : [];
-
-    if (productEntries.length > 0) {
-      // Transform using the adapter
-      const transformedProducts = productEntries.map(mapHubTemplateToProductCard);
-      console.log(`✅ [Product Hub API] Connected successfully! Loaded ${transformedProducts.length} live packages from ${TEMPLATES_API_URL}`);
-
-      return {
-        success: true,
-        data: transformedProducts,
-        products: transformedProducts,
-      };
-    }
-
-    console.warn('⚠️ [Product Hub API] Connected but returned 0 packages. Falling back to local backend...');
-    // If API returned empty array, try fallback backend /products (excluding hardware devices/accessories)
-    const backendRes = await api.get('/products', { params });
-    const rawBackendList = backendRes.data?.data || backendRes.data?.products || backendRes.data || [];
-    const packagesOnly = Array.isArray(rawBackendList)
-      ? rawBackendList.filter((p) => {
-          const cat = (p.category || '').toLowerCase();
-          return !['devices', 'accessories', 'hardware'].includes(cat) && !p.productCode?.startsWith('SLT-ROUTER') && !p.productCode?.startsWith('SLT-SPLITTER') && !p.productCode?.startsWith('SLT-CAT6');
-        })
-      : [];
-    const normalized = packagesOnly.length > 0 ? packagesOnly.map(normalizeBackendProduct) : MOCK_PRODUCTS;
-    return { success: true, data: normalized, products: normalized };
+    return response.data;
   } catch (err) {
     console.warn(`⚠️ [Product Hub API] Connection issue (${err.response?.status || err.message}). Falling back to local catalog.`);
     try {
