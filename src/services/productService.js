@@ -1,4 +1,8 @@
+import axios from 'axios';
 import api from '../utils/api';
+import { mapHubTemplateToProductCard } from '../utils/productHubAdapter';
+
+const TEMPLATES_API_URL = import.meta.env.VITE_PRODUCT_HUB_API_URL || 'https://product-hub-api-7hkn.onrender.com/templates';
 
 // Generate or retrieve session ID for anonymous cart tracking
 const getSessionId = () => {
@@ -93,18 +97,110 @@ const MOCK_PRODUCTS = [
   },
 ];
 
+export const normalizeBackendProduct = (p) => {
+  const catLower = (p.category || '').toLowerCase();
+  let normalizedCat = 'Fibre Broadband';
+  if (catLower.includes('voice') || catLower === 'voice') normalizedCat = 'Voice';
+  else if (catLower.includes('peo') || catLower === 'peo-tv' || catLower.includes('tv')) normalizedCat = 'PEO TV';
+  else if (catLower.includes('lte') || catLower.includes('4g')) normalizedCat = 'LTE Home';
+  else if (catLower.includes('package') || catLower.includes('bundle')) normalizedCat = 'Fibre Broadband';
+
+  return {
+    id: p._id || p.productId || p.id,
+    _id: p._id || p.productId || p.id,
+    productId: p.productId || p._id,
+    name: p.name || p.productName || 'SLTMobitel Connection',
+    productName: p.productName || p.name || 'SLTMobitel Connection',
+    monthlyPrice: p.monthlyPrice !== undefined ? p.monthlyPrice : (p.price || 0),
+    price: p.price !== undefined ? p.price : (p.monthlyPrice || 0),
+    installationFee: p.installationFee !== undefined ? p.installationFee : 2500,
+    category: normalizedCat,
+    speed: p.speed || (catLower.includes('voice') ? 'Voice' : catLower.includes('peo') ? 'HD TV' : '100 Mbps'),
+    features: (Array.isArray(p.features) && p.features.length > 0)
+      ? p.features
+      : (p.description ? [p.description, 'High Reliability', '24/7 Support'] : ['Unlimited Anytime Data', 'Free Standard Setup', '24/7 Customer Support']),
+    description: p.description || '',
+    popular: Boolean(p.popular || (p.price > 4000)),
+    bannerUrl: p.bannerUrl || p.imageUrl || '',
+  };
+};
+
 /**
- * Fetch all active products.
- * Falls back to rich mock data when the backend returns a non-2xx response
- * (e.g. 500 Internal Server Error while the products collection is being set up).
+ * Fetch all active products from Product Hub API.
+ * Falls back to local backend or rich mock data when unavailable.
  */
 export const getProducts = async (params = {}) => {
   try {
-    const response = await api.get('/products', { params });
-    return response.data;
+    const token = import.meta.env.VITE_PRODUCT_HUB_TOKEN;
+
+    const response = await axios.get(TEMPLATES_API_URL, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      params,
+    });
+
+    const items = response.data?.data || response.data || [];
+
+    // Filter product entries: ONLY valid service packages with a price/monthly rental > 0
+    // and belonging to core telecom packages (Voice, Broadband, PEO TV),
+    // while filtering out standalone hardware devices / router photos.
+    const productEntries = Array.isArray(items)
+      ? items.filter((item) => {
+          const t = item.template || {};
+          const fv = t.fieldValues || t.effectiveFieldValues || {};
+          const price = Number(t.price) || Number(fv['Monthly Rental']) || Number(fv['Package Monthly Rental']) || 0;
+
+          // Must have an active package price > 0
+          if (price <= 0) return false;
+
+          const nameLower = (t.name || '').toLowerCase();
+          if (nameLower.includes('router') || nameLower.includes('splitter') || nameLower.includes('cable') || nameLower.includes('adapter')) {
+            return false;
+          }
+
+          return true;
+        })
+      : [];
+
+    if (productEntries.length > 0) {
+      // Transform using the adapter
+      const transformedProducts = productEntries.map(mapHubTemplateToProductCard);
+      console.log(`✅ [Product Hub API] Connected successfully! Loaded ${transformedProducts.length} live packages from ${TEMPLATES_API_URL}`);
+
+      return {
+        success: true,
+        data: transformedProducts,
+        products: transformedProducts,
+      };
+    }
+
+    console.warn('⚠️ [Product Hub API] Connected but returned 0 packages. Falling back to local backend...');
+    // If API returned empty array, try fallback backend /products (excluding hardware devices/accessories)
+    const backendRes = await api.get('/products', { params });
+    const rawBackendList = backendRes.data?.data || backendRes.data?.products || backendRes.data || [];
+    const packagesOnly = Array.isArray(rawBackendList)
+      ? rawBackendList.filter((p) => {
+          const cat = (p.category || '').toLowerCase();
+          return !['devices', 'accessories', 'hardware'].includes(cat) && !p.productCode?.startsWith('SLT-ROUTER') && !p.productCode?.startsWith('SLT-SPLITTER') && !p.productCode?.startsWith('SLT-CAT6');
+        })
+      : [];
+    const normalized = packagesOnly.length > 0 ? packagesOnly.map(normalizeBackendProduct) : MOCK_PRODUCTS;
+    return { success: true, data: normalized, products: normalized };
   } catch (err) {
-    console.warn('Backend /products unavailable (status:', err.response?.status ?? 'network error', '), using mock product catalogue.');
-    return { success: true, data: MOCK_PRODUCTS, products: MOCK_PRODUCTS };
+    console.warn(`⚠️ [Product Hub API] Connection issue (${err.response?.status || err.message}). Falling back to local catalog.`);
+    try {
+      const backendRes = await api.get('/products', { params });
+      const rawBackendList = backendRes.data?.data || backendRes.data?.products || backendRes.data || [];
+      const packagesOnly = Array.isArray(rawBackendList)
+        ? rawBackendList.filter((p) => {
+            const cat = (p.category || '').toLowerCase();
+            return !['devices', 'accessories', 'hardware'].includes(cat) && !p.productCode?.startsWith('SLT-ROUTER') && !p.productCode?.startsWith('SLT-SPLITTER') && !p.productCode?.startsWith('SLT-CAT6');
+          })
+        : [];
+      const normalized = packagesOnly.length > 0 ? packagesOnly.map(normalizeBackendProduct) : MOCK_PRODUCTS;
+      return { success: true, data: normalized, products: normalized };
+    } catch {
+      return { success: true, data: MOCK_PRODUCTS, products: MOCK_PRODUCTS };
+    }
   }
 };
 

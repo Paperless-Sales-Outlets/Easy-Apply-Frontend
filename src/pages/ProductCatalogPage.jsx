@@ -204,11 +204,7 @@ export default function ProductCatalogPage() {
         const res = await getProducts({ limit: 100 });
         const list = res.data || res.products || res || [];
         if (Array.isArray(list) && list.length > 0) {
-          const merged = DEFAULT_MOCKUP_PRODUCTS.map((mock) => {
-            const found = list.find((p) => p.name?.toLowerCase().trim() === mock.name.toLowerCase().trim());
-            return found ? { ...mock, ...found, features: mock.features, monthlyPrice: mock.monthlyPrice } : mock;
-          });
-          setProducts(merged);
+          setProducts(list);
         } else {
           setProducts(DEFAULT_MOCKUP_PRODUCTS);
         }
@@ -768,8 +764,8 @@ export default function ProductCatalogPage() {
                             ? { display: 'flex', flexDirection: 'column', gap: '0.85rem' }
                             : {
                               display: 'grid',
-                              gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
-                              gap: '1rem',
+                              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))',
+                              gap: '1.15rem',
                             }
                         }
                       >

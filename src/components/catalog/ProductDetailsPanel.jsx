@@ -59,15 +59,24 @@ export default function ProductDetailsPanel({
   const {
     _id,
     id,
-    name,
+    name: rawName,
+    productName,
     speed = '300 Mbps',
-    monthlyPrice = 6990,
+    monthlyPrice: rawMonthlyPrice,
+    price,
     installationFee = 1500,
     description,
-    features = [],
+    features: rawFeatures = [],
     popular = false,
     category = 'Broadband',
+    bannerUrl,
   } = product;
+
+  const name = rawName || productName || 'SLTMobitel Connection';
+  const monthlyPrice = rawMonthlyPrice !== undefined ? rawMonthlyPrice : (price !== undefined ? price : 6990);
+  const features = Array.isArray(rawFeatures) && rawFeatures.length > 0
+    ? rawFeatures
+    : (description ? [description] : ['High-speed connectivity', '24/7 SLT Customer Support']);
 
   const productId = _id || id;
   const catLower = (category || name || '').toLowerCase();
@@ -195,8 +204,16 @@ export default function ProductDetailsPanel({
 
             {/* Hero Title & Graphics */}
             <div style={{ margin: '1.5rem 0', textAlign: 'center' }}>
-              <div style={{ fontSize: '2.4rem', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
-                {catLower.includes('voice') ? <FiPhone size={44} /> : catLower.includes('peo') ? <FiTv size={44} /> : <FiGlobe size={44} />}
+              <div style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.4rem', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+                {bannerUrl ? (
+                  <img
+                    src={bannerUrl}
+                    alt={name}
+                    style={{ maxHeight: '100%', maxWidth: '140px', objectFit: 'contain', filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))' }}
+                  />
+                ) : (
+                  catLower.includes('voice') ? <FiPhone size={44} /> : catLower.includes('peo') ? <FiTv size={44} /> : <FiGlobe size={44} />
+                )}
               </div>
               <div style={{ fontSize: '1.4rem', fontWeight: 900, marginTop: '0.75rem' }}>
                 {name}

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  FiPlusCircle, FiLink, FiMapPin, 
-  FiTrash2, FiUserCheck, FiTrendingUp, 
+import {
+  FiPlusCircle, FiLink, FiMapPin,
+  FiTrash2, FiUserCheck, FiTrendingUp,
   FiClock, FiDollarSign, FiCheckSquare,
   FiShoppingCart
 } from 'react-icons/fi';
@@ -44,11 +44,11 @@ const SERVICES_DATA = [
     route: '/ownership-change',
   },
   {
-    id: 'package-migration',
-    title: 'Package Migration',
-    description: 'Apply for migration of your current package.',
+    id: 'package-upgration',
+    title: 'Package Upgration',
+    description: 'Apply for upgrade of your current package.',
     icon: <FiTrendingUp size={22} color="#0056b3" />,
-    route: '/package-migration',
+    route: '/package-upgration',
   },
   {
     id: 'service-vacation',
@@ -115,10 +115,10 @@ export default function ServicesPage() {
         </div>
 
         {/* Services Grid */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
-          gap: '1.5rem', 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+          gap: '1.5rem',
           marginTop: '3rem'
         }}>
           {SERVICES_DATA.map((service) => (
