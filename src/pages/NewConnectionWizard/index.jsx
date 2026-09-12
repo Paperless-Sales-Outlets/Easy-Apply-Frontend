@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import CustomerInfoStep from './CustomerInfoStep';
 import ServiceInfoStep from './ServiceInfoStep';
 import ValueAddedServicesStep from './ValueAddedServicesStep';
+import ConsentStep from './ConsentStep';
 import LoopCheckStep from './LoopCheckStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
@@ -84,7 +85,8 @@ export default function NewConnectionWizard() {
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
   const vasStepRef = useRef(null);
-  const totalSteps = 5;
+  const consentStepRef = useRef(null);
+  const totalSteps = 6;
 
   useEffect(() => {
     if (selectedProduct?.productName) {
@@ -145,6 +147,7 @@ export default function NewConnectionWizard() {
     e.preventDefault();
     setSubmitError('');
     if (currentStep === 3 && vasStepRef.current && !vasStepRef.current.validate()) return;
+    if (currentStep === 4 && consentStepRef.current && !consentStepRef.current.validate()) return;
     if (currentStep < totalSteps) nextStep();
   };
 
@@ -223,6 +226,7 @@ export default function NewConnectionWizard() {
           t('wizards.newConnection.steps.s1'),
           t('wizards.newConnection.steps.s2'),
           t('wizards.newConnection.steps.s3'),
+          'Privacy & Consent',
           'Coverage Check',
           'Payment',
         ]}
@@ -254,6 +258,14 @@ export default function NewConnectionWizard() {
             />
           )}
           {currentStep === 4 && (
+            <ConsentStep
+              ref={consentStepRef}
+              isActive={currentStep === 4}
+              formData={formData}
+              handleChange={handleChange}
+            />
+          )}
+          {currentStep === 5 && (
             <LoopCheckStep
               formData={formData}
               submitting={submitting}
@@ -261,9 +273,9 @@ export default function NewConnectionWizard() {
               onUnavailable={submitApplication}
             />
           )}
-          {currentStep === 5 && (
+          {currentStep === 6 && (
             <PaymentStep
-              isActive={currentStep === 5}
+              isActive={currentStep === 6}
               verifiedPhone={verifiedMobile}
               amount={selectedProduct?.installationFee || 2500}
               amountLabel="Total Amount"
@@ -282,7 +294,7 @@ export default function NewConnectionWizard() {
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
             {t('common.previous')}
           </button>
-          {currentStep <= 3 && (
+          {currentStep <= 4 && (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               {t('common.nextStep')}
             </button>
