@@ -1035,7 +1035,7 @@ export default function SignUpPage() {
             {step === 3 && (
               <>
                 <p className="signup-field-help" style={{ margin: '0 0 1rem 0' }}>
-                  These details are read from your NIC and can't be edited. To correct them, go back and retake your NIC photos.
+                  Apart from Title and Contact Number, these details are read from your NIC and can't be edited. To correct them, go back and retake your NIC photos.
                 </p>
                 <div className="signup-row">
                   <div className="signup-field">
