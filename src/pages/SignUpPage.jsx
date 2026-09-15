@@ -271,12 +271,12 @@ export default function SignUpPage() {
           type: 'success',
           message: result.warnings?.length
             ? `Details fetched. ${result.warnings[0]}`
-            : 'Details fetched successfully. You can review and edit them in the next steps.',
+            : 'Details fetched successfully. You can review them in the next steps.',
         });
       } else {
         setOcrStatus({
           type: 'error',
-          message: result?.message || 'Could not auto-extract details. You can enter them manually.',
+          message: result?.message || 'Could not auto-extract details. Please retake clearer photos of your NIC.',
         });
       }
     } catch (err) {
@@ -284,7 +284,7 @@ export default function SignUpPage() {
       console.warn('OCR error:', err);
       setOcrStatus({
         type: 'error',
-        message: 'Could not auto-extract details. You can enter them manually.',
+        message: 'Could not auto-extract details. Please retake clearer photos of your NIC.',
       });
     } finally {
       if (scanSeqRef.current === currentSeq) {
@@ -633,6 +633,10 @@ export default function SignUpPage() {
     const fe = {};
     if (!form.nicFront) fe.nicFront = 'A photo of the front of your NIC is required';
     if (!form.nicBack) fe.nicBack = 'A photo of the back of your NIC is required';
+    // Personal details can only come from the NIC scan, so block here rather than strand the user on a read-only step.
+    if (!fe.nicFront && !fe.nicBack && ['fullName', 'nic', 'dob', 'addressLine1', 'city', 'postalCode'].some((k) => !form[k]?.trim())) {
+      fe.nicFront = "We couldn't read all your details from the NIC. Please retake clearer photos of both sides.";
+    }
     return fe;
   };
 
@@ -1030,6 +1034,9 @@ export default function SignUpPage() {
 
             {step === 3 && (
               <>
+                <p className="signup-field-help" style={{ margin: '0 0 1rem 0' }}>
+                  These details are read from your NIC and can't be edited. To correct them, go back and retake your NIC photos.
+                </p>
                 <div className="signup-row">
                   <div className="signup-field">
                     <label className="signup-label" htmlFor="signup-title">
@@ -1059,7 +1066,7 @@ export default function SignUpPage() {
                     </label>
                     <div className={`signup-input-wrap ${fieldErrors.dob ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconCalendar /></span>
-                      <input type="date" className="signup-input" id="signup-dob" value={form.dob} onChange={set('dob')} />
+                      <input type="date" className="signup-input" id="signup-dob" value={form.dob} onChange={set('dob')} readOnly />
                     </div>
                     {fieldErrors.dob && <p className="signup-field-error">{fieldErrors.dob}</p>}
                   </div>
@@ -1075,7 +1082,7 @@ export default function SignUpPage() {
                     </label>
                     <div className={`signup-input-wrap ${fieldErrors.fullName ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconUser /></span>
-                      <input type="text" className="signup-input" placeholder="John Michael Perera" id="signup-fullname" value={form.fullName} onChange={set('fullName')} />
+                      <input type="text" className="signup-input" placeholder="John Michael Perera" id="signup-fullname" value={form.fullName} onChange={set('fullName')} readOnly />
                     </div>
                     {fieldErrors.fullName && <p className="signup-field-error">{fieldErrors.fullName}</p>}
                   </div>
@@ -1088,13 +1095,13 @@ export default function SignUpPage() {
                     </span>
                     <div className="signup-radio-group" role="radiogroup" aria-labelledby="signup-gender-label">
                       <label className="signup-radio-label">
-                        <input type="radio" name="gender" value="Male" checked={form.gender === 'Male'} onChange={set('gender')} /> Male
+                        <input type="radio" name="gender" value="Male" checked={form.gender === 'Male'} onChange={set('gender')} disabled /> Male
                       </label>
                       <label className="signup-radio-label">
-                        <input type="radio" name="gender" value="Female" checked={form.gender === 'Female'} onChange={set('gender')} /> Female
+                        <input type="radio" name="gender" value="Female" checked={form.gender === 'Female'} onChange={set('gender')} disabled /> Female
                       </label>
                       <label className="signup-radio-label">
-                        <input type="radio" name="gender" value="Other" checked={form.gender === 'Other'} onChange={set('gender')} /> Other
+                        <input type="radio" name="gender" value="Other" checked={form.gender === 'Other'} onChange={set('gender')} disabled /> Other
                       </label>
                     </div>
                     {fieldErrors.gender && <p className="signup-field-error">{fieldErrors.gender}</p>}
@@ -1111,15 +1118,15 @@ export default function SignUpPage() {
                     </label>
                     <div className={`signup-input-wrap ${fieldErrors.nic ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconCard /></span>
-                      <input type="text" className="signup-input" placeholder="e.g. 199012345678" id="signup-nic" value={form.nic} onChange={set('nic')} maxLength="12" />
+                      <input type="text" className="signup-input" placeholder="e.g. 199012345678" id="signup-nic" value={form.nic} onChange={set('nic')} readOnly maxLength="12" />
                     </div>
-                    {fieldErrors.nic ? <p className="signup-field-error">{fieldErrors.nic}</p> : <p className="signup-field-help">Enter your National Identity Card, Passport or Birth Registration number</p>}
+                    {fieldErrors.nic ? <p className="signup-field-error">{fieldErrors.nic}</p> : <p className="signup-field-help">Read from your National Identity Card</p>}
                   </div>
                   <div className="signup-field">
                     <label className="signup-label" htmlFor="signup-nationality">Nationality <span className="signup-required" aria-hidden="true">*</span></label>
                     <div className={`signup-input-wrap ${fieldErrors.nationality ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconGlobe /></span>
-                      <select className="signup-input signup-select" id="signup-nationality" value={form.nationality} onChange={set('nationality')}>
+                      <select className="signup-input signup-select" id="signup-nationality" value={form.nationality} onChange={set('nationality')} disabled>
                         <option value="Sri Lankan">Sri Lankan</option>
                         <option value="Other">Other</option>
                       </select>
@@ -1144,6 +1151,9 @@ export default function SignUpPage() {
             {/* STEP 4 FIELDS */}
             {step === 4 && (
               <>
+                <p className="signup-field-help" style={{ margin: '0 0 1rem 0' }}>
+                  These details are read from your NIC and can't be edited. To correct them, go back and retake your NIC photos.
+                </p>
                 <div className="signup-row">
                   <div className="signup-field">
                     <label className="signup-label" htmlFor="signup-address1">
@@ -1154,7 +1164,7 @@ export default function SignUpPage() {
                     </label>
                     <div className={`signup-input-wrap ${fieldErrors.addressLine1 ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconMapPin /></span>
-                      <input type="text" className="signup-input" placeholder="123, Galle Road" id="signup-address1" value={form.addressLine1} onChange={set('addressLine1')} />
+                      <input type="text" className="signup-input" placeholder="123, Galle Road" id="signup-address1" value={form.addressLine1} onChange={set('addressLine1')} readOnly />
                     </div>
                     {fieldErrors.addressLine1 && <p className="signup-field-error">{fieldErrors.addressLine1}</p>}
                   </div>
@@ -1166,7 +1176,7 @@ export default function SignUpPage() {
                       )}
                     </label>
                     <div className="signup-input-wrap">
-                      <input type="text" className="signup-input" style={{ paddingLeft: '1rem' }} placeholder="Colombo 03" id="signup-address2" value={form.addressLine2} onChange={set('addressLine2')} />
+                      <input type="text" className="signup-input" style={{ paddingLeft: '1rem' }} placeholder="Colombo 03" id="signup-address2" value={form.addressLine2} onChange={set('addressLine2')} readOnly />
                     </div>
                   </div>
                 </div>
@@ -1181,7 +1191,7 @@ export default function SignUpPage() {
                     </label>
                     <div className={`signup-input-wrap ${fieldErrors.city ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
-                      <input type="text" className="signup-input" placeholder="Colombo" id="signup-city" value={form.city} onChange={set('city')} />
+                      <input type="text" className="signup-input" placeholder="Colombo" id="signup-city" value={form.city} onChange={set('city')} readOnly />
                     </div>
                     {fieldErrors.city && <p className="signup-field-error">{fieldErrors.city}</p>}
                   </div>
@@ -1194,7 +1204,7 @@ export default function SignUpPage() {
                     </label>
                     <div className={`signup-input-wrap ${fieldErrors.district ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
-                      <select className="signup-input signup-select" id="signup-district" value={form.district} onChange={set('district')}>
+                      <select className="signup-input signup-select" id="signup-district" value={form.district} onChange={set('district')} disabled>
                         <option value="Ampara">Ampara</option>
                         <option value="Anuradhapura">Anuradhapura</option>
                         <option value="Badulla">Badulla</option>
@@ -1236,7 +1246,7 @@ export default function SignUpPage() {
                     </label>
                     <div className={`signup-input-wrap ${fieldErrors.postalCode ? 'has-error' : ''}`}>
                       <span className="signup-input-icon"><IconBuilding /></span>
-                      <input type="text" className="signup-input" placeholder="00300" id="signup-postal" value={form.postalCode} onChange={set('postalCode')} />
+                      <input type="text" className="signup-input" placeholder="00300" id="signup-postal" value={form.postalCode} onChange={set('postalCode')} readOnly />
                     </div>
                     {fieldErrors.postalCode && <p className="signup-field-error">{fieldErrors.postalCode}</p>}
                   </div>
@@ -1255,6 +1265,7 @@ export default function SignUpPage() {
                           aria-checked={form.preferredContact === value}
                           className={`signup-contact-method ${form.preferredContact === value ? 'active' : ''}`}
                           onClick={() => setForm({ ...form, preferredContact: value })}
+                          disabled
                         >
                           <Icon aria-hidden="true" /> {value}
                         </button>
