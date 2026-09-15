@@ -1107,3 +1107,19 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+
+/* NIC-derived fields are view-only */
+.signup-input:read-only:not(select),
+.signup-input:disabled {
+  color: #475569;
+  cursor: not-allowed;
+  opacity: 1;
+}
+.signup-input-wrap:has(.signup-input:read-only:not(select)),
+.signup-input-wrap:has(.signup-input:disabled) {
+  background: #f1f5f9;
+}
+.signup-radio-label:has(input:disabled),
+.signup-contact-method:disabled {
+  cursor: not-allowed;
+}
