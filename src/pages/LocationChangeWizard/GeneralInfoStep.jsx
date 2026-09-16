@@ -67,7 +67,15 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
 
   return (
     <div style={{ width: '100%', margin: '0 auto' }}>
-      {/* SECTION 1: Customer Details */}
+      {/* Hidden fields to keep the verified telephone/owner/service in the submitted form data */}
+      <input type="hidden" name="telephone" value={customer.telephone} />
+      <input type="hidden" name="legalOwner" value={customer.legalOwner} />
+      <input type="hidden" name="serviceType" value={customer.serviceType} />
+      <input type="hidden" name="tel" value={customer.tel} />
+      <input type="hidden" name="contactPerson" value={customer.contactPerson} />
+      <input type="hidden" name="mobile" value={customer.mobile} />
+      <input type="hidden" name="email" value={customer.email} />
+
       <div
         style={{
           backgroundColor: '#ffffff',
@@ -78,52 +86,17 @@ export default function GeneralInfoStep({ isActive, formData, onChange, onValida
           boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem', marginBottom: '1rem' }}>
           <div style={{ backgroundColor: '#eff6ff', color: '#0056b3', width: '34px', height: '34px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FiUser size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
-            1. Service Type
+            Account & Service Verification
           </h4>
         </div>
-
-        {/* Hidden fields to keep the verified telephone/owner in the submitted form data */}
-        <input type="hidden" name="telephone" value={customer.telephone} />
-        <input type="hidden" name="legalOwner" value={customer.legalOwner} />
-        <input type="hidden" name="tel" value={customer.tel} />
-        <input type="hidden" name="contactPerson" value={customer.contactPerson} />
-        <input type="hidden" name="mobile" value={customer.mobile} />
-        <input type="hidden" name="email" value={customer.email} />
-
-        {/* Service Type Selection */}
-        <div>
-          <label htmlFor="lc-serviceType" style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
-            {t('wizards.locationChange.generalInfo.serviceType', 'Service Type')} <span style={{ color: '#dc2626' }} aria-hidden="true">*</span>
-          </label>
-          <select
-            id="lc-serviceType"
-            name="serviceType"
-            value={customer.serviceType}
-            onChange={handleChange}
-            style={{
-              width: '100%',
-              padding: '0.75rem 1rem',
-              borderRadius: '12px',
-              border: '1px solid #cbd5e1',
-              backgroundColor: '#ffffff',
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              color: '#0f172a',
-              outline: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            <option value="FTTH">FTTH (Fibre To The Home)</option>
-            <option value="LTE">LTE (Home Broadband)</option>
-            <option value="Megaline">Megaline (Copper Voice)</option>
-            <option value="PEO TV">PEO TV</option>
-          </select>
-        </div>
+        <p style={{ margin: 0, color: '#475569', fontSize: '0.9rem', lineHeight: 1.6 }}>
+          Your connection details and service type (<strong>{customer.serviceType || 'FTTH'}</strong>) have been verified automatically from your account. Click <strong>Next Step</strong> to specify your new relocation address.
+        </p>
       </div>
     </div>
   );

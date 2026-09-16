@@ -65,7 +65,7 @@ const ReadOnlyDetail = ({ label, value }) => (
   </div>
 );
 
-export default function CustomerInfoStep({ formData, handleChange, setFields, handleFileChange }) {
+export default function CustomerInfoStep({ formData, handleChange, setFields, handleFileChange, selectedProduct }) {
   const { t } = useTranslation();
   const { mobileNumber, customerExists, selectedAccount } = useVerifiedContext();
   const [authUser] = useState(getAuthUser);
@@ -108,6 +108,55 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, ha
 
   const hasKnownProfile = !!knownProfile;
   const isReadOnly = !!selectedAccount;
+
+  // Render Select Product Card at top of onboarding flow
+  const renderProductCard = () => (
+    selectedProduct ? (
+      <div
+        style={{
+          backgroundColor: '#eff6ff',
+          border: '1.5px solid #bfdbfe',
+          borderRadius: '16px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '1.5rem',
+          boxShadow: '0 4px 15px rgba(0,86,179,0.06)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.75rem',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0056b3', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
+            Selected Product
+          </div>
+          <h4 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
+            {selectedProduct.productName}
+          </h4>
+          <div style={{ fontSize: '0.85rem', color: '#475569', fontWeight: 600, marginTop: '0.25rem' }}>
+            Monthly: <strong style={{ color: '#0056b3' }}>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong> • Installation Fee: <strong>{selectedProduct.installationFee ? `Rs. ${selectedProduct.installationFee.toLocaleString()}` : 'Free'}</strong>
+          </div>
+        </div>
+        <Link
+          to="/new-connection/products"
+          style={{
+            fontSize: '0.82rem',
+            fontWeight: 800,
+            color: '#0056b3',
+            backgroundColor: '#ffffff',
+            border: '1px solid #bfdbfe',
+            padding: '0.45rem 0.9rem',
+            borderRadius: '8px',
+            textDecoration: 'none',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          Change Product
+        </Link>
+      </div>
+    ) : null
+  );
 
   // Install at the address we already hold, unless they tell us otherwise.
   const [useRegisteredAddress, setUseRegisteredAddress] = useState(true);
@@ -160,6 +209,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, ha
 
     return (
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        {renderProductCard()}
         <h3 style={{ color: '#0f172a', marginBottom: '0.5rem', fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
           {t('wizards.newConnection.customerInfo.heading')}
         </h3>

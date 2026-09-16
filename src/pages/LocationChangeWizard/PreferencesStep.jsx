@@ -98,7 +98,7 @@ export default function PreferencesStep({
             <FiCalendar size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
-            1. Preferred Relocation & Disconnect Timeline
+            Preferred Relocation & Disconnect Timeline
           </h4>
         </div>
 
@@ -180,7 +180,7 @@ export default function PreferencesStep({
             <FiSliders size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
-            2. Present Services Action ({selectedServiceType || 'FTTH'})
+            Present Services Action ({selectedServiceType || 'FTTH'})
           </h4>
         </div>
 
@@ -318,7 +318,7 @@ export default function PreferencesStep({
             <FiPhoneCall size={18} />
           </div>
           <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
-            3. Call Forwarding Facility (Charges Applicable)
+            Call Forwarding Facility (Charges Applicable)
           </h4>
         </div>
 
@@ -408,7 +408,7 @@ export default function PreferencesStep({
               <FiUserCheck size={18} />
             </div>
             <h4 style={{ margin: 0, color: '#0f172a', fontSize: '1.1rem', fontWeight: 800 }}>
-              5. Business Registration
+              Business Registration
             </h4>
           </div>
 

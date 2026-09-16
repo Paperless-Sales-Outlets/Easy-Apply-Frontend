@@ -13,6 +13,23 @@ const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slic
 const NAV_HEIGHT_ESTIMATE = 88;
 const NAV_SPACER_BUFFER = 16;
 
+// Searchable products dataset for navbar suggestions
+const SEARCHABLE_PRODUCTS = [
+  { id: 'prod-1', name: '500 Mbps Fibre Broadband', category: 'Fibre Broadband', speed: '500 Mbps', monthlyPrice: 7999 },
+  { id: 'prod-2', name: '300 Mbps Fibre Broadband', category: 'Fibre Broadband', speed: '300 Mbps', monthlyPrice: 5499 },
+  { id: 'prod-3', name: '1 Gbps Fibre Broadband', category: 'Fibre Broadband', speed: '1 Gbps', monthlyPrice: 10999 },
+  { id: 'prod-4', name: 'LTE Home 150 GB', category: 'LTE Home', speed: '100 Mbps', monthlyPrice: 3999 },
+  { id: 'prod-5', name: 'LTE Home 300 GB', category: 'LTE Home', speed: '100 Mbps', monthlyPrice: 4999 },
+  { id: 'prod-8', name: 'Fibre Voice Home', category: 'Voice', speed: 'Voice', monthlyPrice: 990 },
+  { id: 'prod-9', name: 'Voice Unlimited', category: 'Voice', speed: 'Voice', monthlyPrice: 1490 },
+  { id: 'prod-10', name: 'Megaline Voice Basic', category: 'Voice', speed: 'Voice', monthlyPrice: 790 },
+  { id: 'prod-11', name: 'Voice Business Prime', category: 'Voice', speed: 'Voice', monthlyPrice: 1990 },
+  { id: 'prod-6', name: 'PEO TV Gold Pack', category: 'PEO TV', speed: 'HD TV', monthlyPrice: 2990 },
+  { id: 'prod-7', name: 'PEO TV Starter Pack', category: 'PEO TV', speed: 'HD TV', monthlyPrice: 1490 },
+  { id: 'prod-12', name: 'PEO TV Entertainment', category: 'PEO TV', speed: 'HD TV', monthlyPrice: 2190 },
+  { id: 'prod-13', name: 'PEO TV Titanium', category: 'PEO TV', speed: '4K HD TV', monthlyPrice: 3890 },
+];
+
 export default function Navbar() {
   const { t, i18n } = useTranslation();
   const location = useLocation();
@@ -20,8 +37,57 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [searchCategory, setSearchCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const menuRef = useRef(null);
   const servicesRef = useRef(null);
+  const searchRef = useRef(null);
+
+  // Filter search suggestions
+  const suggestions = React.useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return SEARCHABLE_PRODUCTS.filter((p) => {
+      if (searchCategory !== 'All') {
+        const cat = p.category.toLowerCase();
+        if (searchCategory.toLowerCase() === 'fibre' && !cat.includes('fibre')) return false;
+        if (searchCategory.toLowerCase() === 'lte' && !cat.includes('lte')) return false;
+        if (searchCategory.toLowerCase() === 'peo tv' && !cat.includes('peo')) return false;
+        if (searchCategory.toLowerCase() === 'voice' && !cat.includes('voice')) return false;
+      }
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        p.speed.toLowerCase().includes(q)
+      );
+    }).slice(0, 6);
+  }, [searchQuery, searchCategory]);
+
+  useEffect(() => {
+    const handleClickOutsideSearch = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutsideSearch);
+    return () => document.removeEventListener('mousedown', handleClickOutsideSearch);
+  }, []);
+
+  const handleSelectSuggestion = (product) => {
+    setSearchQuery(product.name);
+    setShowSuggestions(false);
+    window.dispatchEvent(new CustomEvent('easyapply:search', { detail: product.name }));
+    navigate(`/new-connection/products?search=${encodeURIComponent(product.name)}`);
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    setShowSuggestions(false);
+    if (searchQuery.trim()) {
+      window.dispatchEvent(new CustomEvent('easyapply:search', { detail: searchQuery }));
+      navigate(`/new-connection/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   // useLayoutEffect (not useEffect) so the spacer is sized before the browser
   // paints — otherwise content briefly renders behind the fixed nav on first
@@ -143,10 +209,12 @@ export default function Navbar() {
 
           {/* ── Center Search Input Bar ── */}
           <div
-            style={{ flex: 1, maxWidth: '580px', display: 'flex', alignItems: 'center' }}
+            ref={searchRef}
+            style={{ flex: 1, maxWidth: '580px', display: 'flex', alignItems: 'center', position: 'relative' }}
             className="nav-center-search"
           >
-            <div
+            <form
+              onSubmit={handleSearchSubmit}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -167,6 +235,12 @@ export default function Navbar() {
                 type="text"
                 aria-label="Search packages, speeds, products"
                 placeholder="Search packages, speeds, products..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
                 style={{
                   flex: 1,
                   minWidth: 0,
@@ -178,6 +252,26 @@ export default function Navbar() {
                   backgroundColor: 'transparent',
                 }}
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setShowSuggestions(false);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    padding: '0 0.4rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <FiX size={14} />
+                </button>
+              )}
               <select
                 value={searchCategory}
                 onChange={(e) => setSearchCategory(e.target.value)}
@@ -201,7 +295,7 @@ export default function Navbar() {
                 <option value="Voice">Voice</option>
               </select>
               <button
-                type="button"
+                type="submit"
                 aria-label="Search"
                 style={{
                   backgroundColor: '#0056b3',
@@ -216,7 +310,70 @@ export default function Navbar() {
               >
                 <FiSearch size={16} aria-hidden="true" />
               </button>
-            </div>
+            </form>
+
+            {/* Live Search Suggestions Dropdown */}
+            {showSuggestions && searchQuery.trim() && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 4px)',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: '#ffffff',
+                  borderRadius: '12px',
+                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
+                  border: '1px solid #e2e8f0',
+                  zIndex: 1000,
+                  overflow: 'hidden',
+                  maxHeight: '380px',
+                  overflowY: 'auto',
+                }}
+              >
+                {suggestions.length > 0 ? (
+                  suggestions.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSelectSuggestion(item)}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f1f5f9',
+                        transition: 'background-color 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8fafc';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
+                          {item.name}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
+                          <span style={{ backgroundColor: '#eff6ff', color: '#0056b3', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
+                            {item.category}
+                          </span>
+                          <span>• {item.speed}</span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 900, color: '#0056b3', whiteSpace: 'nowrap' }}>
+                        Rs. {item.monthlyPrice.toLocaleString()} <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>/mo</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+                    No matching packages found for "<strong>{searchQuery}</strong>"
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── Right: Navigation, Services, Language and Authentication ── */}

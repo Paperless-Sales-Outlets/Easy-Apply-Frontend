@@ -30,6 +30,54 @@ const DISTRICT_CITIES = {
   Trincomalee: ["Trincomalee", "Kinniya", "Muttur", "Kadaiparichchan"]
 };
 
+const SRI_LANKA_CITY_POSTAL_DATA = [
+  { label: 'Colombo 01 (Fort) - 00100', city: 'Colombo 01', district: 'Colombo', postalCode: '00100' },
+  { label: 'Colombo 02 (Slave Island) - 00200', city: 'Colombo 02', district: 'Colombo', postalCode: '00200' },
+  { label: 'Colombo 03 (Kollupitiya) - 00300', city: 'Colombo 03', district: 'Colombo', postalCode: '00300' },
+  { label: 'Colombo 04 (Bambalapitiya) - 00400', city: 'Colombo 04', district: 'Colombo', postalCode: '00400' },
+  { label: 'Colombo 05 (Havelock Town) - 00500', city: 'Colombo 05', district: 'Colombo', postalCode: '00500' },
+  { label: 'Colombo 06 (Wellawatte) - 00600', city: 'Colombo 06', district: 'Colombo', postalCode: '00600' },
+  { label: 'Colombo 07 (Cinnamon Gardens) - 00700', city: 'Colombo 07', district: 'Colombo', postalCode: '00700' },
+  { label: 'Colombo 08 (Borella) - 00800', city: 'Colombo 08', district: 'Colombo', postalCode: '00800' },
+  { label: 'Colombo 09 (Dematagoda) - 00900', city: 'Colombo 09', district: 'Colombo', postalCode: '00900' },
+  { label: 'Colombo 10 (Maradana) - 01000', city: 'Colombo 10', district: 'Colombo', postalCode: '01000' },
+  { label: 'Colombo 11 (Pettah) - 01100', city: 'Colombo 11', district: 'Colombo', postalCode: '01100' },
+  { label: 'Colombo 12 (Hulftsdorp) - 01200', city: 'Colombo 12', district: 'Colombo', postalCode: '01200' },
+  { label: 'Colombo 13 (Kotahena) - 01300', city: 'Colombo 13', district: 'Colombo', postalCode: '01300' },
+  { label: 'Colombo 14 (Grandpass) - 01400', city: 'Colombo 14', district: 'Colombo', postalCode: '01400' },
+  { label: 'Colombo 15 (Modara) - 01500', city: 'Colombo 15', district: 'Colombo', postalCode: '01500' },
+  { label: 'Dehiwala - 10350', city: 'Dehiwala', district: 'Colombo', postalCode: '10350' },
+  { label: 'Mount Lavinia - 10370', city: 'Mount Lavinia', district: 'Colombo', postalCode: '10370' },
+  { label: 'Nugegoda - 10250', city: 'Nugegoda', district: 'Colombo', postalCode: '10250' },
+  { label: 'Maharagama - 10280', city: 'Maharagama', district: 'Colombo', postalCode: '10280' },
+  { label: 'Kottawa - 10230', city: 'Kottawa', district: 'Colombo', postalCode: '10230' },
+  { label: 'Battaramulla - 10120', city: 'Battaramulla', district: 'Colombo', postalCode: '10120' },
+  { label: 'Sri Jayawardenepura Kotte - 10100', city: 'Sri Jayawardenepura Kotte', district: 'Colombo', postalCode: '10100' },
+  { label: 'Malabe - 10115', city: 'Malabe', district: 'Colombo', postalCode: '10115' },
+  { label: 'Rajagiriya - 10107', city: 'Rajagiriya', district: 'Colombo', postalCode: '10107' },
+  { label: 'Moratuwa - 10400', city: 'Moratuwa', district: 'Colombo', postalCode: '10400' },
+  { label: 'Piliyandala - 10300', city: 'Piliyandala', district: 'Colombo', postalCode: '10300' },
+  { label: 'Gampaha - 11000', city: 'Gampaha', district: 'Gampaha', postalCode: '11000' },
+  { label: 'Negombo - 11500', city: 'Negombo', district: 'Gampaha', postalCode: '11500' },
+  { label: 'Ja-Ela - 11350', city: 'Ja-Ela', district: 'Gampaha', postalCode: '11350' },
+  { label: 'Kelaniya - 11600', city: 'Kelaniya', district: 'Gampaha', postalCode: '11600' },
+  { label: 'Wattala - 11300', city: 'Wattala', district: 'Gampaha', postalCode: '11300' },
+  { label: 'Kandy - 20000', city: 'Kandy', district: 'Kandy', postalCode: '20000' },
+  { label: 'Peradeniya - 20400', city: 'Peradeniya', district: 'Kandy', postalCode: '20400' },
+  { label: 'Gampola - 20500', city: 'Gampola', district: 'Kandy', postalCode: '20500' },
+  { label: 'Galle - 80000', city: 'Galle', district: 'Galle', postalCode: '80000' },
+  { label: 'Hikkaduwa - 80240', city: 'Hikkaduwa', district: 'Galle', postalCode: '80240' },
+  { label: 'Matara - 81000', city: 'Matara', district: 'Matara', postalCode: '81000' },
+  { label: 'Jaffna - 40000', city: 'Jaffna', district: 'Jaffna', postalCode: '40000' },
+  { label: 'Kurunegala - 60000', city: 'Kurunegala', district: 'Kurunegala', postalCode: '60000' },
+  { label: 'Anuradhapura - 50000', city: 'Anuradhapura', district: 'Anuradhapura', postalCode: '50000' },
+  { label: 'Badulla - 90000', city: 'Badulla', district: 'Badulla', postalCode: '90000' },
+  { label: 'Ratnapura - 70000', city: 'Ratnapura', district: 'Ratnapura', postalCode: '70000' },
+  { label: 'Trincomalee - 31000', city: 'Trincomalee', district: 'Trincomalee', postalCode: '31000' },
+  { label: 'Batticaloa - 30000', city: 'Batticaloa', district: 'Batticaloa', postalCode: '30000' },
+  { label: 'Vavuniya - 43000', city: 'Vavuniya', district: 'Vavuniya', postalCode: '43000' },
+];
+
 const ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
 const MAX_FILE_SIZE_MB = 5;
 
@@ -87,6 +135,8 @@ export default function AddressStep({
   const [authorizationLetterError, setAuthorizationLetterError] = useState("");
   const [brcFile, setBrcFile] = useState(null);
   const [brcError, setBrcError] = useState("");
+  const [premisesFile, setPremisesFile] = useState(null);
+  const [premisesError, setPremisesError] = useState("");
 
   const [coordinates, setCoordinates] = useState({ lat: null, lng: null });
   const [selectedPlaceName, setSelectedPlaceName] = useState("");
@@ -454,6 +504,7 @@ export default function AddressStep({
         authorizationLetter: authorizationLetterFile || null,
         brc: brcFile || null,
         sketchFile: sketchFile,
+        premisesPhoto: premisesFile || null,
       });
     }
   }, [
@@ -463,6 +514,7 @@ export default function AddressStep({
     sketchFile,
     authorizationLetterFile,
     brcFile,
+    premisesFile,
     currentAddress,
     isFormValid,
   ]);
@@ -537,132 +589,70 @@ export default function AddressStep({
               <FiHome size={18} />
             </div>
             <h4 style={{ margin: 0, color: "#0f172a", fontSize: "1.1rem", fontWeight: 800 }}>
-              1. New Relocation Address Details
+              New Relocation Address Details
             </h4>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1.25rem", marginBottom: "1.25rem" }}>
-            <div>
-              <label htmlFor="district-select" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
-                District <span style={{ color: "#dc2626" }}>*</span>
-              </label>
-              <select
-                id="district-select"
-                value={relocationAddress.district}
-                onChange={(e) => setRelocationAddress({ ...relocationAddress, district: e.target.value, city: "" })}
-                onBlur={() => handleBlur("district")}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem 1rem",
-                  borderRadius: "10px",
-                  border: shouldShowError("district", isDistrictValid) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
-                  backgroundColor: shouldShowError("district", isDistrictValid) ? "#fef2f2" : "#ffffff",
-                  fontSize: "0.9rem",
-                  fontWeight: 700,
-                  color: "#0f172a",
-                  outline: "none",
-                  cursor: "pointer",
-                }}
-              >
-                <option value="">Select District</option>
-                {SRI_LANKA_DISTRICTS.map((dist) => (
-                  <option key={dist} value={dist}>{dist}</option>
-                ))}
-              </select>
-              {shouldShowError("district", isDistrictValid) && (
-                <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
-                  <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />District is required.
-                </span>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="city-input" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
-                City / Town <span style={{ color: "#dc2626" }}>*</span>
-              </label>
-              {DISTRICT_CITIES[relocationAddress.district] ? (
-                <select
-                  id="city-input"
-                  value={relocationAddress.city}
-                  onChange={(e) => setRelocationAddress({ ...relocationAddress, city: e.target.value })}
-                  onBlur={() => handleBlur("city")}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem 1rem",
-                    borderRadius: "10px",
-                    border: shouldShowError("city", isCityValid) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
-                    backgroundColor: shouldShowError("city", isCityValid) ? "#fef2f2" : "#ffffff",
-                    fontSize: "0.9rem",
-                    fontWeight: 700,
-                    color: "#0f172a",
-                    outline: "none",
-                    cursor: "pointer",
-                  }}
-                >
-                  <option value="">Select City</option>
-                  {DISTRICT_CITIES[relocationAddress.district].map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  id="city-input"
-                  type="text"
-                  placeholder="Enter City"
-                  value={relocationAddress.city}
-                  onChange={(e) => setRelocationAddress({ ...relocationAddress, city: e.target.value })}
-                  onBlur={() => handleBlur("city")}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem 1rem",
-                    borderRadius: "10px",
-                    border: shouldShowError("city", isCityValid) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
-                    backgroundColor: shouldShowError("city", isCityValid) ? "#fef2f2" : "#ffffff",
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                    color: "#0f172a",
-                    outline: "none",
-                  }}
-                />
-              )}
-              {shouldShowError("city", isCityValid) && (
-                <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
-                  <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />City / Town is required.
-                </span>
-              )}
-            </div>
-          </div>
-
+          {/* Standardized City & Postal Code Selector */}
           <div style={{ marginBottom: "1.25rem" }}>
-            <label htmlFor="postal-code" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
-              Postal Code (5 digits) <span style={{ color: "#dc2626" }}>*</span>
+            <label htmlFor="city-postal-selector" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
+              Select City & Postal Code <span style={{ color: "#dc2626" }}>*</span>
             </label>
-            <input
-              id="postal-code"
-              type="text"
-              placeholder="e.g. 10280"
-              maxLength={5}
-              value={relocationAddress.postalCode}
-              onChange={(e) => setRelocationAddress({ ...relocationAddress, postalCode: e.target.value.replace(/\D/g, "") })}
-              onBlur={() => handleBlur("postalCode")}
+            <select
+              id="city-postal-selector"
+              value={relocationAddress.city && relocationAddress.postalCode ? `${relocationAddress.city} - ${relocationAddress.postalCode}` : ""}
+              onChange={(e) => {
+                const selectedVal = e.target.value;
+                const found = SRI_LANKA_CITY_POSTAL_DATA.find((item) => item.label.startsWith(selectedVal) || item.label === selectedVal);
+                if (found) {
+                  setRelocationAddress((prev) => ({
+                    ...prev,
+                    city: found.city,
+                    district: found.district,
+                    postalCode: found.postalCode,
+                  }));
+                }
+              }}
+              onBlur={() => {
+                handleBlur("city");
+                handleBlur("postalCode");
+                handleBlur("district");
+              }}
               style={{
                 width: "100%",
                 padding: "0.75rem 1rem",
                 borderRadius: "10px",
-                border: shouldShowError("postalCode", isPostalCodeValid) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
-                backgroundColor: shouldShowError("postalCode", isPostalCodeValid) ? "#fef2f2" : "#ffffff",
+                border: (shouldShowError("city", isCityValid) || shouldShowError("postalCode", isPostalCodeValid)) ? "1.5px solid #dc2626" : "1px solid #cbd5e1",
+                backgroundColor: (shouldShowError("city", isCityValid) || shouldShowError("postalCode", isPostalCodeValid)) ? "#fef2f2" : "#ffffff",
                 fontSize: "0.9rem",
                 fontWeight: 700,
                 color: "#0f172a",
                 outline: "none",
+                cursor: "pointer",
               }}
-            />
-            {shouldShowError("postalCode", isPostalCodeValid) && (
+            >
+              <option value="">Select City & Postal Code (e.g. Colombo 02 - 00200)</option>
+              {SRI_LANKA_CITY_POSTAL_DATA.map((item) => (
+                <option key={item.label} value={item.label}>
+                  {item.label} ({item.district} District)
+                </option>
+              ))}
+            </select>
+            {(shouldShowError("city", isCityValid) || shouldShowError("postalCode", isPostalCodeValid)) && (
               <span style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "4px", display: "block", fontWeight: 700 }}>
-                <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />{!relocationAddress.postalCode ? "Postal Code is required." : "Postal Code must be exactly 5 numeric digits."}
+                <FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />Please select a valid City & Postal Code.
               </span>
             )}
           </div>
+
+          {/* Auto-filled District & Postal Code preview strip */}
+          {relocationAddress.city && relocationAddress.postalCode && (
+            <div style={{ display: "flex", gap: "1rem", backgroundColor: "#f8fafc", padding: "0.6rem 0.85rem", borderRadius: "8px", marginBottom: "1.25rem", border: "1px solid #e2e8f0", fontSize: "0.8rem" }}>
+              <div>District: <strong>{relocationAddress.district}</strong></div>
+              <div>City: <strong>{relocationAddress.city}</strong></div>
+              <div>Postal Code: <strong>{relocationAddress.postalCode}</strong></div>
+            </div>
+          )}
 
           <div style={{ marginBottom: "1.25rem" }}>
             <label htmlFor="address-1" style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.4rem" }}>
@@ -736,7 +726,7 @@ export default function AddressStep({
               <FiNavigation size={18} />
             </div>
             <h4 style={{ margin: 0, color: "#0f172a", fontSize: "1.1rem", fontWeight: 800 }}>
-              2. Relocation Location Pinning (Map)
+              Relocation Location Pinning (Map)
             </h4>
           </div>
 
@@ -982,7 +972,7 @@ export default function AddressStep({
               <FiFileText size={18} />
             </div>
             <h4 style={{ margin: 0, color: "#0f172a", fontSize: "1.1rem", fontWeight: 800 }}>
-              3. Additional Installation Details & Address Documents
+              Additional Installation Details & Address Documents
             </h4>
           </div>
 
@@ -1115,6 +1105,52 @@ export default function AddressStep({
                 )}
               </label>
               {sketchError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}><FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />{sketchError}</div>}
+            </div>
+
+            {/* Premises / Site Photo Upload Dropzone */}
+            <div>
+              <label style={{ fontWeight: 700, fontSize: "0.85rem", color: "#334155", display: "block", marginBottom: "0.5rem" }}>
+                Premises / Site Photo <span style={{ color: "#64748b", fontWeight: 500, fontSize: "0.8rem" }}>(Optional)</span>
+              </label>
+
+              <label
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "1.5rem",
+                  border: premisesFile ? "2px stroke #10b981" : "2px dashed #93c5fd",
+                  borderRadius: "12px",
+                  backgroundColor: premisesFile ? "#f0fdf4" : "#f8fafc",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  style={{ display: "none" }}
+                  onChange={(e) => validateAndSetFile(e.target.files[0], setPremisesFile, setPremisesError, "Premises photo")}
+                />
+                <FiUploadCloud size={30} style={{ color: premisesFile ? "#16a34a" : "#0056b3", marginBottom: "0.5rem" }} />
+                {premisesFile ? (
+                  <div style={{ textAlign: "center" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#15803d", display: "block" }}>
+                      <FiFileText size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.3rem" }} />{premisesFile.name}
+                    </span>
+                    <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: 600 }}>File Uploaded <FiCheck size={12} aria-hidden="true" style={{ verticalAlign: "-1px" }} /></span>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#0056b3", display: "block" }}>
+                      Upload Premises Photo
+                    </span>
+                    <span style={{ fontSize: "0.72rem", color: "#64748b" }}>Exterior/building photo up to 5MB</span>
+                  </div>
+                )}
+              </label>
+              {premisesError && <div style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.4rem", fontWeight: 700 }}><FiAlertCircle size={13} aria-hidden="true" style={{ verticalAlign: "-2px", marginRight: "0.25rem" }} />{premisesError}</div>}
             </div>
 
             {/* Authorization Letter Upload Dropzone */}
