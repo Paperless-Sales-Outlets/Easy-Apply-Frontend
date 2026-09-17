@@ -1,3 +1,5 @@
+import api from './api';
+
 // Tracks the logged-in customer session shared across the app. A customer signs
 // in once (email + password, or phone + OTP) on the auth screen; every page
 // after that reads the session from here instead of asking for a phone number
@@ -130,20 +132,16 @@ export function notifyAuthUpdated() {
  */
 export function logoutVerifiedSession() {
   // Capture the cart's session id before wiping storage, and send the delete
-  // with it explicitly. Going through the axios instance would re-create the
-  // id, because its request interceptor mints a new one whenever it's absent.
+  // with it explicitly — the api request interceptor runs after the wipe below,
+  // and keeps a caller-supplied id instead of minting a new one.
   let sessionId = null;
   try { sessionId = localStorage.getItem('slt_session_id'); } catch (err) { /* private mode */ }
 
   if (sessionId) {
-    const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api';
     // Best-effort and deliberately not awaited — the local wipe below is what
     // actually protects the next customer on a shared terminal.
-    fetch(`${base}/cart/clear`, {
-      method: 'DELETE',
-      credentials: 'include',
+    api.delete('/cart/clear', {
       headers: { 'x-session-id': sessionId },
-      keepalive: true,
     }).catch(() => {});
   }
 

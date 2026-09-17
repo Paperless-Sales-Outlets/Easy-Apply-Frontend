@@ -88,8 +88,12 @@ api.interceptors.request.use(
       }
     }
 
-    // Always send the session ID for cart operations
-    config.headers['x-session-id'] = getSessionId();
+    // Always send the session ID for cart operations. A caller may pass one
+    // explicitly (e.g. logout, which wipes storage before this runs) — keep it
+    // rather than minting a fresh id.
+    if (!config.headers['x-session-id']) {
+      config.headers['x-session-id'] = getSessionId();
+    }
 
     return config;
   },

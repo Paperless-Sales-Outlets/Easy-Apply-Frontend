@@ -128,7 +128,6 @@ const SLTLogo = () => (
 );
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
-const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api';
 
 /* ── Main Component ──────────────────────────────────────────────── */
 export default function SignUpPage() {
@@ -697,65 +696,63 @@ export default function SignUpPage() {
     setError('');
 
     try {
-      const res = await fetch(`${API}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `${form.title} ${form.fullName.trim()}`,
-          // EMAIL ADDRESS — TEMPORARILY REMOVED FROM REGISTRATION (see step 1).
-          // The account is created without one; the customer supplies it on the
-          // New Connection form. Restore this line with the field.
-          // email: form.email.trim(),
-          phone: form.phone.replace(/[\s+\-()]/g, ''),
-          NIC: form.nic.trim().toUpperCase(),
-          role: 'Customer',
-          title: form.title,
-          dob: form.dob,
-          gender: form.gender,
-          nationality: form.nationality,
-          contactNumber: form.contactNumber.trim(),
-          addressLine1: form.addressLine1.trim(),
-          addressLine2: form.addressLine2.trim(),
-          city: form.city.trim(),
-          district: form.district,
-          postalCode: form.postalCode.trim(),
-          preferredContact: form.preferredContact,
-          // Identity documents captured in step 2. The API stores these in
-          // GridFS and keeps only the file ids on the user record.
-          nicFront: form.nicFront,
-          nicBack: form.nicBack,
-          facePhoto: form.facePhoto
-        }),
+      const res = await api.post('/auth/register', {
+        name: `${form.title} ${form.fullName.trim()}`,
+        // EMAIL ADDRESS — TEMPORARILY REMOVED FROM REGISTRATION (see step 1).
+        // The account is created without one; the customer supplies it on the
+        // New Connection form. Restore this line with the field.
+        // email: form.email.trim(),
+        phone: form.phone.replace(/[\s+\-()]/g, ''),
+        NIC: form.nic.trim().toUpperCase(),
+        role: 'Customer',
+        title: form.title,
+        dob: form.dob,
+        gender: form.gender,
+        nationality: form.nationality,
+        contactNumber: form.contactNumber.trim(),
+        addressLine1: form.addressLine1.trim(),
+        addressLine2: form.addressLine2.trim(),
+        city: form.city.trim(),
+        district: form.district,
+        postalCode: form.postalCode.trim(),
+        preferredContact: form.preferredContact,
+        // Identity documents captured in step 2. The API stores these in
+        // GridFS and keeps only the file ids on the user record.
+        nicFront: form.nicFront,
+        nicBack: form.nicBack,
+        facePhoto: form.facePhoto
       });
 
-      const data = await res.json();
+      const data = res.data || {};
 
-      if (!res.ok) {
-        setError(data.message || 'Registration failed. Please try again.');
-      } else {
-        // Registered and phone-verified — sign them straight in. A brand new
-        // account has no SLT connections yet, so the lookup usually comes back
-        // empty and they'll only be offered New Connection.
-        let accounts = [];
-        try {
-          const lookup = await api.post('/customers/lookup', { phoneNumber: normalisedPhone() });
-          if (lookup.data?.customerExists && Array.isArray(lookup.data.customers)) {
-            accounts = lookup.data.customers;
-          }
-        } catch (lookupErr) {
-          // Non-fatal — they can still apply for a new connection.
+      // Registered and phone-verified — sign them straight in. A brand new
+      // account has no SLT connections yet, so the lookup usually comes back
+      // empty and they'll only be offered New Connection.
+      let accounts = [];
+      try {
+        const lookup = await api.post('/customers/lookup', { phoneNumber: normalisedPhone() });
+        if (lookup.data?.customerExists && Array.isArray(lookup.data.customers)) {
+          accounts = lookup.data.customers;
         }
-
-        saveSession({
-          phone: normalisedPhone(),
-          user: data.user || null,
-          accountsList: accounts,
-          tokens: { accessToken: data.accessToken, refreshToken: data.refreshToken },
-        });
-        navigate('/', { replace: true });
+      } catch (lookupErr) {
+        // Non-fatal — they can still apply for a new connection.
       }
-    } catch {
-      setError('Unable to connect to the server. Please try again later.');
+
+      saveSession({
+        phone: normalisedPhone(),
+        user: data.user || null,
+        accountsList: accounts,
+        tokens: { accessToken: data.accessToken, refreshToken: data.refreshToken },
+      });
+      navigate('/', { replace: true });
+    } catch (err) {
+      // axios rejects on non-2xx responses; a response means the server
+      // answered with an error, no response means it couldn't be reached.
+      if (err.response) {
+        setError(err.response.data?.message || 'Registration failed. Please try again.');
+      } else {
+        setError('Unable to connect to the server. Please try again later.');
+      }
     } finally {
       setLoading(false);
     }
