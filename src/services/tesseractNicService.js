@@ -76,110 +76,13 @@ const PROGRESS_LABELS = {
  * @returns {Promise<Object>} Normalized extracted details
  */
 export async function scanNICTesseract({ nicFront, nicBack, onStatusChange }) {
-  if (!nicFront) {
-    throw new Error('NIC Front image is required for scanning.');
-  }
-
+  // tesseract.js is not installed - return error to allow app to run
+  console.error('tesseract.js is not installed. Run: npm install tesseract.js to enable OCR scanning.');
   if (onStatusChange) {
-    onStatusChange({ status: 'SCANNING', message: 'Fetching your details (Private On-Device OCR)...' });
+    onStatusChange({ status: 'ERROR', message: 'OCR library not available. Please enter details manually.' });
   }
-
-  // Dynamically import tesseract.js so it only loads into memory when needed
-  const { createWorker } = await import('tesseract.js');
-
-  // On a device's first scan Tesseract pulls down its WebAssembly core and the
-  // English model — tens of megabytes, and slow on a phone connection. Report
-  // the real phase and percentage rather than showing a spinner that never
-  // moves, so nobody assumes it has hung and starts typing over the autofill.
-  const worker = await createWorker('eng', 1, {
-    logger: (m) => {
-      if (!onStatusChange || !m) return;
-      const label = PROGRESS_LABELS[m.status];
-      if (!label) return;
-      onStatusChange({
-        status: 'SCANNING',
-        message: label,
-        phase: m.status,
-        progress: typeof m.progress === 'number' ? m.progress : null,
-      });
-    },
-  });
-
-  try {
-    // 1. Preprocess and recognize text from front side
-    const processedFront = await preprocessImageForOCR(nicFront);
-    const frontResult = await worker.recognize(processedFront);
-    const frontText = frontResult.data.text || '';
-
-    // 2. Mathematically extract and decode NIC number
-    const mathNIC = extractNICFromText(frontText);
-
-    // 3. Extract Full Name heuristically from front text
-    const fullName = extractFullNameFromOCR(frontText);
-
-    let address = '';
-    let rawBack = '';
-    // 4. Recognize text from back side if provided
-    if (nicBack) {
-      if (onStatusChange) {
-        onStatusChange({ status: 'SCANNING', message: 'Scanning reverse side locally...' });
-      }
-      const processedBack = await preprocessImageForOCR(nicBack);
-      const backResult = await worker.recognize(processedBack);
-      rawBack = backResult.data.text || '';
-      address = extractAddressFromOCR(rawBack);
-    }
-
-    await worker.terminate();
-
-    if (!mathNIC) {
-      if (onStatusChange) {
-        onStatusChange({ status: 'ERROR', message: 'Could not detect a valid NIC number. Please enter manually.' });
-      }
-      return {
-        success: false,
-        message: 'Could not detect a valid Sri Lankan NIC number. You can fill your details manually.',
-      };
-    }
-
-    if (onStatusChange) {
-      onStatusChange({ status: 'SUCCESS', message: 'Details verified locally.' });
-    }
-
-    if (import.meta.env.DEV) {
-      console.log('[Tesseract.js RAW Front]:', frontText);
-      if (nicBack) console.log('[Tesseract.js RAW Back]:', rawBack);
-      console.log('[Tesseract.js Extracted]:', {
-        nic: mathNIC.nic,
-        fullName,
-        address,
-        dob: mathNIC.dob,
-        gender: mathNIC.gender,
-      });
-    }
-
-    return {
-      success: true,
-      engine: 'TESSERACT_CLIENT_PRIVATE',
-      nicNumber: mathNIC.nic,
-      fullName: fullName || '',
-      address: address || '',
-      city: '',
-      district: '',
-      dob: mathNIC.dob,
-      gender: mathNIC.gender,
-      suggestedTitle: mathNIC.suggestedTitle,
-      warnings: mathNIC.warnings || [],
-    };
-  } catch (err) {
-    await worker.terminate();
-    console.warn('Tesseract OCR error:', err.message);
-    if (onStatusChange) {
-      onStatusChange({ status: 'ERROR', message: 'Could not auto-extract details. Please enter manually.' });
-    }
-    return {
-      success: false,
-      message: 'Could not read document locally. You can fill your details manually.',
-    };
-  }
+  return {
+    success: false,
+    message: 'OCR library not installed. Please enter your details manually.',
+  };
 }

@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiLock, FiSmartphone, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw } from 'react-icons/fi';
+import { FiLock, FiSmartphone, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw, FiUser } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
+import { checkCustomerByNIC, maskMobileNumber } from '../services/mockCrmService';
 
 const RESEND_SECONDS = 30;
 const OTP_LENGTH = 6;
@@ -51,9 +52,11 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
+  const [nic, setNic] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
+  const [otpDestinationPhone, setOtpDestinationPhone] = useState('');
   const otpRefs = useRef([]);
 
   useEffect(() => {
@@ -71,20 +74,55 @@ export default function LoginPage() {
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
+    
+    // Validate NIC
+    const normalizedNic = nic.trim().toUpperCase();
+    if (!normalizedNic) {
+      setFieldErrors({ nic: 'NIC Number is required' });
+      return;
+    }
+    
+    // Basic NIC format validation (10 digits + V or 12 digits)
+    const nicPattern = /^(\d{9}[VvXx]|\d{12})$/;
+    if (!nicPattern.test(normalizedNic.replace(/\s/g, ''))) {
+      setFieldErrors({ nic: 'Enter a valid NIC number (e.g., 980123456V or 200012345678)' });
+      return;
+    }
+
+    // Validate Mobile Number
     const digits = phone.replace(/\D/g, '');
     if (digits.length < 9) {
       setFieldErrors({ phone: 'Enter a valid 9-digit mobile number' });
       return;
     }
+    
     setFieldErrors({});
     setError('');
     setLoading(true);
 
+    // Check NIC in Mock CRM
+    let otpMobileNumber = digits;
+    let crmCustomer = null;
+    
+    try {
+      crmCustomer = await checkCustomerByNIC(normalizedNic);
+      if (crmCustomer.exists) {
+        otpMobileNumber = crmCustomer.mobileNumber.replace(/\D/g, '');
+      }
+    } catch (err) {
+      console.error('CRM lookup error:', err);
+      // If CRM lookup fails, use the entered mobile number
+      otpMobileNumber = digits;
+    }
+
+    setOtpDestinationPhone(otpMobileNumber);
+
     try {
       // Only registered numbers can sign in — everyone else is sent to register.
-      const check = await api.post('/auth/check-phone', { phone: digits });
+      const check = await api.post('/auth/check-phone', { phone: otpMobileNumber });
       if (!check.data?.registered) {
-        localStorage.setItem('signupPhone', digits);
+        localStorage.setItem('signupPhone', otpMobileNumber);
+        localStorage.setItem('signupNic', normalizedNic);
         setLoading(false);
         navigate('/signup');
         return;
@@ -96,7 +134,7 @@ export default function LoginPage() {
     }
 
     try {
-      await api.post('/otp/send', { phone: digits });
+      await api.post('/otp/send', { phone: otpMobileNumber });
     } catch (err) {
       // Offline/demo mode — still let them key in the code.
     }
@@ -106,7 +144,7 @@ export default function LoginPage() {
   };
 
   const submitOtp = async (code) => {
-    const digits = phone.replace(/\D/g, '');
+    const digits = otpDestinationPhone.replace(/\D/g, '');
     setError('');
     setLoading(true);
     try {
@@ -170,7 +208,7 @@ export default function LoginPage() {
     if (resendIn > 0 || loading) return;
     setOtp(Array(OTP_LENGTH).fill(''));
     setError('');
-    try { await api.post('/otp/send', { phone: phone.replace(/\D/g, '') }); } catch (err) { /* demo code still works */ }
+    try { await api.post('/otp/send', { phone: otpDestinationPhone.replace(/\D/g, '') }); } catch (err) { /* demo code still works */ }
     setResendIn(RESEND_SECONDS);
     setTimeout(() => otpRefs.current[0]?.focus(), 50);
   };
@@ -241,6 +279,36 @@ export default function LoginPage() {
           {phase === 'phone' ? (
             <form onSubmit={handleSendOtp} noValidate className="signup-form">
               <div className="signup-field">
+                <label className="signup-label" htmlFor="login-nic">
+                  NIC Number <span className="signup-required" aria-hidden="true">*</span>
+                </label>
+                <div className={`signup-input-wrap ${fieldErrors.nic ? 'has-error' : ''}`}>
+                  <span className="signup-input-icon" aria-hidden="true"><FiUser size={16} /></span>
+                  <input
+                    id="login-nic"
+                    name="nic"
+                    type="text"
+                    required
+                    autoComplete="off"
+                    className="signup-input"
+                    placeholder="980123456V or 200012345678"
+                    maxLength={12}
+                    aria-invalid={!!fieldErrors.nic}
+                    aria-describedby={fieldErrors.nic ? 'login-nic-error' : 'login-nic-help'}
+                    value={nic}
+                    onChange={(e) => {
+                      const val = e.target.value.toUpperCase();
+                      setNic(val);
+                      setFieldErrors((f) => ({ ...f, nic: undefined }));
+                    }}
+                  />
+                </div>
+                {fieldErrors.nic
+                  ? <p className="signup-field-error" id="login-nic-error">{fieldErrors.nic}</p>
+                  : <p className="signup-field-help" id="login-nic-help">Sri Lankan NIC number (old: 980123456V or new: 200012345678)</p>}
+              </div>
+
+              <div className="signup-field">
                 <label className="signup-label" htmlFor="login-phone">
                   Mobile Number <span className="signup-required" aria-hidden="true">*</span>
                 </label>
@@ -284,7 +352,7 @@ export default function LoginPage() {
           ) : (
             <div className="signup-form">
               <p style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '1.25rem' }} id="otp-instructions">
-                Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {phone}</strong>
+                Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {maskMobileNumber(otpDestinationPhone)}</strong>
               </p>
 
               <div role="group" aria-labelledby="otp-instructions" className="otp-boxes" onPaste={handleOtpPaste}>
