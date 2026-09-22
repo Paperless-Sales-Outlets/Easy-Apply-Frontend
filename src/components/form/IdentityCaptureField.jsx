@@ -9,7 +9,7 @@ import {
  *
  * Two variants:
  *   'document' — NIC front/back. Rear camera by default, card-shaped guide.
- *   'face'     — headshot. Front camera by default, oval guide, plus live
+ *   'face'     — profile photo. Front camera by default, oval guide, plus live
  *                framing checks where the browser supports face detection.
  *
  * On phones and tablets with more than one camera a swap control is shown, so a
@@ -193,7 +193,7 @@ export default function IdentityCaptureField({
     const canvas = canvasRef.current;
     if (!video || !canvas || !video.videoWidth) return;
 
-    // A headshot is squared off; a document keeps the frame's own proportions
+    // A profile photo is squared off; a document keeps the frame's own proportions
     // so the whole card is retained.
     let sx = 0, sy = 0, sw = video.videoWidth, sh = video.videoHeight;
     if (isFace) {

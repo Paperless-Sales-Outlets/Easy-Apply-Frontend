@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiLock, FiUser, FiMapPin, FiPhone, FiMail, FiCalendar, FiFileText } from 'react-icons/fi';
+import { FiLock, FiUser, FiMapPin, FiPhone, FiMail, FiCalendar, FiFileText, FiRefreshCw } from 'react-icons/fi';
 import AddressInputWithMap from '../../components/form/AddressInputWithMap';
+import NicUploadSection from '../../components/form/NicUploadSection';
 import { useVerifiedContext } from '../../components/verification';
 import { getAuthUser } from '../../utils/authSession';
 import { motion } from 'framer-motion';
+import { scanNICTesseract } from '../../services/tesseractNicService';
 
 const inputStyles = {
   base: {
@@ -69,6 +71,13 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, ha
   const { t } = useTranslation();
   const { mobileNumber, customerExists, selectedAccount } = useVerifiedContext();
   const [authUser] = useState(getAuthUser);
+
+  // NIC upload state
+  const [nicFormat, setNicFormat] = useState('jpeg');
+  const [nicFiles, setNicFiles] = useState({ nicFront: '', nicBack: '' });
+  const [ocrScanning, setOcrScanning] = useState(false);
+  const [ocrStatus, setOcrStatus] = useState(null);
+  const scanSeqRef = useRef(0);
 
   // Whatever we already know about this person: their SLT connection if they
   // have one, otherwise the details they gave us when they registered. Either
@@ -199,6 +208,77 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, ha
     d.setFullYear(d.getFullYear() - 18);
     return d.toISOString().split('T')[0];
   })();
+
+  // Handle NIC file changes and trigger OCR
+  const handleNicFileChange = (name, value) => {
+    setNicFiles(prev => ({ ...prev, [name]: value }));
+    
+    // Trigger OCR when both front and back are uploaded (for JPEG format)
+    if (nicFormat === 'jpeg' && ((name === 'nicFront' && value && nicFiles.nicBack) || (name === 'nicBack' && value && nicFiles.nicFront))) {
+      triggerOCR();
+    }
+  };
+
+  // Trigger OCR scan
+  const triggerOCR = async () => {
+    if (ocrScanning) return;
+    
+    const currentSeq = ++scanSeqRef.current;
+    setOcrScanning(true);
+    setOcrStatus({ type: 'loading', message: 'Scanning your NIC...', progress: null });
+
+    try {
+      const result = await scanNICTesseract({
+        nicFront: nicFiles.nicFront,
+        nicBack: nicFiles.nicBack,
+        onStatusChange: (st) => {
+          if (scanSeqRef.current !== currentSeq) return;
+          const statusType = st.status === 'ERROR' ? 'error' : st.status === 'SUCCESS' ? 'success' : 'loading';
+          setOcrStatus({
+            type: statusType,
+            message: st.message || 'Fetching your details...',
+            progress: typeof st.progress === 'number' ? st.progress : null,
+          });
+        },
+      });
+
+      if (scanSeqRef.current !== currentSeq) return;
+
+      if (result && result.success) {
+        // Auto-fill form fields with extracted data
+        if (setFields) {
+          const updates = {};
+          if (result.fullName) updates.nameFull = result.fullName;
+          if (result.nicNumber) updates.nic = result.nicNumber;
+          if (result.dob) updates.dob = result.dob;
+          if (result.suggestedTitle) updates.title = result.suggestedTitle;
+          if (result.address) updates.address = result.address;
+          setFields(updates);
+        }
+
+        setOcrStatus({
+          type: 'success',
+          message: 'Details fetched successfully. Please review and edit if needed.',
+        });
+      } else {
+        setOcrStatus({
+          type: 'error',
+          message: result?.message || 'Could not auto-extract details. Please enter them manually.',
+        });
+      }
+    } catch (err) {
+      if (scanSeqRef.current !== currentSeq) return;
+      console.warn('OCR error:', err);
+      setOcrStatus({
+        type: 'error',
+        message: 'Could not auto-extract details. Please enter them manually.',
+      });
+    } finally {
+      if (scanSeqRef.current === currentSeq) {
+        setOcrScanning(false);
+      }
+    }
+  };
 
   // We already hold this person's identity — from their SLT account, or from
   // what they typed when they registered. Asking for all of it again is just
@@ -376,6 +456,51 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, ha
             <FiUser color="#0056b3" /> Personal Information
           </h4>
         </div>
+
+        {/* NIC Upload Section with OCR */}
+        {!hasKnownProfile && (
+          <div style={{ marginBottom: '2rem', padding: '1.5rem', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <h5 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <FiFileText size={16} /> Upload NIC for Auto-Fill
+              </h5>
+              <p style={{ margin: '0.4rem 0 0 0', fontSize: '0.82rem', color: '#64748b' }}>
+                Upload front and back images of your NIC to automatically fill your personal details.
+              </p>
+            </div>
+            
+            <NicUploadSection
+              format={nicFormat}
+              onFormatChange={setNicFormat}
+              values={nicFiles}
+              onFileChange={handleNicFileChange}
+              required={false}
+              idPrefix="new-connection"
+              frontLabel="NIC — Front Side"
+              backLabel="NIC — Back Side"
+              formatLabel="Upload Format"
+            />
+
+            {/* OCR Status Display */}
+            {ocrStatus && (
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.75rem 1rem',
+                borderRadius: '8px',
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                backgroundColor: ocrStatus.type === 'success' ? '#dcfce7' : ocrStatus.type === 'error' ? '#fee2e2' : '#e0f2fe',
+                color: ocrStatus.type === 'success' ? '#166534' : ocrStatus.type === 'error' ? '#991b1b' : '#0369a1',
+                border: `1px solid ${ocrStatus.type === 'success' ? '#86efac' : ocrStatus.type === 'error' ? '#fca5a5' : '#7dd3fc'}`,
+              }}>
+                {ocrStatus.type === 'loading' && <FiRefreshCw size={14} className="spin" />}
+                {ocrStatus.message}
+              </div>
+            )}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
           <div>

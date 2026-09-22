@@ -10,7 +10,7 @@ const ValueAddedServicesStep = forwardRef(function ValueAddedServicesStep({ form
   // Expose validate() so the parent wizard can confirm a signature was given
   // before advancing — the backend rejects submissions without one (BRD 5.1.4)
   // regardless of which path (payment or no-loop) is taken next. The customer's
-  // NIC and headshot are captured once at registration, so they are not asked
+  // NIC and profile photo are captured once at registration, so they are not asked
   // for again here.
   useImperativeHandle(ref, () => ({
     validate: () => {

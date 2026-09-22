@@ -86,6 +86,128 @@ export async function checkCustomerByNIC(nic) {
 }
 
 /**
+ * Find a customer by mobile number.
+ * 
+ * @param {string} mobileNumber - Mobile number to search for
+ * @returns {Object|null} Customer object or null if not found
+ */
+export function findCustomerByMobile(mobileNumber) {
+  const normalizedMobile = mobileNumber.replace(/\D/g, '');
+  return mockCustomers.find(c => 
+    c.mobileNumber.replace(/\D/g, '') === normalizedMobile
+  ) || null;
+}
+
+/**
+ * Validate customer by NIC and Mobile Number combination.
+ * This ensures the NIC and Mobile belong to the SAME customer record.
+ * 
+ * @param {string} nic - Sri Lankan NIC number
+ * @param {string} mobileNumber - Mobile number
+ * @returns {Promise<Object>} Validation result
+ * 
+ * @example
+ * // Valid: NIC and Mobile match same customer
+ * {
+ *   valid: true,
+ *   customerExists: true,
+ *   mobileNumber: "0779999999",
+ *   reason: null
+ * }
+ * 
+ * @example
+ * // Invalid: NIC exists but mobile doesn't match
+ * {
+ *   valid: false,
+ *   customerExists: true,
+ *   mobileNumber: null,
+ *   reason: "NIC_MOBILE_MISMATCH"
+ * }
+ * 
+ * @example
+ * // Invalid: Mobile exists under different NIC
+ * {
+ *   valid: false,
+ *   customerExists: false,
+ *   mobileNumber: null,
+ *   reason: "MOBILE_BELONGS_TO_ANOTHER_CUSTOMER"
+ * }
+ * 
+ * @example
+ * // Valid: New customer (neither NIC nor mobile in CRM)
+ * {
+ *   valid: true,
+ *   customerExists: false,
+ *   mobileNumber: "0771111111",
+ *   reason: null
+ * }
+ */
+export async function validateCustomer(nic, mobileNumber) {
+  // Simulate API delay (500ms)
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  const normalizedNic = nic.replace(/\s/g, '').toUpperCase();
+  // Normalize mobile: remove non-digits and remove leading 0 for comparison
+  const normalizedMobile = mobileNumber.replace(/\D/g, '').replace(/^0/, '');
+
+  // Find customer by NIC
+  const customerByNic = mockCustomers.find(c => 
+    c.nic.replace(/\s/g, '').toUpperCase() === normalizedNic
+  );
+
+  // CASE 1: NIC exists in CRM
+  if (customerByNic) {
+    // Normalize CRM mobile for comparison (remove leading 0)
+    const crmMobile = customerByNic.mobileNumber.replace(/\D/g, '').replace(/^0/, '');
+    
+    // Check if entered mobile matches the CRM mobile for this NIC
+    if (normalizedMobile === crmMobile) {
+      // VALID: NIC and Mobile match same customer
+      return {
+        valid: true,
+        customerExists: true,
+        mobileNumber: customerByNic.mobileNumber,
+        reason: null
+      };
+    } else {
+      // INVALID: NIC exists but mobile doesn't match
+      return {
+        valid: false,
+        customerExists: true,
+        mobileNumber: null,
+        reason: 'NIC_MOBILE_MISMATCH'
+      };
+    }
+  }
+
+  // CASE 2: NIC does not exist in CRM
+  // Check if the entered mobile belongs to another customer
+  const customerByMobile = mockCustomers.find(c => {
+    const crmMobile = c.mobileNumber.replace(/\D/g, '').replace(/^0/, '');
+    return crmMobile === normalizedMobile;
+  });
+
+  if (customerByMobile) {
+    // INVALID: Mobile exists under a different NIC
+    return {
+      valid: false,
+      customerExists: false,
+      mobileNumber: null,
+      reason: 'MOBILE_BELONGS_TO_ANOTHER_CUSTOMER'
+    };
+  }
+
+  // CASE 3: Neither NIC nor Mobile exist in CRM
+  // Valid new customer - use entered mobile
+  return {
+    valid: true,
+    customerExists: false,
+    mobileNumber: mobileNumber,
+    reason: null
+  };
+}
+
+/**
  * Mask a mobile number for display (e.g., 077****999)
  * 
  * @param {string} mobileNumber - Full mobile number

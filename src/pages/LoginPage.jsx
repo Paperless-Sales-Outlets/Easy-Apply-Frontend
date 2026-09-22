@@ -5,7 +5,7 @@ import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
-import { checkCustomerByNIC, maskMobileNumber } from '../services/mockCrmService';
+import { validateCustomer, maskMobileNumber } from '../services/mockCrmService';
 
 const RESEND_SECONDS = 30;
 const OTP_LENGTH = 6;
@@ -100,19 +100,32 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    // Check NIC in Mock CRM
+    // Validate NIC + Mobile combination in Mock CRM
     let otpMobileNumber = digits;
-    let crmCustomer = null;
     
     try {
-      crmCustomer = await checkCustomerByNIC(normalizedNic);
-      if (crmCustomer.exists) {
-        otpMobileNumber = crmCustomer.mobileNumber.replace(/\D/g, '');
+      const validationResult = await validateCustomer(normalizedNic, digits);
+      
+      if (!validationResult.valid) {
+        // Validation failed - show appropriate error message
+        if (validationResult.reason === 'NIC_MOBILE_MISMATCH') {
+          setError('Mobile number does not match this NIC.');
+        } else if (validationResult.reason === 'MOBILE_BELONGS_TO_ANOTHER_CUSTOMER') {
+          setError('NIC and mobile number do not match our records.');
+        } else {
+          setError('Invalid NIC or mobile number. Please check and try again.');
+        }
+        setLoading(false);
+        return;
       }
+      
+      // Validation passed - use the returned mobile number
+      otpMobileNumber = validationResult.mobileNumber.replace(/\D/g, '');
     } catch (err) {
-      console.error('CRM lookup error:', err);
-      // If CRM lookup fails, use the entered mobile number
-      otpMobileNumber = digits;
+      console.error('CRM validation error:', err);
+      setError('Unable to verify your details right now. Please try again.');
+      setLoading(false);
+      return;
     }
 
     setOtpDestinationPhone(otpMobileNumber);

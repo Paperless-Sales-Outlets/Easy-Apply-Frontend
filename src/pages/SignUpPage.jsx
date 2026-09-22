@@ -850,7 +850,7 @@ export default function SignUpPage() {
               }</h2>
               <p>
                 {step === 1 ? 'Please fill in your details to create your account'
-                 : step === 2 ? 'Upload or photograph your NIC and a headshot'
+                 : step === 2 ? 'Upload or photograph your NIC and a profile photo'
                  : step === 3 ? 'Please provide your personal details'
                  : 'Please provide your address details'}
               </p>
@@ -1009,7 +1009,7 @@ export default function SignUpPage() {
                 />
 
                 <IdentityCaptureField
-                  label="Your Photo (Headshot) — Optional"
+                  label="Your Photo (Profile Photo) — Optional"
                   variant="face"
                   required={false}
                   value={form.facePhoto}
@@ -1023,7 +1023,7 @@ export default function SignUpPage() {
                     'Centre your face in the oval and fill the frame',
                     'No hat, sunglasses or face covering — prescription glasses are fine',
                   ]}
-                  helpText="Optional headshot for secondary verification."
+                  helpText="Optional profile photo for secondary verification."
                 />
               </>
             )}

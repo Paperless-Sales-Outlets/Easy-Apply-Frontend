@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FiCamera, FiRefreshCw, FiCheckCircle, FiAlertTriangle, FiUpload, FiX, FiUser } from 'react-icons/fi';
 
 /**
- * FaceCaptureField — live headshot capture for KYC.
+ * FaceCaptureField — live profile photo capture for KYC.
  *
  * Opens the front camera, guides the customer to centre their face inside an
  * oval, and only unlocks the shutter once the frame passes the usual checks
@@ -18,7 +18,7 @@ const OUTPUT_SIZE = 640;      // final square photo, in px
 const ANALYSIS_INTERVAL = 350; // ms between live frame checks
 
 export default function FaceCaptureField({
-  label = 'Face Photo (Headshot)',
+  label = 'Face Photo (Profile Photo)',
   required = false,
   value = '',
   onChange,
@@ -293,7 +293,7 @@ export default function FaceCaptureField({
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1.25rem' }}>
             <img
               src={value}
-              alt="Captured headshot"
+              alt="Captured profile photo"
               style={{
                 width: '150px',
                 height: '150px',
@@ -328,7 +328,7 @@ export default function FaceCaptureField({
                 playsInline
                 muted
                 autoPlay
-                aria-label="Live camera preview for your headshot"
+                aria-label="Live camera preview for your profile photo"
                 style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
               />
               {!videoReady && (
