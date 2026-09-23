@@ -33,6 +33,7 @@ const Cart = ({ isOpen, onClose }) => {
       return;
     }
 
+    /* Voice package mandatory rule commented out - user can checkout with any single package
     const hasVoicePackage = cartItems.some((item) => {
       const p = item.product || item;
       const cat = (p.category || p.name || '').toLowerCase();
@@ -43,6 +44,7 @@ const Cart = ({ isOpen, onClose }) => {
       alert('Voice Package Required (Compulsory):\n\nAll SLTMobitel bundles require at least 1 Voice package.\nAllowed combinations:\n• Voice Only\n• Voice + Broadband\n• Voice + Broadband + PEO TV\n\nPlease add 1 Voice package to your cart to proceed with checkout.');
       return;
     }
+    */
 
     setShowPayHere(true);
   };

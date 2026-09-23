@@ -228,51 +228,74 @@ export default function ProductCatalogPage() {
         const list = res.data || res.products || res || [];
         if (Array.isArray(list) && list.length > 0) {
           // Normalize and use live products directly
-          const normalized = list.map((p) => {
-            const rawName = p.name || p.productName || 'SLT Package';
-            const cat = (p.category || '').toLowerCase();
-            const mock = DEFAULT_MOCKUP_PRODUCTS.find(
-              (m) => m.name?.toLowerCase().trim() === rawName.toLowerCase().trim()
-            );
+          const normalized = list
+            .filter((p) => {
+              const rawName = (p.name || p.productName || '').toLowerCase();
+              return !rawName.includes('test') && (p.monthlyPrice > 0 || p.price > 0 || rawName.includes('peo'));
+            })
+            .map((p) => {
+              const rawName = p.name || p.productName || 'SLT Package';
+              const cat = (p.category || '').toLowerCase();
+              const mock = DEFAULT_MOCKUP_PRODUCTS.find(
+                (m) => m.name?.toLowerCase().trim() === rawName.toLowerCase().trim()
+              );
 
-            let dynamicFeatures = Array.isArray(p.features) && p.features.length > 0 ? p.features : (mock?.features || null);
-            
-            // For PEO TV products, always prioritize real channel count
-            if (cat.includes('peo') || cat.includes('tv') || rawName.toLowerCase().includes('peo')) {
-              const count = getPeoTvChannelsCount(rawName, p.monthlyPrice ?? p.price ?? 0);
-              dynamicFeatures = [
-                `${count}+ Live TV Channels`,
-                'Crystal Clear Digital Quality',
-                'Free Standard Setup & Support',
-              ];
-            }
+              let dynamicFeatures = Array.isArray(p.features) && p.features.length > 0 ? p.features : (mock?.features || null);
+              
+              // Resolve non-zero price with tariff fallback
+              let price = Number(p.monthlyPrice ?? p.price ?? 0);
+              if (price === 0) {
+                const lowerName = rawName.toLowerCase();
+                if (lowerName.includes('silver plus')) price = 1375;
+                else if (lowerName.includes('silver')) price = 1125;
+                else if (lowerName.includes('family')) price = 1625;
+                else if (lowerName.includes('entertainment')) price = 1875;
+                else if (lowerName.includes('gold')) price = 2100;
+                else if (lowerName.includes('titanium')) price = 3890;
+                else if (lowerName.includes('starter') || lowerName.includes('basic')) price = 1490;
+                else if (mock?.monthlyPrice) price = mock.monthlyPrice;
+              }
 
-            if (!dynamicFeatures || dynamicFeatures.length === 0) {
-              dynamicFeatures = ['High-speed connectivity', 'Unlimited Entertainment', '24/7 SLT Support'];
-            }
+              // For PEO TV products, always prioritize real channel count
+              if (cat.includes('peo') || cat.includes('tv') || rawName.toLowerCase().includes('peo')) {
+                const count = getPeoTvChannelsCount(rawName, price);
+                dynamicFeatures = [
+                  `${count}+ Live TV Channels`,
+                  'Crystal Clear Digital Quality',
+                  'Free Standard Setup & Support',
+                ];
+              }
 
-            const isPeo = cat.includes('peo') || cat.includes('tv') || rawName.toLowerCase().includes('peo');
-            const peoCloudinaryImg = 'https://res.cloudinary.com/zipy7m0d/image/upload/v1789621770/product-info-hub/images/fields/peo_qpdary.jpg';
+              if (!dynamicFeatures || dynamicFeatures.length === 0) {
+                dynamicFeatures = ['High-speed connectivity', 'Unlimited Entertainment', '24/7 SLT Support'];
+              }
 
-            return {
-              ...p,
-              name: rawName,
-              monthlyPrice: p.monthlyPrice ?? p.price ?? 0,
-              features: dynamicFeatures,
-              category: p.category || mock?.category || (isPeo ? 'PEO TV' : 'Broadband'),
-              speed: p.speed || mock?.speed || null,
-              popular: p.popular ?? (mock?.popular || false),
-              bannerUrl: p.bannerUrl || p.image || (isPeo ? peoCloudinaryImg : (mock?.bannerUrl || null)),
-              image: p.image || p.bannerUrl || (isPeo ? peoCloudinaryImg : (mock?.bannerUrl || null)),
-            };
-          });
+              const isPeo = cat.includes('peo') || cat.includes('tv') || rawName.toLowerCase().includes('peo');
+              const peoCloudinaryImg = 'https://res.cloudinary.com/zipy7m0d/image/upload/v1789621770/product-info-hub/images/fields/peo_qpdary.jpg';
+
+              return {
+                ...p,
+                name: rawName,
+                monthlyPrice: price,
+                price: price,
+                installationFee: p.installationFee !== undefined ? p.installationFee : (mock?.installationFee ?? 2500),
+                features: dynamicFeatures,
+                category: p.category || mock?.category || (isPeo ? 'PEO TV' : 'Broadband'),
+                speed: p.speed || mock?.speed || null,
+                popular: p.popular ?? (mock?.popular || false),
+                bannerUrl: p.bannerUrl || p.image || (isPeo ? peoCloudinaryImg : (mock?.bannerUrl || null)),
+                image: p.image || p.bannerUrl || (isPeo ? peoCloudinaryImg : (mock?.bannerUrl || null)),
+              };
+            });
+
+          // Set live products directly from API without merging mock DB data
           setProducts(normalized);
         } else {
-          setProducts(DEFAULT_MOCKUP_PRODUCTS);
+          setProducts([]);
         }
       } catch (err) {
-        console.warn('Using mockup products fallback:', err);
-        setProducts(DEFAULT_MOCKUP_PRODUCTS);
+        console.warn('Live products fetch failed:', err);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -358,12 +381,7 @@ export default function ProductCatalogPage() {
     try {
       await addToCart(prod, qty);
       setCartItems(getLocalCart());
-
-      if (group !== 'Voice' && !cartCategoryAnalysis.hasVoice) {
-        showToast(`Added ${prod.name}! Remember: 1 Voice package is COMPULSORY to checkout.`, 'info');
-      } else {
-        showToast(`${prod.name} added to cart!`, 'success');
-      }
+      showToast(`${prod.name} added to cart!`, 'success');
     } catch (err) {
       showToast(`${prod.name} added to cart!`, 'success');
     }
@@ -483,11 +501,11 @@ export default function ProductCatalogPage() {
 
     const sections = [];
 
-    if (activeCategory === 'All Products' || activeCategory === 'Voice') {
+    if (voiceProds.length > 0 && (activeCategory === 'All Products' || activeCategory === 'Voice')) {
       sections.push({
         id: 'voice-section',
-        title: t('catalog.sections.voiceTitle', 'Voice Packages (Compulsory - Max 1)'),
-        subtitle: t('catalog.sections.voiceSubtitle', '1 Voice package is required for all connection bundles'),
+        title: t('catalog.sections.voiceTitle', 'Voice Packages (Max 1)'),
+        subtitle: t('catalog.sections.voiceSubtitle', 'Voice packages for crystal clear home & office calls'),
         icon: <FiPhone />,
         bgColor: '#eff6ff',
         iconColor: '#0b4a91',
@@ -495,7 +513,7 @@ export default function ProductCatalogPage() {
       });
     }
 
-    if (activeCategory === 'All Products' || activeCategory === 'Fibre Broadband' || activeCategory === 'LTE Home') {
+    if (broadbandProds.length > 0 && (activeCategory === 'All Products' || activeCategory === 'Fibre Broadband' || activeCategory === 'LTE Home')) {
       sections.push({
         id: 'broadband-section',
         title: t('catalog.sections.broadbandTitle', 'Broadband Packages (Fibre & LTE - Max 1)'),
@@ -507,7 +525,7 @@ export default function ProductCatalogPage() {
       });
     }
 
-    if (activeCategory === 'All Products' || activeCategory === 'PEO TV') {
+    if (peoTvProds.length > 0 && (activeCategory === 'All Products' || activeCategory === 'PEO TV')) {
       sections.push({
         id: 'peotv-section',
         title: t('catalog.sections.peoTvTitle', 'PEO TV Packages (Max 1)'),
@@ -537,7 +555,7 @@ export default function ProductCatalogPage() {
           }}
         />
 
-        {/* ── Voice Compulsory & Bundle Rules Status Bar ── */}
+        {/* ── Voice Compulsory & Bundle Rules Status Bar (Commented out: single package selection allowed) ──
         <div
           style={{
             backgroundColor: cartCategoryAnalysis.hasVoice ? '#f0fdf4' : '#eff6ff',
@@ -627,6 +645,7 @@ export default function ProductCatalogPage() {
             )}
           </div>
         </div>
+        ── */}
 
         {/* ── Horizontal Category Pill Chips Bar ── */}
         <div id="products-section" className="scroll-target">

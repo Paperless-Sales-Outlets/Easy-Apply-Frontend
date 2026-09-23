@@ -2,8 +2,8 @@ import React, { useState, useReducer, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import CustomerInfoStep from './CustomerInfoStep';
-import ServiceInfoStep from './ServiceInfoStep';
-import ValueAddedServicesStep from './ValueAddedServicesStep';
+// import ServiceInfoStep from './ServiceInfoStep';
+// import ValueAddedServicesStep from './ValueAddedServicesStep';
 import LoopCheckStep from './LoopCheckStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
@@ -54,6 +54,9 @@ const initialState = {
   staticIP: 'no',
   declarationAccepted: false,
   signature: '',
+  locationType: 'current',
+  city: '',
+  district: '',
 };
 
 export default function NewConnectionWizard() {
@@ -83,8 +86,7 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
-  const vasStepRef = useRef(null);
-  const totalSteps = 5;
+  const totalSteps = 3;
 
   useEffect(() => {
     if (selectedProduct?.productName) {
@@ -128,29 +130,32 @@ export default function NewConnectionWizard() {
     });
   };
 
-  const handleFileChange = (name, fileData) => {
-    dispatch({ type: 'UPDATE_FIELD', payload: { name, value: fileData } });
-  };
-
   const nextStep = () => {
-    setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
     window.scrollTo(0, 0);
   };
   const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
     window.scrollTo(0, 0);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitError('');
-    if (currentStep === 3 && vasStepRef.current && !vasStepRef.current.validate()) return;
+
+    // Ensure installation address / location is selected in Step 1
+    if (currentStep === 1) {
+      const activeAddress = formData.installAddress || formData.address;
+      if (!activeAddress || activeAddress.trim().length === 0) {
+        toast.error('Please specify an installation address.');
+        return;
+      }
+    }
+
     if (currentStep < totalSteps) nextStep();
   };
 
-  // Real submission — fired either after payment succeeds (loop available)
-  // or immediately after the loop check comes back negative (no payment,
-  // just a pending request for an SLT rep to follow up on).
+  // Real submission — fired after payment succeeds
   const submitApplication = async (paymentRef, phoneOverride) => {
     const phone = phoneOverride || verifiedMobile || formData.mobileNumber;
     setSubmitting(true);
@@ -158,7 +163,11 @@ export default function NewConnectionWizard() {
     try {
       const res = await api.post('/applications', {
         serviceType: 'new-connection',
-        formData,
+        formData: {
+          ...formData,
+          paymentReference: paymentRef,
+          product: selectedProduct,
+        },
         phone,
       });
       navigate('/completion', {
@@ -216,57 +225,59 @@ export default function NewConnectionWizard() {
         </div>
       )}
 
-      {/* Progress Bar */}
+      {/* Progress Stepper: 3 Clean Steps */}
       <WizardStepper
         currentStep={currentStep}
         steps={[
-          t('wizards.newConnection.steps.s1'),
-          t('wizards.newConnection.steps.s2'),
-          t('wizards.newConnection.steps.s3'),
-          'Coverage Check',
-          'Payment',
+          'Installation Location',
+          'Loop Coverage Check',
+          'Payment Gateway',
         ]}
       />
 
       <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form onSubmit={handleSubmit}>
-
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
+          {/* Step 1: Installation Location (Current or New with City Dropdown & Map) */}
           {currentStep === 1 && (
             <CustomerInfoStep
               formData={formData}
               handleChange={handleChange}
-              handleFileChange={handleFileChange}
               setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
               selectedProduct={selectedProduct}
             />
           )}
+
+          {/* Commented out legacy intermediate steps per new simplified flow
           {currentStep === 2 && (
             <ServiceInfoStep formData={formData} handleChange={handleChange} />
           )}
           {currentStep === 3 && (
             <ValueAddedServicesStep
-              ref={vasStepRef}
               isActive={currentStep === 3}
               formData={formData}
               handleChange={handleChange}
             />
           )}
-          {currentStep === 4 && (
+          */}
+
+          {/* Step 2: Backend Loop Availability Check */}
+          {currentStep === 2 && (
             <LoopCheckStep
               formData={formData}
-              submitting={submitting}
               onAvailable={nextStep}
-              onUnavailable={submitApplication}
+              onGoBack={prevStep}
             />
           )}
-          {currentStep === 5 && (
+
+          {/* Step 3: Payment Gateway */}
+          {currentStep === 3 && (
             <PaymentStep
-              isActive={currentStep === 5}
+              isActive={currentStep === 3}
               verifiedPhone={verifiedMobile}
               amount={selectedProduct?.installationFee || 2500}
-              amountLabel="Total Amount"
+              amountLabel="Installation Fee"
               onSuccess={submitApplication}
             />
           )}
@@ -282,9 +293,9 @@ export default function NewConnectionWizard() {
           <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
             {t('common.previous')}
           </button>
-          {currentStep <= 3 && (
+          {currentStep === 1 && (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
-              {t('common.nextStep')}
+              Verify Loop Coverage →
             </button>
           )}
         </div>

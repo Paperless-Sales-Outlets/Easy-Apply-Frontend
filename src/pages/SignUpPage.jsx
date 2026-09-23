@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiShield, FiX, FiRefreshCw, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
@@ -133,21 +133,34 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api';
 /* ── Main Component ──────────────────────────────────────────────── */
 export default function SignUpPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const prefilledPhone = (() => {
-    const stored = localStorage.getItem('signupPhone') || '';
-    if (stored) localStorage.removeItem('signupPhone');
-    return stored;
-  })();
+  const [initInfo] = useState(() => {
+    const state = location.state || {};
+    const storedPhone = state.phone || localStorage.getItem('signupPhone') || '';
+    const storedNic = state.nic || localStorage.getItem('signupNic') || '';
+    const isVerified = Boolean(state.phoneVerified || localStorage.getItem('signupPhoneVerified') === 'true');
 
-  const [step, setStep] = useState(1);
+    if (localStorage.getItem('signupPhone')) localStorage.removeItem('signupPhone');
+    if (localStorage.getItem('signupNic')) localStorage.removeItem('signupNic');
+    if (localStorage.getItem('signupPhoneVerified')) localStorage.removeItem('signupPhoneVerified');
+
+    return {
+      phone: storedPhone,
+      nic: storedNic,
+      isVerified,
+      step: isVerified && storedPhone && storedNic ? 2 : 1,
+    };
+  });
+
+  const [step, setStep] = useState(initInfo.step);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [form, setForm] = useState({
     // Step 1
-    phone: prefilledPhone,
+    phone: initInfo.phone,
     email: '',
     // Step 2 — identity documents
     nicFront: '',
@@ -158,7 +171,7 @@ export default function SignUpPage() {
     fullName: '',
     dob: '',
     gender: 'Male',
-    nic: '',
+    nic: initInfo.nic,
     nationality: 'Sri Lankan',
     contactNumber: '',
     // Step 4
@@ -408,10 +421,8 @@ export default function SignUpPage() {
   };
 */
 
-  // ── Inline phone verification ────────────────────────────────────
-  // The number is confirmed by OTP right here on the form, the same way the
-  // Ownership Transfer wizard verifies a new applicant's number.
-  const [phoneVerified, setPhoneVerified] = useState(false);
+  // ── Inline phone & NIC verification ──────────────────────────────
+  const [phoneVerified, setPhoneVerified] = useState(initInfo.isVerified);
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
@@ -473,31 +484,30 @@ export default function SignUpPage() {
   }, [otpModalOpen, resendIn]);
 
   const normalisedPhone = () => {
-    let digits = form.phone.replace(/\D/g, '');
+    let digits = (form.phone || '').replace(/\D/g, '');
     if (digits.startsWith('0')) digits = digits.slice(1);
     return digits;
   };
 
   const sendOtp = async () => {
+    const fe = {};
+    const cleanNicVal = cleanNIC(form.nic);
+    const nicCheck = validateNIC(cleanNicVal);
+    if (!nicCheck.valid) {
+      fe.nic = nicCheck.message || 'Enter a valid NIC number first';
+    }
+
     const digits = normalisedPhone();
     if (digits.length !== 9) {
-      setFieldErrors((fe) => ({ ...fe, phone: 'Enter a valid 9-digit mobile number first' }));
+      fe.phone = 'Enter a valid 9-digit mobile number first';
+    }
+
+    if (Object.keys(fe).length > 0) {
+      setFieldErrors((prev) => ({ ...prev, ...fe }));
       return;
     }
 
     setSendingOtp(true);
-    try {
-      // Don't let someone register a number that already has an account.
-      const check = await api.post('/auth/check-phone', { phone: digits });
-      if (check.data?.registered) {
-        setFieldErrors((fe) => ({ ...fe, phone: 'This number already has an account. Please sign in instead.' }));
-        setSendingOtp(false);
-        return;
-      }
-    } catch (err) {
-      // Lookup unavailable — carry on; the register call still guards duplicates.
-    }
-
     try {
       await api.post('/otp/send', { phone: digits });
     } catch (err) {
@@ -511,23 +521,49 @@ export default function SignUpPage() {
 
   const submitOtp = async (code) => {
     const digits = normalisedPhone();
+    const cleanNicVal = cleanNIC(form.nic);
     setVerifyingOtp(true);
     setOtpError('');
     try {
-      const res = await api.post('/otp/verify', { phone: digits, otp: code });
-      if (res.data?.success) {
-        setPhoneVerified(true);
-        setOtpModalOpen(false);
-      } else {
-        setOtpError(res.data?.message || 'Invalid or expired verification code.');
-        setOtp(['', '', '', '', '', '']);
-        setTimeout(() => otpRefs.current[0]?.focus(), 50);
+      const res = await api.post('/auth/verify-entry', {
+        phone: digits,
+        nic: cleanNicVal,
+        otp: code,
+      });
+
+      if (res.data?.existing) {
+        // Existing registered customer -> Direct login
+        const { user, accessToken, refreshToken } = res.data;
+        let accounts = [];
+        try {
+          const lookup = await api.post('/customers/lookup', { phoneNumber: digits });
+          if (lookup.data?.customerExists && Array.isArray(lookup.data.customers)) {
+            accounts = lookup.data.customers;
+          }
+        } catch (_) {}
+
+        saveSession({
+          phone: digits,
+          user: user || null,
+          accountsList: accounts,
+          tokens: { accessToken, refreshToken },
+        });
+        navigate('/', { replace: true });
+        return;
       }
+
+      // New customer -> Verified!
+      setPhoneVerified(true);
+      setOtpModalOpen(false);
+      setStep(2);
+      window.scrollTo(0, 0);
     } catch (err) {
-      // Demo bypass — 000000 (or a backend outage) counts as verified.
-      if (code === '000000' || !err.response) {
+      // Demo bypass — 000000 / 123456 (or offline backend) counts as verified
+      if (code === '000000' || code === '123456' || !err.response) {
         setPhoneVerified(true);
         setOtpModalOpen(false);
+        setStep(2);
+        window.scrollTo(0, 0);
       } else {
         setOtpError(err.response?.data?.message || 'Invalid or expired verification code.');
         setOtp(['', '', '', '', '', '']);
@@ -578,15 +614,18 @@ export default function SignUpPage() {
 
   const set = (field) => (e) => {
     let value = e.target.value;
-    if (field === 'phone' || field === 'contactNumber') {
+    if (field === 'phone') {
+      value = value.replace(/\D/g, '');
+      if (value.startsWith('0')) value = value.slice(1);
+      value = value.slice(0, 9);
+      setPhoneVerified(false);
+    }
+    if (field === 'contactNumber') {
       value = value.replace(/\D/g, '').slice(0, 10);
     }
-    // Editing either contact invalidates the code already confirmed for it.
-    if (field === 'phone') setPhoneVerified(false);
-    // EMAIL VERIFICATION — TEMPORARILY DISABLED (see banner near the top)
-    // if (field === 'email') setEmailVerified(false);
     if (field === 'nic') {
-      value = value.slice(0, 12);
+      value = value.toUpperCase().slice(0, 12);
+      if (step === 1) setPhoneVerified(false);
     }
     if (field === 'postalCode') {
       value = value.replace(/\D/g, '').slice(0, 5);
@@ -607,18 +646,17 @@ export default function SignUpPage() {
 
   const validateStep1 = () => {
     const fe = {};
-    if (!form.phone?.trim()) fe.phone = 'Phone number is required';
-    else if (!/^\d{9,10}$/.test(form.phone.replace(/[\s+\-()]/g, ''))) fe.phone = 'Enter a valid phone number';
-    
-    // EMAIL ADDRESS — TEMPORARILY REMOVED FROM REGISTRATION (see the note in step 1)
-    // if (!form.email?.trim()) fe.email = 'Email address is required';
-    // else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) fe.email = 'Enter a valid email';
-    // EMAIL VERIFICATION — TEMPORARILY DISABLED (see banner near the top)
-    // else if (!emailVerified) fe.email = 'Please verify your email address to continue';
-    
-    if (!form.phone?.trim()) fe.phone = 'Phone number is required';
-    else if (!phoneVerified) fe.phone = 'Please verify your mobile number to continue';
-
+    const cleanNicVal = cleanNIC(form.nic);
+    const nicCheck = validateNIC(cleanNicVal);
+    if (!nicCheck.valid) {
+      fe.nic = nicCheck.message || 'Enter a valid NIC number';
+    }
+    const digits = normalisedPhone();
+    if (digits.length !== 9) {
+      fe.phone = 'Enter a valid 9-digit mobile number';
+    } else if (!phoneVerified) {
+      fe.phone = 'Please verify your mobile number to continue';
+    }
 
     return fe;
   };
@@ -662,7 +700,16 @@ export default function SignUpPage() {
 
   const nextStep = () => {
     let fe = {};
-    if (step === 1) fe = validateStep1();
+    if (step === 1) {
+      fe = validateStep1();
+      if (Object.keys(fe).length > 0) {
+        setFieldErrors(fe);
+        if (!phoneVerified && !fe.nic && normalisedPhone().length === 9) {
+          sendOtp();
+        }
+        return;
+      }
+    }
     if (step === 2) fe = validateStep2();
     if (step === 3) fe = validateStep3();
     
@@ -856,14 +903,36 @@ export default function SignUpPage() {
             {/* STEP 1 FIELDS */}
             {step === 1 && (
               <>
-                {/* EMAIL ADDRESS — TEMPORARILY REMOVED FROM REGISTRATION.
-                    SLT asked for the email field to come out of sign-up for now; the
-                    address is collected on the New Connection form instead. The BRD
-                    still requires it, so the markup is commented out below rather than
-                    deleted. While it is out this two-column row holds only the phone
-                    field, so it is forced to a single column — drop the style prop
-                    when the email field is restored. */}
                 <div className="signup-row" style={{ gridTemplateColumns: '1fr' }}>
+                  {/* NIC Number */}
+                  <div className="signup-field">
+                    <label className="signup-label" htmlFor="signup-nic-step1">
+                      NIC Number <span className="signup-required" aria-hidden="true">*</span>
+                    </label>
+                    <div className={`signup-input-wrap ${fieldErrors.nic ? 'has-error' : ''}`}>
+                      <span className="signup-input-icon" aria-hidden="true"><IconCard /></span>
+                      <input
+                        id="signup-nic-step1"
+                        name="nic"
+                        type="text"
+                        required
+                        autoCapitalize="characters"
+                        className="signup-input"
+                        placeholder="e.g. 200210104449 or 851234567V"
+                        maxLength={12}
+                        readOnly={phoneVerified}
+                        aria-invalid={!!fieldErrors.nic}
+                        aria-describedby={fieldErrors.nic ? 'signup-nic-error' : 'signup-nic-help'}
+                        value={form.nic}
+                        onChange={set('nic')}
+                      />
+                    </div>
+                    {fieldErrors.nic
+                      ? <p className="signup-field-error" id="signup-nic-error">{fieldErrors.nic}</p>
+                      : <p className="signup-field-help" id="signup-nic-help">Enter your 12-digit or 9-digit (with V/X) National Identity Card number.</p>}
+                  </div>
+
+                  {/* Mobile Number */}
                   <div className="signup-field">
                     <label className="signup-label" htmlFor="signup-phone">
                       Mobile Number <span className="signup-required" aria-hidden="true">*</span>
@@ -883,7 +952,7 @@ export default function SignUpPage() {
                           placeholder="77 123 4567"
                           value={form.phone}
                           onChange={set('phone')}
-                          maxLength="10"
+                          maxLength={9}
                           readOnly={phoneVerified}
                           aria-invalid={!!fieldErrors.phone}
                           aria-describedby={fieldErrors.phone ? 'signup-phone-error' : 'signup-phone-help'}
@@ -910,8 +979,8 @@ export default function SignUpPage() {
                       ? <p className="signup-field-error" id="signup-phone-error">{fieldErrors.phone}</p>
                       : <p className="signup-field-help" id="signup-phone-help">
                           {phoneVerified
-                            ? 'Mobile number confirmed.'
-                            : "Select Verify to receive a 6-digit code. We'll use this number for important updates."}
+                            ? 'Identity and mobile number verified.'
+                            : "Enter 9 digits without leading 0. Select Verify or Continue to receive a 6-digit OTP code."}
                         </p>}
                   </div>
                 </div>
@@ -1268,12 +1337,6 @@ export default function SignUpPage() {
                 </>
               )}
             </div>
-            
-            {step === 1 && (
-              <p className="signup-footer-text">
-                Already have an account? <Link to="/login" className="signup-link signup-link--accent">Sign In</Link>
-              </p>
-            )}
           </form>
         </div>
       </div>

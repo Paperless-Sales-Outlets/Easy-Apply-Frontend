@@ -165,7 +165,8 @@ export default function ProductDetailsPanel({
                     POPULAR
                   </span>
                 )}
-                {catLower.includes('voice') && (
+                {/* Voice compulsory badge commented out
+                catLower.includes('voice') && (
                   <span
                     style={{
                       backgroundColor: '#0284c7',
@@ -178,7 +179,8 @@ export default function ProductDetailsPanel({
                   >
                     COMPULSORY
                   </span>
-                )}
+                )
+                */}
               </div>
 
               {onToggleFavorite && (

@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiLock, FiSmartphone, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw } from 'react-icons/fi';
+import { FiLock, FiSmartphone, FiCreditCard, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
+import { validateNIC, cleanNIC } from '../utils/nicParser';
 
 const RESEND_SECONDS = 30;
 const OTP_LENGTH = 6;
@@ -29,28 +30,26 @@ async function fetchSltAccounts(phone) {
     const { customerExists, customers } = res.data || {};
     return customerExists && Array.isArray(customers) ? customers : [];
   } catch (err) {
-    // A lookup outage shouldn't block sign-in — they're treated as a customer
-    // with no SLT products until the next successful lookup.
     return [];
   }
 }
 
 /**
- * Sign in with a mobile number and a one-time code.
- *
- * This is the only sign-in method: SLT asked for email/password to be removed,
- * so a customer's phone number is their single credential.
+ * Unified Entry Sign-in / Verification gateway.
+ * Prompts user for NIC Number and 9-digit Mobile Number.
+ * Verifies OTP and routes existing customers to Landing Page or new customers to NIC upload.
  */
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || '/';
 
-  const [phase, setPhase] = useState('phone'); // 'phone' | 'otp'
+  const [phase, setPhase] = useState('entry'); // 'entry' | 'otp'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
+  const [nic, setNic] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
@@ -71,29 +70,26 @@ export default function LoginPage() {
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
+    const fe = {};
+
+    const nicCheck = validateNIC(nic);
+    if (!nicCheck.valid) {
+      fe.nic = nicCheck.message || 'Enter a valid NIC number';
+    }
+
     const digits = phone.replace(/\D/g, '');
-    if (digits.length < 9) {
-      setFieldErrors({ phone: 'Enter a valid 9-digit mobile number' });
+    if (digits.length !== 9) {
+      fe.phone = 'Enter a valid 9-digit mobile number';
+    }
+
+    if (Object.keys(fe).length > 0) {
+      setFieldErrors(fe);
       return;
     }
+
     setFieldErrors({});
     setError('');
     setLoading(true);
-
-    try {
-      // Only registered numbers can sign in — everyone else is sent to register.
-      const check = await api.post('/auth/check-phone', { phone: digits });
-      if (!check.data?.registered) {
-        localStorage.setItem('signupPhone', digits);
-        setLoading(false);
-        navigate('/signup');
-        return;
-      }
-    } catch (err) {
-      setError('Unable to verify your number right now. Please try again.');
-      setLoading(false);
-      return;
-    }
 
     try {
       await api.post('/otp/send', { phone: digits });
@@ -107,32 +103,60 @@ export default function LoginPage() {
 
   const submitOtp = async (code) => {
     const digits = phone.replace(/\D/g, '');
+    const cleanNicVal = cleanNIC(nic);
     setError('');
     setLoading(true);
+
     try {
-      const res = await api.post('/auth/otp-login', { phone: digits, otp: code });
-      const { user, accessToken, refreshToken } = res.data || {};
-      const accounts = await fetchSltAccounts(user?.phone || digits);
-      saveSession({
-        phone: user?.phone || digits,
-        user,
-        accountsList: accounts,
-        tokens: { accessToken, refreshToken },
+      const res = await api.post('/auth/verify-entry', {
+        phone: digits,
+        nic: cleanNicVal,
+        otp: code,
       });
-      navigate(redirectTo, { replace: true });
-    } catch (err) {
-      if (!err.response) {
-        // API unreachable — fall back to the plain OTP check so the flow still
-        // works during local development.
-        try { await api.post('/otp/verify', { phone: digits, otp: code }); } catch (_) { /* offline */ }
-        const accounts = await fetchSltAccounts(digits);
-        saveSession({ phone: digits, user: null, accountsList: accounts, tokens: {} });
+
+      if (res.data?.existing) {
+        // Existing registered customer -> Direct login
+        const { user, accessToken, refreshToken } = res.data;
+        const accounts = await fetchSltAccounts(user?.phone || digits);
+        saveSession({
+          phone: user?.phone || digits,
+          user,
+          accountsList: accounts,
+          tokens: { accessToken, refreshToken },
+        });
         navigate(redirectTo, { replace: true });
       } else {
-        setError(err.response?.data?.message || 'Invalid or expired verification code.');
-        setOtp(Array(OTP_LENGTH).fill(''));
-        setTimeout(() => otpRefs.current[0]?.focus(), 50);
+        // New customer -> Navigate to Sign Up Step 2 (NIC Upload)
+        localStorage.setItem('signupPhone', digits);
+        localStorage.setItem('signupNic', cleanNicVal);
+        localStorage.setItem('signupPhoneVerified', 'true');
+        navigate('/signup', {
+          state: {
+            phone: digits,
+            nic: cleanNicVal,
+            phoneVerified: true,
+            fromLogin: true,
+          },
+          replace: true,
+        });
       }
+    } catch (err) {
+      if (!err.response) {
+        // API unreachable — fallback for local demo mode
+        if (code === '000000' || code === '123456') {
+          localStorage.setItem('signupPhone', digits);
+          localStorage.setItem('signupNic', cleanNicVal);
+          localStorage.setItem('signupPhoneVerified', 'true');
+          navigate('/signup', {
+            state: { phone: digits, nic: cleanNicVal, phoneVerified: true },
+            replace: true,
+          });
+          return;
+        }
+      }
+      setError(err.response?.data?.message || 'Invalid or expired verification code.');
+      setOtp(Array(OTP_LENGTH).fill(''));
+      setTimeout(() => otpRefs.current[0]?.focus(), 50);
     } finally {
       setLoading(false);
     }
@@ -193,24 +217,23 @@ export default function LoginPage() {
             <p className="signup-badge" style={{ marginTop: '1.25rem' }}>
               <FiLock size={14} aria-hidden="true" /> Secure &amp; Trusted
             </p>
-            <h1 className="signup-sidebar-title">Welcome Back</h1>
+            <h1 className="signup-sidebar-title">Welcome</h1>
             <p className="signup-sidebar-desc">
-              Sign in with your mobile number to apply for connections, manage your services
-              and track your requests.
+              Enter your NIC and mobile number to sign in or register seamlessly with SLTMobitel EasyApply.
             </p>
             <ul className="signup-features" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               <li className="signup-feature-item">
                 <div className="signup-feature-icon" aria-hidden="true"><FiShield /></div>
                 <div>
                   <p className="signup-feature-title">100% Secure Process</p>
-                  <p>Your data is safe with us</p>
+                  <p>Your data is encrypted and safe</p>
                 </div>
               </li>
               <li className="signup-feature-item">
                 <div className="signup-feature-icon" aria-hidden="true"><FiZap /></div>
                 <div>
-                  <p className="signup-feature-title">No Password Needed</p>
-                  <p>Just your number and a one-time code</p>
+                  <p className="signup-feature-title">Instant Verification</p>
+                  <p>One-step OTP verification for all services</p>
                 </div>
               </li>
               <li className="signup-feature-item">
@@ -229,8 +252,12 @@ export default function LoginPage() {
           <div className="signup-form-header">
             <div className="signup-form-header-icon" aria-hidden="true"><FiSmartphone /></div>
             <div>
-              <h2>Sign In</h2>
-              <p>We'll text a one-time code to your registered mobile number.</p>
+              <h2>{phase === 'entry' ? 'Sign In / Register' : 'Verify Mobile Number'}</h2>
+              <p>
+                {phase === 'entry'
+                  ? 'Enter your NIC and mobile number. We will verify your identity with a quick OTP.'
+                  : `Enter the 6-digit code sent to +94 ${phone}`}
+              </p>
             </div>
           </div>
 
@@ -238,8 +265,40 @@ export default function LoginPage() {
             {error && <div className="signup-error">{error}</div>}
           </div>
 
-          {phase === 'phone' ? (
+          {phase === 'entry' ? (
             <form onSubmit={handleSendOtp} noValidate className="signup-form">
+              {/* NIC Number Field */}
+              <div className="signup-field">
+                <label className="signup-label" htmlFor="login-nic">
+                  NIC Number <span className="signup-required" aria-hidden="true">*</span>
+                </label>
+                <div className={`signup-input-wrap ${fieldErrors.nic ? 'has-error' : ''}`}>
+                  <span className="signup-input-icon" aria-hidden="true"><FiCreditCard size={16} /></span>
+                  <input
+                    id="login-nic"
+                    name="nic"
+                    type="text"
+                    required
+                    autoCapitalize="characters"
+                    className="signup-input"
+                    placeholder="e.g. 1234567890123 or 123456789V"
+                    maxLength={12}
+                    aria-invalid={!!fieldErrors.nic}
+                    aria-describedby={fieldErrors.nic ? 'login-nic-error' : 'login-nic-help'}
+                    value={nic}
+                    onChange={(e) => {
+                      const val = e.target.value.toUpperCase();
+                      setNic(val);
+                      setFieldErrors((f) => ({ ...f, nic: undefined }));
+                    }}
+                  />
+                </div>
+                {fieldErrors.nic
+                  ? <p className="signup-field-error" id="login-nic-error">{fieldErrors.nic}</p>
+                  : <p className="signup-field-help" id="login-nic-help">Enter your 12-digit or 9-digit (with V/X) National Identity Card number.</p>}
+              </div>
+
+              {/* Mobile Number Field */}
               <div className="signup-field">
                 <label className="signup-label" htmlFor="login-phone">
                   Mobile Number <span className="signup-required" aria-hidden="true">*</span>
@@ -256,7 +315,7 @@ export default function LoginPage() {
                     autoComplete="tel-national"
                     className="signup-input"
                     placeholder="77 123 4567"
-                    maxLength={10}
+                    maxLength={9}
                     aria-invalid={!!fieldErrors.phone}
                     aria-describedby={fieldErrors.phone ? 'login-phone-error' : 'login-phone-help'}
                     value={phone}
@@ -270,14 +329,14 @@ export default function LoginPage() {
                 </div>
                 {fieldErrors.phone
                   ? <p className="signup-field-error" id="login-phone-error">{fieldErrors.phone}</p>
-                  : <p className="signup-field-help" id="login-phone-help">Sri Lankan mobile number, without the leading zero.</p>}
+                  : <p className="signup-field-help" id="login-phone-help">Sri Lankan mobile number (strictly 9 digits, without leading zero).</p>}
               </div>
 
               <div className="signup-action-row">
                 <button type="submit" className="signup-btn" disabled={loading} aria-busy={loading} style={{ width: '100%' }}>
                   {loading
                     ? <><span className="signup-spinner" aria-hidden="true" /> Sending code…</>
-                    : <>Send Code <FiArrowRight size={18} aria-hidden="true" /></>}
+                    : <>Continue <FiArrowRight size={18} aria-hidden="true" /></>}
                 </button>
               </div>
             </form>
@@ -311,10 +370,10 @@ export default function LoginPage() {
                 <button
                   type="button"
                   className="signup-btn-secondary signup-btn-secondary--auto"
-                  onClick={() => { setPhase('phone'); setError(''); }}
+                  onClick={() => { setPhase('entry'); setError(''); }}
                   disabled={loading}
                 >
-                  <FiArrowLeft size={16} aria-hidden="true" /> Change Number
+                  <FiArrowLeft size={16} aria-hidden="true" /> Change Details
                 </button>
                 {resendIn > 0 ? (
                   <span style={{ fontSize: '0.82rem', color: '#5b6472', fontWeight: 600 }} aria-live="polite">
@@ -332,13 +391,9 @@ export default function LoginPage() {
               )}
             </div>
           )}
-
-          <p className="signup-footer-text">
-            New to SLTMobitel EasyApply?{' '}
-            <Link to="/signup" className="signup-link signup-link--accent">Create an account</Link>
-          </p>
         </main>
       </div>
     </div>
   );
 }
+
