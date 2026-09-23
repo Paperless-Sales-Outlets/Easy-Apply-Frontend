@@ -48,6 +48,21 @@ export const SRI_LANKA_TOWN_DISTRICT_MAP = {
 
   // Colombo
   'COLOMBO': 'Colombo',
+  'COLOMBO 01': 'Colombo',
+  'COLOMBO 02': 'Colombo',
+  'COLOMBO 03': 'Colombo',
+  'COLOMBO 04': 'Colombo',
+  'COLOMBO 05': 'Colombo',
+  'COLOMBO 06': 'Colombo',
+  'COLOMBO 07': 'Colombo',
+  'COLOMBO 08': 'Colombo',
+  'COLOMBO 09': 'Colombo',
+  'COLOMBO 10': 'Colombo',
+  'COLOMBO 11': 'Colombo',
+  'COLOMBO 12': 'Colombo',
+  'COLOMBO 13': 'Colombo',
+  'COLOMBO 14': 'Colombo',
+  'COLOMBO 15': 'Colombo',
   'DEHIWALA': 'Colombo',
   'MOUNT LAVINIA': 'Colombo',
   'MORATUWA': 'Colombo',
@@ -239,34 +254,250 @@ export const SRI_LANKA_TOWN_DISTRICT_MAP = {
 };
 
 /**
+ * Mapping of Sinhala & Tamil Town and District names to English
+ */
+export const SINHALA_TAMIL_TOWN_MAP = {
+  // Sinhala Towns
+  'කොළඹ': 'Colombo',
+  'මහනුවර': 'Kandy',
+  'නුවර': 'Kandy',
+  'පේරාදෙණිය': 'Peradeniya',
+  'ගම්පොල': 'Gampola',
+  'කටුගස්තොට': 'Katugastota',
+  'කුණ්ඩසාලේ': 'Kundasale',
+  'නාවලපිටිය': 'Nawalapitiya',
+  'දික්ඔය': 'Dickoya',
+  'හැටන්': 'Hatton',
+  'තලවාකැලේ': 'Talawakele',
+  'නුවරඑළිය': 'Nuwara Eliya',
+  'මස්කෙළිය': 'Maskeliya',
+  'ගිනිගත්හේන': 'Ginigathena',
+  'ගාල්ල': 'Galle',
+  'හික්කඩුව': 'Hikkaduwa',
+  'කරාපිටිය': 'Karapitiya',
+  'ඇල්පිටිය': 'Elpitiya',
+  'අම්බලන්ගොඩ': 'Ambalangoda',
+  'මාතර': 'Matara',
+  'වැලිගම': 'Weligama',
+  'අකුරැස්ස': 'Akuressa',
+  'දෙණියාය': 'Deniyaya',
+  'ගම්පහ': 'Gampaha',
+  'මීගමුව': 'Negombo',
+  'කැලණිය': 'Kelaniya',
+  'කඩවත': 'Kadawatha',
+  'රාගම': 'Ragama',
+  'ජා-ඇල': 'Ja-Ela',
+  'ජා ඇල': 'Ja-Ela',
+  'වත්තල': 'Wattala',
+  'කිරිබත්ගොඩ': 'Kiribathgoda',
+  'මිනුවන්ගොඩ': 'Minuwangoda',
+  'මීරිගම': 'Mirigama',
+  'වේයන්ගොඩ': 'Veyangoda',
+  'කළුතර': 'Kalutara',
+  'පානදුර': 'Panadura',
+  'හොරණ': 'Horana',
+  'බේරුවල': 'Beruwala',
+  'අලුත්ගම': 'Aluthgama',
+  'මතුගම': 'Matugama',
+  'වාද්දුව': 'Wadduwa',
+  'බණ්ඩාරගම': 'Bandaragama',
+  'කුරුණෑගල': 'Kurunegala',
+  'කුලියාපිටිය': 'Kuliyapitiya',
+  'නාරම්මල': 'Narammala',
+  'පන්නල': 'Pannala',
+  'රත්නපුර': 'Ratnapura',
+  'ඇඹිලිපිටිය': 'Embilipitiya',
+  'බලන්ගොඩ': 'Balangoda',
+  'පැල්මඩුල්ල': 'Pelmadulla',
+  'ඇහැලියගොඩ': 'Eheliyagoda',
+  'කෑගල්ල': 'Kegalle',
+  'මාවනැල්ල': 'Mawanella',
+  'වරකාපොල': 'Warakapola',
+  'රුවන්වැල්ල': 'Ruwanwella',
+  'බදුල්ල': 'Badulla',
+  'බණ්ඩාරවෙල': 'Bandarawela',
+  'හපුතලේ': 'Haputale',
+  'ඇල්ල': 'Ella',
+  'වැලිමඩ': 'Welimada',
+  'මහියංගණය': 'Mahiyanganaya',
+  'දියතලාව': 'Diyatalawa',
+  'අනුරාධපුර': 'Anuradhapura',
+  'මැදවච්චිය': 'Medawachchiya',
+  'කැකිරාව': 'Kekirawa',
+  'පොළොන්නරුව': 'Polonnaruwa',
+  'හිඟුරක්ගොඩ': 'Hingurakgoda',
+  'මාතලේ': 'Matale',
+  'දඹුල්ල': 'Dambulla',
+  'සීගිරිය': 'Sigiriya',
+  'පුත්තලම': 'Puttalam',
+  'හලාවත': 'Chilaw',
+  'මාරවිල': 'Marawila',
+  'වෙන්නප්පුව': 'Wennappuwa',
+  'හම්බන්තොට': 'Hambantota',
+  'තංගල්ල': 'Tangalle',
+  'බෙලිඅත්ත': 'Beliatta',
+  'අම්බලන්තොට': 'Ambalantota',
+  'තිස්සමහාරාමය': 'Tissamaharama',
+  'මොණරාගල': 'Monaragala',
+  'වැල්ලවාය': 'Wellawaya',
+  'කතරගම': 'Kataragama',
+  'යාපනය': 'Jaffna',
+  'චාවකච්චේරි': 'Chavakachcheri',
+  'පේදුරුතුඩුව': 'Point Pedro',
+  'වවුනියාව': 'Vavuniya',
+  'මන්නාරම': 'Mannar',
+  'මුලතිව්': 'Mullaitivu',
+  'කිලිනොච්චිය': 'Kilinochchi',
+  'ත්‍රිකුණාමලය': 'Trincomalee',
+  'ත්රිකුණාමලය': 'Trincomalee',
+  'කින්නියා': 'Kinniya',
+  'මඩකලපුව': 'Batticaloa',
+  'කාත්තන්කුඩි': 'Kattankudy',
+  'අම්පාර': 'Ampara',
+  'කල්මුනේ': 'Kalmunai',
+  'සම්මන්තුරේ': 'Sammanthurai',
+  'අක්කරපත්තුව': 'Akkaraipattu',
+
+  // Tamil Towns
+  'கொழும்பு': 'Colombo',
+  'கண்டி': 'Kandy',
+  'பேராதனை': 'Peradeniya',
+  'கம்பளை': 'Gampola',
+  'நாவலப்பிட்டி': 'Nawalapitiya',
+  'டிக்கோயா': 'Dickoya',
+  'ஹற்றன்': 'Hatton',
+  'தலவாக்கலை': 'Talawakele',
+  'நுவரெலியா': 'Nuwara Eliya',
+  'மஸ்கெலியா': 'Maskeliya',
+  'காலி': 'Galle',
+  'ஹிக்கடுவ': 'Hikkaduwa',
+  'மாத்தறை': 'Matara',
+  'வெலிகம': 'Weligama',
+  'கம்பஹா': 'Gampaha',
+  'நீர்கொழும்பு': 'Negombo',
+  'களுத்துறை': 'Kalutara',
+  'பாணந்துறை': 'Panadura',
+  'ஹொரண': 'Horana',
+  'குருநாகல்': 'Kurunegala',
+  'குளியாப்பிட்டிய': 'Kuliyapitiya',
+  'இரத்தினபுரி': 'Ratnapura',
+  'எம்பிலிப்பிட்டிய': 'Embilipitiya',
+  'பலாங்கொடை': 'Balangoda',
+  'கேகாலை': 'Kegalle',
+  'மாவனல்லை': 'Mawanella',
+  'பதுளை': 'Badulla',
+  'பண்டாரவளை': 'Bandarawela',
+  'அப்புத்தளை': 'Haputale',
+  'எல்ல': 'Ella',
+  'தியத்தலாவ': 'Diyatalawa',
+  'அனுராதபுரம்': 'Anuradhapura',
+  'பொலன்னறுவை': 'Polonnaruwa',
+  'மாத்தளை': 'Matale',
+  'தம்புள்ளை': 'Dambulla',
+  'புத்தளம்': 'Puttalam',
+  'சிலாபம்': 'Chilaw',
+  'அம்பாந்தோட்டை': 'Hambantota',
+  'தங்கல்லை': 'Tangalle',
+  'மொணராகலை': 'Monaragala',
+  'வெல்லவாய': 'Wellawaya',
+  'யாழ்ப்பாணம்': 'Jaffna',
+  'சாவகச்சேரி': 'Chavakachcheri',
+  'பருத்தித்துறை': 'Point Pedro',
+  'நல்லூர்': 'Nallur',
+  'வவுனியா': 'Vavuniya',
+  'மன்னார்': 'Mannar',
+  'முல்லைத்தீவு': 'Mullaitivu',
+  'கிளிநொச்சி': 'Kilinochchi',
+  'திருகோணமலை': 'Trincomalee',
+  'கிண்ணியா': 'Kinniya',
+  'மட்டக்களப்பு': 'Batticaloa',
+  'காத்தான்குடி': 'Kattankudy',
+  'ஏறாவூர்': 'Eravur',
+  'வாழைச்சேனை': 'Valaichchenai',
+  'அம்பாறை': 'Ampara',
+  'கல்முனை': 'Kalmunai',
+  'சம்மாந்துறை': 'Sammanthurai',
+  'அக்கரைப்பற்று': 'Akkaraipattu',
+  'பொத்துவில்': 'Potuvil',
+};
+
+/**
+ * Cleans OCR artifacts (. FETC a, peo, etc.) and normalizes town name
+ */
+export function cleanTownNoise(str) {
+  if (!str || typeof str !== 'string') return '';
+  let cleaned = str
+    .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|pS|jie|jle|die|sie|fetc|etc|fec|setec|drp|a|e|h)\b.*$/i, '')
+    .replace(/\b(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|pS|jie|jle|die|sie|fetc|etc|fec|setec|drp)\b/gi, '')
+    .replace(/[\.\,\-\/\\_]+$/, '')
+    .trim();
+
+  // If the string contains a known Sri Lankan town name, normalize to exact clean town format
+  // Sort keys by length descending so 'COLOMBO 03' matches before 'COLOMBO'
+  const upper = cleaned.toUpperCase();
+  const sortedTowns = Object.keys(SRI_LANKA_TOWN_DISTRICT_MAP).sort((a, b) => b.length - a.length);
+  for (const town of sortedTowns) {
+    const regex = new RegExp(`\\b${town}\\b`, 'i');
+    if (regex.test(cleaned) || upper.startsWith(town)) {
+      return town.charAt(0) + town.slice(1).toLowerCase().replace(/\s+([a-z0-9])/g, (_, c) => ' ' + c.toUpperCase());
+    }
+  }
+
+  return cleaned;
+}
+
+/**
  * Parses and splits a Sri Lankan NIC address into addressLine1, addressLine2, city, and district.
- * e.g. "153, BATHFORD DIVISION, DICKOYA peo SE" ->
- * addressLine1: "153, BATHFORD DIVISION", city: "DICKOYA", district: "Nuwara Eliya"
+ * e.g. "153, BATHFORD DIVISION, DICKOYA. FETC a" ->
+ * addressLine1: "153, BATHFORD DIVISION", city: "Dickoya", district: "Nuwara Eliya", postalCode: "22050"
  */
 export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDistrict = '') {
   if (!rawAddress && !givenCity && !givenDistrict) return {};
 
-  const clean = (rawAddress || '')
+  let clean = (rawAddress || '')
     .replace(/[\r\n]+/g, ', ')
-    .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley)\b.*$/i, '')
+    .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|fetc|etc|fec|setec|drp)\b.*$/i, '')
     .replace(/[£§©®™|\\_~@#^*=\[\]\{\}]/g, '')
     .replace(/\.+$/, '')
     .trim();
 
+  let city = (givenCity || '').trim();
+  let district = (givenDistrict || '').trim();
+
+  // 1. Detect Sinhala/Tamil city or district in raw address or givenCity
+  for (const [localTown, engTown] of Object.entries(SINHALA_TAMIL_TOWN_MAP)) {
+    if (clean.includes(localTown) || city.includes(localTown)) {
+      if (!city || city.includes(localTown)) {
+        city = engTown;
+      }
+      if (!district && SRI_LANKA_TOWN_DISTRICT_MAP[engTown.toUpperCase()]) {
+        district = SRI_LANKA_TOWN_DISTRICT_MAP[engTown.toUpperCase()];
+      }
+      break;
+    }
+  }
+
   // Strip trailing noise tokens
   const rawParts = clean.split(',').map((p) => p.trim()).filter(Boolean);
-  const parts = rawParts.filter((p) => !/^(?:peo|pro|geo|se|emo|bior|h|e|eb)$/i.test(p));
+  let parts = rawParts.filter((p) => !/^(?:peo|pro|geo|se|emo|bior|h|e|eb|pS|fetc|etc|fec|a)$/i.test(p));
+
+  // If parts contain both English lines and non-English lines, keep English parts only
+  const hasEnglish = parts.some((p) => /[A-Za-z]{3,}/.test(p));
+  if (hasEnglish) {
+    const englishParts = parts.filter((p) => !/[\u0D80-\u0DFF\u0B80-\u0BFF]/.test(p));
+    if (englishParts.length >= 2) {
+      parts = englishParts;
+    }
+  }
 
   let addressLine1 = '';
   let addressLine2 = '';
-  let city = (givenCity || '').trim();
-  let district = (givenDistrict || '').trim();
 
   // Determine lines
   if (parts.length === 1) {
     addressLine1 = parts[0];
   } else if (parts.length === 2) {
-    // If part 0 is just a house number (e.g. "153" or "No. 12"), both parts belong in addressLine1
+    // If part 0 is just a house number (e.g. "153" or "No. 12"), both belong in addressLine1
     if (/^(?:No\.?|#)?\s*\d+[\/\-A-Za-z0-9]*$/i.test(parts[0])) {
       addressLine1 = `${parts[0]}, ${parts[1]}`;
     } else {
@@ -274,7 +505,7 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
       if (!city) city = parts[1];
     }
   } else if (parts.length === 3) {
-    // e.g. ["153", "BATHFORD DIVISION", "DICKOYA"]
+    // e.g. ["153", "BATHFORD DIVISION", "DICKOYA. FETC a"]
     addressLine1 = `${parts[0]}, ${parts[1]}`;
     if (!city) city = parts[2];
   } else if (parts.length >= 4) {
@@ -283,9 +514,19 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
     if (!city) city = parts[parts.length - 1];
   }
 
-  // Clean city from noise
+  // Clean and normalize city and addressLine1 from OCR noise
   if (city) {
-    city = city.replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley)\b.*$/i, '').trim();
+    city = cleanTownNoise(city);
+    if (SINHALA_TAMIL_TOWN_MAP[city]) {
+      city = SINHALA_TAMIL_TOWN_MAP[city];
+    }
+  }
+
+  if (addressLine1) {
+    addressLine1 = addressLine1
+      .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|pS|jie|jle|die|sie|fetc|etc|fec|setec|drp)\b.*$/i, '')
+      .replace(/[\.\,\-\/\\_]+$/, '')
+      .trim();
   }
 
   // Auto-detect District from Town-District Map
@@ -297,6 +538,7 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
       for (const [town, dist] of Object.entries(SRI_LANKA_TOWN_DISTRICT_MAP)) {
         if (clean.toUpperCase().includes(town) || cityUpper.includes(town)) {
           district = dist;
+          if (!city || city.toUpperCase() === town) city = town;
           break;
         }
       }
@@ -319,6 +561,30 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
 }
 
 /**
+ * Repairs common OCR character misrecognitions in Sri Lankan names
+ * (e.g. 'MANALINGAM' -> 'MAHALINGAM' where thin 'H' crossbar is read as 'N')
+ */
+export function repairOcrName(name) {
+  if (!name || typeof name !== 'string') return '';
+
+  let repaired = name;
+
+  // 1. Repair H <-> N confusion in common Sri Lankan Tamil/Sinhala name roots
+  repaired = repaired.replace(/\b([A-Za-z]*?)NALINGAM\b/gi, '$1HALINGAM');
+  repaired = repaired.replace(/\b([A-Za-z]*?)NALINGAM/gi, '$1HALINGAM');
+
+  // 2. Repair DAWANHAF / DAWANHAR -> DAWANHAREN
+  repaired = repaired.replace(/\bDAWANHAF\b/gi, 'DAWANHAREN');
+  repaired = repaired.replace(/\bDAWANHAR\b/gi, 'DAWANHAREN');
+  repaired = repaired.replace(/\b([A-Za-z]{3,})HAF\b/gi, '$1HAREN');
+
+  // 3. Double V misread as W
+  repaired = repaired.replace(/\bVV/g, 'W');
+
+  return repaired;
+}
+
+/**
  * Heuristically extracts Full Name in English from OCR raw text on Sri Lankan NICs
  */
 export function extractFullNameFromOCR(text) {
@@ -329,7 +595,13 @@ export function extractFullNameFromOCR(text) {
     'NATIONAL', 'IDENTITY', 'CARD', 'DEPARTMENT', 'REGISTRATION',
     'PERSONS', 'DATE', 'BIRTH', 'GENDER', 'SEX', 'MALE', 'FEMALE',
     'HOLDER', 'SIGNATURE', 'PLACE', 'COUNTRY', 'LANKAN', 'SRILANKAN',
-    'MINISTRY', 'DEFENCE', 'OFFICIAL', 'SECRETARY'
+    'MINISTRY', 'DEFENCE', 'OFFICIAL', 'SECRETARY',
+    'UCT', 'UTC', 'ICT', 'NIC', 'SLT', 'NATIONALITY',
+    'DICKOYA', 'HATTON', 'TALAWAKELE', 'COLOMBO', 'KANDY', 'GALLE',
+    'MATARA', 'JAFFNA', 'KURUNEGALA', 'GAMPAHA', 'NEGOMBO', 'RATNAPURA',
+    'BADULLA', 'KEGALLE', 'KALUTARA', 'AMPARA', 'BATTICALOA', 'TRINCOMALEE',
+    'ANURADHAPURA', 'POLONNARUWA', 'MATALE', 'PUTTALAM', 'VAVUNIYA', 'MANNAR',
+    'MULLAITIVU', 'KILINOCHCHI', 'HAMBANTOTA', 'MONARAGALA', 'JIE', 'JLE'
   ];
 
   const lines = text
@@ -337,15 +609,25 @@ export function extractFullNameFromOCR(text) {
     .map((l) => l.trim())
     .filter(Boolean);
 
+  const cleanNameToken = (cand) => {
+    let cleaned = cand
+      .replace(/^(?:UCT|UTC|ICT|NIC|IC|E\s*IC|NO|ID|DOC|SRI\s*LANKAN|LANKAN)\s+/i, '')
+      .replace(/^(?:DICKOYA|COLOMBO|KANDY|GALLE|MATARA|JAFFNA|KURUNEGALA|GAMPAHA|HATTON|NUWARA\s*ELIYA|BADULLA|RATNAPURA|KEGALLE|KALUTARA|AMPARA|BATTICALOA|TRINCOMALEE|ANURADHAPURA|POLONNARUWA|MATALE|PUTTALAM|VAVUNIYA|MANNAR|MULLAITIVU|KILINOCHCHI|HAMBANTOTA|MONARAGALA)[\s,]+(?:Jie|Jle|die|sie|peo|pro|geo|se|eb|sb|le)?\s*,?\s*/i, '')
+      .replace(/\s+(?:UCT|UTC|ICT|NIC|IC|NO|ID|Jie|Jle|peo|se)$/i, '')
+      .replace(/^[,\s\.\-]+/, '')
+      .trim();
+    return repairOcrName(cleaned);
+  };
+
   let bestCandidate = '';
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
 
-    // 1. Direct Regex match for 2 to 5 uppercase words (e.g. "MAHALINGAM DAWANHAREN" in "e IC MAHALINGAM DAWANHAREN")
-    const matchUpperWords = rawLine.match(/\b([A-Z]{3,}(?:\s+[A-Z]{2,}){1,4})\b/);
+    // 1. Direct Regex match for 2 to 5 uppercase words
+    const matchUpperWords = rawLine.match(/\b([A-Z]{2,}(?:\s+[A-Z]{2,}){1,4})\b/);
     if (matchUpperWords && matchUpperWords[1]) {
-      const candidate = matchUpperWords[1].trim();
+      let candidate = cleanNameToken(matchUpperWords[1]);
       const words = candidate.split(/\s+/);
       const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
       if (!isIgnored && candidate.length > bestCandidate.length) {
@@ -357,7 +639,7 @@ export function extractFullNameFromOCR(text) {
     // 2. Names with initials (e.g. "M. DAWANHAREN" or "K.A.D. PERERA")
     const matchInitials = rawLine.match(/\b((?:[A-Z]\.?\s*){1,3}[A-Z]{3,}(?:\s+[A-Z]{3,})?)\b/);
     if (matchInitials && matchInitials[1]) {
-      const candidate = matchInitials[1].trim();
+      let candidate = cleanNameToken(matchInitials[1]);
       const words = candidate.split(/\s+/);
       const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
       if (!isIgnored && candidate.length > bestCandidate.length) {
@@ -369,7 +651,7 @@ export function extractFullNameFromOCR(text) {
     // 3. Check if line is preceded by "Name" or "Names" label
     const nameMatch = rawLine.match(/(?:Name|Full\s*Name|Names)[\s\:\-\/]+([A-Za-z\s\.\-]{4,})/i);
     if (nameMatch && nameMatch[1]) {
-      const candidate = nameMatch[1].replace(/[^A-Za-z\s\.\-]/g, '').trim().toUpperCase();
+      let candidate = cleanNameToken(nameMatch[1].replace(/[^A-Za-z\s\.\-]/g, '').trim().toUpperCase());
       const words = candidate.split(/\s+/).filter((w) => w.length > 1);
       const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
       if (!isIgnored && candidate.length > bestCandidate.length) {
@@ -378,7 +660,7 @@ export function extractFullNameFromOCR(text) {
     }
   }
 
-  return bestCandidate;
+  return cleanNameToken(bestCandidate);
 }
 
 /**
@@ -392,6 +674,16 @@ export function extractAddressFromOCR(text) {
     .map((l) => l.trim())
     .filter(Boolean);
 
+  const ignoredAdministrativeKeywords = [
+    'REGISTRATION OF PERSONS', 'COMMISSIONER GENERAL', 'PLACE OF BIRTH',
+    'DATE OF ISSUE', 'DEPARTMENT', 'REPUBLIC OF SRI LANKA', 'HOLDER',
+    'SIGNATURE', 'MINISTRY', 'SECRETARY',
+    'පුද්ගලයින් ලියාපදිංචි', 'පාලක ජනරාල්', 'උපන් ස්ථානය', 'නිකුත් කළ දිනය',
+    'දෙපාර්තමේන්තුව', 'උප්පැන්න සහතිකය', 'ශ්‍රී ලංකා', 'අත්සන',
+    'ஆட்பதிவுத் திணைக்களம்', 'ஆணையாளர் நாயகம்', 'பிறந்த இடம்', 'வழங்கப்பட்ட திகதி',
+    'பிறப்பு அத்தாட்சிப் பத்திரம்'
+  ];
+
   const addressKeywords = [
     'ROAD', 'STREET', 'MAWATHA', 'DIVISION', 'LANE', 'AVENUE', 'ESTATE',
     'GARDENS', 'WATTE', 'TOWN', 'NAGAR', 'THOTTAM', 'GAMAYA', 'VILLAGE',
@@ -399,51 +691,65 @@ export function extractAddressFromOCR(text) {
     'KURUNEGALA', 'GAMPAHA', 'DICKOYA', 'HATTON', 'NUWARA', 'BADULLA',
     'RATNAPURA', 'KEGALLE', 'KALUTARA', 'AMPARA', 'BATTICALOA', 'TRINCOMALEE',
     'ANURADHAPURA', 'POLONNARUWA', 'MATALE', 'PUTTALAM', 'VAVUNIYA', 'MANNAR',
-    'MULLAITIVU', 'KILINOCHCHI', 'HAMBANTOTA', 'NO.', 'NO'
+    'MULLAITIVU', 'KILINOCHCHI', 'HAMBANTOTA', 'NO.', 'NO',
+    // Sinhala keywords
+    'පාර', 'මාවත', 'වත්ත', 'කොට්ඨාශය', 'ගම', 'නිවස', 'වීදිය', 'දෙපාර්තමේන්තුව',
+    'කොළඹ', 'මහනුවර', 'ගාල්ල', 'මාතර', 'යාපනය', 'කුරුණෑගල', 'ගම්පහ', 'දික්ඔය',
+    'හැටන්', 'නුවරඑළිය', 'බදුල්ල', 'රත්නපුර', 'කෑගල්ල', 'කළුතර',
+    // Tamil keywords
+    'வீதி', 'தோட்டம்', 'கிராமம்', 'கொழும்பு', 'கண்டி', 'யாழ்ப்பாணம்', 'டிக்கோயா', 'ஹற்றன்'
   ];
 
-  // 1. First priority: look for a line containing clear Sri Lankan address keywords (e.g. "153,BATHFORD DIVISION, DICKOYA peo SE")
+  const candidateLines = [];
+
   for (const rawLine of lines) {
-    // Stop if we hit official Act or Date markers
-    if (/(?:Registration of Persons|Commissioner General|Place of Birth|Date of Issue|\d{4}\/\d{2}\/\d{2})/i.test(rawLine)) {
-      break;
-    }
-
     const upper = rawLine.toUpperCase();
-    const hasAddressKeyword = addressKeywords.some((kw) => upper.includes(kw));
 
-    if (hasAddressKeyword) {
-      // Clean leading & trailing noise
+    // Skip administrative lines
+    const isIgnored = ignoredAdministrativeKeywords.some((kw) => upper.includes(kw) || rawLine.includes(kw));
+    if (isIgnored) continue;
+
+    // Skip date-like footer lines (e.g. 1995/12/30 or 2018-05-10)
+    if (/^\d{4}[\/\.\-]\d{2}[\/\.\-]\d{2}/.test(rawLine.trim())) continue;
+
+    // Check if line has address keywords or starts with number/house indicator
+    const hasAddressKw = addressKeywords.some((kw) => upper.includes(kw) || rawLine.includes(kw));
+    const isHouseNumberLine = /^(?:No\.?|#)?\s*\d+[\/\-A-Za-z0-9]*,?\s+/i.test(rawLine);
+
+    if (hasAddressKw || isHouseNumberLine) {
       let clean = rawLine
         .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley)\b.*$/i, '')
-        .replace(/^[^\dA-Za-z]+/, '')
-        .replace(/\b[A-Z0-9]{2,4}[0-9A-Z]{4,8}(?:-[A-Z0-9])?\b/g, '')
-        .replace(/\b[0-9a-fA-F]{6,10}\b/g, '')
+        .replace(/^[^\dA-Za-z\u0D80-\u0DFF\u0B80-\u0BFF]+/, '')
+        .replace(/\b(?=[A-Za-z0-9]*\d)(?=[A-Za-z0-9]*[A-Za-z])[A-Za-z0-9]{8,16}(?:-[A-Za-z0-9]+)?\b/g, '')
         .replace(/[£§©®™|\\_~@#^*=\[\]\{\}]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
 
-      // Extract the continuous uppercase address block (e.g., "153, BATHFORD DIVISION, DICKOYA")
-      const addressPatternMatch = clean.match(/(\d+[\/\-A-Za-z0-9]*,?\s*(?:[A-Za-z0-9]{2,}[\s,]+)+[A-Za-z]{3,})/);
-      if (addressPatternMatch && addressPatternMatch[1]) {
-        let extracted = addressPatternMatch[1].trim().replace(/,\s*,/g, ',').replace(/\s+,/g, ',');
-        // Ensure proper spacing after comma: "153,BATHFORD" -> "153, BATHFORD"
-        extracted = extracted.replace(/,([A-Za-z0-9])/g, ', $1');
-        return extracted;
-      }
-
-      if (clean.length >= 8) {
-        return clean.replace(/,([A-Za-z0-9])/g, ', $1');
+      if (clean.length >= 3) {
+        candidateLines.push(clean);
       }
     }
   }
 
-  // 2. Fallback: Search for lines starting with number + comma (e.g. "153, ...") before official footer
+  // Prioritize English lines if present (avoids dual Tamil + English duplication)
+  const englishLines = candidateLines.filter((l) => /[A-Za-z]{3,}/.test(l) && !/[\u0D80-\u0DFF\u0B80-\u0BFF]/.test(l));
+  const selectedLines = englishLines.length > 0 ? englishLines : candidateLines;
+
+  if (selectedLines.length > 0) {
+    let combined = selectedLines.join(', ')
+      .replace(/,\s*,/g, ', ')
+      .replace(/\s+,/g, ', ')
+      .replace(/,([A-Za-z0-9\u0D80-\u0DFF\u0B80-\u0BFF])/g, ', $1')
+      .trim();
+    return combined;
+  }
+
+  // Fallback: search for first line starting with a number before official footer
   for (const rawLine of lines) {
     if (/(?:Registration of Persons|Commissioner General|Place of Birth|Date of Issue|\d{4}\/\d{2}\/\d{2})/i.test(rawLine)) {
       break;
     }
-    const matchNo = rawLine.match(/^(\d{1,4}[A-Za-z]?[\s,]+[A-Za-z\s,]{5,40})/);
+    const matchNo = rawLine.match(/^(\d{1,4}[A-Za-z]?[\s,]+[A-Za-z\u0D80-\u0DFF\u0B80-\u0BFF\s,]{4,50})/);
     if (matchNo && matchNo[1]) {
       return matchNo[1].trim().replace(/,([A-Za-z0-9])/g, ', $1');
     }

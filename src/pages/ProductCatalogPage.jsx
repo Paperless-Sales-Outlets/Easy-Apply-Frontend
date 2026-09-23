@@ -7,6 +7,7 @@ import CategoryChips from '../components/catalog/CategoryChips';
 import SidebarFilters from '../components/catalog/SidebarFilters';
 import ProductCard from '../components/catalog/ProductCard';
 import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
+import PackageDetailModal from '../components/PackageDetailModal';
 import SkeletonCard from '../components/catalog/SkeletonCard';
 import Toast from '../components/common/Toast';
 import HeroBannerCarousel from '../components/catalog/HeroBannerCarousel';
@@ -126,7 +127,8 @@ const DEFAULT_MOCKUP_PRODUCTS = [
     installationFee: 500,
     popular: true,
     speed: 'HD TV',
-    features: ['100+ Live HD Channels', 'Sports & Movies Pack', 'Catch-up TV'],
+    bannerUrl: 'https://res.cloudinary.com/zipy7m0d/image/upload/v1789621770/product-info-hub/images/fields/peo_qpdary.jpg',
+    features: ['120+ Live TV Channels', 'Crystal Clear Digital Quality', 'Free Standard Setup & Support'],
   },
   {
     _id: 'prod-7',
@@ -137,7 +139,8 @@ const DEFAULT_MOCKUP_PRODUCTS = [
     installationFee: 500,
     popular: false,
     speed: 'HD TV',
-    features: ['50+ Live HD Channels', '7-Day Catch-up TV', 'Rewind Live TV'],
+    bannerUrl: 'https://res.cloudinary.com/zipy7m0d/image/upload/v1789621770/product-info-hub/images/fields/peo_qpdary.jpg',
+    features: ['50+ Live TV Channels', 'Crystal Clear Digital Quality', 'Free Standard Setup & Support'],
   },
   {
     _id: 'prod-12',
@@ -148,7 +151,8 @@ const DEFAULT_MOCKUP_PRODUCTS = [
     installationFee: 500,
     popular: true,
     speed: 'HD TV',
-    features: ['75+ Premium Channels', 'Kids & News Pack', 'Pause Live TV'],
+    bannerUrl: 'https://res.cloudinary.com/zipy7m0d/image/upload/v1789621770/product-info-hub/images/fields/peo_qpdary.jpg',
+    features: ['105+ Live TV Channels', 'Crystal Clear Digital Quality', 'Free Standard Setup & Support'],
   },
   {
     _id: 'prod-13',
@@ -159,9 +163,28 @@ const DEFAULT_MOCKUP_PRODUCTS = [
     installationFee: 500,
     popular: false,
     speed: '4K HD TV',
-    features: ['All 130+ HD Channels', '4K Movies & VOD', 'Multi-Room Support'],
+    bannerUrl: 'https://res.cloudinary.com/zipy7m0d/image/upload/v1789621770/product-info-hub/images/fields/peo_qpdary.jpg',
+    features: ['135+ Live TV Channels', '4K Ultra HD & Digital Audio', 'Free Standard Setup & Support'],
   },
 ];
+
+const getPeoTvChannelsCount = (name = '', price = 0) => {
+  const lower = String(name).toLowerCase();
+  if (lower.includes('silver plus')) return 85;
+  if (lower.includes('silver')) return 77;
+  if (lower.includes('family')) return 95;
+  if (lower.includes('entertainment')) return 105;
+  if (lower.includes('gold')) return 120;
+  if (lower.includes('titanium')) return 135;
+  if (lower.includes('platinum')) return 150;
+  if (lower.includes('starter')) return 50;
+  if (price >= 3500) return 135;
+  if (price >= 2000) return 120;
+  if (price >= 1600) return 95;
+  if (price >= 1300) return 85;
+  if (price >= 1100) return 77;
+  return 75;
+};
 
 export default function ProductCatalogPage() {
   const { t, i18n } = useTranslation();
@@ -206,17 +229,41 @@ export default function ProductCatalogPage() {
         if (Array.isArray(list) && list.length > 0) {
           // Normalize and use live products directly
           const normalized = list.map((p) => {
+            const rawName = p.name || p.productName || 'SLT Package';
+            const cat = (p.category || '').toLowerCase();
             const mock = DEFAULT_MOCKUP_PRODUCTS.find(
-              (m) => m.name?.toLowerCase().trim() === (p.name || p.productName || '').toLowerCase().trim()
+              (m) => m.name?.toLowerCase().trim() === rawName.toLowerCase().trim()
             );
+
+            let dynamicFeatures = Array.isArray(p.features) && p.features.length > 0 ? p.features : (mock?.features || null);
+            
+            // For PEO TV products, always prioritize real channel count
+            if (cat.includes('peo') || cat.includes('tv') || rawName.toLowerCase().includes('peo')) {
+              const count = getPeoTvChannelsCount(rawName, p.monthlyPrice ?? p.price ?? 0);
+              dynamicFeatures = [
+                `${count}+ Live TV Channels`,
+                'Crystal Clear Digital Quality',
+                'Free Standard Setup & Support',
+              ];
+            }
+
+            if (!dynamicFeatures || dynamicFeatures.length === 0) {
+              dynamicFeatures = ['High-speed connectivity', 'Unlimited Entertainment', '24/7 SLT Support'];
+            }
+
+            const isPeo = cat.includes('peo') || cat.includes('tv') || rawName.toLowerCase().includes('peo');
+            const peoCloudinaryImg = 'https://res.cloudinary.com/zipy7m0d/image/upload/v1789621770/product-info-hub/images/fields/peo_qpdary.jpg';
+
             return {
               ...p,
-              name: p.name || p.productName || 'SLT Package',
+              name: rawName,
               monthlyPrice: p.monthlyPrice ?? p.price ?? 0,
-              features: Array.isArray(p.features) && p.features.length > 0 ? p.features : (mock?.features || ['High-speed connectivity', 'Unlimited Entertainment', '24/7 SLT Support']),
-              category: p.category || mock?.category || 'Broadband',
+              features: dynamicFeatures,
+              category: p.category || mock?.category || (isPeo ? 'PEO TV' : 'Broadband'),
               speed: p.speed || mock?.speed || null,
               popular: p.popular ?? (mock?.popular || false),
+              bannerUrl: p.bannerUrl || p.image || (isPeo ? peoCloudinaryImg : (mock?.bannerUrl || null)),
+              image: p.image || p.bannerUrl || (isPeo ? peoCloudinaryImg : (mock?.bannerUrl || null)),
             };
           });
           setProducts(normalized);
@@ -895,12 +942,13 @@ export default function ProductCatalogPage() {
         </div>
       </div>
 
-      {/* Product Details Side Panel Modal */}
+      {/* Product Details & Specifications Hub Modal */}
       {selectedProduct && (
-        <ProductDetailsPanel
+        <PackageDetailModal
+          isOpen={Boolean(selectedProduct)}
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
-          onAddToCart={(prod) => {
+          onSelectPackage={(prod) => {
             handleAddToCart(prod, 1);
             setSelectedProduct(null);
           }}

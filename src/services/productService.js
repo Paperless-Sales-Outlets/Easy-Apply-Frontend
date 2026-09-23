@@ -180,6 +180,71 @@ export const getProductById = async (id) => {
 };
 
 /**
+ * Fetch deep product specifications, fixed terms, and tables from Product Info Hub
+ * (API 2: https://dpdlab1.slt.lk:703/public-api/v1/integration/products/{productId})
+ */
+export const getProductDetails = async (productId) => {
+  if (!productId) return { success: false, message: 'Invalid product ID' };
+
+  // 1. Try direct live Product Info Hub endpoint
+  try {
+    const directHubUrl = `https://dpdlab1.slt.lk:703/public-api/v1/integration/products/${productId}`;
+    const directRes = await fetch(directHubUrl, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (directRes.ok) {
+      const json = await directRes.json();
+      return {
+        success: true,
+        source: 'LIVE_PRODUCT_HUB',
+        product: json.product,
+        tables: json.tables || [],
+      };
+    }
+  } catch (directErr) {
+    console.warn(`[Product Hub Direct API] ${directErr.message}, trying backend proxy...`);
+  }
+
+  // 2. Try backend endpoint proxy
+  try {
+    const response = await api.get(`/products/${productId}/details`);
+    if (response.data && response.data.success) {
+      return response.data;
+    }
+  } catch (backendErr) {
+    console.warn(`[Backend Product Details API] ${backendErr.message}`);
+  }
+
+  // 3. Fallback Notice (Preserving reference fallback structure commented as requested)
+  /*
+  const FALLBACK_SPEC_REFERENCE = {
+    product: {
+      id: productId,
+      productName: 'SLT Fibre & Entertainment Package',
+      category: 'Broadband',
+      monthlyPrice: 4490,
+      fixedFields: [
+        { name: 'Commitment Period', type: 'Fixed', value: '1 Year' },
+        { name: 'Applicable Tax Rate', type: 'Fixed', value: '42.02%' },
+        { name: 'Early Termination Fee', type: 'Fixed', value: '2500' },
+      ],
+      features: { 'High Speed Fibre': 'Symmetric 100 Mbps' },
+      tables: []
+    }
+  };
+  */
+
+  return {
+    success: false,
+    source: 'NOTICE',
+    message: 'Network Notice: Detailed specifications currently in design or unavailable from Product Info Hub.',
+    data: null,
+  };
+};
+
+/**
  * Filter products by category or options
  */
 export const filterProducts = async (category) => {
@@ -360,6 +425,7 @@ export const clearCart = async () => {
 export default {
   getProducts,
   getProductById,
+  getProductDetails,
   filterProducts,
   searchProducts,
   addToCart,
