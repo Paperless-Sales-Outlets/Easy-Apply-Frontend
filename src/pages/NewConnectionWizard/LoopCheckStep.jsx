@@ -158,7 +158,7 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
                   boxShadow: '0 4px 15px rgba(0, 86, 179, 0.25)',
                 }}
               >
-                <span>Continue to Payment</span>
+                <span>Continue to Agreement &amp; Signature</span>
                 <FiArrowRight size={18} />
               </button>
             </motion.div>

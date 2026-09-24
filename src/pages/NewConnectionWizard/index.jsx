@@ -2,13 +2,13 @@ import React, { useState, useReducer, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import CustomerInfoStep from './CustomerInfoStep';
-// import ServiceInfoStep from './ServiceInfoStep';
-// import ValueAddedServicesStep from './ValueAddedServicesStep';
 import LoopCheckStep from './LoopCheckStep';
+import DeclarationStep from './DeclarationStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
 import api from '../../utils/api';
 import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
+import { getAuthUser } from '../../utils/authSession';
 import WizardStepper from '../../components/WizardStepper';
 import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
@@ -65,6 +65,7 @@ export default function NewConnectionWizard() {
   const { t } = useTranslation();
   const verifiedMobile = useVerifiedMobile();
   const { customerExists, selectedAccount } = useVerifiedContext();
+  const declarationRef = useRef(null);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -86,7 +87,7 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
-  const totalSteps = 3;
+  const totalSteps = 4;
 
   useEffect(() => {
     if (selectedProduct?.productName) {
@@ -143,11 +144,18 @@ export default function NewConnectionWizard() {
     e.preventDefault();
     setSubmitError('');
 
-    // Ensure installation address / location is selected in Step 1
+    // Step 1 validation
     if (currentStep === 1) {
       const activeAddress = formData.installAddress || formData.address;
       if (!activeAddress || activeAddress.trim().length === 0) {
         toast.error('Please specify an installation address.');
+        return;
+      }
+    }
+
+    // Step 3 validation (Terms & Signature)
+    if (currentStep === 3) {
+      if (declarationRef.current && !declarationRef.current.validate()) {
         return;
       }
     }
@@ -157,7 +165,11 @@ export default function NewConnectionWizard() {
 
   // Real submission — fired after payment succeeds
   const submitApplication = async (paymentRef, phoneOverride) => {
-    const phone = phoneOverride || verifiedMobile || formData.mobileNumber;
+    const authUser = getAuthUser();
+    const phone = phoneOverride || verifiedMobile || formData.mobileNumber || authUser?.phone || '';
+    const nic = formData.nic || authUser?.NIC || authUser?.nic || '';
+    const nameFull = formData.nameFull || authUser?.name || 'Customer';
+
     setSubmitting(true);
     setSubmitError('');
     try {
@@ -165,6 +177,11 @@ export default function NewConnectionWizard() {
         serviceType: 'new-connection',
         formData: {
           ...formData,
+          nic,
+          nameFull,
+          mobileNumber: phone,
+          declarationAccepted: Boolean(formData.declarationAccepted),
+          signature: formData.signature || 'DIGITALLY_VERIFIED_OTP',
           paymentReference: paymentRef,
           product: selectedProduct,
         },
@@ -172,7 +189,7 @@ export default function NewConnectionWizard() {
       });
       navigate('/completion', {
         state: {
-          referenceNumber: res.data.application.referenceNumber,
+          referenceNumber: res.data?.application?.referenceNumber || res.data?.referenceNumber,
           messageKey: 'completion.successMessages.newConnection',
         },
       });
@@ -225,12 +242,13 @@ export default function NewConnectionWizard() {
         </div>
       )}
 
-      {/* Progress Stepper: 3 Clean Steps */}
+      {/* Progress Stepper: 4 Clean Steps */}
       <WizardStepper
         currentStep={currentStep}
         steps={[
           'Installation Location',
           'Loop Coverage Check',
+          'Terms & Signature',
           'Payment Gateway',
         ]}
       />
@@ -249,19 +267,6 @@ export default function NewConnectionWizard() {
             />
           )}
 
-          {/* Commented out legacy intermediate steps per new simplified flow
-          {currentStep === 2 && (
-            <ServiceInfoStep formData={formData} handleChange={handleChange} />
-          )}
-          {currentStep === 3 && (
-            <ValueAddedServicesStep
-              isActive={currentStep === 3}
-              formData={formData}
-              handleChange={handleChange}
-            />
-          )}
-          */}
-
           {/* Step 2: Backend Loop Availability Check */}
           {currentStep === 2 && (
             <LoopCheckStep
@@ -271,10 +276,20 @@ export default function NewConnectionWizard() {
             />
           )}
 
-          {/* Step 3: Payment Gateway */}
+          {/* Step 3: Terms & Conditions & Digital Signature */}
           {currentStep === 3 && (
+            <DeclarationStep
+              ref={declarationRef}
+              formData={formData}
+              handleChange={handleChange}
+              setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
+            />
+          )}
+
+          {/* Step 4: Payment Gateway */}
+          {currentStep === 4 && (
             <PaymentStep
-              isActive={currentStep === 3}
+              isActive={currentStep === 4}
               verifiedPhone={verifiedMobile}
               amount={selectedProduct?.installationFee || 2500}
               amountLabel="Installation Fee"
@@ -296,6 +311,11 @@ export default function NewConnectionWizard() {
           {currentStep === 1 && (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               Verify Loop Coverage →
+            </button>
+          )}
+          {currentStep === 3 && (
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
+              Continue to Payment →
             </button>
           )}
         </div>

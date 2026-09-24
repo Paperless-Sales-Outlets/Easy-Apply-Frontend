@@ -175,27 +175,44 @@ export default function KycReviewPage() {
             </span>
           </div>
 
-          {/* ── Document + Reverse / Face Side-by-Side ── */}
-          <div className="kyc-panel">
-            <div className="kyc-doc-frame">
-              <div className="kyc-doc-header">Identity Document</div>
+          {/* ── Document Inspection Grid (NIC Front, NIC Back, Digital Signature) ── */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '1.25rem',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <div className="kyc-doc-frame" style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-color, #e2e8f0)', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+              <div className="kyc-doc-header" style={{ padding: '0.65rem 1rem', fontWeight: 700, fontSize: '0.85rem', color: '#0f172a', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
+                NIC / Identity Front
+              </div>
               <DocImage
-                url={(pickDoc(current.documents || [], PRIMARY_DOC_KEYS) || (current.documents || [])[0])?.url}
-                alt="Identity document"
+                url={(pickDoc(current.documents || [], PRIMARY_DOC_KEYS) || (current.documents || []).find(d => d.key === 'nicFront' || d.key === 'passportDoc') || (current.documents || [])[0])?.url}
+                alt="NIC Front"
               />
             </div>
-            <div className="kyc-doc-frame">
-              <div className="kyc-doc-header">
-                {current.selfieUrl ? 'Face Validation' : 'Document Reverse'}
+
+            <div className="kyc-doc-frame" style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-color, #e2e8f0)', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+              <div className="kyc-doc-header" style={{ padding: '0.65rem 1rem', fontWeight: 700, fontSize: '0.85rem', color: '#0f172a', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
+                NIC Back
               </div>
-              {current.selfieUrl ? (
-                <DocImage url={current.selfieUrl} alt="Applicant selfie" style={{ objectFit: 'cover' }} />
-              ) : (
-                <DocImage
-                  url={(pickDoc(current.documents || [], SECONDARY_DOC_KEYS) || (current.documents || []).find(d => d.key !== (pickDoc(current.documents || [], PRIMARY_DOC_KEYS) || (current.documents || [])[0])?.key))?.url}
-                  alt="Reverse side document"
-                />
-              )}
+              <DocImage
+                url={(pickDoc(current.documents || [], SECONDARY_DOC_KEYS) || (current.documents || []).find(d => d.key === 'nicBack'))?.url}
+                alt="NIC Back"
+              />
+            </div>
+
+            <div className="kyc-doc-frame" style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-color, #e2e8f0)', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+              <div className="kyc-doc-header" style={{ padding: '0.65rem 1rem', fontWeight: 700, fontSize: '0.85rem', color: '#0f172a', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
+                Digital Signature
+              </div>
+              <DocImage
+                url={(current.documents || []).find(d => d.key === 'signature' || d.key === 'customerSignature')?.url || current.formData?.signature}
+                alt="Digital Signature"
+                style={{ backgroundColor: '#ffffff', padding: '0.75rem' }}
+              />
             </div>
           </div>
 
