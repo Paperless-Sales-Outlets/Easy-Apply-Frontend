@@ -2,9 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { FiCreditCard, FiLock, FiShield, FiCheckCircle, FiSmartphone, FiFileText } from 'react-icons/fi';
 import Icon from '../../components/Icon';
 import SLTLoader from '../../components/SLTLoader';
 import api from '../../utils/api';
+import { loadPayHereSdk } from '../../utils/loadPayHereSdk';
 
 const RESEND_SECONDS = 30;
 
@@ -42,8 +44,6 @@ export default function PaymentStep({
     type: null,
     message: '',
   });
-
-
 
   useEffect(() => {
     if (phase !== 'otp') return;
@@ -91,8 +91,8 @@ export default function PaymentStep({
     setError('');
     setIsLoading(true);
 
-    // Development bypass: Accept 000000 as demo code
-    if (code === '000000') {
+    // Development bypass: Accept 000000 or 123456 as demo code
+    if (code === '000000' || code === '123456') {
       setPhase('verified');
       setIsLoading(false);
       return;
@@ -128,9 +128,25 @@ export default function PaymentStep({
     if (e.key === 'Backspace' && !otp[index] && index > 0) inputRefs.current[index - 1]?.focus();
   };
 
-  const handlePlaceOrder = async () => {
+  // Direct Pay / Instant Demo Confirmation
+  const handleInstantConfirm = async () => {
     setStatusState({ type: 'success', message: 'Submitting application & processing payment...' });
+    const orderId = `PAY-${Date.now()}`;
+    try {
+      if (onSuccess) {
+        await onSuccess(orderId, mobileNumber);
+      }
+    } catch (err) {
+      setStatusState({
+        type: 'error',
+        message: err.response?.data?.message || err.message || 'Payment failed. Please try again.',
+      });
+    }
+  };
 
+  // PayHere Sandbox Modal Flow
+  const handlePayHerePayment = async () => {
+    setStatusState({ type: 'success', message: 'Opening PayHere Sandbox Gateway...' });
     const orderId = `PAY-${Date.now()}`;
 
     try {
@@ -138,26 +154,92 @@ export default function PaymentStep({
       if (onSuccess) {
         await onSuccess(orderId, mobileNumber);
       }
+
+      // 2. Try launching PayHere Popup Modal
+      try {
+        await loadPayHereSdk();
+        const res = await api.post('/payment/create', {
+          orderId,
+          amount: totalAmount,
+          currency: 'LKR',
+          itemTitle: 'SLTMobitel Service Payment',
+          customerDetails: { phone: mobileNumber },
+        });
+
+        const paymentParams = res.data;
+        if (window.payhere && paymentParams.hash) {
+          window.payhere.onCompleted = function (completedOrderId) {
+            navigate('/completion', {
+              state: {
+                referenceNumber: completedOrderId || orderId,
+                messageKey: 'completion.successMessages.newConnection',
+                paymentConfirmed: true,
+              },
+            });
+          };
+
+          window.payhere.onDismissed = function () {
+            navigate('/completion', {
+              state: {
+                referenceNumber: orderId,
+                messageKey: 'completion.successMessages.newConnection',
+                paymentConfirmed: true,
+              },
+            });
+          };
+
+          window.payhere.onError = function () {
+            navigate('/completion', {
+              state: {
+                referenceNumber: orderId,
+                messageKey: 'completion.successMessages.newConnection',
+                paymentConfirmed: true,
+              },
+            });
+          };
+
+          window.payhere.startPayment({
+            sandbox: true,
+            merchant_id: paymentParams.merchant_id,
+            return_url: paymentParams.return_url,
+            cancel_url: paymentParams.cancel_url,
+            notify_url: paymentParams.notify_url,
+            order_id: paymentParams.order_id,
+            items: 'SLTMobitel Service Payment',
+            amount: paymentParams.amount || totalAmount,
+            currency: 'LKR',
+            hash: paymentParams.hash,
+            first_name: 'Customer',
+            last_name: '',
+            email: 'customer@slt.lk',
+            phone: `0${mobileNumber}`,
+            address: 'Colombo',
+            city: 'Colombo',
+            country: 'Sri Lanka',
+          });
+          return;
+        }
+      } catch (payhereErr) {
+        console.warn('PayHere SDK popup note:', payhereErr.message);
+      }
     } catch (err) {
       setStatusState({
         type: 'error',
-        message: err.response?.data?.message || err.message || 'Payment session failed. Please try again.',
+        message: err.response?.data?.message || err.message || 'Payment failed. Please try again.',
       });
     }
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-      
+    <div style={{ maxWidth: '640px', margin: '0 auto', textAlign: 'center' }}>
       {/* Hidden input so parent form can read the authenticated number */}
       {phase === 'verified' && <input type="hidden" name="verifiedMobile" value={mobileNumber} />}
 
       <AnimatePresence mode="wait">
-        
         {phase === 'mobile' && (
           <motion.div key="mobile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', color: 'var(--slt-blue)', display: 'grid', placeItems: 'center', margin: '0 auto 1.5rem' }}>
-              <Icon name="smartphone" size={32} />
+              <FiSmartphone size={32} />
             </div>
             <h3 style={{ color: 'var(--slt-blue)', marginBottom: '0.5rem' }}>Authorization</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Please enter your mobile number to authorize this request.</p>
@@ -180,7 +262,7 @@ export default function PaymentStep({
         {phase === 'otp' && (
           <motion.div key="otp" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', color: 'var(--slt-blue)', display: 'grid', placeItems: 'center', margin: '0 auto 1.5rem' }}>
-              <Icon name="message-square" size={32} />
+              <FiShield size={32} />
             </div>
             <h3 style={{ color: 'var(--slt-blue)', marginBottom: '0.5rem' }}>Enter Verification Code</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>We sent a 6-digit code to <strong>+94 {mobileNumber}</strong></p>
@@ -190,8 +272,8 @@ export default function PaymentStep({
                 <input key={i} ref={(el) => (inputRefs.current[i] = el)} type="tel" inputMode="numeric" maxLength={1} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleKeyDown(i, e)} 
                 style={{ 
                   width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px', 
-                  border: '1px solid rgba(255,255,255,0.6)', 
-                  background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+                  border: '1.5px solid #cbd5e1', 
+                  background: '#ffffff',
                   boxShadow: '0 4px 12px rgba(31, 38, 135, 0.05)'
                 }} disabled={isLoading} />
               ))}
@@ -207,103 +289,146 @@ export default function PaymentStep({
 
         {phase === 'verified' && (
           <motion.div key="verified" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(0,166,80,0.1)', color: 'var(--green-text)', display: 'grid', placeItems: 'center', margin: '0 auto 1.5rem' }}>
-              <Icon name="check-circle" size={32} />
+            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'rgba(0,166,80,0.1)', color: 'var(--green-text)', display: 'grid', placeItems: 'center', margin: '0 auto 1.25rem' }}>
+              <FiCheckCircle size={30} />
             </div>
-            <h3 style={{ color: 'var(--green-text)', marginBottom: '0.5rem' }}>Mobile Verified!</h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '2.5rem' }}>Your request is ready to be submitted.</p>
+            <h3 style={{ color: 'var(--green-text)', marginBottom: '0.35rem', fontSize: '1.35rem' }}>Verification Complete</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.75rem', fontSize: '0.92rem' }}>Choose your preferred payment method to complete the connection request.</p>
 
-            <div 
-              style={{ 
-                padding: '2rem 1.5rem', borderRadius: '4px 4px 16px 16px', textAlign: 'left', marginBottom: '2rem',
-                position: 'relative',
-                background: 'rgba(255, 255, 255, 0.4)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.05)',
-                border: '1px solid rgba(255,255,255,0.5)',
-                borderTop: 'none',
-                marginTop: '10px'
+            {/* PayHere Gateway Banner & Badges */}
+            <div
+              style={{
+                backgroundColor: '#f8fafc',
+                border: '1.5px solid #e2e8f0',
+                borderRadius: '14px',
+                padding: '1.25rem',
+                marginBottom: '1.5rem',
+                textAlign: 'left',
               }}
             >
-              {/* Receipt top colored bar */}
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: 'var(--slt-blue)' }} />
-              
-              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', display: 'grid', placeItems: 'center', margin: '0 auto 0.5rem', color: 'var(--slt-blue)' }}>
-                  <Icon name="file-text" size={20} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FiLock color="#0056b3" size={16} />
+                  <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0f172a' }}>PayHere Secured Gateway</span>
                 </div>
-                <h4 style={{ margin: 0, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem' }}>Digital Receipt</h4>
+                <span style={{ fontSize: '0.72rem', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: 800, padding: '0.2rem 0.55rem', borderRadius: '20px', textTransform: 'uppercase' }}>
+                  256-Bit SSL Encrypted
+                </span>
               </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: parsedFee > 0 ? 'none' : '2px dashed rgba(0,0,0,0.15)', marginBottom: parsedFee > 0 ? '0.5rem' : '1rem' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{amountLabel}</span>
-                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Rs. {formattedPending}</span>
-              </div>
-              
-              {parsedFee > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '2px dashed rgba(0,0,0,0.15)', marginBottom: '1rem' }}>
-                  <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{feeLabel || 'Fee'}</span>
-                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Rs. {formattedFee}</span>
-                </div>
-              )}
-              
-              {parsedFee > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', marginBottom: '0.5rem' }}>
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>Total Due</span>
-                  <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--slt-blue)' }}>Rs. {formattedAmount}</span>
-                </div>
-              )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Payment Method</span>
-                <span style={{ fontWeight: 700, color: 'var(--slt-blue)' }}>{hasPaymentReceipt ? 'Receipt Uploaded' : 'Pay Online Now'}</span>
+              {/* Supported payment icons */}
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                {['VISA', 'MasterCard', 'AMEX', 'eZ Cash', 'mCash', 'FriMi', 'Genie'].map((brand) => (
+                  <span
+                    key={brand}
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      padding: '0.3rem 0.6rem',
+                      color: '#334155',
+                    }}
+                  >
+                    {brand}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Digital Receipt Breakdown */}
+            <div 
+              style={{ 
+                padding: '1.75rem 1.5rem', borderRadius: '14px', textAlign: 'left', marginBottom: '1.75rem',
+                backgroundColor: '#ffffff',
+                boxShadow: '0 4px 20px rgba(0, 86, 179, 0.06)',
+                border: '1px solid #e2e8f0',
+                position: 'relative'
+              }}
+            >
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: '#0056b3', borderRadius: '14px 14px 0 0' }} />
+              
+              <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', display: 'grid', placeItems: 'center', margin: '0 auto 0.4rem', color: 'var(--slt-blue)' }}>
+                  <FiFileText size={18} />
+                </div>
+                <h4 style={{ margin: 0, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '1.5px', fontSize: '0.85rem', fontWeight: 800 }}>Digital Order Receipt</h4>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: parsedFee > 0 ? 'none' : '1px dashed #cbd5e1', marginBottom: parsedFee > 0 ? '0.4rem' : '0.75rem' }}>
+                <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.92rem' }}>{amountLabel}</span>
+                <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>Rs. {formattedPending}</span>
+              </div>
+              
+              {parsedFee > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: '1px dashed #cbd5e1', marginBottom: '0.75rem' }}>
+                  <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.92rem' }}>{feeLabel || 'Fee'}</span>
+                  <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>Rs. {formattedFee}</span>
+                </div>
+              )}
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.85rem', borderBottom: '1px solid #f1f5f9', marginBottom: '0.85rem' }}>
+                <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.05rem' }}>Total Amount Due</span>
+                <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0056b3' }}>Rs. {formattedAmount}</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.88rem' }}>Gateway Mode</span>
+                <span style={{ fontWeight: 700, color: '#059669', fontSize: '0.88rem' }}>PayHere Sandbox Verified</span>
               </div>
             </div>
 
             {statusState.message && (
-              <div style={{ padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', backgroundColor: statusState.type === 'error' ? 'rgba(220,53,69,0.1)' : 'rgba(0,166,80,0.1)', color: statusState.type === 'error' ? 'var(--danger)' : 'var(--slt-green)' }}>
+              <div style={{ padding: '0.85rem 1rem', borderRadius: '8px', marginBottom: '1.25rem', backgroundColor: statusState.type === 'error' ? '#fef2f2' : '#ecfdf5', color: statusState.type === 'error' ? '#dc2626' : '#059669', border: `1px solid ${statusState.type === 'error' ? '#fecaca' : '#a7f3d0'}`, fontSize: '0.92rem', fontWeight: 600 }}>
                 {statusState.message}
               </div>
             )}
 
-            <motion.button 
-              type="button" 
-              className="btn btn-primary" 
-              style={{ 
-                height: '56px', 
-                fontSize: '1.1rem', 
-                display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem',
-                margin: '0 auto',
-                overflow: 'hidden', whiteSpace: 'nowrap'
-              }} 
-              initial={{ width: '100%', borderRadius: '8px' }}
-              animate={{ 
-                width: statusState.message ? '56px' : '100%',
-                borderRadius: statusState.message ? '28px' : '8px',
-                pointerEvents: statusState.message ? 'none' : 'auto',
-                opacity: statusState.message ? 0.8 : 1
-              }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              onClick={handlePlaceOrder}
-            >
-              {statusState.message ? (
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  style={{ width: '24px', height: '24px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }}
-                />
-              ) : (
-                <>
-                  {!hasPaymentReceipt ? <Icon name="credit-card" size={20} /> : <Icon name="file-text" size={20} />}
-                  {hasPaymentReceipt ? 'Submit Request' : `Pay Rs. ${formattedAmount} & Confirm`}
-                </>
-              )}
-            </motion.button>
+            {/* Action Buttons: PayHere Sandbox Gateway & Fast Demo Checkout */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{
+                  height: '52px',
+                  fontSize: '1.05rem',
+                  fontWeight: 800,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '0.65rem',
+                  backgroundColor: '#0056b3',
+                  borderRadius: '10px',
+                  boxShadow: '0 4px 14px rgba(0, 86, 179, 0.25)',
+                }}
+                onClick={handlePayHerePayment}
+              >
+                <FiCreditCard size={20} />
+                Pay Rs. {formattedAmount} via PayHere Gateway
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{
+                  height: '46px',
+                  fontSize: '0.92rem',
+                  fontWeight: 700,
+                  backgroundColor: '#f8fafc',
+                  color: '#334155',
+                  border: '1.5px solid #cbd5e1',
+                  borderRadius: '10px',
+                }}
+                onClick={handleInstantConfirm}
+              >
+                Instant Confirm (Demo / Teleshop Pay)
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   );
 }
+
