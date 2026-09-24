@@ -306,38 +306,53 @@ export const saveLocalCart = (items) => {
  * Add an item to the shopping cart (Product object or Product ID)
  */
 export const addToCart = async (productOrId, quantity = 1) => {
-  const prodObj = typeof productOrId === 'object' && productOrId !== null ? productOrId : { _id: productOrId, id: productOrId };
+  let prodObj = typeof productOrId === 'object' && productOrId !== null ? { ...productOrId } : { _id: productOrId, id: productOrId };
   const productId = prodObj._id || prodObj.id || productOrId;
+
+  // If price is missing or zero, resolve from live Product Hub Cart endpoint
+  if ((!prodObj.monthlyPrice && !prodObj.price) && productId) {
+    try {
+      const liveItem = await getProductCartItem(productId);
+      if (liveItem && (liveItem.price || liveItem.monthlyPrice)) {
+        prodObj.monthlyPrice = liveItem.monthlyPrice || liveItem.price;
+        prodObj.price = liveItem.price || liveItem.monthlyPrice;
+        prodObj.name = liveItem.productName || liveItem.name || prodObj.name;
+        prodObj.productName = liveItem.productName || liveItem.name || prodObj.productName;
+      }
+    } catch (e) {
+      console.warn('Live cart item resolution warning:', e);
+    }
+  }
 
   // Local cart sync
   const currentItems = getLocalCart();
   const existingIdx = currentItems.findIndex(i => (i.productId || i._id || i.id) === productId);
 
   let updatedItems = [...currentItems];
+  const itemPrice = Number(prodObj.monthlyPrice || prodObj.price || 0);
   if (existingIdx > -1) {
     updatedItems[existingIdx] = {
       ...updatedItems[existingIdx],
       quantity: updatedItems[existingIdx].quantity + quantity,
+      monthlyPrice: itemPrice || updatedItems[existingIdx].monthlyPrice,
+      price: itemPrice || updatedItems[existingIdx].price,
     };
   } else {
     updatedItems.push({
       productId,
       _id: productId,
       id: productId,
-      productName: prodObj.name || prodObj.productName || 'SLTMobitel Connection',
-      name: prodObj.name || prodObj.productName || 'SLTMobitel Connection',
-      monthlyPrice: prodObj.monthlyPrice || prodObj.price || 6990,
-      price: prodObj.monthlyPrice || prodObj.price || 6990,
+      productName: prodObj.name || prodObj.productName || 'SLTMobitel Package',
+      name: prodObj.name || prodObj.productName || 'SLTMobitel Package',
+      monthlyPrice: itemPrice,
+      price: itemPrice,
       installationFee: prodObj.installationFee !== undefined ? prodObj.installationFee : 2500,
-      speed: prodObj.speed || '300 Mbps',
-      category: prodObj.category || 'Fibre Broadband',
+      speed: prodObj.speed || 'HD TV',
+      category: prodObj.category || 'PEO TV',
       popular: !!prodObj.popular,
       quantity,
       features: prodObj.features || [
-        '300 Mbps Download / Upload Speed',
-        'Unlimited Anytime Data',
-        'Free Standard Installation',
-        'Free Wi-Fi Router',
+        'Live TV & Digital Quality',
         '24/7 Customer Support',
       ],
     });
@@ -422,10 +437,38 @@ export const clearCart = async () => {
   }
 };
 
+/**
+ * Fetch Left Sidebar Category Tree (Hierarchy) from backend /api/products/hierarchy
+ */
+export const getProductHierarchy = async () => {
+  try {
+    const res = await api.get('/products/hierarchy');
+    return res.data?.data || res.data || [];
+  } catch (err) {
+    console.warn('Failed to fetch product hierarchy:', err);
+    return [];
+  }
+};
+
+/**
+ * Fetch Product Cart item by ID from backend /api/products/cart-item/:id
+ */
+export const getProductCartItem = async (productId) => {
+  try {
+    const res = await api.get(`/products/cart-item/${productId}`);
+    return res.data?.data || res.data || null;
+  } catch (err) {
+    console.warn(`Failed to fetch cart product ${productId}:`, err);
+    return null;
+  }
+};
+
 export default {
   getProducts,
   getProductById,
   getProductDetails,
+  getProductHierarchy,
+  getProductCartItem,
   filterProducts,
   searchProducts,
   addToCart,

@@ -111,7 +111,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) 300px',
+        gridTemplateColumns: '1fr',
         gap: '1.25rem',
         marginBottom: '2rem',
         alignItems: 'stretch',
@@ -352,7 +352,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
         </div>
       </div>
 
-      {/* ── Right Quick Action Cards (SINGLE COLUMN Layout — One by One Vertically) ── */}
+      {/* ── Right Quick Action Cards (SINGLE COLUMN Layout — One by One Vertically) — COMMENTED OUT ──
       <div
         style={{
           display: 'flex',
@@ -444,6 +444,7 @@ export default function HeroBannerCarousel({ onShopNow }) {
           );
         })}
       </div>
+      ── */}
     </div>
   );
 }

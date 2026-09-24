@@ -660,6 +660,8 @@ export default function ProductCatalogPage() {
           {/* Left Sidebar Filter Column — desktop only; hidden ≤900px in favor of the "Filters" popup below */}
           <div className="catalog-sidebar-col">
             <SidebarFilters
+              activeCategory={activeCategory}
+              onSelectCategory={(cat) => setActiveCategory(cat)}
               selectedTypes={selectedTypes}
               onTypeToggle={handleTypeToggle}
               selectedSpeeds={selectedSpeeds}
@@ -680,6 +682,11 @@ export default function ProductCatalogPage() {
               >
                 <div className="catalog-sidebar-col-inner">
                   <SidebarFilters
+                    activeCategory={activeCategory}
+                    onSelectCategory={(cat) => {
+                      setActiveCategory(cat);
+                      setShowMobileFilters(false);
+                    }}
                     selectedTypes={selectedTypes}
                     onTypeToggle={handleTypeToggle}
                     selectedSpeeds={selectedSpeeds}

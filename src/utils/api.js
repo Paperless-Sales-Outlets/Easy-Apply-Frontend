@@ -77,15 +77,15 @@ export const clearSessionCart = async () => {
 // Request Interceptor: Attach in-memory admin accessToken & session ID
 api.interceptors.request.use(
   (config) => {
-    // 1. Attach in-memory admin accessToken if available
-    if (adminAccessToken) {
-      config.headers['Authorization'] = `Bearer ${adminAccessToken}`;
-    } else {
-      // Fallback for customer token if present in storage
-      const customerToken = localStorage.getItem('accessToken');
-      if (customerToken) {
-        config.headers['Authorization'] = `Bearer ${customerToken}`;
-      }
+    // 1. Attach in-memory admin accessToken or stored admin token if available
+    const token =
+      adminAccessToken ||
+      sessionStorage.getItem('adminAccessToken') ||
+      localStorage.getItem('adminAccessToken') ||
+      localStorage.getItem('accessToken');
+
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
 
     // Always send the session ID for cart operations

@@ -3,10 +3,10 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../pages/Admin/context/AdminAuthContext';
 
 const ProtectedRoute = ({ children }) => {
-  const { accessToken, admin, loading } = useAdminAuth();
+  const { accessToken, admin, loading, initializing } = useAdminAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (loading || initializing) {
     return (
       <div
         style={{

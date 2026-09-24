@@ -16,7 +16,7 @@ const SESSION_KEY = 'admin_session';
 
 function loadSession() {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -26,6 +26,7 @@ function loadSession() {
 function saveSession(data) {
   try {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(data));
   } catch {
     // Ignore storage errors
   }
@@ -35,6 +36,10 @@ function clearSession() {
   try {
     sessionStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('adminAccessToken');
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem('adminAccessToken');
+    localStorage.removeItem('adminToken');
   } catch {
     // Ignore storage errors
   }
@@ -42,7 +47,7 @@ function clearSession() {
 
 export function AdminAuthProvider({ children }) {
   const [admin, setAdmin] = useState(() => loadSession());
-  const [accessToken, setAccessToken] = useState(null);
+  const [accessToken, setAccessToken] = useState(() => sessionStorage.getItem('adminAccessToken') || localStorage.getItem('adminAccessToken') || null);
 
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
@@ -55,6 +60,21 @@ export function AdminAuthProvider({ children }) {
   const updateAccessToken = useCallback((token) => {
     setAccessToken(token || null);
     setAdminAccessToken(token || null);
+    if (token) {
+      sessionStorage.setItem('adminAccessToken', token);
+      localStorage.setItem('adminAccessToken', token);
+    } else {
+      sessionStorage.removeItem('adminAccessToken');
+      localStorage.removeItem('adminAccessToken');
+    }
+  }, []);
+
+  // Initialize API token immediately if available
+  useEffect(() => {
+    const savedToken = sessionStorage.getItem('adminAccessToken') || localStorage.getItem('adminAccessToken');
+    if (savedToken) {
+      setAdminAccessToken(savedToken);
+    }
   }, []);
 
   /*

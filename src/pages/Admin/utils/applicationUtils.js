@@ -268,10 +268,21 @@ export function formatDateOnly(iso) {
 // Resolve a stored document path/URL to a usable asset URL.
 export function getAssetUrl(path) {
   if (!path) return '';
+  if (path.startsWith('data:image/')) return path;
   if (/^https?:\/\//.test(path)) return path;
+
+  const origin = (api.defaults?.baseURL || '').replace(/\/api\/?$/, '');
+  const token = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('accessToken');
+
+  if (path.startsWith('/api/files/')) {
+    const separator = path.includes('?') ? '&' : '?';
+    const authQuery = token ? `${separator}token=${encodeURIComponent(token)}` : '';
+    return `${origin}${path}${authQuery}`;
+  }
+
   if (path.startsWith('/uploads/')) {
-    const origin = api.defaults.baseURL.replace(/\/api\/?$/, '');
     return `${origin}${path}`;
   }
+
   return path;
 }

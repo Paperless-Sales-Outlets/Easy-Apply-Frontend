@@ -75,8 +75,14 @@ function collectDocuments(formData) {
   Object.entries(all).forEach(([key, value]) => {
     if (key === 'documents') return;
     let url = '';
-    if (typeof value === 'string' && (value.startsWith('/uploads/') || value.startsWith('http') || value.startsWith('data:'))) {
-      url = value;
+    if (typeof value === 'string') {
+      if (value.startsWith('gridfs://')) {
+        url = `/api/files/${value.replace('gridfs://', '')}`;
+      } else if (/^[0-9a-fA-F]{24}$/.test(value)) {
+        url = `/api/files/${value}`;
+      } else if (value.startsWith('/uploads/') || value.startsWith('/api/files/') || value.startsWith('http') || value.startsWith('data:')) {
+        url = value;
+      }
     } else if (value && typeof value === 'object' && !Array.isArray(value)) {
       url = value.url || value.path || value.preview || '';
     }
@@ -89,7 +95,7 @@ function collectDocuments(formData) {
 }
 
 function isImageUrl(url) {
-  return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url) || url.startsWith('data:image');
+  return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url) || url.startsWith('data:image') || url.includes('/api/files/');
 }
 
 function toInputDate(dateStr) {
