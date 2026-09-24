@@ -1,37 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { getKycQueue, reviewKycApplication } from '../services/adminService';
-import { getAssetUrl } from '../utils/applicationUtils';
+import AuthImage from '../components/AuthImage';
 
 function formatDate(iso) {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
-}
-
-const PRIMARY_DOC_KEYS = ['passportDoc', 'nicFront', 'brcDoc'];
-const SECONDARY_DOC_KEYS = ['nicBack', 'vatDoc', 'taxExemptionDoc'];
-
-function pickDoc(docs, keys) {
-  for (const key of keys) {
-    const doc = docs.find(d => d.key === key);
-    if (doc) return doc;
-  }
-  return null;
-}
-
-function DocImage({ url, alt, style }) {
-  const [failed, setFailed] = useState(false);
-  const src = getAssetUrl(url);
-  if (!src) {
-    return <div className="kyc-doc-missing" style={{ minHeight: 220 }}>{alt || 'No image'}</div>;
-  }
-  if (failed) {
-    return <div className="kyc-doc-missing" style={{ minHeight: 220 }}>Could not load image</div>;
-  }
-  return (
-    <img src={src} alt={alt} style={{ minHeight: 220, objectFit: 'contain', ...style }} onError={() => setFailed(true)} />
-  );
 }
 
 export default function KycReviewPage() {
@@ -175,45 +150,25 @@ export default function KycReviewPage() {
             </span>
           </div>
 
-          {/* ── Document Inspection Grid (NIC Front, NIC Back, Digital Signature) ── */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-              gap: '1.25rem',
-              marginBottom: '1.5rem',
-            }}
-          >
-            <div className="kyc-doc-frame" style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-color, #e2e8f0)', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-              <div className="kyc-doc-header" style={{ padding: '0.65rem 1rem', fontWeight: 700, fontSize: '0.85rem', color: '#0f172a', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                NIC / Identity Front
+          {/* ── All captured documents: NIC front / back, live face photo, signature ── */}
+          <div className="kyc-panel">
+            {(current.documents || []).length === 0 ? (
+              <div className="kyc-doc-frame">
+                <div className="kyc-doc-header">Documents</div>
+                <div className="kyc-doc-missing">No documents were captured for this applicant.</div>
               </div>
-              <DocImage
-                url={(pickDoc(current.documents || [], PRIMARY_DOC_KEYS) || (current.documents || []).find(d => d.key === 'nicFront' || d.key === 'passportDoc') || (current.documents || [])[0])?.url}
-                alt="NIC Front"
-              />
-            </div>
-
-            <div className="kyc-doc-frame" style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-color, #e2e8f0)', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-              <div className="kyc-doc-header" style={{ padding: '0.65rem 1rem', fontWeight: 700, fontSize: '0.85rem', color: '#0f172a', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                NIC Back
-              </div>
-              <DocImage
-                url={(pickDoc(current.documents || [], SECONDARY_DOC_KEYS) || (current.documents || []).find(d => d.key === 'nicBack'))?.url}
-                alt="NIC Back"
-              />
-            </div>
-
-            <div className="kyc-doc-frame" style={{ borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-color, #e2e8f0)', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-              <div className="kyc-doc-header" style={{ padding: '0.65rem 1rem', fontWeight: 700, fontSize: '0.85rem', color: '#0f172a', borderBottom: '1px solid #f1f5f9', backgroundColor: '#f8fafc' }}>
-                Digital Signature
-              </div>
-              <DocImage
-                url={(current.documents || []).find(d => d.key === 'signature' || d.key === 'customerSignature')?.url || current.formData?.signature}
-                alt="Digital Signature"
-                style={{ backgroundColor: '#ffffff', padding: '0.75rem' }}
-              />
-            </div>
+            ) : (
+              current.documents.map((doc) => (
+                <div className="kyc-doc-frame" key={doc.key}>
+                  <div className="kyc-doc-header">{doc.label}</div>
+                  <AuthImage
+                    url={doc.url}
+                    alt={doc.label}
+                    style={{ minHeight: 220, objectFit: doc.key === 'facePhoto' ? 'cover' : 'contain' }}
+                  />
+                </div>
+              ))
+            )}
           </div>
 
           {/* ── Applicant Info ── */}
@@ -233,6 +188,12 @@ export default function KycReviewPage() {
               <div className="kyc-info-item">
                 <label>Phone</label>
                 <span>{current.phone}</span>
+              </div>
+              <div className="kyc-info-item">
+                <label>Request</label>
+                <span>
+                  {current.kind === 'account' ? 'Account registration' : `${current.serviceType} · ${current.referenceNumber}`}
+                </span>
               </div>
               <div className="kyc-info-item">
                 <label>Submitted</label>

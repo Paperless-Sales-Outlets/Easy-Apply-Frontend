@@ -503,9 +503,19 @@
 
 .kyc-panel {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 1.5rem;
+}
+
+.kyc-doc-missing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  background: var(--paper);
 }
 
 .kyc-doc-frame {

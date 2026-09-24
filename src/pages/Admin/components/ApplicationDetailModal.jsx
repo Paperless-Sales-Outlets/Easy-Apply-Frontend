@@ -7,11 +7,13 @@ import {
   statusBadgeClass,
   statusLabel,
 } from '../utils/applicationUtils';
+import AuthImage from './AuthImage';
 import { updateOfficeFields, createAppointment } from '../services/adminService';
 
 const DOC_LABELS = {
   nicFront: 'NIC Front',
   nicBack: 'NIC Back',
+  facePhoto: 'Live Face Photo',
   passportDoc: 'Passport',
   brcDoc: 'Business Registration',
   brc: 'Business Registration',
@@ -28,7 +30,7 @@ const DOC_LABELS = {
 const FILE_FIELD_KEYS = new Set([
   'documents', 'signature', 'signatureUpload', 'signatureFile', 'digitalSignature',
   'signatureBase64', 'digitalSignatureBase64', 'proofOfAddress', 'authorizationLetter',
-  'sketchFile', 'brcFile', 'brc', 'nicFront', 'nicBack', 'passportDoc', 'brcDoc',
+  'sketchFile', 'brcFile', 'brc', 'nicFront', 'nicBack', 'facePhoto', 'passportDoc', 'brcDoc',
   'vatDoc', 'taxExemptionDoc',
 ]);
 
@@ -67,6 +69,14 @@ function flattenFormData(obj, prefix = '', acc = []) {
   return acc;
 }
 
+// GridFS references (gridfs://<id> or a bare 24-hex id) are served by the protected /api/files/:id route
+function fileRefToUrl(value) {
+  if (typeof value !== 'string') return '';
+  if (value.startsWith('gridfs://')) return `/api/files/${value.slice(9)}`;
+  if (/^[0-9a-f]{24}$/i.test(value)) return `/api/files/${value}`;
+  return value;
+}
+
 function collectDocuments(formData) {
   const docs = formData?.documents && typeof formData.documents === 'object' ? formData.documents : {};
   const all = { ...(formData || {}), ...docs };
@@ -75,14 +85,9 @@ function collectDocuments(formData) {
   Object.entries(all).forEach(([key, value]) => {
     if (key === 'documents') return;
     let url = '';
-    if (typeof value === 'string') {
-      if (value.startsWith('gridfs://')) {
-        url = `/api/files/${value.replace('gridfs://', '')}`;
-      } else if (/^[0-9a-fA-F]{24}$/.test(value)) {
-        url = `/api/files/${value}`;
-      } else if (value.startsWith('/uploads/') || value.startsWith('/api/files/') || value.startsWith('http') || value.startsWith('data:')) {
-        url = value;
-      }
+    value = fileRefToUrl(value);
+    if (typeof value === 'string' && (value.startsWith('/api/files/') || value.startsWith('/uploads/') || value.startsWith('http') || value.startsWith('data:'))) {
+      url = value;
     } else if (value && typeof value === 'object' && !Array.isArray(value)) {
       url = value.url || value.path || value.preview || '';
     }
@@ -95,7 +100,7 @@ function collectDocuments(formData) {
 }
 
 function isImageUrl(url) {
-  return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url) || url.startsWith('data:image') || url.includes('/api/files/');
+  return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url) || url.startsWith('data:image');
 }
 
 function toInputDate(dateStr) {
@@ -209,6 +214,19 @@ export default function ApplicationDetailModal({ application, onClose }) {
             <div><span>Submitted</span><strong>{formatDate(application.submittedAt)}</strong></div>
           </div>
 
+          {application.formData?.product && (
+            <>
+              <h4>Purchase</h4>
+              <div className="admin-modal-meta">
+                <div><span>Package</span><strong>{application.formData.product.productName} × {application.formData.product.quantity || 1}</strong></div>
+                <div><span>Monthly</span><strong>Rs. {Number(application.formData.product.monthlyPrice || 0).toLocaleString()}</strong></div>
+                <div><span>Installation Fee</span><strong>Rs. {Number(application.formData.product.installationFee || 0).toLocaleString()}</strong></div>
+                <div><span>Payment</span><strong>{application.paymentStatus || '—'} · {application.formData.paymentReference || 'no reference'}</strong></div>
+                <div><span>Install Address</span><strong>{application.formData.installAddress || application.address || '—'}</strong></div>
+              </div>
+            </>
+          )}
+
           {/* ── Office Processing ── */}
           <h4>Office Processing</h4>
           <div className="admin-form-grid" style={{ marginBottom: '1rem' }}>
@@ -299,10 +317,11 @@ export default function ApplicationDetailModal({ application, onClose }) {
             <div className="admin-doc-grid">
               {docs.map((doc) => {
                 const url = getAssetUrl(doc.url);
+                const isFile = doc.url.startsWith('/api/files/');
                 return (
-                  <a className="admin-doc-item" key={doc.key} href={url} target="_blank" rel="noreferrer">
-                    {isImageUrl(url) ? (
-                      <img src={url} alt={doc.label} loading="lazy" />
+                  <a className="admin-doc-item" key={doc.key} href={isFile ? undefined : url} target="_blank" rel="noreferrer">
+                    {isFile || isImageUrl(url) ? (
+                      <AuthImage url={doc.url} alt={doc.label} />
                     ) : (
                       <span className="admin-doc-fallback">PDF</span>
                     )}

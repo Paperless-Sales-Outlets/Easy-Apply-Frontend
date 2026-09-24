@@ -72,6 +72,7 @@ export function normalizeApplication(app) {
     formData: fd,
     documents: fd.documents || {},
     officeFields: app.officeFields || null,
+    paymentStatus: app.paymentStatus || '',
   };
 }
 

@@ -21,14 +21,6 @@ const getCartConfig = () => ({
   },
 });
 
-// The catalogue shown to customers is a curated list (DEFAULT_MOCKUP_PRODUCTS
-// in ProductCatalogPage) that doesn't share product names with whatever is
-// actually seeded in the real database, so it never resolves to a real
-// MongoDB _id — only mock ids like 'prod-1' or 'mock-3'. Posting one of those
-// to the backend cart is guaranteed to 500 with "Product not found", so we
-// check first and only sync to the backend for products that have a real id.
-const isRealObjectId = (id) => typeof id === 'string' && /^[a-f0-9]{24}$/i.test(id);
-
 // ── Rich mock catalogue used when the backend /products endpoint is unavailable ──
 const MOCK_PRODUCTS = [
   {
@@ -359,14 +351,8 @@ export const addToCart = async (productOrId, quantity = 1) => {
   }
   saveLocalCart(updatedItems);
 
-  // Only the real DB catalogue has ids the backend can look up — skip the
-  // network call entirely for mock/curated-catalogue ids instead of firing
-  // a request that's guaranteed to 500.
-  if (!isRealObjectId(productId)) {
-    return { success: true, data: { items: updatedItems } };
-  }
-
-  // Try API call
+  // Try API call — the backend resolves both ObjectIds and product codes (e.g. BB-003);
+  // ids it doesn't know fall back to the local cart below.
   try {
     const response = await api.post('/cart', { productId, quantity }, getCartConfig());
     return response.data;
@@ -411,10 +397,6 @@ export const getCart = async () => {
 export const removeFromCart = async (productId) => {
   const localItems = getLocalCart().filter(i => (i.productId || i._id || i.id) !== productId);
   saveLocalCart(localItems);
-
-  if (!isRealObjectId(productId)) {
-    return { success: true, data: { items: localItems } };
-  }
 
   try {
     const response = await api.delete(`/cart/${productId}`, getCartConfig());
