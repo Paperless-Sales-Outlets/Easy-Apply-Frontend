@@ -3,22 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiLock, FiSmartphone, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw, FiUser } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
+import sltLogo from '../assets/removebg-preview-logo.png';
+import transzentLogo from '../assets/transzent-logo-bg-removed.png';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
 import { validateCustomer, maskMobileNumber } from '../services/mockCrmService';
 
 const RESEND_SECONDS = 30;
 const OTP_LENGTH = 6;
-
-const SLTLogo = () => (
-  <svg width="170" height="48" viewBox="0 0 170 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SLTMobitel — The Connection">
-    <line x1="4" y1="42" x2="18" y2="6" stroke="#0f57a8" strokeWidth="4" strokeLinecap="round" />
-    <line x1="14" y1="42" x2="28" y2="6" stroke="#50b748" strokeWidth="4" strokeLinecap="round" />
-    <text x="34" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#ffffff">SLT</text>
-    <text x="74" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#50b748">MOBITEL</text>
-    <text x="34" y="44" fontFamily="var(--font-body)" fontWeight="400" fontSize="8" fill="rgba(255,255,255,0.55)" letterSpacing="1.5">The Connection</text>
-  </svg>
-);
 
 /**
  * Look up the SLT connections behind a phone number so the rest of the app
@@ -240,7 +232,15 @@ export default function LoginPage() {
           }}
         >
           <div className="signup-sidebar-inner">
-            <SLTLogo />
+            <img 
+              src={sltLogo} 
+              alt="SLT Mobitel Logo" 
+              style={{ 
+                width: '170px', 
+                height: 'auto', 
+                maxWidth: '100%'
+              }} 
+            />
             <p className="signup-badge" style={{ marginTop: '1.25rem' }}>
               <FiLock size={14} aria-hidden="true" /> Secure &amp; Trusted
             </p>
@@ -272,6 +272,27 @@ export default function LoginPage() {
                 </div>
               </li>
             </ul>
+            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+              <img 
+                src={transzentLogo} 
+                alt="Transzent Logo" 
+                style={{ 
+                  width: '100px', 
+                  height: 'auto', 
+                  maxWidth: '100%',
+                  opacity: 1
+                }} 
+              />
+              <p style={{ 
+                marginTop: '0.5rem', 
+                fontSize: '0.65rem', 
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontWeight: 400,
+                margin: '0.5rem 0 0 0'
+              }}>
+                Developed By Digital Platform Division
+              </p>
+            </div>
           </div>
         </div>
 

@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiShield, FiX, FiRefreshCw, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
+import sltLogo from '../assets/removebg-preview-logo.png';
+import transzentLogo from '../assets/transzent-logo-bg-removed.png';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
 import IdentityCaptureField from '../components/form/IdentityCaptureField';
@@ -113,17 +115,6 @@ const IconArrowLeft = () => (
 const IconArrowRight = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
     <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-  </svg>
-);
-
-/* ── SLTMobitel Logo ─────────────────────────────────────────────── */
-const SLTLogo = () => (
-  <svg width="170" height="48" viewBox="0 0 170 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <line x1="4" y1="42" x2="18" y2="6" stroke="#0f57a8" strokeWidth="4" strokeLinecap="round"/>
-    <line x1="14" y1="42" x2="28" y2="6" stroke="#50b748" strokeWidth="4" strokeLinecap="round"/>
-    <text x="34" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#ffffff">SLT</text>
-    <text x="74" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#50b748">MOBITEL</text>
-    <text x="34" y="44" fontFamily="var(--font-body)" fontWeight="400" fontSize="8" fill="rgba(255,255,255,0.45)" letterSpacing="1.5">The Connection</text>
   </svg>
 );
 
@@ -583,7 +574,9 @@ export default function SignUpPage() {
   const set = (field) => (e) => {
     let value = e.target.value;
     if (field === 'phone' || field === 'contactNumber') {
-      value = value.replace(/\D/g, '').slice(0, 10);
+      value = value.replace(/\D/g, '');
+      if (value.startsWith('0')) value = value.slice(1);
+      value = value.slice(0, 10);
     }
     // Editing either contact invalidates the code already confirmed for it.
     if (field === 'phone') setPhoneVerified(false);
@@ -780,7 +773,16 @@ export default function SignUpPage() {
           }}
         >
           <div className="signup-sidebar-inner">
-            <div className="signup-badge">
+            <img 
+              src={sltLogo} 
+              alt="SLT Mobitel Logo" 
+              style={{ 
+                width: '170px', 
+                height: 'auto', 
+                maxWidth: '100%'
+              }} 
+            />
+            <div className="signup-badge" style={{ marginTop: '1.25rem' }}>
               <IconLock /> Secure &amp; Trusted
             </div>
             <h1 className="signup-sidebar-title">Create Your Account</h1>
@@ -809,6 +811,27 @@ export default function SignUpPage() {
                   <p>We're here to help you anytime</p>
                 </div>
               </div>
+            </div>
+            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+              <img 
+                src={transzentLogo} 
+                alt="Transzent Logo" 
+                style={{ 
+                  width: '100px', 
+                  height: 'auto', 
+                  maxWidth: '100%',
+                  opacity: 1
+                }} 
+              />
+              <p style={{ 
+                marginTop: '0.5rem', 
+                fontSize: '0.65rem', 
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontWeight: 400,
+                margin: '0.5rem 0 0 0'
+              }}>
+                Developed By Digital Platform Division
+              </p>
             </div>
           </div>
         </div>
@@ -919,7 +942,7 @@ export default function SignUpPage() {
                       : <p className="signup-field-help" id="signup-phone-help">
                           {phoneVerified
                             ? 'Mobile number confirmed.'
-                            : "Select Verify to receive a 6-digit code. We'll use this number for important updates."}
+                            : "Sri Lankan mobile number, without the leading zero."}
                         </p>}
                   </div>
                 </div>
