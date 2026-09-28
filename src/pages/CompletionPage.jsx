@@ -10,6 +10,8 @@ import {
   FiSearch,
   FiPhoneCall,
   FiCheckCircle,
+  FiCalendar,
+  FiArrowRight,
 } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 import { clearSessionCart } from '../utils/api';
@@ -561,8 +563,30 @@ export default function CompletionPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.2 }}
         >
+          {/* Primary CTA: Schedule Physical Installation */}
+          <button
+            type="button"
+            className="cp-btn cp-btn-primary"
+            style={{
+              background: 'linear-gradient(90deg, #0056b3 0%, #0077ee 100%)',
+              boxShadow: '0 6px 20px rgba(0,86,179,0.3)',
+              padding: '0.9rem 1.25rem',
+              fontSize: '0.98rem',
+              fontWeight: 900,
+            }}
+            onClick={() =>
+              navigate(`/schedule-installation/${encodeURIComponent(referenceNumber)}`, {
+                state: { referenceNumber },
+              })
+            }
+          >
+            <FiCalendar size={20} />
+            <span>Schedule Physical Installation Now</span>
+            <FiArrowRight size={18} />
+          </button>
+
           <div className="cp-btn-row">
-            <button type="button" className="cp-btn cp-btn-primary" onClick={handleDownloadPDF}>
+            <button type="button" className="cp-btn cp-btn-secondary" onClick={handleDownloadPDF}>
               <FiDownload size={18} />
               <span>Download Summary PDF</span>
             </button>
@@ -578,6 +602,7 @@ export default function CompletionPage() {
             <span>{t('completion.backToDashboard', 'Back to Dashboard')}</span>
           </button>
         </motion.div>
+
 
       </div>
     </div>
