@@ -10,11 +10,12 @@ import AppointmentsCalendarPage from './pages/AppointmentsCalendarPage';
 import FieldTechnicianPage from './pages/FieldTechnicianPage';
 import AdoptionMonitoringPage from './pages/AdoptionMonitoringPage';
 import UserPrivilegesPage from './pages/UserPrivilegesPage';
+import UserManagementPage from './pages/UserManagementPage';
 import './admin.css';
 
 function getPageFromPath(pathname) {
   const segment = pathname.replace(/\/$/, '').split('/').pop();
-  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges'];
+  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users'];
   if (known.includes(segment)) {
     return segment === 'applications' ? 'forms' : segment;
   }
@@ -69,6 +70,8 @@ function AdminDashboardContent() {
         return <AdoptionMonitoringPage />;
       case 'privileges':
         return <UserPrivilegesPage />;
+      case 'users':
+        return <UserManagementPage />;
       default:
         return <AdminDashboardPage />;
     }

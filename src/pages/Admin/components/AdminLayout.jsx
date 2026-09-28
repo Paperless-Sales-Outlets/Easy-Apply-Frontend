@@ -57,10 +57,18 @@ const NAV_ICONS = {
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
   ),
+  users: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M19 8v6M22 11h-6" />
+    </svg>
+  ),
 };
 
 const NAV_ITEMS = [
   ...MODULE_ACCESS.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
+  { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
   { key: 'privileges', label: 'User Privileges', icon: NAV_ICONS.privileges, roles: ['Admin'] },
 ];
 
@@ -110,6 +118,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
     Staff: 'Staff',
     Manager: 'Manager',
     SalesOfficer: 'Sales Officer',
+    CustomerCareOfficer: 'Customer Care Officer',
   }[admin?.role] || 'Staff';
 
   return (
@@ -204,7 +213,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Main Content ── */}
       <div className="admin-main">
         <div className="admin-topbar" />
-        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges'].includes(activePage) ? ' admin-page-wide' : ''}`}>
+        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users'].includes(activePage) ? ' admin-page-wide' : ''}`}>
           {children}
         </div>
       </div>

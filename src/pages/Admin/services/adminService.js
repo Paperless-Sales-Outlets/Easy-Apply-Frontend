@@ -90,6 +90,30 @@ export const getUsers = async () => {
   return response.data;
 };
 
+// GET /api/admin/users — list Manager/SalesOfficer/CustomerCareOfficer/Admin accounts
+export const getAdminUsers = async () => {
+  const response = await api.get('/admin/users');
+  return response.data;
+};
+
+// POST /api/admin/users — create a staff account with role + module privileges
+export const createAdminUser = async (data) => {
+  const response = await api.post('/admin/users', data);
+  return response.data;
+};
+
+// PATCH /api/admin/users/:id — update profile, role, privileges, status, or password
+export const updateAdminUser = async (id, data) => {
+  const response = await api.patch(`/admin/users/${id}`, data);
+  return response.data;
+};
+
+// DELETE /api/admin/users/:id — remove a staff account
+export const deleteAdminUser = async (id) => {
+  const response = await api.delete(`/admin/users/${id}`);
+  return response.data;
+};
+
 export default {
   getDashboardStats,
   getApplications,
@@ -106,4 +130,8 @@ export default {
   updateMyJobStatus,
   createAppointment,
   getUsers,
+  getAdminUsers,
+  createAdminUser,
+  updateAdminUser,
+  deleteAdminUser,
 };
