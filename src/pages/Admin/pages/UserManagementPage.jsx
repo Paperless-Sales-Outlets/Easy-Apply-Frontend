@@ -231,15 +231,6 @@ export default function UserManagementPage() {
     setForm((f) => ({ ...f, role: roleName, permissions: role?.permissions || [] }));
   };
 
-  const togglePermission = (key) => {
-    setForm((f) => ({
-      ...f,
-      permissions: f.permissions.includes(key)
-        ? f.permissions.filter((k) => k !== key)
-        : [...f.permissions, key],
-    }));
-  };
-
   const handleGeneratePassword = () => {
     const pwd = generatePassword();
     setForm((f) => ({ ...f, password: pwd, confirmPassword: pwd }));
@@ -733,7 +724,7 @@ export default function UserManagementPage() {
                 <div>
                   <h3>{editingUser ? 'Edit User' : 'Add New User'}</h3>
                   <div className="admin-modal-subtitle">
-                    {editingUser ? 'Update profile, role and module access' : 'Create a staff account — privileges follow the selected role'}
+                    {editingUser ? 'Update profile and role — privileges follow the selected role' : 'Create a staff account — privileges follow the selected role'}
                   </div>
                 </div>
               </div>
@@ -744,7 +735,7 @@ export default function UserManagementPage() {
               <div className="admin-modal-body">
                 {formError && <div className="admin-error-banner" style={{ marginBottom: '1rem' }}>{formError}</div>}
 
-                <div className={`um-form-grid${!editingUser ? ' um-form-vertical' : ''}`}>
+                <div className="um-form-grid um-form-vertical">
                   <label className="um-field">
                     <span>Employee Number</span>
                     <div className="um-input-icon-wrap">
@@ -882,27 +873,6 @@ export default function UserManagementPage() {
                     {fieldErrors.confirmPassword && <span className="um-field-error">{fieldErrors.confirmPassword}</span>}
                   </label>
                 </div>
-
-                {editingUser && (
-                  <>
-                    <div className="um-form-section-label">Module Privileges</div>
-                    <p className="admin-modal-empty" style={{ marginBottom: '0.75rem' }}>
-                      Prefilled from the selected role's defaults — adjust as needed for this user.
-                    </p>
-                    <div className="um-privileges-grid">
-                      {MODULE_ACCESS.map((mod) => (
-                        <label className="um-priv-checkbox" key={mod.key}>
-                          <input
-                            type="checkbox"
-                            checked={form.permissions.includes(mod.key)}
-                            onChange={() => togglePermission(mod.key)}
-                          />
-                          <span>{mod.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </>
-                )}
               </div>
 
               <div className="um-modal-footer">
