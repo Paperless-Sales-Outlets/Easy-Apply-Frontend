@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiUser,
@@ -18,10 +18,14 @@ import {
   FiDownload,
   FiZap,
   FiBox,
+  FiStar,
+  FiCalendar,
 } from 'react-icons/fi';
 import { useVerifiedContext } from '../components/verification';
 import { getAuthUser, notifyAuthUpdated } from '../utils/authSession';
 import api from '../utils/api';
+import InstallationReviewModal from '../components/InstallationReviewModal';
+
 
 const SERVICE_TYPE_LABELS = {
   'new-connection': 'New Connection',
@@ -198,6 +202,7 @@ function EditableField({ label, name, value, onChange, type = 'text' }) {
 /* ── Main Page ────────────────────────────────────────────────────────────── */
 export default function MyProfilePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { mobileNumber, customerExists, selectedAccount, accountsList, switchAccount } = useVerifiedContext();
   const [authUser, setAuthUser] = useState(getAuthUser);
   const [isEditing, setIsEditing] = useState(false);
@@ -209,6 +214,7 @@ export default function MyProfilePage() {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [selectedAppForView, setSelectedAppForView] = useState(null);
   const [selectedAppForComments, setSelectedAppForComments] = useState(null);
+  const [selectedAppForReview, setSelectedAppForReview] = useState(null);
 
   // Re-sync whenever the SLT account or the registered user changes
   useEffect(() => {
@@ -257,6 +263,25 @@ export default function MyProfilePage() {
       isSubscribed = false;
     };
   }, [mobileNumber]);
+
+  // Listen for query params e.g. /profile?review=true&ref=REQ-XXXXXX
+  useEffect(() => {
+    const reviewParam = searchParams.get('review') || searchParams.get('feedback') || searchParams.get('openReview');
+    const refParam = searchParams.get('ref');
+    if (applications.length > 0) {
+      if (refParam) {
+        const found = applications.find(a => a.referenceNumber === refParam.trim());
+        if (found) {
+          if (reviewParam === 'true' || reviewParam === '1') {
+            setSelectedAppForReview(found);
+          }
+        }
+      } else if (reviewParam === 'true' || reviewParam === '1') {
+        setSelectedAppForReview(applications[0]);
+      }
+    }
+  }, [applications, searchParams]);
+
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
@@ -874,7 +899,7 @@ export default function MyProfilePage() {
                         </span>
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem' }}>
                           <button
                             title="View Application Details"
                             onClick={() => setSelectedAppForView(app)}
@@ -918,6 +943,57 @@ export default function MyProfilePage() {
                             onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.2)'; }}
                           >
                             <FiMessageSquare size={16} />
+                          </button>
+                          <button
+                            title={
+                              app.formData?.installationReview
+                                ? `Installation Verified: ${app.formData.installationReview.rating || 5}/5 ⭐`
+                                : 'Rate Technician & Sign-Off'
+                            }
+                            onClick={() => setSelectedAppForReview(app)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.3rem',
+                              padding: '0 0.6rem',
+                              height: '32px',
+                              borderRadius: '8px',
+                              border: app.formData?.installationReview
+                                ? '1px solid rgba(251, 191, 36, 0.5)'
+                                : '1px solid rgba(245, 158, 11, 0.4)',
+                              background: app.formData?.installationReview
+                                ? 'rgba(254, 243, 199, 0.6)'
+                                : '#fffbeb',
+                              color: '#d97706',
+                              fontWeight: 800,
+                              fontSize: '0.74rem',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#fef3c7';
+                              e.currentTarget.style.borderColor = '#d97706';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = app.formData?.installationReview
+                                ? 'rgba(254, 243, 199, 0.6)'
+                                : '#fffbeb';
+                              e.currentTarget.style.borderColor = app.formData?.installationReview
+                                ? '1px solid rgba(251, 191, 36, 0.5)'
+                                : 'rgba(245, 158, 11, 0.4)';
+                            }}
+                          >
+                            <FiStar
+                              size={14}
+                              fill={app.formData?.installationReview ? '#fbbf24' : 'none'}
+                            />
+                            <span>
+                              {app.formData?.installationReview
+                                ? `${app.formData.installationReview.rating || 5}★`
+                                : 'Rate'}
+                            </span>
                           </button>
                         </div>
                       </td>
@@ -1157,6 +1233,34 @@ export default function MyProfilePage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* ── Installation & Technician Verification Modal ─────────────── */}
+      <InstallationReviewModal
+        isOpen={!!selectedAppForReview}
+        onClose={() => setSelectedAppForReview(null)}
+        application={selectedAppForReview}
+        onSuccess={(feedbackData) => {
+          setApplications((prev) =>
+            prev.map((a) => {
+              if (a.referenceNumber === feedbackData.referenceNumber) {
+                return {
+                  ...a,
+                  status: 'confirmed',
+                  formData: {
+                    ...(a.formData || {}),
+                    installationReview: {
+                      rating: feedbackData.rating,
+                      feedbackText: feedbackData.feedbackText,
+                      submittedAt: new Date().toISOString(),
+                    },
+                  },
+                };
+              }
+              return a;
+            })
+          );
+        }}
+      />
     </div>
   );
-}
+}

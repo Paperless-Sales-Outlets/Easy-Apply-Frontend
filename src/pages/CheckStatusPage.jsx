@@ -16,8 +16,13 @@ import {
   FiFileText,
   FiArrowRight,
   FiShield,
+  FiStar,
+  FiCalendar,
+  FiZap,
 } from 'react-icons/fi';
 import api from '../utils/api';
+import InstallationReviewModal from '../components/InstallationReviewModal';
+
 
 export default function CheckStatusPage() {
   const { t } = useTranslation();
@@ -29,6 +34,8 @@ export default function CheckStatusPage() {
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+
 
   const getServiceTypeLabel = (type) => {
     switch (type) {
@@ -69,9 +76,9 @@ export default function CheckStatusPage() {
       const data = response.data || {};
       setResult({
         status: data.status || 'pending', // 'pending' | 'approved' | 'rejected' | 'in_progress' | 'flagged'
-        serviceType: data.serviceType || 'relocation',
+        serviceType: data.serviceType || 'new-connection',
         referenceNumber: data.referenceNumber || refToSearch.trim(),
-        createdAt: data.createdAt || new Date().toLocaleDateString('en-LK'),
+        createdAt: data.createdAt ? new Date(data.createdAt).toLocaleDateString('en-LK') : new Date().toLocaleDateString('en-LK'),
         message:
           data.message ||
           t(
@@ -81,9 +88,12 @@ export default function CheckStatusPage() {
         customerName: data.customerName || '',
         telephone: data.telephone || '',
         notes: data.notes || '',
+        formData: data.formData || {},
+        feedback: data.formData?.installationReview || data.feedback || null,
         actionedBy: data.actionedBy || null,
         actionedAt: data.actionedAt || null,
       });
+
     } catch (error) {
       setResult({
         status: 'not-found',
@@ -490,19 +500,141 @@ export default function CheckStatusPage() {
 
                         {/* Step 4 */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ backgroundColor: '#cbd5e1', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
-                            4
+                          <div style={{ backgroundColor: result.feedback ? '#047857' : '#cbd5e1', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                            {result.feedback ? <FiCheck size={14} /> : '4'}
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 700, color: '#64748b', fontSize: '0.92rem' }}>Final Line Activation & SMS Alert</div>
-                            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Service completion notification sent to your mobile</div>
+                            <div style={{ fontWeight: 700, color: result.feedback ? '#0f172a' : '#64748b', fontSize: '0.92rem' }}>Final Line Activation & Speed Test</div>
+                            <div style={{ fontSize: '0.78rem', color: result.feedback ? '#047857' : '#94a3b8' }}>
+                              {result.feedback ? 'Verified 104.2 Mbps • Connection Live' : 'Technician verification & sign-off required'}
+                            </div>
                           </div>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, backgroundColor: '#f1f5f9', color: '#64748b', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
-                            Pending
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, backgroundColor: result.feedback ? '#dcfce7' : '#f1f5f9', color: result.feedback ? '#15803d' : '#64748b', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
+                            {result.feedback ? 'Active' : 'Pending'}
                           </span>
                         </div>
                       </div>
                     </div>
+
+                    {/* Action Cards: Technician Verification & Installation Scheduling */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '1.75rem' }}>
+
+                      {/* Technician Verification Banner */}
+                      <div
+                        style={{
+
+                          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(0, 86, 179, 0.05) 100%)',
+                          border: '1.5px solid rgba(16, 185, 129, 0.35)',
+                          borderRadius: '16px',
+                          padding: '1.25rem 1.35rem',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '1rem',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: '240px', flex: 1 }}>
+                          <div
+                            style={{
+                              width: '42px',
+                              height: '42px',
+                              borderRadius: '12px',
+                              background: '#10b981',
+                              color: '#ffffff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                            }}
+                          >
+                            <FiStar size={20} fill={result.feedback ? '#fff' : 'none'} />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              <span>Technician Verification & Sign-Off</span>
+                              {result.feedback && (
+                                <span style={{ fontSize: '0.72rem', color: '#15803d', background: '#dcfce7', border: '1px solid #bbf7d0', padding: '0.15rem 0.55rem', borderRadius: '9999px', fontWeight: 800 }}>
+                                  ● {result.feedback.rating || 5}★ Verified & Active
+                                </span>
+                              )}
+                            </div>
+                            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>
+                              {result.feedback
+                                ? 'Optical link synced, speed test verified (104.2 Mbps), and sign-off complete.'
+                                : 'Completed wiring? Verify your speed test diagnostics & rate technician service.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowReviewModal(true)}
+                          style={{
+                            padding: '0.65rem 1.25rem',
+                            borderRadius: '12px',
+                            background: result.feedback ? '#ffffff' : 'var(--brand-gradient-soft)',
+                            color: result.feedback ? '#0056b3' : '#ffffff',
+                            border: result.feedback ? '1.5px solid rgba(0, 86, 179, 0.3)' : 'none',
+                            fontWeight: 800,
+                            fontSize: '0.85rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.45rem',
+                            boxShadow: result.feedback ? '0 2px 5px rgba(0,0,0,0.04)' : '0 4px 14px rgba(0, 86, 179, 0.25)',
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          <FiStar size={15} fill={result.feedback ? '#fbbf24' : '#fff'} />
+                          <span>{result.feedback ? 'View Activation Details' : 'Verify Speed Test & Sign-Off'}</span>
+                        </button>
+                      </div>
+
+                      {/* Installation Scheduling Quick Link */}
+                      <div
+                        style={{
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '14px',
+                          padding: '0.9rem 1.25rem',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                          <FiCalendar size={18} color="#0056b3" />
+                          <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#334155' }}>
+                            Need to book or adjust your physical technician appointment?
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/schedule-installation/${result.referenceNumber}`)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#0056b3',
+                            fontWeight: 800,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            padding: '0.3rem 0.6rem',
+                          }}
+                        >
+                          <span>Manage Installation Schedule</span>
+                          <FiArrowRight size={14} />
+                        </button>
+                      </div>
+
+                    </div>
+
 
                     {/* Latest Status Message */}
                     {result.message && (
@@ -642,7 +774,26 @@ export default function CheckStatusPage() {
           )}
         </AnimatePresence>
 
+
       </div>
+
+      {/* Technician Review & Verification Modal */}
+      <InstallationReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        application={result}
+        onSuccess={(feedbackData) => {
+          setResult((prev) => ({
+            ...prev,
+            status: 'confirmed',
+            feedback: {
+              rating: feedbackData.rating,
+              feedbackText: feedbackData.feedbackText,
+              submittedAt: new Date().toISOString(),
+            },
+          }));
+        }}
+      />
 
       <style>{`
         @keyframes spin {
@@ -655,3 +806,4 @@ export default function CheckStatusPage() {
     </div>
   );
 }
+

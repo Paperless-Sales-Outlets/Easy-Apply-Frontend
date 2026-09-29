@@ -315,7 +315,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/schedule-installation"
           element={
-            <PageWrapper>
+            <PageWrapper fullBleed>
               <InstallationSchedulingPage />
             </PageWrapper>
           }
@@ -324,7 +324,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/schedule-installation/:ref"
           element={
-            <PageWrapper>
+            <PageWrapper fullBleed>
               <InstallationSchedulingPage />
             </PageWrapper>
           }
