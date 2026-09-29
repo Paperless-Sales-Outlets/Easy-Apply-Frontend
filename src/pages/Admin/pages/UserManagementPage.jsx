@@ -47,6 +47,23 @@ const EMPTY_USER_FORM = {
 
 const EMPTY_ROLE_FORM = { name: '', permissions: [] };
 
+// Employee Number is the account's permanent unique id: a leading '0'
+// followed by 5 digits (e.g. 000001..099999), auto-assigned — never typed.
+const EMPLOYEE_NUMBER_LENGTH = 5;
+const EMAIL_DOMAIN = 'slt.com.lk';
+const EMAIL_PATTERN = new RegExp(`^[a-zA-Z0-9._%+-]+@${EMAIL_DOMAIN.replace(/\./g, '\\.')}$`, 'i');
+
+// Next free employee number, derived from whatever's already assigned so it
+// keeps incrementing even if the list is filtered/out of order.
+function nextEmployeeNumber(users) {
+  const highest = users.reduce((max, u) => {
+    const match = /^0(\d{5})$/.exec(u.employeeNumber || '');
+    if (!match) return max;
+    return Math.max(max, parseInt(match[1], 10));
+  }, 0);
+  return '0' + String(highest + 1).padStart(EMPLOYEE_NUMBER_LENGTH, '0');
+}
+
 function generatePassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
   let out = '';
@@ -58,6 +75,17 @@ function initials(name) {
   if (!name) return '?';
   return name.split(' ').filter(Boolean).map((n) => n[0]).slice(0, 2).join('').toUpperCase();
 }
+
+const EyeIcon = ({ open }) => open ? (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+) : (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" /><circle cx="12" cy="12" r="3" />
+  </svg>
+);
 
 const TABS = [
   { key: 'team', label: 'Team Members' },
@@ -85,8 +113,10 @@ export default function UserManagementPage() {
   const [editingUser, setEditingUser] = useState(null);
   const [form, setForm] = useState(EMPTY_USER_FORM);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -156,11 +186,14 @@ export default function UserManagementPage() {
     const defaultRole = roles[0];
     setForm({
       ...EMPTY_USER_FORM,
+      employeeNumber: nextEmployeeNumber(users),
       role: defaultRole?.name || '',
       permissions: defaultRole?.permissions || [],
     });
     setFormError('');
+    setFieldErrors({});
     setShowPassword(false);
+    setShowConfirmPassword(false);
     setModalOpen(true);
   };
 
@@ -182,7 +215,9 @@ export default function UserManagementPage() {
         : (roles.find((r) => r.name === user.role)?.permissions || []),
     });
     setFormError('');
+    setFieldErrors({});
     setShowPassword(false);
+    setShowConfirmPassword(false);
     setModalOpen(true);
   };
 
@@ -208,27 +243,53 @@ export default function UserManagementPage() {
   const handleGeneratePassword = () => {
     const pwd = generatePassword();
     setForm((f) => ({ ...f, password: pwd, confirmPassword: pwd }));
+    setFieldErrors((fe) => ({ ...fe, password: undefined, confirmPassword: undefined }));
     setShowPassword(true);
+    setShowConfirmPassword(true);
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!form.name.trim()) {
+      errors.name = 'Full name is required.';
+    }
+
+    if (!form.email.trim()) {
+      errors.email = 'Email address is required.';
+    } else if (!EMAIL_PATTERN.test(form.email.trim())) {
+      errors.email = `Must be a valid ${EMAIL_DOMAIN} address, e.g. name@${EMAIL_DOMAIN}.`;
+    }
+
+    if (!form.role) {
+      errors.role = 'Please select a role.';
+    }
+
+    if (!editingUser && !form.password) {
+      errors.password = 'Password is required.';
+    } else if (form.password && form.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters.';
+    }
+
+    if (!editingUser || form.password) {
+      if (!form.confirmPassword) {
+        errors.confirmPassword = 'Please confirm the password.';
+      } else if (form.password !== form.confirmPassword) {
+        errors.confirmPassword = 'Passwords do not match.';
+      }
+    }
+
+    return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
 
-    if (!form.employeeNumber.trim() || !form.name.trim() || !form.email.trim()) {
-      setFormError('Employee number, name and email are required.');
-      return;
-    }
-    if (!editingUser && form.password.trim().length < 6) {
-      setFormError('Password must be at least 6 characters.');
-      return;
-    }
-    if (form.password && form.password.length < 6) {
-      setFormError('Password must be at least 6 characters.');
-      return;
-    }
-    if (form.password !== form.confirmPassword) {
-      setFormError('Password and Confirm Password do not match.');
+    const errors = validateForm();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setFormError('Please fix the highlighted fields before continuing.');
       return;
     }
 
@@ -663,62 +724,90 @@ export default function UserManagementPage() {
       {/* ── Add / Edit User Modal ── */}
       {modalOpen && (
         <div className="admin-modal-overlay" onClick={closeModal}>
-          <div className="admin-modal um-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="admin-modal um-modal um-user-modal" onClick={(e) => e.stopPropagation()}>
             <div className="admin-modal-header um-modal-header">
-              <div>
-                <h3>{editingUser ? 'Edit User' : 'Add New User'}</h3>
-                <div className="admin-modal-subtitle">
-                  {editingUser ? 'Update profile, role and module access' : 'Create a staff account and assign its role and privileges'}
+              <div className="um-modal-header-identity">
+                <div className="um-modal-avatar" style={{ background: avatarGradient(form.role, roles) }}>
+                  {initials(form.name) || '?'}
+                </div>
+                <div>
+                  <h3>{editingUser ? 'Edit User' : 'Add New User'}</h3>
+                  <div className="admin-modal-subtitle">
+                    {editingUser ? 'Update profile, role and module access' : 'Create a staff account — privileges follow the selected role'}
+                  </div>
                 </div>
               </div>
               <button type="button" className="admin-modal-close" onClick={closeModal} aria-label="Close">×</button>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               <div className="admin-modal-body">
                 {formError && <div className="admin-error-banner" style={{ marginBottom: '1rem' }}>{formError}</div>}
 
-                <div className="um-form-section-label">Account Details</div>
-                <div className="um-form-grid">
+                <div className={`um-form-grid${!editingUser ? ' um-form-vertical' : ''}`}>
                   <label className="um-field">
-                    <span>Employee Number *</span>
-                    <input
-                      type="text"
-                      className="um-input"
-                      value={form.employeeNumber}
-                      onChange={(e) => setForm((f) => ({ ...f, employeeNumber: e.target.value }))}
-                      placeholder="e.g. EMP-0042"
-                      required
-                    />
+                    <span>Employee Number</span>
+                    <div className="um-input-icon-wrap">
+                      <span className="um-input-icon-glyph">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 8h10M7 12h6M3 16h18" />
+                        </svg>
+                      </span>
+                      <input
+                        type="text"
+                        className="um-input um-input-icon"
+                        value={form.employeeNumber}
+                        disabled
+                        readOnly
+                      />
+                    </div>
+                    <span className="um-field-hint">Auto-generated — this is the account's permanent unique ID.</span>
                   </label>
+
                   <label className="um-field">
                     <span>Full Name *</span>
-                    <input
-                      type="text"
-                      className="um-input"
-                      value={form.name}
-                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                      placeholder="e.g. Kasun Perera"
-                      required
-                    />
+                    <div className="um-input-icon-wrap">
+                      <span className="um-input-icon-glyph">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </span>
+                      <input
+                        type="text"
+                        className={`um-input um-input-icon${fieldErrors.name ? ' invalid' : ''}`}
+                        value={form.name}
+                        onChange={(e) => { setForm((f) => ({ ...f, name: e.target.value })); setFieldErrors((fe) => ({ ...fe, name: undefined })); }}
+                        placeholder="e.g. Kasun Perera"
+                      />
+                    </div>
+                    {fieldErrors.name && <span className="um-field-error">{fieldErrors.name}</span>}
                   </label>
+
                   <label className="um-field">
                     <span>Email Address *</span>
-                    <input
-                      type="email"
-                      className="um-input"
-                      value={form.email}
-                      onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                      placeholder="name@slt.lk"
-                      required
-                    />
+                    <div className="um-input-icon-wrap">
+                      <span className="um-input-icon-glyph">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 6-10 7L2 6" />
+                        </svg>
+                      </span>
+                      <input
+                        type="email"
+                        className={`um-input um-input-icon${fieldErrors.email ? ' invalid' : ''}`}
+                        value={form.email}
+                        onChange={(e) => { setForm((f) => ({ ...f, email: e.target.value })); setFieldErrors((fe) => ({ ...fe, email: undefined })); }}
+                        placeholder={`name@${EMAIL_DOMAIN}`}
+                      />
+                    </div>
+                    {fieldErrors.email && <span className="um-field-error">{fieldErrors.email}</span>}
                   </label>
+
                   <label className="um-field">
                     <span>Role *</span>
                     <select
-                      className="um-input"
+                      className={`um-input${fieldErrors.role ? ' invalid' : ''}`}
                       value={form.role}
-                      onChange={(e) => handleRoleChange(e.target.value)}
+                      onChange={(e) => { handleRoleChange(e.target.value); setFieldErrors((fe) => ({ ...fe, role: undefined })); }}
                       disabled={editingUser?.role === 'Admin'}
                     >
                       {editingUser?.role === 'Admin' && (
@@ -731,59 +820,89 @@ export default function UserManagementPage() {
                     {editingUser?.role === 'Admin' && (
                       <span className="um-field-hint">Administrator accounts can't be re-assigned from here.</span>
                     )}
+                    {fieldErrors.role && <span className="um-field-error">{fieldErrors.role}</span>}
                   </label>
-                </div>
 
-                <div className="um-form-section-label">Security</div>
-                <div className="um-form-grid">
                   <label className="um-field">
                     <span>{editingUser ? 'New Password (optional)' : 'Password *'}</span>
-                    <div className="um-password-row">
+                    <div className="um-input-icon-wrap">
+                      <span className="um-input-icon-glyph">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      </span>
                       <input
                         type={showPassword ? 'text' : 'password'}
-                        className="um-input"
+                        className={`um-input um-input-icon um-input-icon-both${fieldErrors.password ? ' invalid' : ''}`}
                         value={form.password}
-                        onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                        onChange={(e) => { setForm((f) => ({ ...f, password: e.target.value })); setFieldErrors((fe) => ({ ...fe, password: undefined })); }}
                         placeholder={editingUser ? 'Leave blank to keep current' : 'Minimum 6 characters'}
-                        required={!editingUser}
                       />
-                      <button type="button" className="um-inline-btn" onClick={() => setShowPassword((s) => !s)}>
-                        {showPassword ? 'Hide' : 'Show'}
-                      </button>
-                      <button type="button" className="um-inline-btn" onClick={handleGeneratePassword}>
-                        Generate
+                      <button
+                        type="button"
+                        className="um-eye-btn"
+                        onClick={() => setShowPassword((s) => !s)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        title={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        <EyeIcon open={showPassword} />
                       </button>
                     </div>
+                    <button type="button" className="um-generate-link" onClick={handleGeneratePassword}>
+                      Generate a strong password
+                    </button>
+                    {fieldErrors.password && <span className="um-field-error">{fieldErrors.password}</span>}
                   </label>
+
                   <label className="um-field">
                     <span>Confirm Password{!editingUser ? ' *' : ''}</span>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      className="um-input"
-                      value={form.confirmPassword}
-                      onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                      placeholder="Re-enter password"
-                      required={!editingUser || !!form.password}
-                    />
+                    <div className="um-input-icon-wrap">
+                      <span className="um-input-icon-glyph">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      </span>
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        className={`um-input um-input-icon um-input-icon-both${fieldErrors.confirmPassword ? ' invalid' : ''}`}
+                        value={form.confirmPassword}
+                        onChange={(e) => { setForm((f) => ({ ...f, confirmPassword: e.target.value })); setFieldErrors((fe) => ({ ...fe, confirmPassword: undefined })); }}
+                        placeholder="Re-enter password"
+                      />
+                      <button
+                        type="button"
+                        className="um-eye-btn"
+                        onClick={() => setShowConfirmPassword((s) => !s)}
+                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                        title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                      >
+                        <EyeIcon open={showConfirmPassword} />
+                      </button>
+                    </div>
+                    {fieldErrors.confirmPassword && <span className="um-field-error">{fieldErrors.confirmPassword}</span>}
                   </label>
                 </div>
 
-                <div className="um-form-section-label">Module Privileges</div>
-                <p className="admin-modal-empty" style={{ marginBottom: '0.75rem' }}>
-                  Prefilled from the selected role's defaults — adjust as needed for this user.
-                </p>
-                <div className="um-privileges-grid">
-                  {MODULE_ACCESS.map((mod) => (
-                    <label className="um-priv-checkbox" key={mod.key}>
-                      <input
-                        type="checkbox"
-                        checked={form.permissions.includes(mod.key)}
-                        onChange={() => togglePermission(mod.key)}
-                      />
-                      <span>{mod.label}</span>
-                    </label>
-                  ))}
-                </div>
+                {editingUser && (
+                  <>
+                    <div className="um-form-section-label">Module Privileges</div>
+                    <p className="admin-modal-empty" style={{ marginBottom: '0.75rem' }}>
+                      Prefilled from the selected role's defaults — adjust as needed for this user.
+                    </p>
+                    <div className="um-privileges-grid">
+                      {MODULE_ACCESS.map((mod) => (
+                        <label className="um-priv-checkbox" key={mod.key}>
+                          <input
+                            type="checkbox"
+                            checked={form.permissions.includes(mod.key)}
+                            onChange={() => togglePermission(mod.key)}
+                          />
+                          <span>{mod.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="um-modal-footer">

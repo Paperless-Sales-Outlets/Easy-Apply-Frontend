@@ -2680,12 +2680,6 @@
   box-shadow: 0 0 0 3px rgba(15,87,168,0.12);
 }
 
-.um-input:disabled {
-  background: var(--paper);
-  color: var(--muted);
-  cursor: not-allowed;
-}
-
 .um-field-hint {
   font-size: 0.72rem;
   color: var(--muted);
@@ -3354,4 +3348,147 @@
 
 @media (max-width: 480px) {
   .um-stat-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Add / Edit User modal — refined form ─────────────────────────────────── */
+
+.um-user-modal { max-width: 620px; }
+
+.um-modal-header-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.um-modal-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(11,45,91,0.25);
+  transition: background 0.2s ease;
+}
+
+/* Vertical single-column layout, centred with breathing room either side —
+   used for the Add User form specifically. */
+.um-form-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+.um-form-vertical .um-field { width: 100%; }
+
+/* Icon-adorned inputs */
+.um-input-icon-wrap { position: relative; display: flex; align-items: center; }
+
+.um-input-icon-wrap .um-input-icon-glyph {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  display: flex;
+}
+
+.um-input.um-input-icon { padding-left: 2.5rem; }
+.um-input.um-input-icon-both { padding-right: 2.6rem; }
+
+.um-eye-btn {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.um-eye-btn:hover { color: var(--blue); background: rgba(15,87,168,0.08); }
+
+.um-generate-link {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: var(--blue);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.35rem 0 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.um-generate-link:hover { color: var(--blue-deep); }
+
+/* Validation states */
+
+.um-input.invalid,
+select.um-input.invalid {
+  border-color: var(--danger);
+  background: rgba(196,55,44,0.04);
+}
+
+.um-input.invalid:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196,55,44,0.15);
+}
+
+@keyframes um-field-error-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.um-field-error {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--danger);
+  animation: um-field-error-in 0.15s ease;
+}
+
+.um-field-error::before {
+  content: '!';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.um-input:disabled {
+  background: var(--paper);
+  color: var(--navy);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .um-form-vertical { max-width: none; }
 }
