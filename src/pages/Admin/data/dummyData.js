@@ -25,29 +25,10 @@ export const MODULE_ACCESS = [
 ];
 
 // ── User Management ────────────────────────────────────────────────────────
-// Roles an Admin can create from the User Management screen.
-export const CREATABLE_ROLES = ['Manager', 'SalesOfficer', 'CustomerCareOfficer'];
-
-// All roles User Management is aware of (includes Admin, for accounts already
-// in the system) — used for labels, filters and badge colors.
-export const MANAGED_ROLES = ['Admin', 'Manager', 'SalesOfficer', 'CustomerCareOfficer'];
-
-export const MANAGED_ROLE_LABELS = {
-  Admin: 'Administrator',
-  Manager: 'Manager',
-  SalesOfficer: 'Sales Officer',
-  CustomerCareOfficer: 'Customer Care Officer',
-};
-
-// Sensible starting module access per role, used to prefill the privileges
-// checklist when an Admin picks a role — the Admin can still customize it
-// per user before saving.
-export const DEFAULT_ROLE_MODULES = {
-  Admin: MODULE_ACCESS.map((m) => m.key),
-  Manager: MODULE_ACCESS.filter((m) => m.roles.includes('Manager')).map((m) => m.key),
-  SalesOfficer: MODULE_ACCESS.filter((m) => m.roles.includes('SalesOfficer')).map((m) => m.key),
-  CustomerCareOfficer: ['dashboard', 'kyc', 'appointments'],
-};
+// Roles themselves are no longer a fixed list here — an Admin creates and
+// maintains them from User Management (see services/adminService.js
+// getStaffRoles/createStaffRole/updateStaffRole/deleteStaffRole), each one a
+// name plus a default set of MODULE_ACCESS keys.
 
 // ── Applications ─────────────────────────────────────────────────────────────
 export const DUMMY_APPLICATIONS = [

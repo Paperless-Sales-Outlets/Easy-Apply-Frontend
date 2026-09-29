@@ -114,6 +114,30 @@ export const deleteAdminUser = async (id) => {
   return response.data;
 };
 
+// GET /api/admin/roles — list roles an Admin has defined (name + default privileges + user count)
+export const getStaffRoles = async () => {
+  const response = await api.get('/admin/roles');
+  return response.data;
+};
+
+// POST /api/admin/roles — create a new role
+export const createStaffRole = async (data) => {
+  const response = await api.post('/admin/roles', data);
+  return response.data;
+};
+
+// PATCH /api/admin/roles/:id — rename a role and/or change its default privileges
+export const updateStaffRole = async (id, data) => {
+  const response = await api.patch(`/admin/roles/${id}`, data);
+  return response.data;
+};
+
+// DELETE /api/admin/roles/:id — remove a role (blocked while any user still holds it)
+export const deleteStaffRole = async (id) => {
+  const response = await api.delete(`/admin/roles/${id}`);
+  return response.data;
+};
+
 export default {
   getDashboardStats,
   getApplications,
@@ -134,4 +158,8 @@ export default {
   createAdminUser,
   updateAdminUser,
   deleteAdminUser,
+  getStaffRoles,
+  createStaffRole,
+  updateStaffRole,
+  deleteStaffRole,
 };

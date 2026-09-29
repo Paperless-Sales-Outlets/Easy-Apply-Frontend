@@ -2474,6 +2474,59 @@
   .um-privileges-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* ── Inline Notices (replaces toast popups) ─────────────────────────────────
+   Rendered in the normal page flow near the action that triggered them,
+   rather than floating over the UI. Auto-clears itself; can be dismissed. */
+
+@keyframes admin-notice-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.admin-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.88rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  border: 1px solid transparent;
+  animation: admin-notice-in 0.2s ease;
+}
+
+.admin-notice-icon { display: flex; flex-shrink: 0; }
+.admin-notice-text { flex: 1; }
+
+.admin-notice-close {
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+  flex-shrink: 0;
+  color: inherit;
+}
+.admin-notice-close:hover { opacity: 1; }
+
+.admin-notice-success {
+  background: rgba(87,181,49,0.1);
+  border-color: rgba(87,181,49,0.3);
+  color: var(--green-deep);
+}
+.admin-notice-error {
+  background: rgba(196,55,44,0.08);
+  border-color: rgba(196,55,44,0.25);
+  color: var(--danger);
+}
+.admin-notice-info {
+  background: rgba(15,87,168,0.08);
+  border-color: rgba(15,87,168,0.22);
+  color: var(--blue);
+}
+
 /* ── User Management ──────────────────────────────────────────────────────── */
 
 .um-header {
@@ -2485,7 +2538,23 @@
 
 .um-add-btn { padding: 0.6rem 1.1rem; font-size: 0.85rem; }
 
+.um-header-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
 .um-role-grid { margin-top: 0; }
+
+.um-role-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+
+.um-role-card-actions .um-inline-btn { flex: 1; text-align: center; }
 
 .um-toolbar {
   display: flex;
@@ -2647,6 +2716,9 @@
 
 .um-inline-btn:hover { background: var(--line); }
 
+.um-inline-btn.danger { color: var(--danger); }
+.um-inline-btn.danger:hover { background: rgba(196,55,44,0.1); }
+
 .um-privileges-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2696,4 +2768,590 @@
 @media (max-width: 640px) {
   .um-privileges-grid { grid-template-columns: 1fr 1fr; }
   .um-priv-chips { max-width: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Operations Dashboard — advanced layout
+   Everything here is scoped under .dash-page so it can never affect any
+   other admin screen, even where it reuses a shared component's markup
+   (e.g. .admin-table, .admin-search).
+   ════════════════════════════════════════════════════════════════════════ */
+
+.dash-page { display: flex; flex-direction: column; }
+
+.dash-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  background: linear-gradient(115deg, var(--navy) 0%, var(--blue-deep) 55%, var(--blue) 100%);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem 2rem;
+  margin-bottom: 1.75rem;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(11,45,91,0.22);
+}
+
+.dash-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--slash-gradient);
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.dash-hero-text { position: relative; z-index: 1; }
+
+.dash-hero-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 0.5rem;
+}
+
+.dash-hero-text h1 {
+  font-family: var(--font-head);
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+}
+
+.dash-hero-text p {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.75);
+  max-width: 34rem;
+  margin: 0;
+}
+
+.dash-hero-side {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.dash-hero-clock { text-align: right; }
+
+.dash-hero-time {
+  display: block;
+  font-family: var(--font-head);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.dash-hero-date {
+  display: block;
+  font-size: 0.76rem;
+  color: rgba(255,255,255,0.7);
+  margin-top: 0.15rem;
+}
+
+.dash-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1rem;
+  border-radius: 100px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.dash-refresh-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
+.dash-refresh-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+@keyframes dash-spin { to { transform: rotate(360deg); } }
+.dash-spin { animation: dash-spin 0.9s linear infinite; }
+
+/* ── Stat cards ── */
+
+.dash-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.dash-stat-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  padding: 1.35rem 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(11,45,91,0.06);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dash-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--slash-gradient);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.dash-stat-card:hover {
+  box-shadow: 0 10px 28px rgba(11,45,91,0.14);
+  transform: translateY(-3px);
+}
+
+.dash-stat-card:hover::before { opacity: 1; }
+
+.dash-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-stat-icon.blue  { background: linear-gradient(135deg, rgba(15,87,168,0.16), rgba(15,87,168,0.05)); color: var(--blue); }
+.dash-stat-icon.green { background: linear-gradient(135deg, rgba(87,181,49,0.18), rgba(87,181,49,0.05)); color: var(--green-deep); }
+.dash-stat-icon.amber { background: linear-gradient(135deg, rgba(235,168,52,0.2), rgba(235,168,52,0.05)); color: #b87a00; }
+.dash-stat-icon.red   { background: linear-gradient(135deg, rgba(196,55,44,0.16), rgba(196,55,44,0.05)); color: var(--danger); }
+
+.dash-stat-body { min-width: 0; }
+
+.dash-stat-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.dash-stat-value {
+  font-size: 1.9rem;
+  font-family: var(--font-head);
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1;
+  margin-bottom: 0.35rem;
+}
+
+.dash-stat-trend {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+/* ── Skeleton loaders ── */
+
+@keyframes dash-shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+.dash-skeleton {
+  background: linear-gradient(90deg, var(--paper) 0%, var(--line) 50%, var(--paper) 100%);
+  background-size: 400px 100%;
+  animation: dash-shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.dash-skeleton-num { width: 48px; height: 24px; }
+
+.dash-skeleton-row {
+  height: 44px;
+  width: 100%;
+  margin-bottom: 0.6rem;
+  border-radius: var(--radius);
+}
+
+.dash-table-skeleton { padding: 1.5rem; }
+
+/* ── Chart cards ── */
+
+.dash-section { margin-top: 1.5rem; }
+
+.dash-chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.dash-chart-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(11,45,91,0.06);
+}
+
+.dash-chart-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dash-chart-card-head h2 {
+  font-size: 1rem;
+  font-family: var(--font-head);
+  color: var(--navy);
+  margin: 0 0 0.2rem;
+}
+
+.dash-chart-card-head p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.dash-chart-legend-bar {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* ── Recent applications table ── */
+
+.dash-table-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 10px rgba(11,45,91,0.06);
+  overflow: hidden;
+}
+
+.dash-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.5rem 1.5rem 1.1rem;
+}
+
+.dash-table-toolbar h2 {
+  font-size: 1rem;
+  font-family: var(--font-head);
+  color: var(--navy);
+  margin: 0 0 0.2rem;
+}
+
+.dash-table-toolbar p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.dash-table-controls {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.dash-search { min-width: 260px; }
+
+.dash-table-wrap { overflow-x: auto; }
+
+.dash-table { min-width: 1120px; border-top: 1px solid var(--line); }
+.dash-table thead { position: sticky; top: 0; z-index: 1; }
+.dash-table tbody tr:nth-child(even) { background: rgba(15,87,168,0.015); }
+.dash-table tbody tr:hover { background: rgba(15,87,168,0.04); }
+
+.dash-ref {
+  font-family: monospace;
+  font-size: 0.82rem;
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.dash-applicant-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.dash-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--navy));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dash-applicant-name { font-weight: 600; font-size: 0.88rem; color: var(--text); }
+.dash-applicant-email { font-size: 0.76rem; color: var(--muted); }
+
+.dash-comment-cell {
+  font-size: 0.82rem;
+  color: var(--muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 24rem;
+}
+
+.dash-more-btn {
+  border: none;
+  background: transparent;
+  color: var(--blue);
+  cursor: pointer;
+  margin-left: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0;
+}
+
+@media (max-width: 1024px) {
+  .dash-chart-grid { grid-template-columns: 1fr; }
+  .dash-stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 720px) {
+  .dash-hero { flex-direction: column; align-items: flex-start; padding: 1.5rem; }
+  .dash-hero-side { width: 100%; justify-content: space-between; }
+  .dash-stat-grid { grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+  .dash-table-toolbar { flex-direction: column; align-items: stretch; }
+  .dash-table-controls { flex-direction: column; }
+  .dash-search { min-width: 0; }
+}
+
+@media (max-width: 480px) {
+  .dash-stat-grid { grid-template-columns: 1fr; }
+  .dash-hero-text h1 { font-size: 1.35rem; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   User Management — advanced layout
+   Everything here is scoped under .um-page so it can never affect any
+   other admin screen (including the Privileges page it shares a few
+   generic chip/badge class names with).
+   ════════════════════════════════════════════════════════════════════════ */
+
+.um-page { display: flex; flex-direction: column; }
+
+/* ── Stat cards (own treatment, independent of .admin-stat-card) ── */
+
+.um-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.um-stat-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  padding: 1.15rem 1.35rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  box-shadow: 0 2px 10px rgba(11,45,91,0.06);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.um-stat-card:hover { box-shadow: 0 10px 26px rgba(11,45,91,0.12); transform: translateY(-2px); }
+
+.um-stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.um-stat-icon.blue  { background: linear-gradient(135deg, rgba(15,87,168,0.16), rgba(15,87,168,0.05)); color: var(--blue); }
+.um-stat-icon.green { background: linear-gradient(135deg, rgba(87,181,49,0.18), rgba(87,181,49,0.05)); color: var(--green-deep); }
+.um-stat-icon.amber { background: linear-gradient(135deg, rgba(235,168,52,0.2), rgba(235,168,52,0.05)); color: #b87a00; }
+.um-stat-icon.red   { background: linear-gradient(135deg, rgba(196,55,44,0.16), rgba(196,55,44,0.05)); color: var(--danger); }
+
+.um-stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; margin-bottom: 0.25rem; }
+.um-stat-value { font-size: 1.65rem; font-family: var(--font-head); font-weight: 700; color: var(--navy); line-height: 1; margin-bottom: 0.3rem; }
+.um-stat-trend { font-size: 0.74rem; color: var(--muted); }
+
+/* ── Tabs ── */
+
+.um-tabs {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.3rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  width: fit-content;
+  margin-bottom: 1.5rem;
+}
+
+.um-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 100px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.um-tab:hover { color: var(--navy); }
+
+.um-tab.active {
+  background: var(--navy);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(11,45,91,0.25);
+}
+
+.um-tab-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.05rem 0.5rem;
+  border-radius: 100px;
+  background: rgba(15,87,168,0.12);
+  color: var(--blue);
+}
+
+.um-tab.active .um-tab-count { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* ── Team table ── */
+
+.um-table-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 10px rgba(11,45,91,0.06);
+  overflow: hidden;
+}
+
+.um-table-card .admin-table-wrap { border: none; border-radius: 0; box-shadow: none; }
+.um-table tbody tr:hover { background: rgba(15,87,168,0.035); }
+
+.um-row-actions { display: flex; gap: 0.4rem; justify-content: flex-end; }
+
+.um-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--navy);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.um-icon-btn:hover:not(:disabled) { background: rgba(15,87,168,0.08); border-color: rgba(15,87,168,0.3); }
+.um-icon-btn.danger:hover:not(:disabled) { background: rgba(196,55,44,0.1); border-color: rgba(196,55,44,0.3); color: var(--danger); }
+.um-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.um-empty-state {
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.um-empty-state svg { margin-bottom: 0.75rem; opacity: 0.4; }
+.um-empty-state p { font-size: 0.9rem; margin: 0; }
+
+/* ── Role cards (independent of .priv-role-card) ── */
+
+.um-role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.um-role-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.35rem 1.5rem 1.25rem;
+  box-shadow: 0 2px 10px rgba(11,45,91,0.06);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.um-role-card:hover { box-shadow: 0 10px 26px rgba(11,45,91,0.12); transform: translateY(-2px); }
+
+.um-role-card-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #57b531, #3a9636);
+}
+
+.um-role-card.admin .um-role-card-accent { background: var(--slash-gradient); }
+
+/* ── Modal refinements ── */
+
+.um-modal { position: relative; }
+.um-modal-header { border-bottom: none; position: relative; }
+.um-modal-header::after {
+  content: '';
+  position: absolute;
+  left: 1.5rem; right: 1.5rem; bottom: 0;
+  height: 1px;
+  background: var(--line);
+}
+
+.um-form-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--blue);
+  margin: 1.25rem 0 0.75rem;
+}
+
+.um-form-section-label:first-child { margin-top: 0; }
+
+@media (max-width: 1024px) {
+  .um-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .um-role-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 720px) {
+  .um-stat-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .um-role-grid { grid-template-columns: 1fr; }
+  .um-tabs { width: 100%; }
+  .um-tab { flex: 1; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .um-stat-grid { grid-template-columns: 1fr; }
 }

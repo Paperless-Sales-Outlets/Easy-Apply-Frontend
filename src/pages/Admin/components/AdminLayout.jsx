@@ -66,9 +66,14 @@ const NAV_ICONS = {
   ),
 };
 
+// Dashboard leads, User Management comes right after it, then every other
+// module in its usual order, with User Privileges last.
+const [DASHBOARD_MODULE, ...OTHER_MODULES] = MODULE_ACCESS;
+
 const NAV_ITEMS = [
-  ...MODULE_ACCESS.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
+  { ...DASHBOARD_MODULE, icon: NAV_ICONS[DASHBOARD_MODULE.key] },
   { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
+  ...OTHER_MODULES.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
   { key: 'privileges', label: 'User Privileges', icon: NAV_ICONS.privileges, roles: ['Admin'] },
 ];
 
@@ -113,13 +118,9 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
     ? admin.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : 'A';
 
-  const roleLabel = {
-    Admin: 'Administrator',
-    Staff: 'Staff',
-    Manager: 'Manager',
-    SalesOfficer: 'Sales Officer',
-    CustomerCareOfficer: 'Customer Care Officer',
-  }[admin?.role] || 'Staff';
+  // 'Admin' and 'Staff' are the only fixed labels — everything else is a
+  // custom role name an Admin defined in User Management, shown as-is.
+  const roleLabel = { Admin: 'Administrator', Staff: 'Staff' }[admin?.role] || admin?.role || 'Staff';
 
   return (
     <div className="admin-shell">

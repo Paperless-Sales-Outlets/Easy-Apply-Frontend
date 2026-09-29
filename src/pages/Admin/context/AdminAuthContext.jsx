@@ -12,10 +12,10 @@ import api, {
 
 const AdminAuthContext = createContext(null);
 
-// Roles allowed into the Admin Portal. Manager / SalesOfficer /
-// CustomerCareOfficer accounts are created from User Management and need to
-// sign in here the same way Admin/Staff accounts do.
-const PORTAL_ROLES = ['Admin', 'Staff', 'Manager', 'SalesOfficer', 'CustomerCareOfficer'];
+// Any account that isn't a Customer may sign into the Admin Portal — Admin,
+// legacy Staff, and any custom staff role an Admin has defined and assigned
+// from User Management.
+const isPortalRole = (role) => !!role && role !== 'Customer';
 
 const SESSION_KEY = 'admin_session';
 
@@ -172,7 +172,7 @@ export function AdminAuthProvider({ children }) {
         const response = await api.get('/auth/me');
         const user = response.data?.user;
 
-        if (!user || !PORTAL_ROLES.includes(user.role)) {
+        if (!user || !isPortalRole(user.role)) {
           throw new Error('Admin or Staff access required.');
         }
 
@@ -223,7 +223,7 @@ export function AdminAuthProvider({ children }) {
         refreshToken: newRefreshToken,
       } = response.data;
 
-      if (!user || !PORTAL_ROLES.includes(user.role)) {
+      if (!user || !isPortalRole(user.role)) {
         const message =
           'Admin or Staff access required for this portal.';
 

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { getApplications, getAdminForms } from '../services/adminService';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import {
   formatDate,
   normalizeApplication,
@@ -18,6 +19,11 @@ const SHORT_FORM_LABELS = {
 
 function shortFormLabel(label) {
   return SHORT_FORM_LABELS[label] || label;
+}
+
+function initials(name) {
+  if (!name) return '?';
+  return name.split(' ').filter(Boolean).map((n) => n[0]).slice(0, 2).join('').toUpperCase();
 }
 
 const STAT_CARDS = [
@@ -259,63 +265,70 @@ function TodayDistributionBarChart({ data }) {
   );
 }
 
+const STATUS_FILTERS = ['All', 'pending', 'approved', 'rejected', 'flagged'];
+
 export default function AdminDashboardPage() {
+  const { admin } = useAdminAuth();
   const [stats, setStats] = useState({});
   const [recentApplications, setRecentApplications] = useState([]);
   const [todayDistribution, setTodayDistribution] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [dataSource, setDataSource] = useState('');
   const [expandedComments, setExpandedComments] = useState({});
   const [dashboardSearch, setDashboardSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-
-    // Primary: derive all charts + recent history straight from the
-    // applications API (same data that powers the rest of the admin pages).
-    getApplications({ limit: 200, sortBy: 'createdAt', sortOrder: 'desc' })
-      .then((res) => {
-        if (cancelled) return;
-        const apps = (res.applications || []).map(normalizeApplication);
-        setStats(deriveStatsFromApplications(apps));
-        setTodayDistribution(deriveTodayDistribution(apps));
-        setRecentApplications(apps.slice(0, 15));
-        setDataSource('');
-        setError('');
-      })
-      .catch(async (err) => {
-        if (cancelled) return;
-        // Fallback: derive charts + recent history from the pre-existing forms API.
-        try {
-          const { forms = [] } = await getAdminForms({ limit: 200 });
-          if (cancelled) return;
-          const normalized = forms.map(normalizeForm);
-          setStats(deriveStatsFromForms(forms));
-          setTodayDistribution(deriveTodayDistribution(normalized));
-          setRecentApplications(normalized.slice(0, 15));
-          setDataSource('forms');
-          setError('');
-        } catch {
-          if (cancelled) return;
-          setError(err.response?.data?.message || 'Failed to load dashboard data');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => { cancelled = true; };
+    const t = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(t);
   }, []);
+
+  const loadDashboard = useCallback(async ({ silent } = {}) => {
+    if (silent) setRefreshing(true); else setLoading(true);
+
+    try {
+      const res = await getApplications({ limit: 200, sortBy: 'createdAt', sortOrder: 'desc' });
+      const apps = (res.applications || []).map(normalizeApplication);
+      setStats(deriveStatsFromApplications(apps));
+      setTodayDistribution(deriveTodayDistribution(apps));
+      setRecentApplications(apps.slice(0, 15));
+      setDataSource('');
+      setError('');
+    } catch (err) {
+      try {
+        const { forms = [] } = await getAdminForms({ limit: 200 });
+        const normalized = forms.map(normalizeForm);
+        setStats(deriveStatsFromForms(forms));
+        setTodayDistribution(deriveTodayDistribution(normalized));
+        setRecentApplications(normalized.slice(0, 15));
+        setDataSource('forms');
+        setError('');
+      } catch {
+        setError(err.response?.data?.message || 'Failed to load dashboard data');
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => { loadDashboard(); }, [loadDashboard]);
 
   const { byServiceType = [] } = stats;
   const formTotalData = byServiceType.map(form => ({ service: form.label, count: form.total }));
   const formCompletedData = byServiceType.map(form => ({ service: form.label, count: form.completed }));
 
-  const renderFormPieCard = (title, data) => (
-    <div className="pie-card">
-      <h2>{title}</h2>
+  const renderFormPieCard = (title, subtitle, data) => (
+    <div className="dash-chart-card">
+      <div className="dash-chart-card-head">
+        <div>
+          <h2>{title}</h2>
+          <p>{subtitle}</p>
+        </div>
+      </div>
       <div className="pie-chart-wrap">
         <FormsDonutChart data={data} />
         <div className="pie-legend">
@@ -348,15 +361,38 @@ export default function AdminDashboardPage() {
   const recentApplicationsSorted = [...recentApplications]
     .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
 
-  const filteredApplications = recentApplicationsSorted.filter(app => matchesSearch(app, dashboardSearch));
+  const filteredApplications = recentApplicationsSorted
+    .filter(app => matchesSearch(app, dashboardSearch))
+    .filter(app => statusFilter === 'All' || app.status === statusFilter);
+
+  const greeting = (() => {
+    const h = now.getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  })();
 
   return (
-    <>
-      <div className="admin-page-header">
-        <h1 className="admin-page-title">Operations Dashboard</h1>
-        <p className="admin-page-subtitle">
-          Overview of all service applications and field operations
-        </p>
+    <div className="dash-page">
+      {/* ── Hero header ── */}
+      <div className="dash-hero">
+        <div className="dash-hero-text">
+          <span className="dash-hero-eyebrow">Operations Dashboard</span>
+          <h1>{greeting}{admin?.name ? `, ${admin.name.split(' ')[0]}` : ''}</h1>
+          <p>Here's what's happening across service applications and field operations today.</p>
+        </div>
+        <div className="dash-hero-side">
+          <div className="dash-hero-clock">
+            <span className="dash-hero-time">{now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="dash-hero-date">{now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+          </div>
+          <button type="button" className="dash-refresh-btn" onClick={() => loadDashboard({ silent: true })} disabled={refreshing}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={refreshing ? 'dash-spin' : ''}>
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" /><polyline points="21 3 21 9 15 9" />
+            </svg>
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -372,108 +408,126 @@ export default function AdminDashboardPage() {
       )}
 
       {/* ── Summary Cards ── */}
-      <div className="admin-summary-grid">
+      <div className="dash-stat-grid">
         {STAT_CARDS.map(card => (
-          <div className="admin-stat-card" key={card.key}>
-            <div className={`admin-stat-icon ${card.colorClass}`}>
+          <div className="dash-stat-card" key={card.key}>
+            <div className={`dash-stat-icon ${card.colorClass}`}>
               {card.icon}
             </div>
-            <div>
-              <div className="admin-stat-label">{card.label}</div>
-              <div className="admin-stat-value">
-                {loading ? '…' : stats[card.key] ?? 0}
+            <div className="dash-stat-body">
+              <div className="dash-stat-label">{card.label}</div>
+              <div className="dash-stat-value">
+                {loading ? <span className="dash-skeleton dash-skeleton-num" /> : stats[card.key] ?? 0}
               </div>
-              <div className="admin-stat-trend">{card.caption}</div>
+              <div className="dash-stat-trend">{card.caption}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* ── Operation Pie Charts ── */}
-      <section className="admin-pie-grid">
-        {renderFormPieCard('Total Forms by Type (9 forms)', formTotalData)}
-        {renderFormPieCard('Completed Forms by Type (9 forms)', formCompletedData)}
+      <section className="dash-chart-grid">
+        {renderFormPieCard('Total Forms by Type', '9 tracked service forms', formTotalData)}
+        {renderFormPieCard('Completed Forms by Type', 'Finished vs. in-flight', formCompletedData)}
       </section>
 
       {/* ── Today Application Distribution ── */}
-      <section style={{ marginTop: '1.5rem' }}>
-        <h2 style={{ fontSize: '1rem', fontFamily: 'var(--font-head)', color: 'var(--navy)', marginBottom: '1rem' }}>
-          Today Application Distribution
-        </h2>
-        <div className="form-chart-card">
-          <div className="form-chart-legend-bar">
-            <span><span className="legend-dot completed" /> Completed today</span>
-            <span><span className="legend-dot today" /> Submitted today</span>
+      <section className="dash-section">
+        <div className="dash-chart-card">
+          <div className="dash-chart-card-head">
+            <div>
+              <h2>Today's Application Distribution</h2>
+              <p>Submitted vs. completed, per service form</p>
+            </div>
+            <div className="dash-chart-legend-bar">
+              <span><span className="legend-dot completed" /> Completed</span>
+              <span><span className="legend-dot today" /> Submitted</span>
+            </div>
           </div>
           <TodayDistributionBarChart data={todayDistribution} />
         </div>
       </section>
 
-      <section style={{ marginTop: '1.5rem' }}>
-        <h2 style={{ fontSize: '1rem', fontFamily: 'var(--font-head)', color: 'var(--navy)', marginBottom: '1rem' }}>
-          Recent application history
-        </h2>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
-          <input
-            type="search"
-            value={dashboardSearch}
-            onChange={(e) => setDashboardSearch(e.target.value)}
-            placeholder="Search reference, NIC, phone or name"
-            style={{
-              flex: '1 1 320px',
-              minWidth: 240,
-              padding: '0.75rem 1rem',
-              border: '1px solid var(--line)',
-              borderRadius: '12px',
-              background: 'var(--surface)',
-              color: 'var(--text)',
-            }}
-          />
-        </div>
-        {filteredApplications.length === 0 && !loading ? (
-          <div className="admin-empty">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-            </svg>
-            <p>No recent applications found.</p>
+      {/* ── Recent Applications ── */}
+      <section className="dash-section">
+        <div className="dash-table-card">
+          <div className="dash-table-toolbar">
+            <div>
+              <h2>Recent Application History</h2>
+              <p>Latest {filteredApplications.length} of {recentApplications.length} applications</p>
+            </div>
+            <div className="dash-table-controls">
+              <div className="admin-search dash-search">
+                <span className="admin-search-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </span>
+                <input
+                  type="search"
+                  value={dashboardSearch}
+                  onChange={(e) => setDashboardSearch(e.target.value)}
+                  placeholder="Search reference, NIC, phone or name"
+                />
+              </div>
+              <select className="admin-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                {STATUS_FILTERS.map((s) => (
+                  <option key={s} value={s}>{s === 'All' ? 'All Statuses' : statusLabel(s)}</option>
+                ))}
+              </select>
+            </div>
           </div>
-        ) : (
-          <div className="admin-table-wrap" style={{ overflowX: 'auto' }}>
-            <table className="admin-table" style={{ minWidth: 1120 }}>
-              <thead>
-                <tr>
-                  <th>Reference</th>
-                  <th>Applicant</th>
-                  <th>Service</th>
-                  <th>Status</th>
-                  <th>Submitted</th>
-                  <th>Phone</th>
-                  <th>Address</th>
-                  <th>Comments</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredApplications.map(app => {
-                  const comment = app.notes || '';
-                  const isExpanded = expandedComments[app.id];
-                  const isLong = comment.length > 90;
-                  const visibleText = isExpanded ? comment : comment.slice(0, 90);
-                  const actioner = app.actionedBy || null;
-                  const actionerName = actioner
-                    ? (actioner.name || actioner.email || actioner._id || '')
-                    : '';
 
-                  return (
-                    <React.Fragment key={app.id}>
-                      <tr>
+          {loading ? (
+            <div className="dash-table-skeleton">
+              {Array.from({ length: 5 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
+            </div>
+          ) : filteredApplications.length === 0 ? (
+            <div className="admin-empty">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
+              <p>No recent applications found.</p>
+            </div>
+          ) : (
+            <div className="dash-table-wrap">
+              <table className="admin-table dash-table">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Applicant</th>
+                    <th>Service</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Comments</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredApplications.map(app => {
+                    const comment = app.notes || '';
+                    const isExpanded = expandedComments[app.id];
+                    const isLong = comment.length > 90;
+                    const visibleText = isExpanded ? comment : comment.slice(0, 90);
+                    const actioner = app.actionedBy || null;
+                    const actionerName = actioner
+                      ? (actioner.name || actioner.email || actioner._id || '')
+                      : '';
+
+                    return (
+                      <tr key={app.id}>
                         <td>
-                          <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--blue)' }}>
-                            {app.referenceNumber}
-                          </span>
+                          <span className="dash-ref">{app.referenceNumber}</span>
                         </td>
                         <td>
-                          <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{app.name}</div>
-                          <div style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>{app.email}</div>
+                          <div className="dash-applicant-cell">
+                            <div className="dash-avatar">{initials(app.name)}</div>
+                            <div>
+                              <div className="dash-applicant-name">{app.name}</div>
+                              <div className="dash-applicant-email">{app.email}</div>
+                            </div>
+                          </div>
                         </td>
                         <td style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{serviceLabel(app.serviceType)}</td>
                         <td>
@@ -484,25 +538,13 @@ export default function AdminDashboardPage() {
                         <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{formatDate(app.submittedAt)}</td>
                         <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.phone}</td>
                         <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.address}</td>
-                        <td style={{ fontSize: '0.82rem', color: 'var(--muted)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxWidth: '24rem' }}>
+                        <td className="dash-comment-cell">
                           {comment ? (
                             <>
                               {visibleText}
                               {isLong && !isExpanded ? '...' : ''}
                               {isLong && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleExpanded(app.id)}
-                                  style={{
-                                    border: 'none',
-                                    background: 'transparent',
-                                    color: 'var(--blue)',
-                                    cursor: 'pointer',
-                                    marginLeft: 4,
-                                    fontSize: '0.78rem',
-                                    fontWeight: 600,
-                                  }}
-                                >
+                                <button type="button" className="dash-more-btn" onClick={() => handleToggleExpanded(app.id)}>
                                   {isExpanded ? 'less' : 'more'}
                                 </button>
                               )}
@@ -513,21 +555,18 @@ export default function AdminDashboardPage() {
                           {actionerName && (
                             <div style={{ fontSize: '0.74rem', color: 'var(--muted)', marginTop: '0.25rem' }}>
                               — {actionerName}
-                              {actioner._id && (
-                                <span style={{ fontFamily: 'monospace' }}> (ID: {actioner._id})</span>
-                              )}
                             </div>
                           )}
                         </td>
                       </tr>
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </section>
-    </>
+    </div>
   );
 }
