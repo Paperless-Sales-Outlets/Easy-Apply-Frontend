@@ -3248,25 +3248,66 @@
 .um-table-card .admin-table-wrap { border: none; border-radius: 0; box-shadow: none; }
 .um-table tbody tr:hover { background: rgba(15,87,168,0.035); }
 
-.um-row-actions { display: flex; gap: 0.4rem; justify-content: flex-end; }
+.um-row-actions { display: flex; gap: 0.5rem; justify-content: center; }
 
-.um-icon-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  border: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--navy);
+.um-action-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: var(--font-body);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
 }
 
-.um-icon-btn:hover:not(:disabled) { background: rgba(15,87,168,0.08); border-color: rgba(15,87,168,0.3); }
-.um-icon-btn.danger:hover:not(:disabled) { background: rgba(196,55,44,0.1); border-color: rgba(196,55,44,0.3); color: var(--danger); }
-.um-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.um-action-btn.edit {
+  background: rgba(15,87,168,0.08);
+  border-color: rgba(15,87,168,0.18);
+  color: var(--blue);
+}
+
+.um-action-btn.edit:hover:not(:disabled) {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15,87,168,0.28);
+}
+
+.um-action-btn.delete {
+  background: rgba(196,55,44,0.07);
+  border-color: rgba(196,55,44,0.16);
+  color: var(--danger);
+}
+
+.um-action-btn.delete:hover:not(:disabled) {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(196,55,44,0.28);
+}
+
+.um-action-btn:active:not(:disabled) { transform: translateY(0); }
+
+.um-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.um-employee-no {
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--navy);
+  letter-spacing: 0.03em;
+}
 
 .um-empty-state {
   background: var(--surface);

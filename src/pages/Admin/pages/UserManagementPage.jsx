@@ -580,43 +580,30 @@ export default function UserManagementPage() {
                 <table className="admin-table um-table">
                   <thead>
                     <tr>
-                      <th>User</th>
                       <th>Employee No.</th>
-                      <th>Email</th>
+                      <th>Full Name</th>
+                      <th>Email Address</th>
                       <th>Role</th>
-                      <th>Privileges</th>
                       <th>Status</th>
                       <th>Added</th>
-                      <th style={{ textAlign: 'right' }}>Actions</th>
+                      <th style={{ textAlign: 'center' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredUsers.map((u) => (
                       <tr key={u.id}>
+                        <td className="um-employee-no">{u.employeeNumber || '—'}</td>
                         <td>
                           <div className="um-user-cell">
                             <div className="um-avatar" style={{ background: avatarGradient(u.role, roles) }}>{initials(u.name)}</div>
                             <span style={{ fontWeight: 600 }}>{u.name}</span>
                           </div>
                         </td>
-                        <td>{u.employeeNumber || '—'}</td>
                         <td>{u.email || '—'}</td>
                         <td>
                           <span className={`admin-badge ${roleBadgeClass(u.role, roles)}`}>
                             {u.role === 'Admin' ? 'Administrator' : u.role}
                           </span>
-                        </td>
-                        <td>
-                          <div className="um-priv-chips">
-                            {(u.permissions && u.permissions.length ? u.permissions : []).slice(0, 3).map((key) => {
-                              const mod = MODULE_ACCESS.find((m) => m.key === key);
-                              return mod ? <span className="priv-role-chip" key={key}>{mod.label}</span> : null;
-                            })}
-                            {u.permissions && u.permissions.length > 3 && (
-                              <span className="priv-role-chip um-more-chip">+{u.permissions.length - 3}</span>
-                            )}
-                            {(!u.permissions || u.permissions.length === 0) && <span className="um-contact-sub">No modules</span>}
-                          </div>
                         </td>
                         <td>
                           <button
@@ -633,23 +620,25 @@ export default function UserManagementPage() {
                         <td>{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
                         <td>
                           <div className="um-row-actions">
-                            <button type="button" className="um-icon-btn" onClick={() => openEditModal(u)} title="Edit user" aria-label="Edit user">
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <button type="button" className="um-action-btn edit" onClick={() => openEditModal(u)} title="Edit user" aria-label="Edit user">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
                               </svg>
+                              Edit
                             </button>
                             <button
                               type="button"
-                              className="um-icon-btn danger"
+                              className="um-action-btn delete"
                               onClick={() => setPendingDelete(u)}
                               disabled={String(admin?.id) === String(u.id)}
                               title="Remove user"
                               aria-label="Remove user"
                             >
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                               </svg>
+                              Delete
                             </button>
                           </div>
                         </td>
