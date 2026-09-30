@@ -533,7 +533,8 @@ export default function SignUpPage() {
 
       if (res.data?.existing) {
         // Existing registered customer -> Direct login
-        const { user, accessToken, refreshToken } = res.data;
+        const customerProfile = res.data.customer || res.data.user;
+        const { accessToken, refreshToken } = res.data;
         let accounts = [];
         try {
           const lookup = await api.post('/customers/lookup', { phoneNumber: digits });
@@ -544,7 +545,8 @@ export default function SignUpPage() {
 
         saveSession({
           phone: digits,
-          user: user || null,
+          customer: customerProfile || null,
+          user: customerProfile || null,
           accountsList: accounts,
           tokens: { accessToken, refreshToken },
         });
@@ -776,9 +778,11 @@ export default function SignUpPage() {
         // Non-fatal — they can still apply for a new connection.
       }
 
+      const customerProfile = data.customer || data.user;
       saveSession({
         phone: normalisedPhone(),
-        user: data.user || null,
+        customer: customerProfile || null,
+        user: customerProfile || null,
         accountsList: accounts,
         tokens: { accessToken: data.accessToken, refreshToken: data.refreshToken },
       });
