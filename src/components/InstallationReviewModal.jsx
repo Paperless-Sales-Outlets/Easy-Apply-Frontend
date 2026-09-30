@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Wrench,
   Star,
-  Gauge,
-  Wifi,
   CheckCircle2,
   Sparkles,
   RefreshCw,
@@ -43,8 +41,8 @@ export default function InstallationReviewModal({
   const [hoverRating, setHoverRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState(
     existingFeedback?.feedbackText ||
-      existingFeedback?.text ||
-      'Installation completed on time. Clean cabling, router setup configured, and speed test verified.'
+    existingFeedback?.text ||
+    'Installation completed on time. Clean cabling and service setup verified.'
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isServiceActive, setIsServiceActive] = useState(!!existingFeedback);
@@ -61,7 +59,7 @@ export default function InstallationReviewModal({
       } else {
         setRating(5);
         setFeedbackText(
-          'Installation completed on time. Clean cabling, router setup configured, and speed test verified.'
+          'Installation completed on time. Clean cabling and service setup verified.'
         );
         setIsServiceActive(false);
       }
@@ -74,7 +72,7 @@ export default function InstallationReviewModal({
   const handleAutoFill = () => {
     setRating(5);
     setFeedbackText(
-      'Outstanding service! The optical technician arrived promptly, ran fiber neat along baseboards, and speed test clocked 100+ Mbps.'
+      'Outstanding service! The optical technician arrived promptly and verified line installation cleanly.'
     );
   };
 
@@ -101,8 +99,6 @@ export default function InstallationReviewModal({
         referenceNumber,
         rating,
         feedbackText,
-        ontDevice: 'ONT-HUAWEI-HG8245',
-        speedTest: { download: '104.2 Mbps', upload: '52.6 Mbps', ping: '4ms' },
       });
 
       setIsServiceActive(true);
@@ -117,7 +113,7 @@ export default function InstallationReviewModal({
     } catch (err) {
       setErrorMsg(
         err.response?.data?.message ||
-          'Failed to submit verification. Please try again.'
+        'Failed to submit verification. Please try again.'
       );
     } finally {
       setIsSubmitting(false);
@@ -376,16 +372,18 @@ export default function InstallationReviewModal({
               </span>
             </div>
 
-            {/* Equipment Diagnostics Grid */}
+            {/* Assigned Line Box */}
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '0.85rem',
                 background: '#ffffff',
                 border: '1px solid #cbd5e1',
                 borderRadius: '12px',
-                padding: '1.15rem',
+                padding: '1rem 1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
               }}
             >
               <div>
@@ -395,112 +393,41 @@ export default function InstallationReviewModal({
                     color: '#64748b',
                     fontWeight: 700,
                     textTransform: 'uppercase',
-                  }}
-                >
-                  ONT Device:
-                </span>
-                <div
-                  style={{
-                    fontSize: '0.92rem',
-                    fontWeight: 800,
-                    color: '#0f172a',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    margin: '0.2rem 0',
-                  }}
-                >
-                  <Wifi size={15} color="#0056b3" /> ONT-HUAWEI-HG8245
-                </div>
-                <span
-                  style={{
-                    fontSize: '0.72rem',
-                    color: '#10b981',
-                    fontWeight: 700,
-                  }}
-                >
-                  ● Optical Link Sync OK
-                </span>
-              </div>
-
-              <div>
-                <span
-                  style={{
-                    fontSize: '0.7rem',
-                    color: '#64748b',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Speed Test Verified:
-                </span>
-                <div
-                  style={{
-                    fontSize: '1.05rem',
-                    fontWeight: 900,
-                    color: '#0056b3',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    margin: '0.2rem 0',
-                  }}
-                >
-                  <Gauge size={16} color="#0056b3" /> 104.2 Mbps{' '}
-                  <span
-                    style={{
-                      fontSize: '0.74rem',
-                      color: '#64748b',
-                      fontWeight: 600,
-                    }}
-                  >
-                    / 52.6 Mbps
-                  </span>
-                </div>
-                <span
-                  style={{
-                    fontSize: '0.72rem',
-                    color: '#10b981',
-                    fontWeight: 700,
-                  }}
-                >
-                  ● Ping: 4ms
-                </span>
-              </div>
-
-              <div>
-                <span
-                  style={{
-                    fontSize: '0.7rem',
-                    color: '#64748b',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
                   }}
                 >
                   Assigned Line:
                 </span>
                 <div
                   style={{
-                    fontSize: '0.92rem',
-                    fontWeight: 800,
+                    fontSize: '1.05rem',
+                    fontWeight: 900,
                     color: '#0f172a',
                     margin: '0.2rem 0',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.35rem',
+                    gap: '0.45rem',
                   }}
                 >
-                  <Phone size={14} color="#0056b3" /> {telephone}
+                  <Phone size={16} color="#0056b3" /> {telephone}
                 </div>
-                <span
-                  style={{
-                    fontSize: '0.72rem',
-                    color: '#0056b3',
-                    fontWeight: 700,
-                  }}
-                >
-                  ● SIP Voice Active
-                </span>
               </div>
+              <span
+                style={{
+                  fontSize: '0.74rem',
+                  color: '#0056b3',
+                  background: 'rgba(0, 86, 179, 0.08)',
+                  border: '1px solid rgba(0, 86, 179, 0.25)',
+                  padding: '0.35rem 0.85rem',
+                  borderRadius: '9999px',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                }}
+              >
+                ● Voice Active
+              </span>
             </div>
           </div>
 
@@ -739,8 +666,7 @@ export default function InstallationReviewModal({
                   fontWeight: 600,
                 }}
               >
-                Your connection is officially live and active. Verified Speed:{' '}
-                <strong style={{ color: '#0056b3' }}>104.2 Mbps</strong> with{' '}
+                Your connection is officially live and active with{' '}
                 <strong style={{ color: '#10b981' }}>{rating}/5 Stars</strong>{' '}
                 satisfaction. Thank you for choosing SLTMobitel!
               </p>
