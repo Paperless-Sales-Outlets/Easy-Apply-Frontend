@@ -231,9 +231,11 @@ export default function MyProfilePage() {
     api
       .get('/auth/me')
       .then((res) => {
-        if (alive && res.data?.user) {
-          localStorage.setItem('authUser', JSON.stringify(res.data.user));
-          setAuthUser(res.data.user);
+        const customerProfile = res.data?.customer || res.data?.user;
+        if (alive && customerProfile) {
+          localStorage.setItem('authCustomer', JSON.stringify(customerProfile));
+          localStorage.setItem('authUser', JSON.stringify(customerProfile));
+          setAuthUser(customerProfile);
         }
       })
       .catch(() => {});
@@ -305,6 +307,7 @@ export default function MyProfilePage() {
       else updated[f] = editDraft[f];
     });
     try {
+      localStorage.setItem('authCustomer', JSON.stringify(updated));
       localStorage.setItem('authUser', JSON.stringify(updated));
       setAuthUser(updated);
       notifyAuthUpdated();

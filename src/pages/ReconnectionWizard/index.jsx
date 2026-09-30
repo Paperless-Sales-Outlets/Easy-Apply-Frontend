@@ -167,6 +167,7 @@ export default function ReconnectionWizard() {
         err.response?.data?.message ||
           t('common.submitError')
       );
+      throw err;
 
       setSubmitting(false);
     }
