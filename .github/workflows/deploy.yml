@@ -3,8 +3,7 @@ name: Deploy Frontend
 on:
   push:
     branches:
-      - main
-      - main-v3
+      - new-flow
 
 jobs:
   build-and-deploy:
@@ -22,13 +21,8 @@ jobs:
 
       - name: Determine Environment Variables & Folders
         run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "API_URL=/Paperless/api" >> $GITHUB_ENV
-            echo "DEST_DIR=/var/www/paperless" >> $GITHUB_ENV
-          else
-            echo "API_URL=/Paperlessbackup/api" >> $GITHUB_ENV
-            echo "DEST_DIR=/var/www/paperlessbackup" >> $GITHUB_ENV
-          fi
+          echo "API_URL=/Paperlessbackup/api" >> $GITHUB_ENV
+          echo "DEST_DIR=/var/www/paperlessbackup" >> $GITHUB_ENV
 
       - name: Create Production .env file
         run: |
