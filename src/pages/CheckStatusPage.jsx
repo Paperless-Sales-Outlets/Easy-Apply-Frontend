@@ -37,6 +37,22 @@ export default function CheckStatusPage() {
   const [showReviewModal, setShowReviewModal] = useState(false);
 
 
+  const formatAppointmentDate = (dateVal) => {
+    if (!dateVal) return null;
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return String(dateVal);
+      return d.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    } catch {
+      return String(dateVal);
+    }
+  };
+
   const getServiceTypeLabel = (type) => {
     switch (type) {
       case 'new-connection':
@@ -61,6 +77,7 @@ export default function CheckStatusPage() {
         return type || 'SLT Service Application';
     }
   };
+
 
   const fetchStatus = useCallback(async (refToSearch) => {
     if (!refToSearch || !refToSearch.trim()) return;
@@ -89,10 +106,12 @@ export default function CheckStatusPage() {
         telephone: data.telephone || '',
         notes: data.notes || '',
         formData: data.formData || {},
+        appointment: data.appointment || null,
         feedback: data.formData?.installationReview || data.feedback || null,
         actionedBy: data.actionedBy || null,
         actionedAt: data.actionedAt || null,
       });
+
 
     } catch (error) {
       setResult({
@@ -402,7 +421,7 @@ export default function CheckStatusPage() {
                     <div
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                         gap: '1.25rem',
                         marginBottom: '1.75rem',
                         backgroundColor: '#f0f9ff',
@@ -429,7 +448,6 @@ export default function CheckStatusPage() {
                         </span>
                       </div>
 
-
                       <div>
                         <span style={{ display: 'block', fontSize: '0.75rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
                           Submission Date
@@ -446,6 +464,46 @@ export default function CheckStatusPage() {
                         <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#047857' }}>
                           24 – 48 Hours
                         </span>
+                      </div>
+
+                      {/* Scheduled Installation Date & Time */}
+                      <div style={{ gridColumn: 'span 1' }}>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                          Scheduled Installation
+                        </span>
+                        {result.appointment?.scheduledAt ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0056b3', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                              <FiCalendar size={14} color="#0056b3" />
+                              {formatAppointmentDate(result.appointment.scheduledAt)}
+                            </span>
+                            <span style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                              <FiClock size={12} /> {result.appointment.timeSlot || 'Morning (08.30 AM - 12.00 PM)'}
+                            </span>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#b45309' }}>
+                              Not Scheduled
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/schedule-installation/${result.referenceNumber}`)}
+                              style={{
+                                background: '#ffffff',
+                                border: '1px solid #0056b3',
+                                color: '#0056b3',
+                                padding: '0.15rem 0.5rem',
+                                borderRadius: '6px',
+                                fontSize: '0.72rem',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              Book →
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -486,17 +544,26 @@ export default function CheckStatusPage() {
 
                         {/* Step 3 */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ backgroundColor: '#cbd5e1', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
-                            3
+                          <div style={{ backgroundColor: result.appointment?.scheduledAt ? '#0284c7' : '#cbd5e1', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                            {result.appointment?.scheduledAt ? <FiCheck size={14} /> : '3'}
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 700, color: '#64748b', fontSize: '0.92rem' }}>Field Technician Dispatch</div>
-                            <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Assigning regional technical team for physical connection</div>
+                            <div style={{ fontWeight: 800, color: result.appointment?.scheduledAt ? '#0f172a' : '#64748b', fontSize: '0.92rem' }}>
+                              {result.appointment?.scheduledAt
+                                ? `Field Technician Scheduled • ${formatAppointmentDate(result.appointment.scheduledAt)}`
+                                : 'Field Technician Dispatch & Scheduling'}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: result.appointment?.scheduledAt ? '#0284c7' : '#94a3b8', fontWeight: 600 }}>
+                              {result.appointment?.scheduledAt
+                                ? `Slot: ${result.appointment.timeSlot || 'Morning (08.30 AM - 12.00 PM)'} • Dispatch Ref: ${result.appointment.dispatchId || 'OPMC-ASSIGNED'}`
+                                : 'Select your preferred technician date and slot'}
+                            </div>
                           </div>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, backgroundColor: '#f1f5f9', color: '#64748b', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
-                            Pending
+                          <span style={{ fontSize: '0.75rem', fontWeight: 800, backgroundColor: result.appointment?.scheduledAt ? '#e0f2fe' : '#f1f5f9', color: result.appointment?.scheduledAt ? '#0369a1' : '#64748b', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
+                            {result.appointment?.scheduledAt ? 'Booked' : 'Pending'}
                           </span>
                         </div>
+
 
                         {/* Step 4 */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -515,6 +582,7 @@ export default function CheckStatusPage() {
                         </div>
                       </div>
                     </div>
+
 
                     {/* Action Cards: Technician Verification & Installation Scheduling */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '1.75rem' }}>

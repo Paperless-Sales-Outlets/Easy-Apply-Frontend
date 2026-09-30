@@ -208,18 +208,19 @@ export default function InstallationSchedulingPage() {
     {
       id: 'afternoon',
       name: 'Afternoon',
-      timeRange: '12.30 PM – 04.30 PM',
+      timeRange: '12.00 PM – 02.00 PM',
       available: false, // Fully booked
       badgeText: 'Fully Booked',
     },
     {
       id: 'evening',
       name: 'Evening',
-      timeRange: '04.30 PM – 08.00 PM',
+      timeRange: '02.00 PM – 04.30 PM',
       available: true,
       badgeText: 'Available',
     },
   ];
+
 
   const [selectedSlotId, setSelectedSlotId] = useState('morning');
   const [landmarkNotes, setLandmarkNotes] = useState('');
