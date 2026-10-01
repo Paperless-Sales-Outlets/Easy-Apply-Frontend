@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { MODULE_ACCESS, DUMMY_FORM_WEEKLY } from '../data/dummyData';
-import sltLogo from '../../../assets/sltlogoOnly.png';
+import sltLogo from '../../../assets/slt-logo.png';
 
 const NAV_ICONS = {
   dashboard: (
@@ -155,10 +155,10 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Sidebar ── */}
       <aside className={`admin-sidebar${mobileNavOpen ? ' open' : ''}`} aria-label="Admin Navigation">
         <div className="admin-sidebar-logo">
-          <img src={sltLogo} alt="SLTMobitel" style={{ height: 32, width: 'auto' }} />
-          <span>
-            SLTMobitel EasyApply Admin Portal
-           
+          <img className="admin-sidebar-logo-img" src={sltLogo} alt="SLTMobitel" />
+          <span className="admin-sidebar-brand-text">
+            Easy Apply
+            <small>Admin Portal</small>
           </span>
         </div>
 

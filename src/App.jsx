@@ -24,6 +24,7 @@ import InternetServicesWizard from './pages/InternetServicesWizard';
 
 import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
+import InstallationSchedulingPage from './pages/InstallationSchedulingPage';
 import ThankYouPage from './pages/ThankYouPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentCancelPage from './pages/PaymentCancelPage';
@@ -307,6 +308,24 @@ const AnimatedRoutes = () => {
           element={
             <PageWrapper>
               <CompletionPage />
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/schedule-installation"
+          element={
+            <PageWrapper fullBleed>
+              <InstallationSchedulingPage />
+            </PageWrapper>
+          }
+        />
+
+        <Route
+          path="/schedule-installation/:ref"
+          element={
+            <PageWrapper fullBleed>
+              <InstallationSchedulingPage />
             </PageWrapper>
           }
         />

@@ -150,77 +150,70 @@ export default function PaymentStep({
     const orderId = `PAY-${Date.now()}`;
 
     try {
-      // 1. Submit application to MongoDB first so record and KYC documents are safely stored
-      if (onSuccess) {
-        await onSuccess(orderId, mobileNumber);
-      }
+      // 1. Load PayHere SDK and request parameters (stay on Step 4)
+      await loadPayHereSdk();
+      const res = await api.post('/payment/create', {
+        orderId,
+        amount: totalAmount,
+        currency: 'LKR',
+        itemTitle: 'SLTMobitel Service Payment',
+        customerDetails: { phone: mobileNumber },
+      });
 
-      // 2. Try launching PayHere Popup Modal
-      try {
-        await loadPayHereSdk();
-        const res = await api.post('/payment/create', {
-          orderId,
-          amount: totalAmount,
-          currency: 'LKR',
-          itemTitle: 'SLTMobitel Service Payment',
-          customerDetails: { phone: mobileNumber },
-        });
-
-        const paymentParams = res.data;
-        if (window.payhere && paymentParams.hash) {
-          window.payhere.onCompleted = function (completedOrderId) {
-            navigate('/completion', {
-              state: {
-                referenceNumber: completedOrderId || orderId,
-                messageKey: 'completion.successMessages.newConnection',
-                paymentConfirmed: true,
-              },
+      const paymentParams = res.data;
+      if (window.payhere && paymentParams.hash) {
+        // 2. Only submit application & navigate when payment is actually completed
+        window.payhere.onCompleted = async function (completedOrderId) {
+          setStatusState({ type: 'success', message: 'Payment verified! Submitting your application...' });
+          try {
+            if (onSuccess) {
+              await onSuccess(completedOrderId || orderId, mobileNumber);
+            }
+          } catch (submitErr) {
+            setStatusState({
+              type: 'error',
+              message: submitErr.response?.data?.message || submitErr.message || 'Payment confirmed, but application submission encountered an issue. Please contact support.',
             });
-          };
+          }
+        };
 
-          window.payhere.onDismissed = function () {
-            navigate('/completion', {
-              state: {
-                referenceNumber: orderId,
-                messageKey: 'completion.successMessages.newConnection',
-                paymentConfirmed: true,
-              },
-            });
-          };
-
-          window.payhere.onError = function () {
-            navigate('/completion', {
-              state: {
-                referenceNumber: orderId,
-                messageKey: 'completion.successMessages.newConnection',
-                paymentConfirmed: true,
-              },
-            });
-          };
-
-          window.payhere.startPayment({
-            sandbox: true,
-            merchant_id: paymentParams.merchant_id,
-            return_url: paymentParams.return_url,
-            cancel_url: paymentParams.cancel_url,
-            notify_url: paymentParams.notify_url,
-            order_id: paymentParams.order_id,
-            items: 'SLTMobitel Service Payment',
-            amount: paymentParams.amount || totalAmount,
-            currency: 'LKR',
-            hash: paymentParams.hash,
-            first_name: 'Customer',
-            last_name: '',
-            email: 'customer@slt.lk',
-            phone: `0${mobileNumber}`,
-            address: 'Colombo',
-            city: 'Colombo',
-            country: 'Sri Lanka',
+        // 3. If customer dismisses modal without paying, stay on Step 4
+        window.payhere.onDismissed = function () {
+          setStatusState({
+            type: 'error',
+            message: 'Payment was dismissed. You can retry or choose Instant Confirm.',
           });
-          return;
-        }
-      } catch (payhereErr) {
-        console.warn('PayHere SDK popup note:', payhereErr.message);
+        };
+
+        // 4. If payment fails/cancels, stay on Step 4
+        window.payhere.onError = function (error) {
+          setStatusState({
+            type: 'error',
+            message: 'Payment error: ' + (error || 'Transaction could not be completed. Please retry.'),
+          });
+        };
+
+        // 5. Open PayHere popup on Step 4
+        window.payhere.startPayment({
+          sandbox: true,
+          merchant_id: paymentParams.merchant_id,
+          return_url: paymentParams.return_url,
+          cancel_url: paymentParams.cancel_url,
+          notify_url: paymentParams.notify_url,
+          order_id: paymentParams.order_id,
+          items: 'SLTMobitel Service Payment',
+          amount: paymentParams.amount || totalAmount,
+          currency: 'LKR',
+          hash: paymentParams.hash,
+          first_name: 'Customer',
+          last_name: '',
+          email: 'customer@slt.lk',
+          phone: `0${mobileNumber}`,
+          address: 'Colombo',
+          city: 'Colombo',
+          country: 'Sri Lanka',
+        });
+        return;
       }
     } catch (err) {
       setStatusState({

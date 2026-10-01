@@ -21,7 +21,7 @@ export const MODULE_ACCESS = [
   { key: 'appointments', label: 'Appointments', roles: ['Admin', 'Staff', 'Manager'] },
   { key: 'technician',   label: 'My Jobs',      roles: ['Admin', 'Staff', 'SalesOfficer'] },
   { key: 'forms',        label: 'Forms',        roles: ['Admin', 'Staff', 'Manager'] },
-  { key: 'analytics',    label: 'Analytics',    roles: ['Admin', 'Staff', 'Manager'] },
+  { key: 'analytics',    label: 'Reports & Analytics', roles: ['Admin', 'Staff', 'Manager'] },
 ];
 
 // ── User Management ────────────────────────────────────────────────────────

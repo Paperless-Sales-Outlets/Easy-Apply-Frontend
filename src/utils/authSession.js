@@ -15,6 +15,7 @@ const SESSION_KEYS = [
   'accountsList',
   'selectedAccount',
   'customerData',
+  'authCustomer',
   'authUser',
   'accessToken',
   'refreshToken',
@@ -42,8 +43,12 @@ const readJson = (key) => {
   }
 };
 
+export function getAuthCustomer() {
+  return readJson('authCustomer') || readJson('authUser');
+}
+
 export function getAuthUser() {
-  return readJson('authUser');
+  return getAuthCustomer();
 }
 
 export function getVerifiedName() {
@@ -52,7 +57,7 @@ export function getVerifiedName() {
     const name = account.fullName || account.customerName || account.nameFull || '';
     if (name) return name;
   }
-  return getAuthUser()?.name || '';
+  return getAuthCustomer()?.name || '';
 }
 
 /** A customer counts as signed in once we hold a verified phone for them. */
@@ -64,6 +69,7 @@ export function isAuthenticated() {
 export function getSession() {
   const accountsList = readJson('accountsList') || [];
   const selectedAccount = readJson('selectedAccount');
+  const authCustomer = getAuthCustomer();
 
   return {
     mobileNumber: getVerifiedPhone(),
@@ -71,7 +77,8 @@ export function getSession() {
     selectedAccount,
     customerData: selectedAccount,
     accountsList: accountsList.length > 0 ? accountsList : (selectedAccount ? [selectedAccount] : []),
-    user: getAuthUser(),
+    customer: authCustomer,
+    user: authCustomer,
   };
 }
 
@@ -80,15 +87,21 @@ export function getSession() {
  * for this phone number — an empty list means a registered app user who is not
  * yet an SLT customer, so they can only apply for a new connection.
  */
-export function saveSession({ phone, user = null, accountsList = [], selectedAccount = null, tokens = {} }) {
+export function saveSession({ phone, customer = null, user = null, accountsList = [], selectedAccount = null, tokens = {} }) {
   const accounts = Array.isArray(accountsList) ? accountsList : [];
   const account = selectedAccount || (accounts.length === 1 ? accounts[0] : null);
+  const customerProfile = customer || user;
 
   localStorage.setItem('verifiedPhone', phone || '');
   localStorage.setItem('customerExists', accounts.length > 0 ? 'true' : 'false');
 
-  if (user) localStorage.setItem('authUser', JSON.stringify(user));
-  else localStorage.removeItem('authUser');
+  if (customerProfile) {
+    localStorage.setItem('authCustomer', JSON.stringify(customerProfile));
+    localStorage.setItem('authUser', JSON.stringify(customerProfile));
+  } else {
+    localStorage.removeItem('authCustomer');
+    localStorage.removeItem('authUser');
+  }
 
   if (tokens.accessToken) localStorage.setItem('accessToken', tokens.accessToken);
   if (tokens.refreshToken) localStorage.setItem('refreshToken', tokens.refreshToken);

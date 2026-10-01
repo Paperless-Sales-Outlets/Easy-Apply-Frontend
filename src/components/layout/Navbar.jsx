@@ -207,7 +207,8 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* ── Center Search Input Bar ── */}
+          {/* ── Center Search Input Bar (Hidden on checkout/scheduling funnel pages) ── */}
+          {!location.pathname.startsWith('/schedule-installation') && !location.pathname.startsWith('/completion') && (
           <div
             ref={searchRef}
             style={{ flex: 1, maxWidth: '580px', display: 'flex', alignItems: 'center', position: 'relative' }}
@@ -375,6 +376,7 @@ export default function Navbar() {
               </div>
             )}
           </div>
+          )}
 
           {/* ── Right: Navigation, Services, Language and Authentication ── */}
           <div

@@ -116,11 +116,13 @@ export default function LoginPage() {
 
       if (res.data?.existing) {
         // Existing registered customer -> Direct login
-        const { user, accessToken, refreshToken } = res.data;
-        const accounts = await fetchSltAccounts(user?.phone || digits);
+        const customerProfile = res.data.customer || res.data.user;
+        const { accessToken, refreshToken } = res.data;
+        const accounts = await fetchSltAccounts(customerProfile?.phone || digits);
         saveSession({
-          phone: user?.phone || digits,
-          user,
+          phone: customerProfile?.phone || digits,
+          customer: customerProfile,
+          user: customerProfile,
           accountsList: accounts,
           tokens: { accessToken, refreshToken },
         });

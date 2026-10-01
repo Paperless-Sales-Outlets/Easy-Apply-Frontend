@@ -17,6 +17,10 @@ const SHORT_FORM_LABELS = {
   'Customer Request Acceptance': 'Cust. Request',
 };
 
+// Dashboard history shows only work that is still awaiting action.
+const PENDING_STATUSES = ['pending', 'pending payment'];
+const RECENT_LIMIT = 15;
+
 function shortFormLabel(label) {
   return SHORT_FORM_LABELS[label] || label;
 }
@@ -96,9 +100,7 @@ function generateServiceTypeLegend(serviceTypes) {
 }
 
 function FormsDonutChart({ data }) {
-  const [selected, setSelected] = useState(null);
-  const [popup, setPopup] = useState(null);
-  const figureRef = React.useRef(null);
+  const [hovered, setHovered] = useState(null);
   const total = data.reduce((sum, item) => sum + item.count, 0) || 1;
   const size = 300;
   const cx = size / 2;
@@ -108,36 +110,35 @@ function FormsDonutChart({ data }) {
   const circumference = 2 * Math.PI * radius;
   let cumulative = 0;
 
+  // The popup is anchored to the outer edge of each segment, expressed as a
+  // percentage of the figure so it scales with the responsive donut.
+  const anchorPct = ((radius + strokeWidth / 2) / size) * 100;
+
   const slices = data.map((item, index) => {
     const fraction = item.count / total;
     const start = cumulative;
     cumulative += fraction;
     const midAngleDeg = ((start + cumulative) / 2) * 360 - 90;
+    const midRad = (midAngleDeg * Math.PI) / 180;
     return {
       ...item,
+      // The dashboard feeds this chart { service, count }; accept a plain
+      // `label` too so the popup always has a form name to show.
+      label: item.label || item.service,
       index,
       color: SERVICE_PALETTE[index % SERVICE_PALETTE.length],
       dashLength: fraction * circumference,
       dashOffset: -start * circumference,
-      midRad: (midAngleDeg * Math.PI) / 180,
+      tipX: 50 + anchorPct * Math.cos(midRad),
+      tipY: 50 + anchorPct * Math.sin(midRad),
+      tipSide: Math.cos(midRad) >= 0 ? 'right' : 'left',
     };
   });
 
-  const handleClick = (index, event) => {
-    const rect = figureRef.current.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    if (selected === index) {
-      setSelected(null);
-      setPopup(null);
-    } else {
-      setSelected(index);
-      setPopup({ index, x, y });
-    }
-  };
+  const active = hovered == null ? null : slices[hovered];
 
   return (
-    <div className="pie-chart-figure" ref={figureRef}>
+    <div className="pie-chart-figure">
       <svg viewBox={`0 0 ${size} ${size}`} width="240" height="240" style={{ display: 'block' }}>
         <g transform={`rotate(-90 ${cx} ${cy})`}>
           {slices.map((slice, index) => (
@@ -148,26 +149,38 @@ function FormsDonutChart({ data }) {
               r={radius}
               fill="none"
               stroke={slice.color}
-              strokeWidth={strokeWidth}
+              strokeWidth={hovered === index ? strokeWidth + 8 : strokeWidth}
               strokeDasharray={`${slice.dashLength} ${circumference - slice.dashLength}`}
               strokeDashoffset={slice.dashOffset}
-              opacity={selected == null || selected === index ? 1 : 0.3}
-              style={{ cursor: 'pointer' }}
-              title={`${slice.label}: ${slice.count}`}
-              onClick={event => handleClick(index, event)}
+              opacity={hovered == null || hovered === index ? 1 : 0.35}
+              style={{ cursor: 'pointer', transition: 'opacity 0.18s ease, stroke-width 0.18s ease' }}
+              role="img"
+              aria-label={`${slice.label}: ${slice.count} forms`}
+              onMouseEnter={() => setHovered(index)}
+              onMouseLeave={() => setHovered(current => (current === index ? null : current))}
             />
           ))}
         </g>
       </svg>
       <div className="pie-chart-center-info">
-        <div className="pci-hint">Click a segment</div>
+        {active ? (
+          <>
+            <div className="pci-count">{active.count}</div>
+            <div className="pci-label">{active.label}</div>
+          </>
+        ) : (
+          <div className="pci-hint"></div>
+        )}
       </div>
-      {popup && (
-        <div className="pie-chart-popup" style={{ left: popup.x, top: popup.y }}>
-          <span className="pie-chart-popup-swatch" style={{ background: slices[popup.index].color }} />
+      {active && (
+        <div
+          className={`pie-chart-popup pie-chart-popup--${active.tipSide}`}
+          style={{ left: `${active.tipX}%`, top: `${active.tipY}%` }}
+        >
+          <span className="pie-chart-popup-swatch" style={{ background: active.color }} />
           <div>
-            <div className="pie-chart-popup-count">{slices[popup.index].count}</div>
-            <div className="pie-chart-popup-label">{slices[popup.index].label}</div>
+            <div className="pie-chart-popup-count">{active.count}</div>
+            <div className="pie-chart-popup-label">{active.label}</div>
           </div>
         </div>
       )}
@@ -265,7 +278,7 @@ function TodayDistributionBarChart({ data }) {
   );
 }
 
-const STATUS_FILTERS = ['All', 'pending', 'approved', 'rejected', 'flagged'];
+const STATUS_FILTERS = ['All', ...PENDING_STATUSES];
 
 export default function AdminDashboardPage() {
   const { admin } = useAdminAuth();
@@ -294,7 +307,7 @@ export default function AdminDashboardPage() {
       const apps = (res.applications || []).map(normalizeApplication);
       setStats(deriveStatsFromApplications(apps));
       setTodayDistribution(deriveTodayDistribution(apps));
-      setRecentApplications(apps.slice(0, 15));
+      setRecentApplications(apps);
       setDataSource('');
       setError('');
     } catch (err) {
@@ -303,7 +316,7 @@ export default function AdminDashboardPage() {
         const normalized = forms.map(normalizeForm);
         setStats(deriveStatsFromForms(forms));
         setTodayDistribution(deriveTodayDistribution(normalized));
-        setRecentApplications(normalized.slice(0, 15));
+        setRecentApplications(normalized);
         setDataSource('forms');
         setError('');
       } catch {
@@ -358,10 +371,15 @@ export default function AdminDashboardPage() {
     setExpandedComments(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const recentApplicationsSorted = [...recentApplications]
-    .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+  // The dashboard history lists the newest applications still awaiting action —
+  // everything already approved, confirmed, rejected or flagged is handled and
+  // does not need to sit in front of the team. Capped at RECENT_LIMIT rows.
+  const pendingApplications = [...recentApplications]
+    .filter(app => PENDING_STATUSES.includes(String(app.status || 'pending').toLowerCase()))
+    .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
+    .slice(0, RECENT_LIMIT);
 
-  const filteredApplications = recentApplicationsSorted
+  const filteredApplications = pendingApplications
     .filter(app => matchesSearch(app, dashboardSearch))
     .filter(app => statusFilter === 'All' || app.status === statusFilter);
 
@@ -454,7 +472,7 @@ export default function AdminDashboardPage() {
           <div className="dash-table-toolbar">
             <div>
               <h2>Recent Application History</h2>
-              <p>Latest {filteredApplications.length} of {recentApplications.length} applications</p>
+              <p>Latest {filteredApplications.length} applications awaiting action</p>
             </div>
             <div className="dash-table-controls">
               <div className="admin-search dash-search">
@@ -491,7 +509,7 @@ export default function AdminDashboardPage() {
             </div>
           ) : (
             <div className="dash-table-wrap">
-              <table className="admin-table dash-table">
+              <table className="admin-table admin-table-striped dash-table">
                 <thead>
                   <tr>
                     <th>Reference</th>
