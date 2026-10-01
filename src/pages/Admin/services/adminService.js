@@ -36,9 +36,23 @@ export const reviewKycApplication = async (id, status, notes = '') => {
   return response.data;
 };
 
-// GET /api/admin/analytics — submissions by service type, daily trend (30 days), status breakdown
-export const getAnalytics = async () => {
-  const response = await api.get('/admin/analytics');
+// GET /api/admin/analytics — submissions by service type, daily trend, status breakdown
+// Accepts a shared report window: { from, to, serviceType, status }
+export const getAnalytics = async (params = {}) => {
+  const response = await api.get('/admin/analytics', { params });
+  return response.data;
+};
+
+// GET /api/admin/analytics/reports — per-user progress report (tasks handled per staff member)
+export const getUserReports = async (params = {}) => {
+  const response = await api.get('/admin/analytics/reports', { params });
+  return response.data;
+};
+
+// GET /api/admin/analytics/reports/applications — application report rows
+// (product, customer, NIC, mobile, paid amount, apply date, reference number)
+export const getApplicationReports = async (params = {}) => {
+  const response = await api.get('/admin/analytics/reports/applications', { params });
   return response.data;
 };
 
@@ -98,6 +112,8 @@ export default {
   getKycQueue,
   reviewKycApplication,
   getAnalytics,
+  getUserReports,
+  getApplicationReports,
   updateOfficeFields,
   getAppointments,
   getTechnicians,

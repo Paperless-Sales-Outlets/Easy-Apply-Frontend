@@ -54,19 +54,45 @@
   overflow-y: auto;
 }
 
+/* Navbar brand lockup: a small official SLT logo on its own white plate (the
+   logo's blue is too dark to read on navy) beside the product name, which wraps
+   to two lines. Logo and name are separate boxes, vertically centred on one
+   baseline — the standard sidebar header pattern. */
 .admin-sidebar-logo {
-  padding: 1.5rem 1.25rem 1rem;
+  padding: 1rem;
   border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
 }
 
-.admin-sidebar-logo span {
+.admin-sidebar-logo-img {
+  display: block;
+  flex-shrink: 0;
+  height: 36px;
+  width: auto;
+  padding: 0.45rem 0.5rem;
+  background: #ffffff;
+  border-radius: 9px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.28);
+}
+
+.admin-sidebar-brand-text {
   font-family: var(--font-head);
   font-size: 0.9rem;
   font-weight: 700;
-  color: #fff;
+  line-height: 1.25;
+  color: #ffffff;
+  min-width: 0;
+}
+
+.admin-sidebar-brand-text small {
   display: block;
-  margin-top: 0.4rem;
-  line-height: 1.2;
+  margin-top: 0.1rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: rgba(255,255,255,0.6);
 }
 
 .admin-sidebar-logo small {
@@ -302,6 +328,12 @@
   transform: translateY(-2px);
 }
 
+/* Each summary card carries its own light tint, matching its state colour. */
+.admin-stat-card--blue  { background: #eef4fd; border-color: #d3e2f7; }
+.admin-stat-card--amber { background: #fff6e6; border-color: #f6e3bd; }
+.admin-stat-card--green { background: #edf8ea; border-color: #d3ead0; }
+.admin-stat-card--red   { background: #fdeeed; border-color: #f5d5d2; }
+
 .admin-stat-icon {
   width: 44px;
   height: 44px;
@@ -312,30 +344,41 @@
   flex-shrink: 0;
 }
 
-.admin-stat-icon.blue  { background: rgba(15,87,168,0.12); color: var(--blue); }
-.admin-stat-icon.green { background: rgba(87,181,49,0.12);  color: var(--green-deep); }
-.admin-stat-icon.amber { background: rgba(235,168,52,0.12); color: #b87a00; }
-.admin-stat-icon.red   { background: rgba(196,55,44,0.12);  color: var(--danger); }
+.admin-stat-icon.blue  { background: var(--blue);       color: #fff; }
+.admin-stat-icon.green { background: var(--green-deep); color: #fff; }
+.admin-stat-icon.amber { background: #c2800a;          color: #fff; }
+.admin-stat-icon.red   { background: var(--danger);    color: #fff; }
 
 .admin-stat-label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--muted);
-  font-weight: 500;
-  margin-bottom: 0.2rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.25rem;
 }
 
+/* Standard number treatment for every stat card: one size, one weight and
+   tabular figures, so the digits never jitter as the counts change. */
 .admin-stat-value {
-  font-size: 1.85rem;
   font-family: var(--font-head);
-  font-weight: 700;
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
   color: var(--navy);
-  line-height: 1;
   margin-bottom: 0.3rem;
 }
 
+.admin-stat-card--blue  .admin-stat-value { color: var(--blue-deep); }
+.admin-stat-card--amber .admin-stat-value { color: #a86a00; }
+.admin-stat-card--green .admin-stat-value { color: var(--green-deep); }
+.admin-stat-card--red   .admin-stat-value { color: var(--danger); }
+
 .admin-stat-trend {
   font-size: 0.78rem;
-  color: var(--green-deep);
+  color: var(--green-text);
   font-weight: 500;
 }
 
@@ -384,6 +427,12 @@
 .admin-table tbody tr:last-child td { border-bottom: none; }
 
 .admin-table tbody tr:hover { background: rgba(15,87,168,0.025); }
+
+/* Zebra striping — alternating white / light blue rows, so wide tables stay
+   readable when the eye tracks across columns. */
+.admin-table-striped tbody tr:nth-child(odd)  { background: #ffffff; }
+.admin-table-striped tbody tr:nth-child(even) { background: #e9f1fb; }
+.admin-table-striped tbody tr:hover { background: #d8e7f8; }
 
 /* ── Status Badges ───────────────────────────────────────────────────────── */
 
@@ -978,13 +1027,14 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 140px;
+  /* matches the donut hole, so the hovered value never overlaps the ring */
+  width: 118px;
   text-align: center;
   pointer-events: none;
 }
 
 .pci-count {
-  font-size: 2.4rem;
+  font-size: 2.1rem;
   font-weight: 700;
   line-height: 1;
   color: var(--navy);
@@ -992,8 +1042,9 @@
 
 .pci-label {
   margin-top: 0.3rem;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
+  line-height: 1.25;
   color: var(--muted);
 }
 
@@ -1034,8 +1085,26 @@
 
 .pie-chart-popup-label {
   margin-top: 2px;
-  font-size: 0.7rem;
-  opacity: 0.85;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  opacity: 0.9;
+}
+
+/* Donut segments anchor the popup beside the segment (not the cursor), so it
+   stays still and always reads left-to-right inside the card. Form names are
+   long, so let them wrap instead of running past the card edge. */
+.pie-chart-popup--right {
+  transform: translate(12px, -50%);
+}
+
+.pie-chart-popup--left {
+  transform: translate(calc(-100% - 12px), -50%);
+}
+
+.pie-chart-popup--right,
+.pie-chart-popup--left {
+  max-width: 210px;
+  white-space: normal;
 }
 
 .pie-legend {
@@ -1117,6 +1186,421 @@
 
 .analytics-bottom-row {
   margin-top: 1.5rem;
+}
+
+.analytics-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.pie-chart-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.pie-chart-center-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.1;
+}
+
+.pie-chart-center-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ── Report Filters ────────────────────────────────────────────────────────── */
+
+.analytics-filter-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.analytics-filter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.analytics-filter-head h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.analytics-filter-summary {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--blue-deep);
+  background: rgba(15, 87, 168, 0.09);
+  border: 1px solid rgba(15, 87, 168, 0.16);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  white-space: nowrap;
+}
+
+.analytics-preset-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.analytics-preset {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.analytics-preset:hover { color: var(--blue); }
+
+.analytics-preset.active {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(15, 87, 168, 0.3);
+}
+
+.analytics-custom-range {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.analytics-custom-range label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.analytics-custom-range span {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.analytics-custom-range input {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--surface);
+}
+
+.analytics-custom-range input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(15, 87, 168, 0.12);
+}
+
+/* ── User Progress Report ──────────────────────────────────────────────────── */
+
+/* Doubled selector so this wins over the base grid and its later breakpoints —
+   pages that render four cards would otherwise be squeezed into three columns. */
+.admin-summary-grid.admin-summary-grid--four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.analytics-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.analytics-card-head h3 { margin-bottom: 0; }
+
+.analytics-card-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.analytics-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.analytics-card-actions .admin-btn {
+  padding: 0.45rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+/* ── Application Report ────────────────────────────────────────────────────── */
+
+/* Columns are deliberately left to the browser's auto table layout. Pinning
+   percentages with `table-layout: fixed` forces every column to its share of
+   the container, which leaves a gap after a short product name and truncates a
+   long customer name instead of letting that column widen. Auto layout keeps
+   each column at least as wide as its widest cell, so a header can never drift
+   off its values. Cells are nowrap, so the table cannot be squeezed below its
+   content and scrolls horizontally inside .admin-table-wrap when space is
+   tight. */
+.app-report-table {
+  min-width: 900px;
+}
+
+.app-report-product,
+.app-report-customer {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.app-report-table td {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.report-amount {
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+.app-report-ref {
+  display: inline-block;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  background: rgba(15, 87, 168, 0.08);
+  border: 1px solid rgba(15, 87, 168, 0.15);
+  border-radius: 5px;
+  padding: 0.15rem 0.45rem;
+  color: var(--blue-deep);
+  white-space: nowrap;
+}
+
+/* Auto layout again (see .app-report-table): no colgroup, no fixed widths.
+   These tables have enough columns that nowrap cells give them an intrinsic
+   minimum width, which the wrapper scrolls horizontally as needed. */
+.report-table {
+  min-width: 1040px;
+}
+
+.report-table th,
+.report-table td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Numeric columns share one rule so the header and its values always share an
+   edge. The `th` selectors are required: `.admin-table th` sets text-align:left
+   at a higher specificity than a bare `.report-num`, which silently left every
+   numeric header left-aligned against right-aligned values. */
+.admin-table th.report-num,
+.admin-table td.report-num {
+  text-align: right;
+}
+
+.report-last,
+.report-caret {
+  white-space: nowrap;
+}
+
+.report-strong {
+  font-weight: 700;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.report-count { font-variant-numeric: tabular-nums; }
+.report-count.approved  { color: var(--green-deep); font-weight: 600; }
+.report-count.rejected { color: var(--danger); font-weight: 600; }
+.report-count.flagged  { color: #5a28a8; font-weight: 600; }
+.report-count.open     { color: #a06b00; font-weight: 600; }
+
+.report-row { cursor: pointer; }
+
+.report-user {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.report-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.report-user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.report-user-meta strong { font-size: 0.85rem; color: var(--text); }
+
+.report-user-meta small {
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.report-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.report-progress-track {
+  flex: 1;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(11, 45, 91, 0.1);
+  overflow: hidden;
+}
+
+.report-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.report-progress-fill.good { background: var(--green); }
+.report-progress-fill.fair { background: #eab034; }
+.report-progress-fill.poor { background: var(--danger); }
+
+.report-progress-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  min-width: 34px;
+  text-align: right;
+}
+
+.report-last { font-size: 0.8rem; color: var(--muted); }
+
+.report-caret {
+  color: var(--muted);
+  text-align: center;
+  width: 32px;
+}
+
+.report-detail-row td {
+  background: #f4f8fd;
+  white-space: normal;
+  padding: 1rem 1.25rem;
+}
+
+.report-detail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.5rem;
+}
+
+.report-detail-block h4 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 0.6rem;
+}
+
+.report-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.report-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.76rem;
+  color: var(--text);
+}
+
+.report-chip strong {
+  color: var(--blue-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.report-detail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.report-detail-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding-bottom: 0.3rem;
+  border-bottom: 1px dashed rgba(11, 45, 91, 0.1);
+}
+
+.report-detail-list li:last-child { border-bottom: none; }
+
+.report-detail-list strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.report-muted {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .admin-summary-grid.admin-summary-grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analytics-preset-group { width: 100%; }
+}
+
+@media (max-width: 600px) {
+  .admin-summary-grid.admin-summary-grid--four { grid-template-columns: 1fr; }
+  .analytics-custom-range { width: 100%; }
+  .analytics-custom-range label { flex: 1; }
 }
 
 @media (max-width: 860px) {
@@ -1332,44 +1816,256 @@
 .admin-login-root {
   min-height: 100vh;
   display: flex;
-  background: var(--navy);
+  padding: clamp(1rem, 4vw, 2.5rem);
   position: relative;
+  /* Vertical scroll is kept (short viewports) while the decorative
+     backdrop is fixed, so the page scrolls behind the artwork. */
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-family: var(--font-body);
+  color: #fff;
+  background:
+    radial-gradient(120% 90% at 12% 0%, rgba(15,87,168,0.65) 0%, rgba(15,87,168,0) 55%),
+    radial-gradient(110% 85% at 92% 100%, rgba(0,90,64,0.7) 0%, rgba(0,90,64,0) 60%),
+    linear-gradient(135deg, #001f3f 0%, #002b57 38%, #01304f 66%, #01291e 100%);
+}
+
+/* ── Decorative background layers ── */
+
+.admin-login-bg {
+  position: fixed;
+  inset: 0;
   overflow: hidden;
+  pointer-events: none;
+}
+
+.admin-login-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+}
+
+.admin-login-glow-blue {
+  width: 48vw;
+  height: 48vw;
+  min-width: 300px;
+  min-height: 300px;
+  top: -16vw;
+  left: -10vw;
+  background: radial-gradient(circle, rgba(60,140,255,0.5) 0%, rgba(60,140,255,0) 70%);
+}
+
+.admin-login-glow-green {
+  width: 44vw;
+  height: 44vw;
+  min-width: 280px;
+  min-height: 280px;
+  bottom: -16vw;
+  right: -8vw;
+  background: radial-gradient(circle, rgba(80,183,72,0.4) 0%, rgba(80,183,72,0) 70%);
+}
+
+/* Concentric hairline rings — depth without competing with the card */
+.admin-login-orb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60vmin;
+  height: 60vmin;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow:
+    0 0 0 11vmin rgba(255,255,255,0.035),
+    0 0 0 24vmin rgba(255,255,255,0.02);
+}
+
+.admin-login-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.18) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.5;
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 0%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(120% 100% at 50% 0%, #000 0%, transparent 78%);
+}
+
+.admin-login-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 110% at 50% 40%, rgba(0,0,0,0) 38%, rgba(0,0,0,0.45) 100%);
 }
 
 .admin-login-art {
   position: absolute;
   inset: 0;
-  pointer-events: none;
 }
 
 .admin-login-art span {
   position: absolute;
-  height: 200%;
-  top: -50%;
+  height: 220%;
+  top: -60%;
   transform: skewX(-18deg);
 }
 
-.admin-login-art span:nth-child(1) { left: 30%; width: 80px; background: rgba(15,87,168,0.25); }
-.admin-login-art span:nth-child(2) { left: 42%; width: 30px; background: rgba(87,181,49,0.2); }
-.admin-login-art span:nth-child(3) { left: 47%; width: 12px; background: rgba(87,181,49,0.35); }
+.admin-login-art span:nth-child(1) { left: 4%;  width: 130px; background: rgba(255,255,255,0.05); }
+.admin-login-art span:nth-child(2) { left: 19%; width: 24px;  background: rgba(15,87,168,0.35); }
+.admin-login-art span:nth-child(3) { left: 89%; width: 80px;  background: rgba(87,181,49,0.2); }
+.admin-login-art span:nth-child(4) { left: 95%; width: 14px;  background: rgba(87,181,49,0.35); }
 
-.admin-login-card {
+/* ── Card shell: brand panel + sign-in card ── */
+
+.admin-login-shell {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  /* auto margins (not align-items: center) centre the card while keeping its
+     top reachable when the content is taller than a short viewport */
   margin: auto;
   width: 100%;
-  max-width: 420px;
+  max-width: 1040px;
   background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: 2.5rem;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow:
+    0 40px 90px rgba(1, 18, 38, 0.55),
+    0 0 0 1px rgba(255,255,255,0.08);
+}
+
+/* ── Left brand panel ── */
+
+.admin-login-aside {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2.5rem;
+  padding: clamp(2rem, 3.5vw, 3rem);
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(90% 70% at 100% 0%, rgba(15,87,168,0.6) 0%, rgba(15,87,168,0) 62%),
+    radial-gradient(80% 70% at 0% 100%, rgba(80,183,72,0.38) 0%, rgba(80,183,72,0) 62%),
+    linear-gradient(160deg, #00305c 0%, #00214a 55%, #01291e 100%);
+}
+
+.admin-login-aside-slash {
+  position: absolute;
+  top: -20%;
+  right: 12%;
+  width: 90px;
+  height: 150%;
+  transform: skewX(-18deg);
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.07) 45%, rgba(255,255,255,0) 100%);
+}
+
+.admin-login-aside-inner {
   position: relative;
   z-index: 1;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+}
+
+.admin-login-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: max-content;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.admin-login-aside-title {
+  font-family: var(--font-head);
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  margin: 1.35rem 0 0.75rem;
+  color: #fff;
+}
+
+.admin-login-aside-text {
+  color: rgba(255,255,255,0.82);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.admin-login-highlights {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-login-highlight {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.admin-login-highlight-icon {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(15,87,168,0.95) 0%, rgba(80,183,72,0.8) 100%);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.28);
+}
+
+.admin-login-highlight-title {
+  margin: 0 0 0.12rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.admin-login-highlight-text {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgba(255,255,255,0.72);
+}
+
+.admin-login-aside-foot {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.14);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.55);
+}
+
+.admin-login-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  padding: clamp(2rem, 3.2vw, 2.75rem) clamp(1.5rem, 3vw, 3rem);
+}
+
+.admin-login-card-inner {
+  width: 100%;
+  min-width: 0;
 }
 
 .admin-login-top {
   height: 4px;
   background: var(--slash-gradient);
-  border-radius: 4px 4px 0 0;
   position: absolute;
   top: 0;
   left: 0;
@@ -1378,56 +2074,216 @@
 
 .admin-login-logo {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.75rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 2rem;
 }
 
-.admin-login-logo-icon {
-  width: 42px;
-  height: 42px;
-  background: var(--slash-gradient);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-.admin-login-logo h1 {
-  font-size: 1rem;
-  line-height: 1.2;
-  color: var(--navy);
-  margin: 0;
-}
-
-.admin-login-logo small {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  color: var(--muted);
-  font-weight: 400;
+.admin-login-logo-img {
   display: block;
+  width: auto;
+  height: 38px;
 }
 
-.admin-login-card h2 {
-  font-size: 1.35rem;
-  margin-bottom: 0.25rem;
+.admin-login-portal {
+  margin: 0;
+  padding: 0.26rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(15,87,168,0.08);
+  border: 1px solid rgba(15,87,168,0.18);
+  color: var(--blue);
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.admin-login-title {
+  font-family: var(--font-head);
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--navy);
+  margin: 0 0 0.35rem;
 }
 
 .admin-login-subtitle {
   color: var(--muted);
-  font-size: 0.88rem;
-  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  margin: 0 0 1.75rem;
 }
 
 .admin-login-error {
-  background: rgba(196,55,44,0.1);
-  border: 1px solid rgba(196,55,44,0.3);
-  border-radius: 8px;
-  padding: 0.65rem 0.9rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  background: rgba(196,55,44,0.08);
+  border: 1px solid rgba(196,55,44,0.25);
+  border-left: 3px solid var(--danger);
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
   font-size: 0.85rem;
-  color: var(--danger);
-  margin-bottom: 1rem;
+  line-height: 1.45;
+  color: #9c2b22;
+  margin-bottom: 1.25rem;
+}
+
+.admin-login-error svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.admin-login-field {
+  margin-bottom: 1.1rem;
+}
+
+.admin-login-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.45rem;
+}
+
+.admin-login-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.admin-login-input-icon {
+  position: absolute;
+  left: 0.9rem;
+  display: flex;
+  color: var(--muted);
+  pointer-events: none;
+  transition: color 0.18s ease;
+}
+
+.admin-login-input {
+  width: 100%;
+  padding: 0.82rem 0.95rem 0.82rem 2.7rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text);
+  background: #f7f9fc;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  transition: var(--transition);
+}
+
+.admin-login-input::placeholder { color: #93a3ba; }
+
+.admin-login-input:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(15, 87, 168, 0.14);
+}
+
+.admin-login-input.has-toggle { padding-right: 2.85rem; }
+
+.admin-login-input-wrap:focus-within .admin-login-input-icon { color: var(--blue); }
+
+.admin-login-toggle {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.admin-login-toggle:hover {
+  background: rgba(15,87,168,0.08);
+  color: var(--blue);
+}
+
+.admin-login-submit {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+  padding: 0.9rem 1.5rem;
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  background: var(--slash-gradient);
+  background-size: 200% 100%;
+  background-position: 0 0;
+  box-shadow: 0 10px 24px rgba(15,87,168,0.32);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-position 0.3s ease;
+}
+
+.admin-login-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background-position: 100% 0;
+  box-shadow: 0 16px 32px rgba(15,87,168,0.38);
+}
+
+.admin-login-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-login-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: admin-login-spin 0.7s linear infinite;
+}
+
+@keyframes admin-login-spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-login-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin: 1.75rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.admin-login-note svg { flex-shrink: 0; }
+
+/* Short viewports (laptops in landscape) — tighten the brand panel so the
+   whole card still fits without scrolling. */
+@media (min-width: 861px) and (max-height: 720px) {
+  .admin-login-aside { padding: 2rem 2.25rem; gap: 1.5rem; }
+  .admin-login-aside-title { font-size: 1.45rem; margin: 1rem 0 0.6rem; }
+  .admin-login-highlights { margin-top: 1.5rem; gap: 0.75rem; }
+  .admin-login-highlight-icon { width: 34px; height: 34px; }
+  .admin-login-aside-foot { padding-top: 1rem; }
+  .admin-login-card { padding-top: 1.75rem; padding-bottom: 1.75rem; }
+  .admin-login-logo { margin-bottom: 1.4rem; }
+  .admin-login-logo-img { height: 32px; }
+  .admin-login-subtitle { margin-bottom: 1.25rem; }
+  .admin-login-note { margin-top: 1.25rem; padding-top: 1rem; }
 }
 
 /* ── Form Charts ─────────────────────────────────────────────────────────── */
@@ -2386,7 +3242,11 @@
   .admin-modal-body { padding: 1rem; }
 
   /* ── Login page ── */
-  .admin-login-card { padding: 1.75rem 1.25rem; margin: 1rem auto; max-height: none; }
+  .admin-login-root { padding: 1.5rem 1rem; }
+  .admin-login-shell { max-width: 460px; grid-template-columns: 1fr; border-radius: 20px; }
+  .admin-login-aside { display: none; }
+  .admin-login-card { padding: 2rem 1.5rem; }
+  .admin-login-orb { width: 110vmin; height: 110vmin; }
 }
 
 @media (max-width: 600px) {
@@ -2461,8 +3321,12 @@
   .admin-form-grid { grid-template-columns: 1fr 1fr; }
   .admin-doc-grid { grid-template-columns: 1fr 1fr; }
 
-  /* login art bars shift left so they stay visible */
-  .admin-login-art span:nth-child(1) { left: 18%; }
-  .admin-login-art span:nth-child(2) { left: 30%; }
-  .admin-login-art span:nth-child(3) { left: 35%; }
+  /* login art bars slide to the outer edges so they peek out beside the card */
+  .admin-login-art span:nth-child(1) { left: -2%; width: 90px; }
+  .admin-login-art span:nth-child(2) { left: 7%; }
+  .admin-login-art span:nth-child(3) { left: 88%; width: 60px; }
+  .admin-login-art span:nth-child(4) { left: 95%; }
+  .admin-login-logo-img { height: 32px; }
+  .admin-login-title { font-size: 1.35rem; }
+  .admin-login-card { padding: 1.75rem 1.25rem; }
 }

@@ -8,7 +8,7 @@ import FormsPage from './pages/FormsPage';
 import KycReviewPage from './pages/KycReviewPage';
 import AppointmentsCalendarPage from './pages/AppointmentsCalendarPage';
 import FieldTechnicianPage from './pages/FieldTechnicianPage';
-import AdoptionMonitoringPage from './pages/AdoptionMonitoringPage';
+import ReportsAnalyticsPage from './pages/ReportsAnalyticsPage';
 import UserPrivilegesPage from './pages/UserPrivilegesPage';
 import './admin.css';
 
@@ -66,7 +66,7 @@ function AdminDashboardContent() {
       case 'technician':
         return <FieldTechnicianPage />;
       case 'analytics':
-        return <AdoptionMonitoringPage />;
+        return <ReportsAnalyticsPage />;
       case 'privileges':
         return <UserPrivilegesPage />;
       default:
