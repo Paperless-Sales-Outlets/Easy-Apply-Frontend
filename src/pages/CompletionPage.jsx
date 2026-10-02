@@ -348,6 +348,9 @@ export default function CompletionPage() {
 
   // Read the real reference number returned by the API (passed via router state)
   const referenceNumber = location.state?.referenceNumber || 'SLT-REQ-883912';
+  const appointmentDate = location.state?.appointmentDate;
+  const timeSlot = location.state?.timeSlot;
+  const landmarkNotes = location.state?.landmarkNotes;
   const [copied, setCopied] = useState(false);
 
   const messageKey = location.state?.messageKey || 'completion.defaultMessage';
@@ -373,6 +376,10 @@ export default function CompletionPage() {
       hour: '2-digit',
       minute: '2-digit',
     });
+
+    const appointmentRow = appointmentDate ? `
+      <tr><td class="label">Scheduled Installation</td><td><strong style="color: #0284c7;">${appointmentDate} (${timeSlot || 'Standard Slot'})</strong></td></tr>
+    ` : '';
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -412,13 +419,15 @@ export default function CompletionPage() {
           <tr><td class="label">Reference Number</td><td><strong>${referenceNumber}</strong></td></tr>
           <tr><td class="label">Submission Date &amp; Time</td><td>${todayStr}</td></tr>
           <tr><td class="label">Application Message</td><td>${message}</td></tr>
+          ${appointmentRow}
           <tr><td class="label">Estimated Processing Time</td><td>24 – 48 Hours</td></tr>
-          <tr><td class="label">Application Status</td><td><strong style="color: #10b981;">Submitted / Under Review</strong></td></tr>
+          <tr><td class="label">Application Status</td><td><strong style="color: #10b981;">Submitted &amp; Scheduled</strong></td></tr>
         </table>
         <div class="notice">
           <strong>Important Information:</strong><br/>
           - Please quote reference number <strong>${referenceNumber}</strong> for all future inquiries regarding this application.<br/>
-          - You will receive an SMS notification once your application is reviewed and processed by SLTMobitel.<br/>
+          - Our technician will visit your location during the scheduled appointment window.<br/>
+          - You will receive an SMS notification prior to technician arrival.<br/>
           - For immediate support, call <strong>1212</strong> or visit your nearest SLT Teleshop.
         </div>
         <div class="footer">
@@ -514,6 +523,57 @@ export default function CompletionPage() {
               </AnimatePresence>
             </div>
 
+            {/* Confirmed Appointment Box (when scheduled in wizard) */}
+            {appointmentDate && (
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)',
+                  border: '1.5px solid #86efac',
+                  borderRadius: '14px',
+                  padding: '1.1rem 1.35rem',
+                  marginBottom: '1.25rem',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.85rem',
+                }}
+              >
+                <div
+                  style={{
+                    background: '#16a34a',
+                    color: '#fff',
+                    borderRadius: '10px',
+                    width: '38px',
+                    height: '38px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    marginTop: '2px',
+                  }}
+                >
+                  <FiCalendar size={20} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 900, color: '#15803d', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Installation Visit Confirmed
+                    </span>
+                    <span style={{ fontSize: '0.72rem', background: '#dcfce7', color: '#15803d', padding: '0.1rem 0.5rem', borderRadius: '999px', fontWeight: 800 }}>
+                      Booked
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', marginTop: '0.2rem' }}>
+                    {appointmentDate} &bull; <span style={{ color: '#0284c7' }}>{timeSlot || 'Standard Slot'}</span>
+                  </div>
+                  {landmarkNotes && (
+                    <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.25rem' }}>
+                      <strong>Landmark / Note:</strong> {landmarkNotes}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Processing timeline */}
             <div className="cp-timeline">
               <div className="cp-timeline-title">Application Processing Timeline</div>
@@ -524,26 +584,30 @@ export default function CompletionPage() {
                   <div className="cp-timeline-dot" style={{ backgroundColor: '#10b981' }}>
                     <FiCheck size={13} />
                   </div>
-                  <div className="cp-timeline-label">Application Logged &amp; Received</div>
+                  <div className="cp-timeline-label">Application Logged &amp; Payment Received</div>
                   <span className="cp-badge" style={{ color: '#15803d', backgroundColor: '#dcfce7' }}>Done</span>
                 </div>
 
-                {/* Step 2 — In progress */}
+                {/* Step 2 — Scheduled / In progress */}
+                <div className="cp-timeline-item">
+                  <div className="cp-timeline-dot" style={{ backgroundColor: appointmentDate ? '#10b981' : '#0284c7' }}>
+                    {appointmentDate ? <FiCheck size={13} /> : <FiClock size={13} />}
+                  </div>
+                  <div className="cp-timeline-label">
+                    {appointmentDate ? `Installation Scheduled for ${appointmentDate}` : 'Technical Verification & Scheduling'}
+                  </div>
+                  <span className="cp-badge" style={{ color: appointmentDate ? '#15803d' : '#0369a1', backgroundColor: appointmentDate ? '#dcfce7' : '#e0f2fe' }}>
+                    {appointmentDate ? 'Confirmed' : 'Pending'}
+                  </span>
+                </div>
+
+                {/* Step 3 — Technician Visit & Line Activation */}
                 <div className="cp-timeline-item">
                   <div className="cp-timeline-dot" style={{ backgroundColor: '#0284c7' }}>
                     <FiClock size={13} />
                   </div>
-                  <div className="cp-timeline-label">Technical Verification &amp; Dispatch</div>
-                  <span className="cp-badge" style={{ color: '#0369a1', backgroundColor: '#e0f2fe' }}>24 - 48 Hours</span>
-                </div>
-
-                {/* Step 3 — Pending */}
-                <div className="cp-timeline-item">
-                  <div className="cp-timeline-dot" style={{ backgroundColor: '#cbd5e1' }}>
-                    <FiCheckCircle size={13} />
-                  </div>
-                  <div className="cp-timeline-label muted">SMS Notification &amp; Line Activation</div>
-                  <span className="cp-badge" style={{ color: '#64748b', backgroundColor: '#f1f5f9' }}>Pending</span>
+                  <div className="cp-timeline-label">Technician Dispatch &amp; Line Activation</div>
+                  <span className="cp-badge" style={{ color: '#0369a1', backgroundColor: '#e0f2fe' }}>On Visit</span>
                 </div>
               </div>
             </div>
@@ -563,46 +627,85 @@ export default function CompletionPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.2 }}
         >
-          {/* Primary CTA: Schedule Physical Installation */}
-          <button
-            type="button"
-            className="cp-btn cp-btn-primary"
-            style={{
-              background: 'linear-gradient(90deg, #0056b3 0%, #0077ee 100%)',
-              boxShadow: '0 6px 20px rgba(0,86,179,0.3)',
-              padding: '0.9rem 1.25rem',
-              fontSize: '0.98rem',
-              fontWeight: 900,
-            }}
-            onClick={() =>
-              navigate(`/schedule-installation/${encodeURIComponent(referenceNumber)}`, {
-                state: { referenceNumber },
-              })
-            }
-          >
-            <FiCalendar size={20} />
-            <span>Schedule Physical Installation Now</span>
-            <FiArrowRight size={18} />
-          </button>
-
-          <div className="cp-btn-row">
-            <button type="button" className="cp-btn cp-btn-secondary" onClick={handleDownloadPDF}>
-              <FiDownload size={18} />
-              <span>Download Summary PDF</span>
+          {/* If installation is NOT yet scheduled (legacy or other wizards), show primary Schedule button */}
+          {!appointmentDate ? (
+            <button
+              type="button"
+              className="cp-btn cp-btn-primary"
+              style={{
+                background: 'linear-gradient(90deg, #0056b3 0%, #0077ee 100%)',
+                boxShadow: '0 6px 20px rgba(0,86,179,0.3)',
+                padding: '0.9rem 1.25rem',
+                fontSize: '0.98rem',
+                fontWeight: 900,
+              }}
+              onClick={() =>
+                navigate(`/schedule-installation/${encodeURIComponent(referenceNumber)}`, {
+                  state: { referenceNumber },
+                })
+              }
+            >
+              <FiCalendar size={20} />
+              <span>Schedule Physical Installation Now</span>
+              <FiArrowRight size={18} />
             </button>
+          ) : (
+            <div className="cp-btn-row">
+              <button
+                type="button"
+                className="cp-btn cp-btn-primary"
+                style={{
+                  background: 'linear-gradient(90deg, #0056b3 0%, #0077ee 100%)',
+                  boxShadow: '0 4px 16px rgba(0,86,179,0.25)',
+                }}
+                onClick={handleTrackStatus}
+              >
+                <FiSearch size={18} />
+                <span>Track Application Status</span>
+              </button>
 
-            <button type="button" className="cp-btn cp-btn-secondary" onClick={handleTrackStatus}>
-              <FiSearch size={18} />
-              <span>Track Application Status</span>
+              <button type="button" className="cp-btn cp-btn-secondary" onClick={handleDownloadPDF}>
+                <FiDownload size={18} />
+                <span>Download Summary PDF</span>
+              </button>
+            </div>
+          )}
+
+          {!appointmentDate && (
+            <div className="cp-btn-row">
+              <button type="button" className="cp-btn cp-btn-secondary" onClick={handleDownloadPDF}>
+                <FiDownload size={18} />
+                <span>Download Summary PDF</span>
+              </button>
+
+              <button type="button" className="cp-btn cp-btn-secondary" onClick={handleTrackStatus}>
+                <FiSearch size={18} />
+                <span>Track Application Status</span>
+              </button>
+            </div>
+          )}
+
+          {appointmentDate && (
+            <button
+              type="button"
+              className="cp-btn cp-btn-ghost"
+              style={{ fontSize: '0.82rem', color: '#0284c7' }}
+              onClick={() =>
+                navigate(`/schedule-installation/${encodeURIComponent(referenceNumber)}`, {
+                  state: { referenceNumber },
+                })
+              }
+            >
+              <FiCalendar size={16} />
+              <span>Need to change date? Reschedule Visit</span>
             </button>
-          </div>
+          )}
 
           <button type="button" className="cp-btn cp-btn-ghost" onClick={() => navigate('/')}>
             <FiHome size={18} />
             <span>{t('completion.backToDashboard', 'Back to Dashboard')}</span>
           </button>
         </motion.div>
-
 
       </div>
     </div>

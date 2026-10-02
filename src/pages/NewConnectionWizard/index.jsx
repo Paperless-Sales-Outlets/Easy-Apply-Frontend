@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import CustomerInfoStep from './CustomerInfoStep';
 import LoopCheckStep from './LoopCheckStep';
+import InstallationScheduleStep from './InstallationScheduleStep';
 import DeclarationStep from './DeclarationStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
@@ -57,6 +58,10 @@ const initialState = {
   locationType: 'current',
   city: '',
   district: '',
+  installationDate: '',
+  installationTimeSlot: 'Morning (08.30 AM - 12.00 PM)',
+  timeSlot: 'Morning (08.30 AM - 12.00 PM)',
+  landmarkNotes: '',
 };
 
 export default function NewConnectionWizard() {
@@ -87,7 +92,7 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   useEffect(() => {
     if (selectedProduct?.productName) {
@@ -153,8 +158,16 @@ export default function NewConnectionWizard() {
       }
     }
 
-    // Step 3 validation (Terms & Signature)
+    // Step 3 validation (Installation Schedule)
     if (currentStep === 3) {
+      if (!formData.installationDate) {
+        toast.error('Please select an installation date.');
+        return;
+      }
+    }
+
+    // Step 4 validation (Terms & Signature)
+    if (currentStep === 4) {
       if (declarationRef.current && !declarationRef.current.validate()) {
         return;
       }
@@ -184,6 +197,8 @@ export default function NewConnectionWizard() {
           signature: formData.signature || 'DIGITALLY_VERIFIED_OTP',
           paymentReference: paymentRef,
           product: selectedProduct,
+          appointmentDate: formData.installationDate,
+          timeSlot: formData.installationTimeSlot || formData.timeSlot,
         },
         phone,
       });
@@ -194,6 +209,9 @@ export default function NewConnectionWizard() {
           referenceNumber: officialRef,
           messageKey: 'completion.successMessages.newConnection',
           paymentConfirmed: true,
+          appointmentDate: formData.installationDate,
+          timeSlot: formData.installationTimeSlot || formData.timeSlot,
+          landmarkNotes: formData.landmarkNotes,
         },
       });
       return officialRef;
@@ -206,6 +224,9 @@ export default function NewConnectionWizard() {
             referenceNumber: mockRef,
             messageKey: 'completion.successMessages.newConnection',
             paymentConfirmed: true,
+            appointmentDate: formData.installationDate,
+            timeSlot: formData.installationTimeSlot || formData.timeSlot,
+            landmarkNotes: formData.landmarkNotes,
           },
         });
         return mockRef;
@@ -249,12 +270,13 @@ export default function NewConnectionWizard() {
         </div>
       )}
 
-      {/* Progress Stepper: 4 Clean Steps */}
+      {/* Progress Stepper: 5 Clean Steps */}
       <WizardStepper
         currentStep={currentStep}
         steps={[
           'Installation Location',
           'Loop Coverage Check',
+          'Schedule Installation',
           'Terms & Signature',
           'Payment Gateway',
         ]}
@@ -283,8 +305,18 @@ export default function NewConnectionWizard() {
             />
           )}
 
-          {/* Step 3: Terms & Conditions & Digital Signature */}
+          {/* Step 3: Schedule Installation (Date Carousel & Time Slot) */}
           {currentStep === 3 && (
+            <InstallationScheduleStep
+              formData={formData}
+              handleChange={handleChange}
+              setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
+              selectedProduct={selectedProduct}
+            />
+          )}
+
+          {/* Step 4: Terms & Conditions & Digital Signature */}
+          {currentStep === 4 && (
             <DeclarationStep
               ref={declarationRef}
               formData={formData}
@@ -293,10 +325,10 @@ export default function NewConnectionWizard() {
             />
           )}
 
-          {/* Step 4: Payment Gateway */}
-          {currentStep === 4 && (
+          {/* Step 5: Payment Gateway */}
+          {currentStep === 5 && (
             <PaymentStep
-              isActive={currentStep === 4}
+              isActive={currentStep === 5}
               verifiedPhone={verifiedMobile}
               amount={selectedProduct?.installationFee || 2500}
               amountLabel="Installation Fee"
@@ -321,6 +353,11 @@ export default function NewConnectionWizard() {
             </button>
           )}
           {currentStep === 3 && (
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
+              Continue to Agreement &amp; Signature →
+            </button>
+          )}
+          {currentStep === 4 && (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
               Continue to Payment →
             </button>
