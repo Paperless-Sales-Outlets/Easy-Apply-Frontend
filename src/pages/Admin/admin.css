@@ -3794,8 +3794,8 @@
   overflow: hidden;
   padding: 1.25rem 1.35rem 1rem;
   border-radius: 18px;
-  border: 1px solid var(--line);
-  background: var(--surface);
+  border: 1px solid var(--edge, var(--line));
+  background: var(--bg, var(--surface));
   box-shadow: 0 1px 2px rgba(11, 45, 91, 0.04), 0 10px 26px -16px rgba(11, 45, 91, 0.25);
   transition: transform 0.22s ease, box-shadow 0.22s ease;
   animation: dash-rise 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
@@ -3805,6 +3805,12 @@
 .dash-stat-card.green { --tone: #3a9636; --tone-deep: #2a7226; --tone-soft: rgba(80, 183, 72, 0.14); }
 .dash-stat-card.amber { --tone: #e3a020; --tone-deep: #b87a00; --tone-soft: rgba(235, 168, 52, 0.16); }
 .dash-stat-card.red   { --tone: #d0473c; --tone-deep: #9f2b22; --tone-soft: rgba(196, 55, 44, 0.12); }
+
+/* Full-body pastel tint per card */
+.dash-stat-card       { --bg: #eef4fd; --edge: #d3e2f7; }
+.dash-stat-card.amber { --bg: #fff6e6; --edge: #f6e3bd; }
+.dash-stat-card.green { --bg: #edf8ea; --edge: #d3ead0; }
+.dash-stat-card.red   { --bg: #fdeeed; --edge: #f5d5d2; }
 
 .dash-stat-card::before {
   content: '';
@@ -3860,7 +3866,7 @@
   font-size: 0.68rem;
   font-weight: 700;
   white-space: nowrap;
-  background: #eef3fa;
+  background: rgba(255, 255, 255, 0.75);
   color: var(--navy);
 }
 
@@ -3888,7 +3894,7 @@
   gap: 0.3rem;
   margin-top: 0.9rem;
   padding-top: 0.75rem;
-  border-top: 1px dashed var(--line);
+  border-top: 1px dashed var(--edge, var(--line));
 }
 
 .dash-stat-spark .adm-sparkline { display: block; width: 100%; height: 44px; overflow: visible; }
