@@ -1158,6 +1158,14 @@
   margin: 0;
 }
 
+/* The report is one document, so its two sections share a single bleed and sit
+   in one stack with a consistent gap instead of floating apart as separate
+   cards. Section headings ("Section 1 - User Progress Summary") carry the
+   ordering; these rules only handle the spacing between them. */
+.analytics-report-stack > .analytics-card + .analytics-card {
+  margin-top: 1.5rem;
+}
+
 .analytics-top-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

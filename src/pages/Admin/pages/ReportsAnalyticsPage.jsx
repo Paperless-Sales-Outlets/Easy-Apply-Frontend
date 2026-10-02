@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getAnalytics, getUserReports, getApplicationReports } from '../services/adminService';
-import { buildTablePdf } from '../utils/reportPdf';
+import { buildReportPdf } from '../utils/reportPdf';
 
 const SLT_PIE_COLORS = [
   '#0f57a8', // blue
@@ -393,10 +393,22 @@ const APPLICATION_REPORT_COLUMNS = [
   ['Payment Status', r => r.paymentStatus],
 ];
 
-const buildCsv = (title, columns, rows, range) => {
-  const header = `${title} (${formatInputDay(range.from)} to ${formatInputDay(range.to)})`;
-  const body = rows.map(row => columns.map(([, read]) => csvCell(read(row))).join(','));
-  return [csvCell(header), '', columns.map(([label]) => csvCell(label)).join(','), ...body].join('\n');
+// One report, one file: every section is written in order under a single
+// header, separated by a blank line so a spreadsheet reads it as one document.
+const buildCombinedCsv = (sections, range) => {
+  const lines = [
+    csvCell(`Combined Report (${formatInputDay(range.from)} to ${formatInputDay(range.to)})`),
+    '',
+  ];
+  sections.forEach((section, index) => {
+    if (index) lines.push('');
+    lines.push(csvCell(section.title));
+    lines.push(section.columns.map(([label]) => csvCell(label)).join(','));
+    section.rows.forEach(row => {
+      lines.push(section.columns.map(([, read]) => csvCell(read(row))).join(','));
+    });
+  });
+  return lines.join('\n');
 };
 
 
@@ -490,58 +502,6 @@ export default function ReportsAnalyticsPage() {
     setSearch('');
   };
 
-  const exportUserCsv = () => {
-    if (!reports.length) return;
-    downloadBlob(
-      buildCsv('User Progress Report', USER_REPORT_COLUMNS, reports, range),
-      `user-progress-report-${range.from}-to-${range.to}.csv`,
-      'text/csv;charset=utf-8;'
-    );
-  };
-
-  const exportUserPdf = () => {
-    if (!reports.length) return;
-    downloadBlob(
-      buildTablePdf(
-        `User Progress Report (${formatInputDay(range.from)} to ${formatInputDay(range.to)})`,
-        USER_REPORT_COLUMNS,
-        reports,
-        [
-          `Users: ${reportData?.summary?.totalUsers ?? 0}`,
-          `Tasks: ${reportData?.summary?.totalTasks ?? 0}`,
-        ]
-      ),
-      `user-progress-report-${range.from}-to-${range.to}.pdf`,
-      'application/pdf'
-    );
-  };
-
-  const exportAppCsv = () => {
-    if (!appRows.length) return;
-    downloadBlob(
-      buildCsv('Application Report', APPLICATION_REPORT_COLUMNS, appRows, range),
-      `application-report-${range.from}-to-${range.to}.csv`,
-      'text/csv;charset=utf-8;'
-    );
-  };
-
-  const exportAppPdf = () => {
-    if (!appRows.length) return;
-    downloadBlob(
-      buildTablePdf(
-        `Application Report (${formatInputDay(range.from)} to ${formatInputDay(range.to)})`,
-        APPLICATION_REPORT_COLUMNS,
-        appRows,
-        [
-          `Applications: ${appSummary?.totalApplications ?? 0}`,
-          `Collected: Rs. ${Number(appSummary?.totalCollected ?? 0).toLocaleString('en-LK')}`,
-        ]
-      ),
-      `application-report-${range.from}-to-${range.to}.pdf`,
-      'application/pdf'
-    );
-  };
-
   // -- Derived values --
   const reports = reportData?.reports || [];
   const appRows = appData?.rows || [];
@@ -549,13 +509,69 @@ export default function ReportsAnalyticsPage() {
   const totalStatus = (analytics?.statusBreakdown || []).reduce((s, d) => s + d.count, 0);
   const hasFilters = preset !== '30d' || serviceType !== 'all' || status !== 'all' || !!search;
 
+  // The report is a single document: per-user progress first as the summary,
+  // then the full application detail. Both formats emit the same two sections
+  // in the same order.
+  const reportSections = useMemo(
+    () => [
+      {
+        title: 'Section 1 - User Progress Summary',
+        note: `${reports.length} user${reports.length === 1 ? '' : 's'}`,
+        columns: USER_REPORT_COLUMNS,
+        rows: reports,
+      },
+      {
+        title: 'Section 2 - Application Information',
+        note: `${appRows.length} application${appRows.length === 1 ? '' : 's'}`,
+        columns: APPLICATION_REPORT_COLUMNS,
+        rows: appRows,
+      },
+    ],
+    [reports, appRows]
+  );
+
+  const canExport = reports.length > 0 || appRows.length > 0;
+
+  const reportFilename = `combined-report-${range.from}-to-${range.to}`;
+
+  const exportCombinedCsv = () => {
+    if (!canExport) return;
+    downloadBlob(
+      buildCombinedCsv(reportSections, range),
+      `${reportFilename}.csv`,
+      'text/csv;charset=utf-8;'
+    );
+  };
+
+  const exportCombinedPdf = () => {
+    if (!canExport) return;
+    downloadBlob(
+      buildReportPdf({
+        title: 'SLTMobitel EasyApply Portal',
+        subtitle: 'Operations & Analytics Report',
+        generatedDate: formatInputDay(new Date().toISOString()),
+        reportPeriod: `${formatInputDay(range.from)} to ${formatInputDay(range.to)}`,
+        executiveSummary: {
+          totalApplications: appSummary?.totalApplications ?? appRows.length,
+          totalUsers: reportData?.summary?.totalUsers ?? reports.length,
+          totalTasks: reportData?.summary?.totalTasks ?? 0,
+          totalCollected: appSummary?.totalCollected ?? 0,
+          statusBreakdown: analytics?.statusBreakdown || [],
+        },
+        sections: reportSections,
+      }),
+      `${reportFilename}.pdf`,
+      'application/pdf'
+    );
+  };
+
   return (
     <>
       <div className="analytics-bleed">
         <div className="admin-page-header">
           <h1 className="admin-page-title">Reports &amp; Analytics</h1>
           <p className="admin-page-subtitle">
-            Generate per-user progress reports and track submissions by service type, trend and status
+            One combined report - per-user progress summary first, then full application details
           </p>
         </div>
       </div>
@@ -645,99 +661,28 @@ export default function ReportsAnalyticsPage() {
         <div className="admin-loading">Generating report...</div>
       ) : (
         <>
-          {/* -- Application Report -- */}
-          <div className="analytics-bleed">
+          {/* -- Combined Report: user progress summary, then application detail -- */}
+          <div className="analytics-bleed analytics-report-stack">
+            {/* Section 1 */}
             <div className="analytics-card">
               <div className="analytics-card-head">
-                <h3>Application Report</h3>
-                <div className="analytics-card-actions">
-                  <span className="analytics-card-hint">
-                    {appSummary
-                      ? `${appSummary.totalApplications} application${appSummary.totalApplications === 1 ? '' : 's'} - ${formatAmount(appSummary.totalCollected)} collected`
-                      : ''}
-                  </span>
-                  <button type="button" className="admin-btn ghost" onClick={exportAppCsv} disabled={!appRows.length}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" />
-                    </svg>
-                    CSV
-                  </button>
-                  <button type="button" className="admin-btn primary" onClick={exportAppPdf} disabled={!appRows.length}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <path d="M14 2v6h6" /><path d="M12 18v-6" /><path d="m9.5 14.5 2.5-2.5 2.5 2.5" />
-                    </svg>
-                    Download PDF
-                  </button>
-                </div>
-              </div>
-
-              {!appRows.length ? (
-                <div className="admin-empty">
-                  <p>No applications match the selected filters.</p>
-                </div>
-              ) : (
-                <div className="admin-table-wrap">
-                  <table className="admin-table admin-table-striped app-report-table">
-                    <thead>
-                      <tr>
-                        <th>Selected Product</th>
-                        <th>Customer Name</th>
-                        <th>NIC Number</th>
-                        <th>Mobile Number</th>
-                        <th className="report-num">Paid Amount</th>
-                        <th>Apply Date</th>
-                        <th>Reference Number</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {appRows.map(row => (
-                        <tr key={row.id}>
-                          <td className="app-report-product">{row.product}</td>
-                          <td className="app-report-customer">{row.customerName}</td>
-                          <td>{row.nic}</td>
-                          <td>{row.mobile}</td>
-                          <td className="report-num report-amount">{formatAmount(row.paidAmount)}</td>
-                          <td>{formatDateTime(row.applyDate)}</td>
-                          <td>
-                            <span className="app-report-ref">{row.referenceNumber}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {appSummary?.truncated && (
-                <p className="report-muted" style={{ marginTop: '0.75rem' }}>
-                  Showing the first {appRows.length} applications. Narrow the date range to see the rest.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* -- User Progress Report -- */}
-          <div className="analytics-bleed">
-            <div className="analytics-card">
-              <div className="analytics-card-head">
-                <h3>User Progress Report</h3>
+                <h3>Section 1 &mdash; User Progress Summary</h3>
                 <div className="analytics-card-actions">
                   <span className="analytics-card-hint">
                     Task progress per admin &amp; staff member - click a row for the service breakdown
                   </span>
-                  <button type="button" className="admin-btn ghost" onClick={exportUserCsv} disabled={!reports.length}>
+                  <button type="button" className="admin-btn ghost" onClick={exportCombinedCsv} disabled={!canExport}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" />
                     </svg>
                     CSV
                   </button>
-                  <button type="button" className="admin-btn primary" onClick={exportUserPdf} disabled={!reports.length}>
+                  <button type="button" className="admin-btn primary" onClick={exportCombinedPdf} disabled={!canExport}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                       <path d="M14 2v6h6" /><path d="M12 18v-6" /><path d="m9.5 14.5 2.5-2.5 2.5 2.5" />
                     </svg>
-                    Download PDF
+                    Download Report
                   </button>
                 </div>
               </div>
@@ -868,6 +813,63 @@ export default function ReportsAnalyticsPage() {
                     </tbody>
                   </table>
                 </div>
+              )}
+            </div>
+
+            {/* Section 2 */}
+            <div className="analytics-card">
+              <div className="analytics-card-head">
+                <h3>Section 2 &mdash; Application Information</h3>
+                <div className="analytics-card-actions">
+                  <span className="analytics-card-hint">
+                    {appSummary
+                      ? `${appSummary.totalApplications} application${appSummary.totalApplications === 1 ? '' : 's'} - ${formatAmount(appSummary.totalCollected)} collected`
+                      : ''}
+                  </span>
+                </div>
+              </div>
+
+              {!appRows.length ? (
+                <div className="admin-empty">
+                  <p>No applications match the selected filters.</p>
+                </div>
+              ) : (
+                <div className="admin-table-wrap">
+                  <table className="admin-table admin-table-striped app-report-table">
+                    <thead>
+                      <tr>
+                        <th>Selected Product</th>
+                        <th>Customer Name</th>
+                        <th>NIC Number</th>
+                        <th>Mobile Number</th>
+                        <th className="report-num">Paid Amount</th>
+                        <th>Apply Date</th>
+                        <th>Reference Number</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {appRows.map(row => (
+                        <tr key={row.id}>
+                          <td className="app-report-product">{row.product}</td>
+                          <td className="app-report-customer">{row.customerName}</td>
+                          <td>{row.nic}</td>
+                          <td>{row.mobile}</td>
+                          <td className="report-num report-amount">{formatAmount(row.paidAmount)}</td>
+                          <td>{formatDateTime(row.applyDate)}</td>
+                          <td>
+                            <span className="app-report-ref">{row.referenceNumber}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {appSummary?.truncated && (
+                <p className="report-muted" style={{ marginTop: '0.75rem' }}>
+                  Showing the first {appRows.length} applications. Narrow the date range to see the rest.
+                </p>
               )}
             </div>
           </div>
