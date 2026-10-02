@@ -15,28 +15,31 @@ import {
 } from '../services/adminService';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
+import { AnimatedNumber, timeAgo } from '../components/AdminVisuals';
 
-const ROLE_BADGE_PALETTE = ['scheduled', 'pending', 'in-progress', 'flagged', 'completed', 'cancelled'];
-const ROLE_AVATAR_PALETTE = [
-  'linear-gradient(135deg, #0f57a8, #0b2d5b)',
-  'linear-gradient(135deg, #57b531, #3a9636)',
-  'linear-gradient(135deg, #eba834, #b87a00)',
-  'linear-gradient(135deg, #a855f7, #5a28a8)',
-  'linear-gradient(135deg, #2c8f92, #0a3f7e)',
-  'linear-gradient(135deg, #c4372c, #8f271e)',
+// Brand-family tones for roles; Administrator always uses the SLT brand sweep.
+const ADMIN_TONE = ['#0b4a91', '#00543c'];
+const ROLE_TONES = [
+  ['#0f57a8', '#0b2d5b'],
+  ['#3a9636', '#1f5f1c'],
+  ['#1a8fb8', '#0a4f7e'],
+  ['#14806e', '#0b4f45'],
+  ['#2c6fd6', '#1b3f8f'],
+  ['#5a8f1f', '#35560f'],
 ];
 
-function roleBadgeClass(roleName, roles) {
-  if (roleName === 'Admin') return 'approved';
+function roleTone(roleName, roles) {
+  if (roleName === 'Admin') return ADMIN_TONE;
   const idx = roles.findIndex((r) => r.name === roleName);
-  return ROLE_BADGE_PALETTE[idx >= 0 ? idx % ROLE_BADGE_PALETTE.length : 0];
+  return ROLE_TONES[idx >= 0 ? idx % ROLE_TONES.length : 0];
 }
 
 function avatarGradient(roleName, roles) {
-  if (roleName === 'Admin') return ROLE_AVATAR_PALETTE[0];
-  const idx = roles.findIndex((r) => r.name === roleName);
-  return ROLE_AVATAR_PALETTE[(idx >= 0 ? idx % ROLE_AVATAR_PALETTE.length : 1)];
+  const [from, to] = roleTone(roleName, roles);
+  return `linear-gradient(135deg, ${from}, ${to})`;
 }
+
+const roleLabel = (roleName) => (roleName === 'Admin' ? 'Administrator' : roleName);
 
 const EMPTY_USER_FORM = {
   employeeNumber: '',
@@ -199,10 +202,68 @@ function FieldError({ id, message }) {
 const touchAll = (fields) => Object.fromEntries(fields.map((f) => [f, true]));
 
 const TABS = [
-  { key: 'team', label: 'Team Members' },
-  { key: 'roles', label: 'Roles & Access' },
-  { key: 'privileges', label: 'Privileges' },
+  {
+    key: 'team',
+    label: 'Team Members',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
+  {
+    key: 'roles',
+    label: 'Roles & Access',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" />
+      </svg>
+    ),
+  },
+  {
+    key: 'privileges',
+    label: 'Privileges',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="8" cy="15" r="4" /><path d="m10.85 12.15 8.65-8.65M18 5l3 3M15 8l2 2" />
+      </svg>
+    ),
+  },
 ];
+
+const ICON_EDIT = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
+  </svg>
+);
+
+const ICON_DELETE = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+  </svg>
+);
+
+const ICON_SEARCH = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+// Up to `max` member avatars, then a "+n" bubble.
+function AvatarStack({ members, roles, max = 4 }) {
+  if (!members.length) return <span className="um-avatar-stack-empty">No members yet</span>;
+  const shown = members.slice(0, max);
+  return (
+    <div className="um-avatar-stack" aria-label={members.map((m) => m.name).join(', ')}>
+      {shown.map((m) => (
+        <span key={m.id} className="um-avatar-stack-item" style={{ background: avatarGradient(m.role, roles) }} title={m.name}>
+          {initials(m.name)}
+        </span>
+      ))}
+      {members.length > max && <span className="um-avatar-stack-item more">+{members.length - max}</span>}
+    </div>
+  );
+}
 
 export default function UserManagementPage() {
   const { admin } = useAdminAuth();
@@ -304,8 +365,6 @@ export default function UserManagementPage() {
   }, [privileges, privSearch]);
 
   const roleNames = useMemo(() => ['Admin', ...roles.map((r) => r.name)], [roles]);
-
-  const adminCount = useMemo(() => users.filter((u) => u.role === 'Admin').length, [users]);
 
   const summary = useMemo(() => {
     const active = users.filter((u) => u.isActive !== false).length;
@@ -646,65 +705,190 @@ export default function UserManagementPage() {
     privileges: { label: 'Add Privilege', onClick: openAddPrivModal },
   };
 
-  const summaryCards = [
+  const membersByRole = useMemo(() => {
+    const map = {};
+    users.forEach((u) => { (map[u.role] = map[u.role] || []).push(u); });
+    return map;
+  }, [users]);
+
+  const newestUser = useMemo(
+    () => users.reduce((latest, u) => (!latest || new Date(u.createdAt) > new Date(latest.createdAt) ? u : latest), null),
+    [users]
+  );
+
+  const activePct = summary.total ? Math.round((summary.active / summary.total) * 100) : 0;
+  const tabIndex = Math.max(0, TABS.findIndex((t) => t.key === activeTab));
+  const tabCount = (key) => (key === 'team' ? users.length : key === 'roles' ? roles.length + 1 : privileges.length);
+  const isSelf = (u) => String(admin?.id) === String(u.id);
+
+  const heroTiles = [
     {
-      key: 'total', label: 'Total Staff Users', value: summary.total, hint: 'Across all roles', colorClass: 'blue',
+      key: 'total',
+      label: 'Staff accounts',
+      value: summary.total,
+      foot: newestUser ? `Newest: ${newestUser.name.split(' ')[0]} · ${timeAgo(newestUser.createdAt)}` : 'No accounts yet',
       icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
       ),
     },
     {
-      key: 'active', label: 'Active Users', value: summary.active, hint: 'Can sign in now', colorClass: 'green',
+      key: 'active',
+      label: 'Active',
+      value: summary.active,
+      meter: activePct,
+      foot: `${activePct}% can sign in`,
       icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
         </svg>
       ),
     },
     {
-      key: 'inactive', label: 'Inactive Users', value: summary.inactive, hint: 'Access suspended', colorClass: 'red',
+      key: 'inactive',
+      label: 'Suspended',
+      value: summary.inactive,
+      foot: summary.inactive ? 'Sign-in blocked' : 'Nobody suspended',
       icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
         </svg>
       ),
     },
     {
-      key: 'roles', label: 'Roles In Use', value: summary.roles, hint: 'Distinct roles assigned', colorClass: 'amber',
+      key: 'roles',
+      label: 'Roles in use',
+      value: summary.roles,
+      foot: `of ${roles.length + 1} defined roles`,
       icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" />
         </svg>
       ),
     },
   ];
 
+  const renderRoleCard = ({ key, name, members, isAdmin, role, idx }) => {
+    const [from, to] = isAdmin ? ADMIN_TONE : roleTone(name, roles);
+    const granted = isAdmin ? privileges.length : (role.permissions || []).filter((k) => privilegeByKey[k]).length;
+    const coverage = privileges.length ? Math.round((granted / privileges.length) * 100) : 0;
+    return (
+      <article className={`um-role-card${isAdmin ? ' admin' : ''}`} key={key} style={{ '--from': from, '--to': to, '--i': idx }}>
+        <div className="um-role-banner">
+          <span className="um-role-emblem">
+            {isAdmin ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" /><path d="m9 12 2 2 4-4" />
+              </svg>
+            ) : initials(name)}
+          </span>
+          <span className="um-role-members-pill">{members.length} {members.length === 1 ? 'member' : 'members'}</span>
+        </div>
+
+        <div className="um-role-body">
+          <h3>
+            {roleLabel(name)}
+            {isAdmin && <span className="um-role-lock">Reserved</span>}
+          </h3>
+          <p className="um-role-sub">
+            {isAdmin ? 'Full system access to every module' : `${granted} of ${privileges.length} privileges granted`}
+          </p>
+          <div className="um-role-meter" aria-hidden="true"><span style={{ width: `${isAdmin ? 100 : coverage}%` }} /></div>
+
+          <AvatarStack members={members} roles={roles} />
+
+          <div className="um-role-chips">
+            {isAdmin
+              ? <span className="um-role-chip all">All modules</span>
+              : granted === 0
+                ? <span className="um-role-chip none">No privileges</span>
+                : (role.permissions || []).map((k) => {
+                  const priv = privilegeByKey[k];
+                  return priv ? <span className="um-role-chip" key={k} title={priv.description}>{priv.name}</span> : null;
+                })}
+          </div>
+        </div>
+
+        {isAdmin ? (
+          <div className="um-role-foot">
+            <span className="um-role-foot-note">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              System role — managed automatically
+            </span>
+          </div>
+        ) : (
+          <div className="um-role-foot">
+            <div className="um-row-actions">
+              <button type="button" className="um-action-btn edit" onClick={() => openEditRoleModal(role)} aria-label={`Edit ${name} role`}>
+                {ICON_EDIT}<span className="um-action-label">Edit</span>
+              </button>
+              <button type="button" className="um-action-btn delete" onClick={() => setPendingDeleteRole(role)} aria-label={`Delete ${name} role`}>
+                {ICON_DELETE}<span className="um-action-label">Delete</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </article>
+    );
+  };
+
   return (
     <div className="um-page">
-      <div className="admin-page-header um-header">
-        <div>
-          <h1 className="admin-page-title">User Management</h1>
-          <p className="admin-page-subtitle">
-            Add staff accounts and control what each one can access
-          </p>
+      {/* ── Hero ── */}
+      <section className="um-hero">
+        <div className="um-hero-deco" aria-hidden="true">
+          <span className="um-hero-orb" />
+          <span className="um-hero-slash" />
+          <span className="um-hero-grid" />
         </div>
-        <div className="um-header-actions">
+
+        <div className="um-hero-top">
+          <div className="um-hero-text">
+            <span className="um-hero-eyebrow">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" />
+              </svg>
+              Access Control
+            </span>
+            <h1>User Management</h1>
+            <p>Add staff accounts, shape roles and decide exactly what each person can access.</p>
+          </div>
           <button
             type="button"
-            className="admin-btn primary um-add-btn"
+            className="um-hero-action"
             onClick={HEADER_ACTIONS[activeTab].onClick}
             disabled={activeTab === 'team' && roles.length === 0}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <span className="um-hero-action-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </span>
             {HEADER_ACTIONS[activeTab].label}
           </button>
         </div>
-      </div>
+
+        <div className="um-hero-tiles">
+          {heroTiles.map((tile, idx) => (
+            <div className={`um-hero-tile ${tile.key}`} key={tile.key} style={{ '--i': idx }}>
+              <div className="um-hero-tile-head">
+                <span className="um-hero-tile-icon">{tile.icon}</span>
+                {tile.label}
+              </div>
+              <div className="um-hero-tile-value">
+                {loading ? <span className="dash-skeleton um-hero-skeleton" /> : <AnimatedNumber value={tile.value} />}
+              </div>
+              {tile.meter != null && (
+                <div className="um-hero-meter" aria-hidden="true"><span style={{ width: `${loading ? 0 : tile.meter}%` }} /></div>
+              )}
+              <div className="um-hero-tile-foot">{loading ? '\u00a0' : tile.foot}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <AdminNotice notice={notice.notice} onDismiss={notice.dismiss} />
       {error && <div className="admin-error-banner">{error}</div>}
@@ -721,22 +905,9 @@ export default function UserManagementPage() {
         </div>
       )}
 
-      {/* ── Summary Cards ── */}
-      <div className="um-stat-grid">
-        {summaryCards.map((card) => (
-          <div className="um-stat-card" key={card.key}>
-            <div className={`um-stat-icon ${card.colorClass}`}>{card.icon}</div>
-            <div>
-              <div className="um-stat-label">{card.label}</div>
-              <div className="um-stat-value">{card.value}</div>
-              <div className="um-stat-trend">{card.hint}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* ── Tabs ── */}
-      <div className="um-tabs" role="tablist">
+      <div className="um-tabs" role="tablist" style={{ '--tab-index': tabIndex, '--tab-count': TABS.length }}>
+        <span className="um-tabs-indicator" aria-hidden="true" />
         {TABS.map((tab) => (
           <button
             key={tab.key}
@@ -746,189 +917,172 @@ export default function UserManagementPage() {
             className={`um-tab${activeTab === tab.key ? ' active' : ''}`}
             onClick={() => setActiveTab(tab.key)}
           >
-            {tab.label}
-            <span className="um-tab-count">
-              {tab.key === 'team' ? users.length : tab.key === 'roles' ? roles.length + 1 : privileges.length}
-            </span>
+            <span className="um-tab-icon">{tab.icon}</span>
+            <span className="um-tab-label">{tab.label}</span>
+            <span className="um-tab-count">{tabCount(tab.key)}</span>
           </button>
         ))}
       </div>
 
       {/* ── Team Members Tab ── */}
       {activeTab === 'team' && (
-        <>
-          <div className="um-toolbar">
-            <div className="admin-search um-search">
-              <span className="admin-search-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </span>
-              <input
-                type="text"
-                placeholder="Search by name, email or employee number"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+        <section className="um-panel" key="team">
+          <div className="um-panel-head">
+            <div className="um-panel-title">
+              <h2>Team members</h2>
+              <p>{loading ? 'Loading…' : `Showing ${filteredUsers.length} of ${users.length}`}</p>
             </div>
-            <select className="admin-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-              <option value="All">All Roles</option>
-              {roleNames.map((r) => <option key={r} value={r}>{r === 'Admin' ? 'Administrator' : r}</option>)}
-            </select>
-            <select className="admin-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-              <option value="All">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
+            <div className="um-toolbar">
+              <div className="admin-search um-search">
+                <span className="admin-search-icon">{ICON_SEARCH}</span>
+                <input
+                  type="text"
+                  placeholder="Search name, email or ID"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <select className="admin-select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+                <option value="All">All Roles</option>
+                {roleNames.map((r) => <option key={r} value={r}>{roleLabel(r)}</option>)}
+              </select>
+              <select className="admin-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <option value="All">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
           </div>
 
           {loading ? (
-            <div className="um-table-card">
-              <div className="dash-table-skeleton">
-                {Array.from({ length: 4 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
-              </div>
+            <div className="dash-table-skeleton">
+              {Array.from({ length: 4 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="um-empty-state">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-              <p>No team members match your filters.</p>
+              <span className="um-empty-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </span>
+              <h3>{users.length ? 'No matches' : 'No team members yet'}</h3>
+              <p>{users.length ? 'Try a different search or clear the filters.' : 'Use “Add User” to create the first staff account.'}</p>
             </div>
           ) : (
-            <div className="um-table-card">
-              <div className="admin-table-wrap">
-                <table className="admin-table um-table">
-                  <thead>
-                    <tr>
-                      <th>Employee No.</th>
-                      <th>Full Name</th>
-                      <th>Email Address</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      <th>Added</th>
-                      <th style={{ textAlign: 'center' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers.map((u) => (
-                      <tr key={u.id}>
-                        <td className="um-employee-no">{u.employeeNumber || '—'}</td>
+            <div className="admin-table-wrap um-table-wrap">
+              <table className="admin-table um-table">
+                <thead>
+                  <tr>
+                    <th>Employee No.</th>
+                    <th>Full Name</th>
+                    <th>Email Address</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Added</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((u) => {
+                    const active = u.isActive !== false;
+                    const [toneFrom] = roleTone(u.role, roles);
+                    return (
+                      <tr key={u.id} className={active ? '' : 'is-inactive'}>
+                        <td><span className="um-employee-no">{u.employeeNumber || '—'}</span></td>
                         <td>
                           <div className="um-user-cell">
-                            <div className="um-avatar" style={{ background: avatarGradient(u.role, roles) }}>{initials(u.name)}</div>
-                            <span style={{ fontWeight: 600 }}>{u.name}</span>
+                            <div className="um-avatar" style={{ background: avatarGradient(u.role, roles) }}>
+                              {initials(u.name)}
+                              <span className={`um-presence ${active ? 'on' : 'off'}`} aria-hidden="true" />
+                            </div>
+                            <span className="um-user-name">
+                              {u.name}
+                              {isSelf(u) && <span className="um-you">You</span>}
+                            </span>
                           </div>
                         </td>
-                        <td>{u.email || '—'}</td>
+                        <td className="um-email">{u.email || '—'}</td>
                         <td>
-                          <span className={`admin-badge ${roleBadgeClass(u.role, roles)}`}>
-                            {u.role === 'Admin' ? 'Administrator' : u.role}
-                          </span>
+                          <span className="um-role-badge" style={{ '--tone': toneFrom }}>{roleLabel(u.role)}</span>
                         </td>
                         <td>
                           <button
                             type="button"
-                            className={`um-status-toggle ${u.isActive === false ? 'inactive' : 'active'}`}
+                            role="switch"
+                            aria-checked={active}
+                            aria-label={`${u.name} is ${active ? 'active' : 'inactive'}`}
+                            className={`um-switch ${active ? 'on' : 'off'}`}
                             onClick={() => handleToggleActive(u)}
-                            disabled={String(admin?.id) === String(u.id)}
-                            title={String(admin?.id) === String(u.id) ? 'You cannot change your own status' : 'Toggle status'}
+                            disabled={isSelf(u)}
+                            title={isSelf(u) ? 'You cannot change your own status' : `Click to ${active ? 'suspend' : 'reactivate'}`}
                           >
-                            <span className="um-status-dot" />
-                            {u.isActive === false ? 'Inactive' : 'Active'}
+                            <span className="um-switch-track"><span className="um-switch-thumb" /></span>
+                            <span className="um-switch-label">{active ? 'Active' : 'Inactive'}</span>
                           </button>
                         </td>
-                        <td>{new Date(u.createdAt).toLocaleDateString('en-GB')}</td>
+                        <td>
+                          <div className="um-date">
+                            <span>{new Date(u.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                            <small>{timeAgo(u.createdAt)}</small>
+                          </div>
+                        </td>
                         <td>
                           <div className="um-row-actions">
                             <button type="button" className="um-action-btn edit" onClick={() => openEditModal(u)} aria-label="Edit user">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z" />
-                              </svg>
-                              <span className="um-action-label">Edit</span>
+                              {ICON_EDIT}<span className="um-action-label">Edit</span>
                             </button>
                             <button
                               type="button"
                               className="um-action-btn delete"
                               onClick={() => setPendingDelete(u)}
-                              disabled={String(admin?.id) === String(u.id)}
+                              disabled={isSelf(u)}
                               aria-label="Remove user"
                             >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
-                              <span className="um-action-label">Delete</span>
+                              {ICON_DELETE}<span className="um-action-label">Delete</span>
                             </button>
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
-        </>
+        </section>
       )}
 
       {/* ── Roles & Access Tab ── */}
       {activeTab === 'roles' && (
-        <>
-          <div className="um-role-grid">
-            <div className="um-role-card admin">
-              <div className="um-role-card-accent" />
-              <div className="priv-role-head">
-                <span className="priv-role-name">Administrator</span>
-                <span className="admin-badge approved">{adminCount} users</span>
-              </div>
-              <div className="priv-role-sub">Full system access · reserved role</div>
-              <div className="priv-role-modules">
-                <span className="priv-role-chip">All modules</span>
-              </div>
-            </div>
-            {roles.map((role, idx) => (
-              <div className="um-role-card" key={role.id}>
-                <div className="um-role-card-accent" style={{ background: ROLE_AVATAR_PALETTE[(idx + 1) % ROLE_AVATAR_PALETTE.length] }} />
-                <div className="priv-role-head">
-                  <span className="priv-role-name">{role.name}</span>
-                  <span className={`admin-badge ${roleBadgeClass(role.name, roles)}`}>{role.userCount || 0} users</span>
-                </div>
-                <div className="priv-role-sub">Default privileges</div>
-                <div className="priv-role-modules">
-                  {(role.permissions || []).length === 0 && <span className="um-contact-sub">No privileges</span>}
-                  {(role.permissions || []).map((key) => {
-                    const priv = privilegeByKey[key];
-                    return priv ? <span className="priv-role-chip" key={key} title={priv.description}>{priv.name}</span> : null;
-                  })}
-                </div>
-                <div className="um-role-card-actions">
-                  <button type="button" className="um-inline-btn" onClick={() => openEditRoleModal(role)}>Edit</button>
-                  <button type="button" className="um-inline-btn danger" onClick={() => setPendingDeleteRole(role)}>Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+        <div className="um-role-grid" key="roles">
+          {renderRoleCard({ key: 'admin', name: 'Admin', members: membersByRole.Admin || [], isAdmin: true, idx: 0 })}
+          {roles.map((role, idx) => renderRoleCard({
+            key: role.id,
+            name: role.name,
+            members: membersByRole[role.name] || [],
+            role,
+            idx: idx + 1,
+          }))}
+          {rolesLoading && <div className="dash-skeleton um-role-skeleton" />}
+        </div>
       )}
 
       {/* ── Privileges Tab ── */}
       {activeTab === 'privileges' && (
-        <>
-          <div className="um-toolbar">
+        <section key="privileges">
+          <div className="um-toolbar um-priv-toolbar">
             <div className="admin-search um-search">
-              <span className="admin-search-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </span>
+              <span className="admin-search-icon">{ICON_SEARCH}</span>
               <input
                 type="search"
                 value={privSearch}
                 onChange={(e) => setPrivSearch(e.target.value)}
                 placeholder="Search privileges by name or description"
               />
+            </div>
+            <div className="um-priv-legend">
+              <span><i className="system" /> Built-in · {privileges.filter((pv) => pv.isSystem).length}</span>
+              <span><i /> Custom · {privileges.filter((pv) => !pv.isSystem).length}</span>
             </div>
           </div>
 
@@ -938,17 +1092,20 @@ export default function UserManagementPage() {
             </div>
           ) : visiblePrivileges.length === 0 ? (
             <div className="um-empty-state">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              <p>{privSearch ? 'No privileges match your search.' : 'No privileges yet.'}</p>
+              <span className="um-empty-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </span>
+              <h3>{privSearch ? 'No matches' : 'No privileges yet'}</h3>
+              <p>{privSearch ? 'Try a different search term.' : 'Use “Add Privilege” to define the first one.'}</p>
             </div>
           ) : (
             <div className="um-priv-grid">
-              {visiblePrivileges.map((priv) => {
+              {visiblePrivileges.map((priv, idx) => {
                 const inUse = priv.roleCount + priv.userCount > 0;
                 return (
-                  <div className={`um-priv-card${priv.isSystem ? ' system' : ''}`} key={priv.id}>
+                  <div className={`um-priv-card${priv.isSystem ? ' system' : ''}`} key={priv.id} style={{ '--i': idx }}>
                     <div className="um-priv-card-head">
                       <div className="um-priv-icon">
                         {priv.isSystem ? (
@@ -972,20 +1129,22 @@ export default function UserManagementPage() {
 
                     <div className="um-priv-card-foot">
                       <span className="um-priv-usage" title="Roles and users currently holding this privilege">
-                        <strong>{priv.roleCount}</strong> {priv.roleCount === 1 ? 'role' : 'roles'}
-                        <i aria-hidden="true">·</i>
-                        <strong>{priv.userCount}</strong> {priv.userCount === 1 ? 'user' : 'users'}
+                        <span><strong>{priv.roleCount}</strong> {priv.roleCount === 1 ? 'role' : 'roles'}</span>
+                        <span><strong>{priv.userCount}</strong> {priv.userCount === 1 ? 'user' : 'users'}</span>
                       </span>
-                      <div className="um-priv-actions">
-                        <button type="button" className="um-inline-btn" onClick={() => openEditPrivModal(priv)}>Edit</button>
+                      <div className="um-row-actions um-priv-actions">
+                        <button type="button" className="um-action-btn edit" onClick={() => openEditPrivModal(priv)} aria-label={`Edit ${priv.name}`}>
+                          {ICON_EDIT}<span className="um-action-label">Edit</span>
+                        </button>
                         <button
                           type="button"
-                          className="um-inline-btn danger"
+                          className="um-action-btn delete"
                           onClick={() => setPendingDeletePriv(priv)}
                           disabled={priv.isSystem}
-                          title={priv.isSystem ? 'Built-in privileges cannot be deleted' : inUse ? 'Still in use — remove it from roles first' : 'Delete privilege'}
+                          aria-label={`Delete ${priv.name}`}
+                          title={priv.isSystem ? 'Built-in privileges cannot be deleted' : inUse ? 'Still in use — remove it from roles first' : undefined}
                         >
-                          Delete
+                          {ICON_DELETE}<span className="um-action-label">Delete</span>
                         </button>
                       </div>
                     </div>
@@ -994,7 +1153,7 @@ export default function UserManagementPage() {
               })}
             </div>
           )}
-        </>
+        </section>
       )}
 
       {/* ── Add / Edit User Modal ── */}

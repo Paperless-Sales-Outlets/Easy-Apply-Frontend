@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getApplications, getAdminForms } from '../services/adminService';
 import { useAdminAuth } from '../context/AdminAuthContext';
+import { AnimatedNumber, Sparkline, timeAgo } from '../components/AdminVisuals';
 import {
   formatDate,
   normalizeApplication,
@@ -29,6 +30,74 @@ function initials(name) {
   if (!name) return '?';
   return name.split(' ').filter(Boolean).map((n) => n[0]).slice(0, 2).join('').toUpperCase();
 }
+
+const DAY_MS = 86400000;
+const TREND_DAYS = 7;
+const CLOSED_STATUSES = ['approved', 'confirmed'];
+
+const statusOf = (app) => String(app.status || 'pending').toLowerCase();
+const actionedOn = (app) => app.actionedAt || app.updatedAt;
+
+function startOfDay(value) {
+  const d = new Date(value);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+// Applications per local day for the last TREND_DAYS days (oldest → newest),
+// bucketed by whichever date `pickDate` returns (null = not counted).
+function dailySeries(apps, pickDate) {
+  const today = startOfDay(Date.now());
+  const counts = Array(TREND_DAYS).fill(0);
+  apps.forEach((app) => {
+    const when = pickDate(app);
+    if (!when) return;
+    const idx = TREND_DAYS - 1 - Math.round((today - startOfDay(when)) / DAY_MS);
+    if (idx >= 0 && idx < TREND_DAYS) counts[idx] += 1;
+  });
+  return counts;
+}
+
+// 7-day trend source + colour for each summary card.
+const KPI_TRENDS = {
+  todaySubmissions: { color: '#0f57a8', pick: (a) => a.submittedAt },
+  pendingKyc: { color: '#d08a00', pick: (a) => (PENDING_STATUSES.includes(statusOf(a)) ? a.submittedAt : null) },
+  approvedToday: { color: '#3a9636', pick: (a) => (CLOSED_STATUSES.includes(statusOf(a)) ? actionedOn(a) : null) },
+  rejectedToday: { color: '#c4372c', pick: (a) => (statusOf(a) === 'rejected' ? actionedOn(a) : null) },
+};
+
+// Status order + colour for the pipeline bar in the hero.
+const PIPELINE = [
+  { key: 'pending', label: 'Pending', color: '#eba834' },
+  { key: 'pending payment', label: 'Pending Payment', color: '#f6cf7a' },
+  { key: 'approved', label: 'Approved', color: '#50b748' },
+  { key: 'confirmed', label: 'Confirmed', color: '#5aa9f0' },
+  { key: 'rejected', label: 'Rejected', color: '#e0645a' },
+  { key: 'flagged', label: 'Flagged', color: '#a98bf0' },
+];
+
+const CARD_ICONS = {
+  donut: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21.2 15.9A10 10 0 1 1 8 2.8" /><path d="M22 12A10 10 0 0 0 12 2v10z" />
+    </svg>
+  ),
+  check: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" />
+    </svg>
+  ),
+  bars: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3v18h18" /><path d="M7 16v-5M12 16V8M17 16v-8" />
+    </svg>
+  ),
+  inbox: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
+  ),
+};
 
 const STAT_CARDS = [
   {
@@ -293,6 +362,7 @@ export default function AdminDashboardPage() {
   const [dashboardSearch, setDashboardSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [now, setNow] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60000);
@@ -310,6 +380,7 @@ export default function AdminDashboardPage() {
       setRecentApplications(apps);
       setDataSource('');
       setError('');
+      setLastUpdated(new Date());
     } catch (err) {
       try {
         const { forms = [] } = await getAdminForms({ limit: 200 });
@@ -319,6 +390,7 @@ export default function AdminDashboardPage() {
         setRecentApplications(normalized);
         setDataSource('forms');
         setError('');
+        setLastUpdated(new Date());
       } catch {
         setError(err.response?.data?.message || 'Failed to load dashboard data');
       }
@@ -334,12 +406,19 @@ export default function AdminDashboardPage() {
   const formTotalData = byServiceType.map(form => ({ service: form.label, count: form.total }));
   const formCompletedData = byServiceType.map(form => ({ service: form.label, count: form.completed }));
 
-  const renderFormPieCard = (title, subtitle, data) => (
+  const renderFormPieCard = (title, subtitle, data, icon) => (
     <div className="dash-chart-card">
       <div className="dash-chart-card-head">
-        <div>
-          <h2>{title}</h2>
-          <p>{subtitle}</p>
+        <div className="dash-card-title">
+          <span className="dash-card-icon">{icon}</span>
+          <div>
+            <h2>{title}</h2>
+            <p>{subtitle}</p>
+          </div>
+        </div>
+        <div className="dash-card-total">
+          <strong><AnimatedNumber value={data.reduce((sum, item) => sum + item.count, 0)} /></strong>
+          <span>forms</span>
         </div>
       </div>
       <div className="pie-chart-wrap">
@@ -383,6 +462,44 @@ export default function AdminDashboardPage() {
     .filter(app => matchesSearch(app, dashboardSearch))
     .filter(app => statusFilter === 'All' || app.status === statusFilter);
 
+  const kpiSeries = useMemo(
+    () => Object.fromEntries(Object.entries(KPI_TRENDS).map(([key, t]) => [key, dailySeries(recentApplications, t.pick)])),
+    [recentApplications]
+  );
+
+  // Oldest application still waiting for action (all of them, not just the 15 shown).
+  const oldestPendingDays = useMemo(() => {
+    const times = recentApplications
+      .filter((app) => PENDING_STATUSES.includes(statusOf(app)) && app.submittedAt)
+      .map((app) => startOfDay(app.submittedAt));
+    if (!times.length) return null;
+    return Math.round((startOfDay(Date.now()) - Math.min(...times)) / DAY_MS);
+  }, [recentApplications]);
+
+  const pipeline = useMemo(() => {
+    const counts = {};
+    recentApplications.forEach((app) => { counts[statusOf(app)] = (counts[statusOf(app)] || 0) + 1; });
+    return PIPELINE.map((stage) => ({ ...stage, count: counts[stage.key] || 0 }));
+  }, [recentApplications]);
+  const pipelineTotal = pipeline.reduce((sum, stage) => sum + stage.count, 0);
+  const awaitingAction = pipeline.filter((st) => PENDING_STATUSES.includes(st.key)).reduce((sum, st) => sum + st.count, 0);
+
+  const todayTotals = todayDistribution.reduce(
+    (acc, item) => ({ submitted: acc.submitted + item.submitted, completed: acc.completed + item.completed }),
+    { submitted: 0, completed: 0 }
+  );
+
+  const kpiBadge = (key) => {
+    if (key === 'pendingKyc') {
+      if (oldestPendingDays == null) return { text: 'Queue clear', tone: 'good' };
+      return { text: oldestPendingDays === 0 ? 'Oldest: today' : `Oldest: ${oldestPendingDays}d`, tone: oldestPendingDays > 2 ? 'warn' : 'neutral' };
+    }
+    const series = kpiSeries[key] || [];
+    const delta = (series[TREND_DAYS - 1] || 0) - (series[TREND_DAYS - 2] || 0);
+    if (delta === 0) return { text: 'Same as yesterday', tone: 'neutral' };
+    return { text: `${delta > 0 ? '▲' : '▼'} ${Math.abs(delta)} vs yesterday`, tone: delta > 0 ? 'up' : 'down' };
+  };
+
   const greeting = (() => {
     const h = now.getHours();
     if (h < 12) return 'Good morning';
@@ -394,22 +511,61 @@ export default function AdminDashboardPage() {
     <div className="dash-page">
       {/* ── Hero header ── */}
       <div className="dash-hero">
-        <div className="dash-hero-text">
-          <span className="dash-hero-eyebrow">Operations Dashboard</span>
-          <h1>{greeting}{admin?.name ? `, ${admin.name.split(' ')[0]}` : ''}</h1>
-          <p>Here's what's happening across service applications and field operations today.</p>
+        <div className="dash-hero-deco" aria-hidden="true">
+          <span className="dash-hero-orb" />
+          <span className="dash-hero-slash" />
+          <span className="dash-hero-grid" />
         </div>
+
+        <div className="dash-hero-main">
+          <span className="dash-hero-eyebrow">
+            <span className="dash-live-dot" /> Operations Dashboard
+          </span>
+          <h1>{greeting}{admin?.name ? `, ${admin.name.split(' ')[0]}` : ''}</h1>
+          <p>
+            {loading
+              ? 'Gathering today\'s activity…'
+              : awaitingAction > 0
+                ? <><strong>{awaitingAction}</strong> application{awaitingAction === 1 ? ' is' : 's are'} waiting for action · <strong>{stats.todaySubmissions ?? 0}</strong> submitted today</>
+                : <>All caught up — no applications are waiting · <strong>{stats.todaySubmissions ?? 0}</strong> submitted today</>}
+          </p>
+
+          <div className="dash-pipeline">
+            <div className="dash-pipeline-head">
+              <span>Application pipeline</span>
+              <span>Latest {pipelineTotal} applications</span>
+            </div>
+            <div className="dash-pipeline-bar" role="img" aria-label={pipeline.map((st) => `${st.label}: ${st.count}`).join(', ')}>
+              {pipelineTotal === 0
+                ? <span className="dash-pipeline-empty" />
+                : pipeline.filter((st) => st.count > 0).map((st) => (
+                  <span key={st.key} style={{ flexGrow: st.count, background: st.color }} title={`${st.label}: ${st.count}`} />
+                ))}
+            </div>
+            <div className="dash-pipeline-legend">
+              {pipeline.map((st) => (
+                <span key={st.key} className={st.count === 0 ? 'is-zero' : ''}>
+                  <i style={{ background: st.color }} />{st.label}<b>{st.count}</b>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="dash-hero-side">
           <div className="dash-hero-clock">
             <span className="dash-hero-time">{now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
-            <span className="dash-hero-date">{now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+            <span className="dash-hero-date">{now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
           </div>
           <button type="button" className="dash-refresh-btn" onClick={() => loadDashboard({ silent: true })} disabled={refreshing}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={refreshing ? 'dash-spin' : ''}>
               <path d="M21 12a9 9 0 1 1-2.64-6.36" /><polyline points="21 3 21 9 15 9" />
             </svg>
-            {refreshing ? 'Refreshing…' : 'Refresh'}
+            {refreshing ? 'Refreshing…' : 'Refresh data'}
           </button>
+          <span className="dash-hero-updated">
+            {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : 'Loading…'}
+          </span>
         </div>
       </div>
 
@@ -427,39 +583,60 @@ export default function AdminDashboardPage() {
 
       {/* ── Summary Cards ── */}
       <div className="dash-stat-grid">
-        {STAT_CARDS.map(card => (
-          <div className="dash-stat-card" key={card.key}>
-            <div className={`dash-stat-icon ${card.colorClass}`}>
-              {card.icon}
-            </div>
-            <div className="dash-stat-body">
+        {STAT_CARDS.map((card, idx) => {
+          const badge = kpiBadge(card.key);
+          return (
+            <div className={`dash-stat-card ${card.colorClass}`} key={card.key} style={{ '--i': idx }}>
+              <div className="dash-stat-top">
+                <div className={`dash-stat-icon ${card.colorClass}`}>
+                  {card.icon}
+                </div>
+                {!loading && <span className={`dash-stat-badge ${badge.tone}`}>{badge.text}</span>}
+              </div>
               <div className="dash-stat-label">{card.label}</div>
               <div className="dash-stat-value">
-                {loading ? <span className="dash-skeleton dash-skeleton-num" /> : stats[card.key] ?? 0}
+                {loading ? <span className="dash-skeleton dash-skeleton-num" /> : <AnimatedNumber value={stats[card.key] ?? 0} />}
               </div>
               <div className="dash-stat-trend">{card.caption}</div>
+              <div className="dash-stat-spark">
+                {!loading && (
+                  <Sparkline
+                    data={kpiSeries[card.key]}
+                    color={KPI_TRENDS[card.key].color}
+                    label={`${card.label}, last ${TREND_DAYS} days: ${kpiSeries[card.key].join(', ')}`}
+                  />
+                )}
+                <span>Last {TREND_DAYS} days</span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── Operation Pie Charts ── */}
       <section className="dash-chart-grid">
-        {renderFormPieCard('Total Forms by Type', '9 tracked service forms', formTotalData)}
-        {renderFormPieCard('Completed Forms by Type', 'Finished vs. in-flight', formCompletedData)}
+        {renderFormPieCard('Total Forms by Type', '9 tracked service forms', formTotalData, CARD_ICONS.donut)}
+        {renderFormPieCard('Completed Forms by Type', 'Approved or confirmed, per form', formCompletedData, CARD_ICONS.check)}
       </section>
 
       {/* ── Today Application Distribution ── */}
       <section className="dash-section">
         <div className="dash-chart-card">
           <div className="dash-chart-card-head">
-            <div>
-              <h2>Today's Application Distribution</h2>
-              <p>Submitted vs. completed, per service form</p>
+            <div className="dash-card-title">
+              <span className="dash-card-icon">{CARD_ICONS.bars}</span>
+              <div>
+                <h2>Today's Application Distribution</h2>
+                <p>Submitted vs. completed, per service form</p>
+              </div>
             </div>
-            <div className="dash-chart-legend-bar">
-              <span><span className="legend-dot completed" /> Completed</span>
-              <span><span className="legend-dot today" /> Submitted</span>
+            <div className="dash-today-chips">
+              <span className="dash-today-chip submitted">
+                <span className="legend-dot today" /> Submitted <strong><AnimatedNumber value={todayTotals.submitted} /></strong>
+              </span>
+              <span className="dash-today-chip completed">
+                <span className="legend-dot completed" /> Completed <strong><AnimatedNumber value={todayTotals.completed} /></strong>
+              </span>
             </div>
           </div>
           <TodayDistributionBarChart data={todayDistribution} />
@@ -470,9 +647,15 @@ export default function AdminDashboardPage() {
       <section className="dash-section">
         <div className="dash-table-card">
           <div className="dash-table-toolbar">
-            <div>
-              <h2>Recent Application History</h2>
-              <p>Latest {filteredApplications.length} applications awaiting action</p>
+            <div className="dash-card-title">
+              <span className="dash-card-icon">{CARD_ICONS.inbox}</span>
+              <div>
+                <h2>
+                  Recent Application History
+                  <span className="dash-count-pill">{filteredApplications.length}</span>
+                </h2>
+                <p>Newest applications still awaiting action</p>
+              </div>
             </div>
             <div className="dash-table-controls">
               <div className="admin-search dash-search">
@@ -501,11 +684,14 @@ export default function AdminDashboardPage() {
               {Array.from({ length: 5 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
             </div>
           ) : filteredApplications.length === 0 ? (
-            <div className="admin-empty">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-              </svg>
-              <p>No recent applications found.</p>
+            <div className="dash-empty">
+              <span className="dash-empty-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" />
+                </svg>
+              </span>
+              <h3>{dashboardSearch || statusFilter !== 'All' ? 'No matches' : 'Inbox zero'}</h3>
+              <p>{dashboardSearch || statusFilter !== 'All' ? 'No pending applications match your search or filter.' : 'Every application has been actioned. Nice work!'}</p>
             </div>
           ) : (
             <div className="dash-table-wrap">
@@ -547,15 +733,20 @@ export default function AdminDashboardPage() {
                             </div>
                           </div>
                         </td>
-                        <td style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{serviceLabel(app.serviceType)}</td>
+                        <td><span className="dash-service-tag">{serviceLabel(app.serviceType)}</span></td>
                         <td>
                           <span className={`admin-badge ${statusBadgeClass(app.status)}`}>
                             {statusLabel(app.status)}
                           </span>
                         </td>
-                        <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{formatDate(app.submittedAt)}</td>
-                        <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.phone}</td>
-                        <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.address}</td>
+                        <td>
+                          <div className="dash-date">
+                            <span>{formatDate(app.submittedAt)}</span>
+                            <small>{timeAgo(app.submittedAt)}</small>
+                          </div>
+                        </td>
+                        <td className="dash-muted-cell">{app.phone || '—'}</td>
+                        <td className="dash-muted-cell"><span className="dash-address" title={app.address}>{app.address || '—'}</span></td>
                         <td className="dash-comment-cell">
                           {comment ? (
                             <>
