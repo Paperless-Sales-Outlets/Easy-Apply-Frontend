@@ -92,6 +92,112 @@ const EyeIcon = ({ open }) => open ? (
   </svg>
 );
 
+const NAME_PATTERN = /^[\p{L}][\p{L}\s.'-]*$/u;
+const ROLE_NAME_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N}\s&-]*$/u;
+const RESERVED_ROLE_NAMES = ['admin', 'administrator', 'customer'];
+const PRIVILEGE_DESCRIPTION_MIN = 10;
+
+const USER_FIELDS = ['name', 'email', 'role', 'password', 'confirmPassword'];
+const ROLE_FIELDS = ['name'];
+const PRIVILEGE_FIELDS = ['name', 'description'];
+
+const sameText = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+
+// Each validator is pure: it returns { field: message } for every field that is
+// currently invalid, so the UI can decide *when* to reveal them (on blur, then live).
+function validateUserForm(form, { editingUser, users }) {
+  const errors = {};
+  const name = form.name.trim();
+  const email = form.email.trim();
+
+  if (!name) errors.name = 'Full name is required.';
+  else if (name.length < 2) errors.name = 'Full name must be at least 2 characters.';
+  else if (name.length > 60) errors.name = 'Full name must be 60 characters or fewer.';
+  else if (!NAME_PATTERN.test(name)) errors.name = 'Use letters, spaces, apostrophes, hyphens or full stops only.';
+
+  if (!email) errors.email = 'Email address is required.';
+  else if (!EMAIL_PATTERN.test(email)) errors.email = `Must be a valid ${EMAIL_DOMAIN} address, e.g. name@${EMAIL_DOMAIN}.`;
+  else if (users.some((u) => u.id !== editingUser?.id && sameText(u.email, email))) {
+    errors.email = 'Another account already uses this email address.';
+  }
+
+  if (!form.role) errors.role = 'Please select a role.';
+
+  if (!editingUser && !form.password) errors.password = 'Password is required.';
+  else if (form.password && form.password.length < 6) errors.password = 'Password must be at least 6 characters.';
+  else if (form.password && /\s/.test(form.password)) errors.password = 'Password cannot contain spaces.';
+
+  if (!editingUser || form.password) {
+    if (!form.confirmPassword) errors.confirmPassword = 'Please confirm the password.';
+    else if (form.password !== form.confirmPassword) errors.confirmPassword = 'Passwords do not match.';
+  }
+
+  return errors;
+}
+
+function validateRoleForm(roleForm, { editingRole, roles }) {
+  const errors = {};
+  const name = roleForm.name.trim();
+
+  if (!name) errors.name = 'Role name is required.';
+  else if (name.length < 2) errors.name = 'Role name must be at least 2 characters.';
+  else if (name.length > 40) errors.name = 'Role name must be 40 characters or fewer.';
+  else if (!ROLE_NAME_PATTERN.test(name)) errors.name = 'Use letters, numbers, spaces, & or hyphens only.';
+  else if (RESERVED_ROLE_NAMES.includes(name.toLowerCase())) errors.name = `"${name}" is a reserved system role.`;
+  else if (roles.some((r) => r.id !== editingRole?.id && sameText(r.name, name))) {
+    errors.name = 'A role with this name already exists.';
+  }
+
+  return errors;
+}
+
+function validatePrivilegeForm(privForm, { editingPriv, privileges }) {
+  const errors = {};
+  const name = privForm.name.trim();
+  const description = privForm.description.trim();
+
+  if (!name) errors.name = 'Privilege name is required.';
+  else if (name.length < 2) errors.name = 'Privilege name must be at least 2 characters.';
+  else if (name.length > 60) errors.name = 'Privilege name must be 60 characters or fewer.';
+  else if (privileges.some((p) => p.id !== editingPriv?.id && sameText(p.name, name))) {
+    errors.name = 'A privilege with this name already exists.';
+  }
+
+  if (!description) errors.description = 'Describe what this privilege allows.';
+  else if (description.length < PRIVILEGE_DESCRIPTION_MIN) {
+    errors.description = `Add a little more detail (at least ${PRIVILEGE_DESCRIPTION_MIN} characters).`;
+  }
+
+  return errors;
+}
+
+// Reveals a field's error only once the user has left it (or tried to submit),
+// then keeps it in sync as they type. Returns what the input needs: a state
+// class, the message, and accessibility + blur wiring.
+function makeField(prefix, key, errors, touched, value, onTouch, required = true) {
+  const error = touched[key] ? errors[key] : undefined;
+  const valid = !!touched[key] && !errors[key] && String(value ?? '').length > 0;
+  const errorId = `${prefix}-${key}-error`;
+  return {
+    cls: error ? ' invalid' : valid ? ' valid' : '',
+    error,
+    errorId,
+    props: {
+      onBlur: onTouch,
+      'aria-invalid': error ? true : undefined,
+      'aria-describedby': error ? errorId : undefined,
+      'aria-required': required || undefined,
+    },
+  };
+}
+
+function FieldError({ id, message }) {
+  if (!message) return null;
+  return <span id={id} className="um-field-error" role="alert">{message}</span>;
+}
+
+const touchAll = (fields) => Object.fromEntries(fields.map((f) => [f, true]));
+
 const TABS = [
   { key: 'team', label: 'Team Members' },
   { key: 'roles', label: 'Roles & Access' },
@@ -125,7 +231,8 @@ export default function UserManagementPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState({});
+  const [userTouched, setUserTouched] = useState({});
+  const [userSubmitted, setUserSubmitted] = useState(false);
 
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -144,7 +251,10 @@ export default function UserManagementPage() {
   const [privModalOpen, setPrivModalOpen] = useState(false);
   const [editingPriv, setEditingPriv] = useState(null);
   const [privForm, setPrivForm] = useState(EMPTY_PRIVILEGE_FORM);
-  const [privFieldErrors, setPrivFieldErrors] = useState({});
+  const [privTouched, setPrivTouched] = useState({});
+  const [privSubmitted, setPrivSubmitted] = useState(false);
+  const [roleTouched, setRoleTouched] = useState({});
+  const [roleSubmitted, setRoleSubmitted] = useState(false);
   const [privFormError, setPrivFormError] = useState('');
   const [privSaving, setPrivSaving] = useState(false);
   const [pendingDeletePriv, setPendingDeletePriv] = useState(null);
@@ -221,6 +331,26 @@ export default function UserManagementPage() {
     });
   }, [users, roleFilter, statusFilter, search]);
 
+  // ── Live validation (errors surface per field on blur, then update as you type) ──
+
+  const userErrors = useMemo(() => validateUserForm(form, { editingUser, users }), [form, editingUser, users]);
+  const roleErrors = useMemo(() => validateRoleForm(roleForm, { editingRole, roles }), [roleForm, editingRole, roles]);
+  const privErrors = useMemo(() => validatePrivilegeForm(privForm, { editingPriv, privileges }), [privForm, editingPriv, privileges]);
+
+  const touchField = (setter) => (key) => () => setter((t) => (t[key] ? t : { ...t, [key]: true }));
+  const uf = Object.fromEntries(USER_FIELDS.map((k) => [
+    k,
+    makeField('um-user', k, userErrors, userTouched, form[k], touchField(setUserTouched)(k), k !== 'confirmPassword' || !editingUser),
+  ]));
+  const rf = Object.fromEntries(ROLE_FIELDS.map((k) => [
+    k,
+    makeField('um-role', k, roleErrors, roleTouched, roleForm[k], touchField(setRoleTouched)(k)),
+  ]));
+  const pf = Object.fromEntries(PRIVILEGE_FIELDS.map((k) => [
+    k,
+    makeField('um-priv', k, privErrors, privTouched, privForm[k], touchField(setPrivTouched)(k)),
+  ]));
+
   // ── User modal handlers ──
 
   const openAddModal = () => {
@@ -233,7 +363,8 @@ export default function UserManagementPage() {
       permissions: defaultRole?.permissions || [],
     });
     setFormError('');
-    setFieldErrors({});
+    setUserTouched({});
+    setUserSubmitted(false);
     setShowPassword(false);
     setShowConfirmPassword(false);
     setModalOpen(true);
@@ -257,7 +388,8 @@ export default function UserManagementPage() {
         : (roles.find((r) => r.name === user.role)?.permissions || []),
     });
     setFormError('');
-    setFieldErrors({});
+    setUserTouched({});
+    setUserSubmitted(false);
     setShowPassword(false);
     setShowConfirmPassword(false);
     setModalOpen(true);
@@ -276,55 +408,17 @@ export default function UserManagementPage() {
   const handleGeneratePassword = () => {
     const pwd = generatePassword();
     setForm((f) => ({ ...f, password: pwd, confirmPassword: pwd }));
-    setFieldErrors((fe) => ({ ...fe, password: undefined, confirmPassword: undefined }));
     setShowPassword(true);
     setShowConfirmPassword(true);
-  };
-
-  const validateForm = () => {
-    const errors = {};
-
-    if (!form.name.trim()) {
-      errors.name = 'Full name is required.';
-    }
-
-    if (!form.email.trim()) {
-      errors.email = 'Email address is required.';
-    } else if (!EMAIL_PATTERN.test(form.email.trim())) {
-      errors.email = `Must be a valid ${EMAIL_DOMAIN} address, e.g. name@${EMAIL_DOMAIN}.`;
-    }
-
-    if (!form.role) {
-      errors.role = 'Please select a role.';
-    }
-
-    if (!editingUser && !form.password) {
-      errors.password = 'Password is required.';
-    } else if (form.password && form.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters.';
-    }
-
-    if (!editingUser || form.password) {
-      if (!form.confirmPassword) {
-        errors.confirmPassword = 'Please confirm the password.';
-      } else if (form.password !== form.confirmPassword) {
-        errors.confirmPassword = 'Passwords do not match.';
-      }
-    }
-
-    return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
 
-    const errors = validateForm();
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) {
-      setFormError('Please fix the highlighted fields before continuing.');
-      return;
-    }
+    setUserSubmitted(true);
+    setUserTouched(touchAll(USER_FIELDS));
+    if (Object.keys(userErrors).length > 0) return;
 
     setSaving(true);
     try {
@@ -394,7 +488,8 @@ export default function UserManagementPage() {
   const openAddPrivModal = () => {
     setEditingPriv(null);
     setPrivForm(EMPTY_PRIVILEGE_FORM);
-    setPrivFieldErrors({});
+    setPrivTouched({});
+    setPrivSubmitted(false);
     setPrivFormError('');
     setPrivModalOpen(true);
   };
@@ -402,7 +497,8 @@ export default function UserManagementPage() {
   const openEditPrivModal = (priv) => {
     setEditingPriv(priv);
     setPrivForm({ name: priv.name, description: priv.description });
-    setPrivFieldErrors({});
+    setPrivTouched({});
+    setPrivSubmitted(false);
     setPrivFormError('');
     setPrivModalOpen(true);
   };
@@ -416,11 +512,9 @@ export default function UserManagementPage() {
     e.preventDefault();
     setPrivFormError('');
 
-    const errors = {};
-    if (!privForm.name.trim()) errors.name = 'Give this privilege a name.';
-    if (!privForm.description.trim()) errors.description = 'Describe what this privilege allows.';
-    setPrivFieldErrors(errors);
-    if (Object.keys(errors).length) return;
+    setPrivSubmitted(true);
+    setPrivTouched(touchAll(PRIVILEGE_FIELDS));
+    if (Object.keys(privErrors).length > 0) return;
 
     setPrivSaving(true);
     try {
@@ -463,6 +557,8 @@ export default function UserManagementPage() {
     setEditingRole(null);
     setRoleForm(EMPTY_ROLE_FORM);
     setRoleFormError('');
+    setRoleTouched({});
+    setRoleSubmitted(false);
     setRoleModalOpen(true);
   };
 
@@ -470,6 +566,8 @@ export default function UserManagementPage() {
     setEditingRole(role);
     setRoleForm({ name: role.name, permissions: role.permissions || [] });
     setRoleFormError('');
+    setRoleTouched({});
+    setRoleSubmitted(false);
     setRoleModalOpen(true);
   };
 
@@ -491,10 +589,9 @@ export default function UserManagementPage() {
     e.preventDefault();
     setRoleFormError('');
 
-    if (!roleForm.name.trim()) {
-      setRoleFormError('Role name is required.');
-      return;
-    }
+    setRoleSubmitted(true);
+    setRoleTouched(touchAll(ROLE_FIELDS));
+    if (Object.keys(roleErrors).length > 0) return;
 
     setRoleSaving(true);
     try {
@@ -921,7 +1018,10 @@ export default function UserManagementPage() {
 
             <form onSubmit={handleSubmit} noValidate>
               <div className="admin-modal-body">
-                {formError && <div className="admin-error-banner" style={{ marginBottom: '1rem' }}>{formError}</div>}
+                {userSubmitted && Object.keys(userErrors).length > 0 && (
+                  <div className="admin-error-banner" role="alert" style={{ marginBottom: '1rem' }}>Please fix the highlighted fields before continuing.</div>
+                )}
+                {formError && <div className="admin-error-banner" role="alert" style={{ marginBottom: '1rem' }}>{formError}</div>}
 
                 <div className="um-form-grid um-form-vertical">
                   <label className="um-field">
@@ -953,13 +1053,16 @@ export default function UserManagementPage() {
                       </span>
                       <input
                         type="text"
-                        className={`um-input um-input-icon${fieldErrors.name ? ' invalid' : ''}`}
+                        className={`um-input um-input-icon${uf.name.cls}`}
+                        {...uf.name.props}
                         value={form.name}
-                        onChange={(e) => { setForm((f) => ({ ...f, name: e.target.value })); setFieldErrors((fe) => ({ ...fe, name: undefined })); }}
+                        maxLength={60}
+                        autoComplete="off"
+                        onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                         placeholder="e.g. Kasun Perera"
                       />
                     </div>
-                    {fieldErrors.name && <span className="um-field-error">{fieldErrors.name}</span>}
+                    <FieldError id={uf.name.errorId} message={uf.name.error} />
                   </label>
 
                   <label className="um-field">
@@ -972,21 +1075,24 @@ export default function UserManagementPage() {
                       </span>
                       <input
                         type="email"
-                        className={`um-input um-input-icon${fieldErrors.email ? ' invalid' : ''}`}
+                        className={`um-input um-input-icon${uf.email.cls}`}
+                        {...uf.email.props}
                         value={form.email}
-                        onChange={(e) => { setForm((f) => ({ ...f, email: e.target.value })); setFieldErrors((fe) => ({ ...fe, email: undefined })); }}
+                        autoComplete="off"
+                        onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                         placeholder={`name@${EMAIL_DOMAIN}`}
                       />
                     </div>
-                    {fieldErrors.email && <span className="um-field-error">{fieldErrors.email}</span>}
+                    <FieldError id={uf.email.errorId} message={uf.email.error} />
                   </label>
 
                   <label className="um-field">
                     <span>Role *</span>
                     <select
-                      className={`um-input${fieldErrors.role ? ' invalid' : ''}`}
+                      className={`um-input${uf.role.cls}`}
+                      {...uf.role.props}
                       value={form.role}
-                      onChange={(e) => { handleRoleChange(e.target.value); setFieldErrors((fe) => ({ ...fe, role: undefined })); }}
+                      onChange={(e) => handleRoleChange(e.target.value)}
                       disabled={editingUser?.role === 'Admin'}
                     >
                       {editingUser?.role === 'Admin' && (
@@ -999,7 +1105,7 @@ export default function UserManagementPage() {
                     {editingUser?.role === 'Admin' && (
                       <span className="um-field-hint">Administrator accounts can't be re-assigned from here.</span>
                     )}
-                    {fieldErrors.role && <span className="um-field-error">{fieldErrors.role}</span>}
+                    <FieldError id={uf.role.errorId} message={uf.role.error} />
                   </label>
 
                   <label className="um-field">
@@ -1012,9 +1118,11 @@ export default function UserManagementPage() {
                       </span>
                       <input
                         type={showPassword ? 'text' : 'password'}
-                        className={`um-input um-input-icon um-input-icon-both${fieldErrors.password ? ' invalid' : ''}`}
+                        className={`um-input um-input-icon um-input-icon-both${uf.password.cls}`}
+                        {...uf.password.props}
                         value={form.password}
-                        onChange={(e) => { setForm((f) => ({ ...f, password: e.target.value })); setFieldErrors((fe) => ({ ...fe, password: undefined })); }}
+                        autoComplete="new-password"
+                        onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                         placeholder={editingUser ? 'Leave blank to keep current' : 'Minimum 6 characters'}
                       />
                       <button
@@ -1030,7 +1138,7 @@ export default function UserManagementPage() {
                     <button type="button" className="um-generate-link" onClick={handleGeneratePassword}>
                       Generate a strong password
                     </button>
-                    {fieldErrors.password && <span className="um-field-error">{fieldErrors.password}</span>}
+                    <FieldError id={uf.password.errorId} message={uf.password.error} />
                   </label>
 
                   <label className="um-field">
@@ -1043,9 +1151,11 @@ export default function UserManagementPage() {
                       </span>
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
-                        className={`um-input um-input-icon um-input-icon-both${fieldErrors.confirmPassword ? ' invalid' : ''}`}
+                        className={`um-input um-input-icon um-input-icon-both${uf.confirmPassword.cls}`}
+                        {...uf.confirmPassword.props}
                         value={form.confirmPassword}
-                        onChange={(e) => { setForm((f) => ({ ...f, confirmPassword: e.target.value })); setFieldErrors((fe) => ({ ...fe, confirmPassword: undefined })); }}
+                        autoComplete="new-password"
+                        onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
                         placeholder="Re-enter password"
                       />
                       <button
@@ -1058,7 +1168,7 @@ export default function UserManagementPage() {
                         <EyeIcon open={showConfirmPassword} />
                       </button>
                     </div>
-                    {fieldErrors.confirmPassword && <span className="um-field-error">{fieldErrors.confirmPassword}</span>}
+                    <FieldError id={uf.confirmPassword.errorId} message={uf.confirmPassword.error} />
                   </label>
                 </div>
               </div>
@@ -1116,20 +1226,26 @@ export default function UserManagementPage() {
               <button type="button" className="admin-modal-close" onClick={closeRoleModal} aria-label="Close">×</button>
             </div>
 
-            <form onSubmit={handleRoleSubmit}>
+            <form onSubmit={handleRoleSubmit} noValidate>
               <div className="admin-modal-body">
-                {roleFormError && <div className="admin-error-banner" style={{ marginBottom: '1rem' }}>{roleFormError}</div>}
+                {roleSubmitted && Object.keys(roleErrors).length > 0 && (
+                  <div className="admin-error-banner" role="alert" style={{ marginBottom: '1rem' }}>Please fix the highlighted fields before continuing.</div>
+                )}
+                {roleFormError && <div className="admin-error-banner" role="alert" style={{ marginBottom: '1rem' }}>{roleFormError}</div>}
 
                 <label className="um-field" style={{ marginBottom: '1.25rem' }}>
                   <span>Role Name *</span>
                   <input
                     type="text"
-                    className="um-input"
+                    className={`um-input${rf.name.cls}`}
+                    {...rf.name.props}
                     value={roleForm.name}
+                    maxLength={40}
+                    autoComplete="off"
                     onChange={(e) => setRoleForm((f) => ({ ...f, name: e.target.value }))}
                     placeholder="e.g. Support Agent"
-                    required
                   />
+                  <FieldError id={rf.name.errorId} message={rf.name.error} />
                 </label>
 
                 <div className="um-form-section-label">Default Module Privileges</div>
@@ -1219,20 +1335,25 @@ export default function UserManagementPage() {
 
             <form onSubmit={handlePrivSubmit} noValidate>
               <div className="admin-modal-body">
-                {privFormError && <div className="admin-error-banner" style={{ marginBottom: '1rem' }}>{privFormError}</div>}
+                {privSubmitted && Object.keys(privErrors).length > 0 && (
+                  <div className="admin-error-banner" role="alert" style={{ marginBottom: '1rem' }}>Please fix the highlighted fields before continuing.</div>
+                )}
+                {privFormError && <div className="admin-error-banner" role="alert" style={{ marginBottom: '1rem' }}>{privFormError}</div>}
 
                 <div className="um-form-grid um-form-vertical">
                   <label className="um-field">
                     <span>Privilege Name *</span>
                     <input
                       type="text"
-                      className={`um-input${privFieldErrors.name ? ' invalid' : ''}`}
+                      className={`um-input${pf.name.cls}`}
+                      {...pf.name.props}
                       value={privForm.name}
                       maxLength={60}
-                      onChange={(e) => { setPrivForm((f) => ({ ...f, name: e.target.value })); setPrivFieldErrors((fe) => ({ ...fe, name: undefined })); }}
+                      autoComplete="off"
+                      onChange={(e) => setPrivForm((f) => ({ ...f, name: e.target.value }))}
                       placeholder="e.g. Export Reports"
                     />
-                    {privFieldErrors.name && <span className="um-field-error">{privFieldErrors.name}</span>}
+                    <FieldError id={pf.name.errorId} message={pf.name.error} />
                   </label>
 
                   {editingPriv && (
@@ -1250,15 +1371,16 @@ export default function UserManagementPage() {
                   <label className="um-field">
                     <span>What does it allow? *</span>
                     <textarea
-                      className={`um-input um-textarea${privFieldErrors.description ? ' invalid' : ''}`}
+                      className={`um-input um-textarea${pf.description.cls}`}
+                      {...pf.description.props}
                       value={privForm.description}
                       maxLength={PRIVILEGE_DESCRIPTION_MAX}
                       rows={4}
-                      onChange={(e) => { setPrivForm((f) => ({ ...f, description: e.target.value })); setPrivFieldErrors((fe) => ({ ...fe, description: undefined })); }}
+                      onChange={(e) => setPrivForm((f) => ({ ...f, description: e.target.value }))}
                       placeholder="Explain in a sentence or two what someone holding this privilege can do."
                     />
                     <span className="um-field-hint um-char-count">{privForm.description.length} / {PRIVILEGE_DESCRIPTION_MAX}</span>
-                    {privFieldErrors.description && <span className="um-field-error">{privFieldErrors.description}</span>}
+                    <FieldError id={pf.description.errorId} message={pf.description.error} />
                   </label>
                 </div>
               </div>

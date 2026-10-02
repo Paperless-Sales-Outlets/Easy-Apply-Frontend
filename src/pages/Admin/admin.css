@@ -4559,3 +4559,18 @@ select.um-input.invalid {
   .um-priv-grid { grid-template-columns: 1fr; }
   .um-priv-card-foot { flex-wrap: wrap; }
 }
+
+/* ── Field validation states (shared by the three User Management forms) ── */
+
+.um-input.valid,
+select.um-input.valid {
+  border-color: var(--green, #3a9636);
+  background: rgba(87,181,49,0.04);
+}
+
+.um-input.valid:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(87,181,49,0.18);
+}
+
+.um-input.invalid + .um-eye-btn { color: var(--danger); }
