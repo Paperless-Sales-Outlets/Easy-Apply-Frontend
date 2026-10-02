@@ -4398,3 +4398,140 @@ select.um-input.invalid {
 @media (max-width: 640px) {
   .um-form-vertical { max-width: none; }
 }
+
+/* ── Privileges tab (User Management) ─────────────────────────────────────── */
+
+.um-priv-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.um-priv-skeleton { display: block; height: 170px; border-radius: var(--radius-lg); }
+
+.um-priv-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.3rem 1.35rem 1.1rem;
+  box-shadow: 0 2px 10px rgba(11,45,91,0.06);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.um-priv-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #57b531, #3a9636);
+}
+
+.um-priv-card.system::before { background: linear-gradient(135deg, #0f57a8, #0b2d5b); }
+
+.um-priv-card:hover {
+  box-shadow: 0 10px 26px rgba(11,45,91,0.12);
+  transform: translateY(-2px);
+  border-color: rgba(15,87,168,0.25);
+}
+
+.um-priv-card-head { display: flex; align-items: center; gap: 0.75rem; }
+
+.um-priv-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(87,181,49,0.14);
+  color: #2f7d2b;
+}
+
+.um-priv-card.system .um-priv-icon { background: rgba(15,87,168,0.12); color: var(--blue); }
+
+.um-priv-title { flex: 1; min-width: 0; }
+
+.um-priv-title h4 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.um-priv-title code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.um-priv-tag {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 100px;
+  background: rgba(87,181,49,0.14);
+  color: #2f7d2b;
+  white-space: nowrap;
+}
+
+.um-priv-tag.system { background: rgba(15,87,168,0.1); color: var(--blue); }
+
+.um-priv-desc {
+  margin: 0;
+  flex: 1;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.um-priv-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--line);
+}
+
+.um-priv-usage { font-size: 0.76rem; color: var(--muted); white-space: nowrap; }
+.um-priv-usage strong { color: var(--navy); font-weight: 700; }
+.um-priv-usage i { font-style: normal; margin: 0 0.35rem; opacity: 0.6; }
+
+.um-priv-actions { display: flex; gap: 0.4rem; }
+.um-priv-actions .um-inline-btn { padding: 0.35rem 0.7rem; }
+
+.um-inline-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.um-inline-btn.danger:disabled:hover { background: var(--paper); }
+
+/* ── Privilege form ── */
+
+.um-priv-modal { max-width: 560px; }
+
+.um-priv-modal-icon { background: linear-gradient(135deg, #57b531, #3a9636); }
+
+.um-priv-modal .um-form-vertical { max-width: none; }
+
+.um-textarea { resize: vertical; min-height: 96px; line-height: 1.5; font-family: inherit; }
+
+.um-char-count { align-self: flex-end; }
+
+@media (max-width: 1024px) {
+  .um-priv-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 720px) {
+  .um-priv-grid { grid-template-columns: 1fr; }
+  .um-priv-card-foot { flex-wrap: wrap; }
+}

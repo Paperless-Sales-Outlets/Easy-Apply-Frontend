@@ -152,6 +152,30 @@ export const deleteStaffRole = async (id) => {
   return response.data;
 };
 
+// GET /api/admin/privileges — every privilege with its description and usage counts
+export const getPrivileges = async () => {
+  const response = await api.get('/admin/privileges');
+  return response.data;
+};
+
+// POST /api/admin/privileges — create a custom privilege
+export const createPrivilege = async (data) => {
+  const response = await api.post('/admin/privileges', data);
+  return response.data;
+};
+
+// PATCH /api/admin/privileges/:id — change a privilege's name / description
+export const updatePrivilege = async (id, data) => {
+  const response = await api.patch(`/admin/privileges/${id}`, data);
+  return response.data;
+};
+
+// DELETE /api/admin/privileges/:id — remove a custom privilege that nothing uses
+export const deletePrivilege = async (id) => {
+  const response = await api.delete(`/admin/privileges/${id}`);
+  return response.data;
+};
+
 export default {
   getDashboardStats,
   getApplications,
@@ -178,4 +202,8 @@ export default {
   createStaffRole,
   updateStaffRole,
   deleteStaffRole,
+  getPrivileges,
+  createPrivilege,
+  updatePrivilege,
+  deletePrivilege,
 };

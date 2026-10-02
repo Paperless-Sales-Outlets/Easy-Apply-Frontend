@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MODULE_ACCESS } from '../data/dummyData';
 import {
   getAdminUsers,
   createAdminUser,
@@ -9,6 +8,10 @@ import {
   createStaffRole,
   updateStaffRole,
   deleteStaffRole,
+  getPrivileges,
+  createPrivilege,
+  updatePrivilege,
+  deletePrivilege,
 } from '../services/adminService';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
@@ -46,6 +49,8 @@ const EMPTY_USER_FORM = {
 };
 
 const EMPTY_ROLE_FORM = { name: '', permissions: [] };
+const EMPTY_PRIVILEGE_FORM = { name: '', description: '' };
+const PRIVILEGE_DESCRIPTION_MAX = 300;
 
 // Employee Number is the account's permanent unique id: a leading '0'
 // followed by 5 digits (e.g. 000001..099999), auto-assigned — never typed.
@@ -90,6 +95,7 @@ const EyeIcon = ({ open }) => open ? (
 const TABS = [
   { key: 'team', label: 'Team Members' },
   { key: 'roles', label: 'Roles & Access' },
+  { key: 'privileges', label: 'Privileges' },
 ];
 
 export default function UserManagementPage() {
@@ -103,6 +109,9 @@ export default function UserManagementPage() {
 
   const [roles, setRoles] = useState([]);
   const [rolesLoading, setRolesLoading] = useState(true);
+
+  const [privileges, setPrivileges] = useState([]);
+  const [privilegesLoading, setPrivilegesLoading] = useState(true);
 
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
@@ -130,6 +139,17 @@ export default function UserManagementPage() {
   const [pendingDeleteRole, setPendingDeleteRole] = useState(null);
   const [deletingRole, setDeletingRole] = useState(false);
 
+  // ── Privileges tab ──
+  const [privSearch, setPrivSearch] = useState('');
+  const [privModalOpen, setPrivModalOpen] = useState(false);
+  const [editingPriv, setEditingPriv] = useState(null);
+  const [privForm, setPrivForm] = useState(EMPTY_PRIVILEGE_FORM);
+  const [privFieldErrors, setPrivFieldErrors] = useState({});
+  const [privFormError, setPrivFormError] = useState('');
+  const [privSaving, setPrivSaving] = useState(false);
+  const [pendingDeletePriv, setPendingDeletePriv] = useState(null);
+  const [deletingPriv, setDeletingPriv] = useState(false);
+
   const loadUsers = () => {
     setLoading(true);
     getAdminUsers()
@@ -146,10 +166,32 @@ export default function UserManagementPage() {
       .finally(() => setRolesLoading(false));
   };
 
+  const loadPrivileges = ({ silent } = {}) => {
+    if (!silent) setPrivilegesLoading(true);
+    getPrivileges()
+      .then((res) => setPrivileges(res.privileges || []))
+      .catch((err) => setError(err.response?.data?.message || 'Failed to load privileges'))
+      .finally(() => setPrivilegesLoading(false));
+  };
+
   useEffect(() => {
     loadUsers();
     loadRoles();
+    loadPrivileges();
   }, []);
+
+  const privilegeByKey = useMemo(
+    () => Object.fromEntries(privileges.map((p) => [p.key, p])),
+    [privileges]
+  );
+
+  const visiblePrivileges = useMemo(() => {
+    const q = privSearch.trim().toLowerCase();
+    if (!q) return privileges;
+    return privileges.filter((p) =>
+      [p.name, p.description, p.key].some((v) => String(v || '').toLowerCase().includes(q))
+    );
+  }, [privileges, privSearch]);
 
   const roleNames = useMemo(() => ['Admin', ...roles.map((r) => r.name)], [roles]);
 
@@ -347,6 +389,74 @@ export default function UserManagementPage() {
     }
   };
 
+  // ── Privilege handlers ──
+
+  const openAddPrivModal = () => {
+    setEditingPriv(null);
+    setPrivForm(EMPTY_PRIVILEGE_FORM);
+    setPrivFieldErrors({});
+    setPrivFormError('');
+    setPrivModalOpen(true);
+  };
+
+  const openEditPrivModal = (priv) => {
+    setEditingPriv(priv);
+    setPrivForm({ name: priv.name, description: priv.description });
+    setPrivFieldErrors({});
+    setPrivFormError('');
+    setPrivModalOpen(true);
+  };
+
+  const closePrivModal = () => {
+    if (privSaving) return;
+    setPrivModalOpen(false);
+  };
+
+  const handlePrivSubmit = async (e) => {
+    e.preventDefault();
+    setPrivFormError('');
+
+    const errors = {};
+    if (!privForm.name.trim()) errors.name = 'Give this privilege a name.';
+    if (!privForm.description.trim()) errors.description = 'Describe what this privilege allows.';
+    setPrivFieldErrors(errors);
+    if (Object.keys(errors).length) return;
+
+    setPrivSaving(true);
+    try {
+      const payload = { name: privForm.name.trim(), description: privForm.description.trim() };
+      if (editingPriv) {
+        const res = await updatePrivilege(editingPriv.id, payload);
+        setPrivileges((prev) => prev.map((p) => (p.id === editingPriv.id ? res.privilege : p)));
+        notice.success(`Privilege "${res.privilege.name}" updated.`);
+      } else {
+        const res = await createPrivilege(payload);
+        setPrivileges((prev) => [...prev, res.privilege]);
+        notice.success(`Privilege "${res.privilege.name}" created — you can now add it to any role.`);
+      }
+      setPrivModalOpen(false);
+    } catch (err) {
+      setPrivFormError(err.response?.data?.message || 'Failed to save privilege');
+    } finally {
+      setPrivSaving(false);
+    }
+  };
+
+  const confirmDeletePriv = async () => {
+    if (!pendingDeletePriv) return;
+    setDeletingPriv(true);
+    try {
+      await deletePrivilege(pendingDeletePriv.id);
+      setPrivileges((prev) => prev.filter((p) => p.id !== pendingDeletePriv.id));
+      notice.success(`Privilege "${pendingDeletePriv.name}" removed.`);
+      setPendingDeletePriv(null);
+    } catch (err) {
+      notice.error(err.response?.data?.message || 'Failed to remove privilege');
+    } finally {
+      setDeletingPriv(false);
+    }
+  };
+
   // ── Role modal handlers ──
 
   const openAddRoleModal = () => {
@@ -396,6 +506,7 @@ export default function UserManagementPage() {
         setRoles((prev) => prev.map((r) => (r.id === editingRole.id ? res.role : r)));
         notice.success(`Role "${res.role.name}" updated.`);
         loadUsers();
+        loadPrivileges({ silent: true });
       } else {
         const res = await createStaffRole({
           name: roleForm.name.trim(),
@@ -403,6 +514,7 @@ export default function UserManagementPage() {
         });
         setRoles((prev) => [...prev, res.role]);
         notice.success(`Role "${res.role.name}" created.`);
+        loadPrivileges({ silent: true });
       }
       setRoleModalOpen(false);
     } catch (err) {
@@ -421,12 +533,20 @@ export default function UserManagementPage() {
       await deleteStaffRole(pendingDeleteRole.id);
       setRoles((prev) => prev.filter((r) => r.id !== pendingDeleteRole.id));
       notice.success(`Role "${pendingDeleteRole.name}" removed.`);
+      loadPrivileges({ silent: true });
       setPendingDeleteRole(null);
     } catch (err) {
       notice.error(err.response?.data?.message || 'Failed to remove role');
     } finally {
       setDeletingRole(false);
     }
+  };
+
+  // The page-level action button follows the active tab.
+  const HEADER_ACTIONS = {
+    team: { label: 'Add User', onClick: openAddModal },
+    roles: { label: 'Add Role', onClick: openAddRoleModal },
+    privileges: { label: 'Add Privilege', onClick: openAddPrivModal },
   };
 
   const summaryCards = [
@@ -475,11 +595,16 @@ export default function UserManagementPage() {
           </p>
         </div>
         <div className="um-header-actions">
-          <button type="button" className="admin-btn primary um-add-btn" onClick={openAddModal} disabled={roles.length === 0}>
+          <button
+            type="button"
+            className="admin-btn primary um-add-btn"
+            onClick={HEADER_ACTIONS[activeTab].onClick}
+            disabled={activeTab === 'team' && roles.length === 0}
+          >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Add User
+            {HEADER_ACTIONS[activeTab].label}
           </button>
         </div>
       </div>
@@ -526,7 +651,7 @@ export default function UserManagementPage() {
           >
             {tab.label}
             <span className="um-tab-count">
-              {tab.key === 'team' ? users.length : roles.length + 1}
+              {tab.key === 'team' ? users.length : tab.key === 'roles' ? roles.length + 1 : privileges.length}
             </span>
           </button>
         ))}
@@ -655,15 +780,6 @@ export default function UserManagementPage() {
       {/* ── Roles & Access Tab ── */}
       {activeTab === 'roles' && (
         <>
-          <div className="um-toolbar" style={{ justifyContent: 'flex-end' }}>
-            <button type="button" className="admin-btn ghost um-add-btn" onClick={openAddRoleModal}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Add Role
-            </button>
-          </div>
-
           <div className="um-role-grid">
             <div className="um-role-card admin">
               <div className="um-role-card-accent" />
@@ -683,12 +799,12 @@ export default function UserManagementPage() {
                   <span className="priv-role-name">{role.name}</span>
                   <span className={`admin-badge ${roleBadgeClass(role.name, roles)}`}>{role.userCount || 0} users</span>
                 </div>
-                <div className="priv-role-sub">Default module access</div>
+                <div className="priv-role-sub">Default privileges</div>
                 <div className="priv-role-modules">
-                  {(role.permissions || []).length === 0 && <span className="um-contact-sub">No modules</span>}
+                  {(role.permissions || []).length === 0 && <span className="um-contact-sub">No privileges</span>}
                   {(role.permissions || []).map((key) => {
-                    const mod = MODULE_ACCESS.find((m) => m.key === key);
-                    return mod ? <span className="priv-role-chip" key={key}>{mod.label}</span> : null;
+                    const priv = privilegeByKey[key];
+                    return priv ? <span className="priv-role-chip" key={key} title={priv.description}>{priv.name}</span> : null;
                   })}
                 </div>
                 <div className="um-role-card-actions">
@@ -698,6 +814,90 @@ export default function UserManagementPage() {
               </div>
             ))}
           </div>
+        </>
+      )}
+
+      {/* ── Privileges Tab ── */}
+      {activeTab === 'privileges' && (
+        <>
+          <div className="um-toolbar">
+            <div className="admin-search um-search">
+              <span className="admin-search-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </span>
+              <input
+                type="search"
+                value={privSearch}
+                onChange={(e) => setPrivSearch(e.target.value)}
+                placeholder="Search privileges by name or description"
+              />
+            </div>
+          </div>
+
+          {privilegesLoading ? (
+            <div className="um-priv-grid">
+              {Array.from({ length: 6 }).map((_, i) => <div className="dash-skeleton um-priv-skeleton" key={i} />)}
+            </div>
+          ) : visiblePrivileges.length === 0 ? (
+            <div className="um-empty-state">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <p>{privSearch ? 'No privileges match your search.' : 'No privileges yet.'}</p>
+            </div>
+          ) : (
+            <div className="um-priv-grid">
+              {visiblePrivileges.map((priv) => {
+                const inUse = priv.roleCount + priv.userCount > 0;
+                return (
+                  <div className={`um-priv-card${priv.isSystem ? ' system' : ''}`} key={priv.id}>
+                    <div className="um-priv-card-head">
+                      <div className="um-priv-icon">
+                        {priv.isSystem ? (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" /><path d="m9 12 2 2 4-4" />
+                          </svg>
+                        ) : (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="8" cy="15" r="4" /><path d="m10.85 12.15 8.65-8.65M18 5l3 3M15 8l2 2" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="um-priv-title">
+                        <h4>{priv.name}</h4>
+                        <code>{priv.key}</code>
+                      </div>
+                      <span className={`um-priv-tag${priv.isSystem ? ' system' : ''}`}>{priv.isSystem ? 'Built-in' : 'Custom'}</span>
+                    </div>
+
+                    <p className="um-priv-desc">{priv.description}</p>
+
+                    <div className="um-priv-card-foot">
+                      <span className="um-priv-usage" title="Roles and users currently holding this privilege">
+                        <strong>{priv.roleCount}</strong> {priv.roleCount === 1 ? 'role' : 'roles'}
+                        <i aria-hidden="true">·</i>
+                        <strong>{priv.userCount}</strong> {priv.userCount === 1 ? 'user' : 'users'}
+                      </span>
+                      <div className="um-priv-actions">
+                        <button type="button" className="um-inline-btn" onClick={() => openEditPrivModal(priv)}>Edit</button>
+                        <button
+                          type="button"
+                          className="um-inline-btn danger"
+                          onClick={() => setPendingDeletePriv(priv)}
+                          disabled={priv.isSystem}
+                          title={priv.isSystem ? 'Built-in privileges cannot be deleted' : inUse ? 'Still in use — remove it from roles first' : 'Delete privilege'}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
 
@@ -938,14 +1138,14 @@ export default function UserManagementPage() {
                   Applied automatically when a user with this role is created — still adjustable per user.
                 </p>
                 <div className="um-privileges-grid">
-                  {MODULE_ACCESS.map((mod) => (
-                    <label className="um-priv-checkbox" key={mod.key}>
+                  {privileges.map((priv) => (
+                    <label className="um-priv-checkbox" key={priv.key}>
                       <input
                         type="checkbox"
-                        checked={roleForm.permissions.includes(mod.key)}
-                        onChange={() => toggleRolePermission(mod.key)}
+                        checked={roleForm.permissions.includes(priv.key)}
+                        onChange={() => toggleRolePermission(priv.key)}
                       />
-                      <span>{mod.label}</span>
+                      <span>{priv.name}</span>
                     </label>
                   ))}
                 </div>
@@ -991,6 +1191,115 @@ export default function UserManagementPage() {
                 disabled={deletingRole || pendingDeleteRole.userCount > 0}
               >
                 {deletingRole ? 'Removing…' : 'Remove Role'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add / Edit Privilege Modal ── */}
+      {privModalOpen && (
+        <div className="admin-modal-overlay" onClick={closePrivModal}>
+          <div className="admin-modal um-modal um-priv-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header um-modal-header">
+              <div className="um-modal-header-identity">
+                <div className="um-modal-avatar um-priv-modal-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3>{editingPriv ? 'Edit Privilege' : 'Add New Privilege'}</h3>
+                  <div className="admin-modal-subtitle">
+                    {editingPriv ? 'Update how this privilege is named and described' : 'Define something a role or user can be allowed to do'}
+                  </div>
+                </div>
+              </div>
+              <button type="button" className="admin-modal-close" onClick={closePrivModal} aria-label="Close">×</button>
+            </div>
+
+            <form onSubmit={handlePrivSubmit} noValidate>
+              <div className="admin-modal-body">
+                {privFormError && <div className="admin-error-banner" style={{ marginBottom: '1rem' }}>{privFormError}</div>}
+
+                <div className="um-form-grid um-form-vertical">
+                  <label className="um-field">
+                    <span>Privilege Name *</span>
+                    <input
+                      type="text"
+                      className={`um-input${privFieldErrors.name ? ' invalid' : ''}`}
+                      value={privForm.name}
+                      maxLength={60}
+                      onChange={(e) => { setPrivForm((f) => ({ ...f, name: e.target.value })); setPrivFieldErrors((fe) => ({ ...fe, name: undefined })); }}
+                      placeholder="e.g. Export Reports"
+                    />
+                    {privFieldErrors.name && <span className="um-field-error">{privFieldErrors.name}</span>}
+                  </label>
+
+                  {editingPriv && (
+                    <label className="um-field">
+                      <span>Key</span>
+                      <input type="text" className="um-input" value={editingPriv.key} disabled readOnly />
+                      <span className="um-field-hint">
+                        {editingPriv.isSystem
+                          ? 'Built-in key — it links this privilege to its admin page and cannot change.'
+                          : 'Generated when the privilege was created and never changes, so roles keep working after a rename.'}
+                      </span>
+                    </label>
+                  )}
+
+                  <label className="um-field">
+                    <span>What does it allow? *</span>
+                    <textarea
+                      className={`um-input um-textarea${privFieldErrors.description ? ' invalid' : ''}`}
+                      value={privForm.description}
+                      maxLength={PRIVILEGE_DESCRIPTION_MAX}
+                      rows={4}
+                      onChange={(e) => { setPrivForm((f) => ({ ...f, description: e.target.value })); setPrivFieldErrors((fe) => ({ ...fe, description: undefined })); }}
+                      placeholder="Explain in a sentence or two what someone holding this privilege can do."
+                    />
+                    <span className="um-field-hint um-char-count">{privForm.description.length} / {PRIVILEGE_DESCRIPTION_MAX}</span>
+                    {privFieldErrors.description && <span className="um-field-error">{privFieldErrors.description}</span>}
+                  </label>
+                </div>
+              </div>
+
+              <div className="um-modal-footer">
+                <button type="button" className="admin-btn ghost" onClick={closePrivModal} disabled={privSaving}>Cancel</button>
+                <button type="submit" className="admin-btn primary" disabled={privSaving}>
+                  {privSaving ? 'Saving…' : editingPriv ? 'Save Changes' : 'Create Privilege'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Privilege Confirmation ── */}
+      {pendingDeletePriv && (
+        <div className="admin-modal-overlay" onClick={() => !deletingPriv && setPendingDeletePriv(null)}>
+          <div className="admin-modal um-confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h3>Remove Privilege</h3>
+              <button type="button" className="admin-modal-close" onClick={() => setPendingDeletePriv(null)} aria-label="Close">×</button>
+            </div>
+            <div className="admin-modal-body">
+              <p>
+                Are you sure you want to permanently remove the <strong>{pendingDeletePriv.name}</strong> privilege?
+                {pendingDeletePriv.roleCount + pendingDeletePriv.userCount > 0
+                  ? ` It is still assigned to ${pendingDeletePriv.roleCount} role(s) and ${pendingDeletePriv.userCount} user(s) — remove it from them first.`
+                  : ' This cannot be undone.'}
+              </p>
+            </div>
+            <div className="um-modal-footer">
+              <button type="button" className="admin-btn ghost" onClick={() => setPendingDeletePriv(null)} disabled={deletingPriv}>Cancel</button>
+              <button
+                type="button"
+                className="admin-btn danger"
+                onClick={confirmDeletePriv}
+                disabled={deletingPriv || pendingDeletePriv.roleCount + pendingDeletePriv.userCount > 0}
+              >
+                {deletingPriv ? 'Removing…' : 'Remove Privilege'}
               </button>
             </div>
           </div>
