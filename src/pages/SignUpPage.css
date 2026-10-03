@@ -1,6 +1,7 @@
 /* ============================================================
    SLTMobitel EasyApply — SignUpPage.css
-   Light Theme Exact Match to UI Design
+   SLT Mobitel Brand Theme — Navy Blue & Green
+   Brand: SLT #003087 (navy) | #43B02A (green) | #00AEEF (cyan accent)
    ============================================================ */
 
 /* Typography comes from the shared tokens in index.css (Raleway + Inter,
@@ -12,8 +13,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  background-color: var(--page-bg);
+  padding: 2rem;
+  /* Subtle SLT-branded background: very light blue-grey tint */
+  background: linear-gradient(135deg, #e8f0f8 0%, #f0f7f0 50%, #e8f0f8 100%);
   font-family: var(--font-body);
   color: #334155;
 }
@@ -22,78 +24,166 @@
 .signup-card {
   position: relative;
   z-index: 1;
-  width: 100%;
-  max-width: 1040px;
+  width: 88%;
+  max-width: 860px;
   background: #ffffff;
-  border-radius: 24px;
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 16px 48px rgba(0, 48, 135, 0.14),
+    0 0 0 1px rgba(0, 48, 135, 0.10);
   display: flex;
   overflow: hidden;
-  /* Fit the card to the screen instead of a fixed height, so the sign-in and
-     register screens are readable without the page scrolling. The form column
-     takes any overflow on its own (see .signup-form-section). */
-  min-height: min(600px, calc(100vh - 2rem));
-  max-height: calc(100vh - 2rem);
+  min-height: min(520px, calc(100vh - 4rem));
+  max-height: calc(100vh - 4rem);
 }
 
 /* ── Split Layout: Sidebar ───────────────────────────────────── */
 .signup-sidebar {
-  width: 38%;
-  background: linear-gradient(135deg, rgb(0, 31, 63) 0%, rgb(0, 59, 115) 45%, rgb(0, 77, 56) 85%, rgb(1, 41, 30) 100%);
+  width: 40%;
+  /* Solid SLT deep navy gradient — NOT photo background in CSS */
+  /* The photo background is applied via JSX style attr; overridden here */
+  background: linear-gradient(170deg, #001f5c 0%, #003087 35%, #004aad 65%, #005fa3 100%) !important;
+  border-right: none;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* Decorative circles in sidebar background */
+.signup-sidebar::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: rgba(67, 176, 42, 0.08);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.signup-sidebar::after {
+  content: '';
+  position: absolute;
+  bottom: -50px;
+  left: -50px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(0, 174, 239, 0.06);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Logo showcase panel — white area so colorful SLT logo pops ── */
+.signup-logo-panel {
+  position: relative;
+  z-index: 2;
+  background: #ffffff;
+  border-radius: 0 0 24px 0;
+  padding: 1.5rem 2rem 1.4rem;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.signup-logo-panel img {
+  width: 180px;
+  height: auto;
+  max-width: 100%;
+  display: block;
+  /* No filter on white background — the logo looks perfect as-is */
+  filter: none;
+}
+
+.signup-logo-panel-tagline {
+  margin: 0.25rem 0 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #003087;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .signup-sidebar-inner {
   position: relative;
   z-index: 1;
-  padding: 2.25rem 2.25rem;
+  padding: 1.75rem 2rem;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  color: #ffffff;
+  flex: 1;
+  align-items: center;
+  text-align: center;
+  /* No padding-top since logo-panel sits above */
+}
+
+/* ── Logo area (legacy, kept for compat) ────────────────────────── */
+.signup-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.signup-logo-divider {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #43B02A, #00AEEF);
+  border-radius: 2px;
+  margin-top: 0.5rem;
 }
 
 .signup-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #1157b2;
+  /* Green accent badge to match SLT green brand color */
+  background: rgba(67, 176, 42, 0.2);
   color: #ffffff;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 10px;
+  border: 1px solid rgba(67, 176, 42, 0.4);
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
   font-size: 0.78rem;
-  font-weight: 500;
-  margin-top: 0;
+  font-weight: 600;
   margin-bottom: 1rem;
   width: max-content;
+  align-self: center;
+  backdrop-filter: blur(4px);
 }
 
 .signup-sidebar-title {
   font-family: var(--font-head);
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0.9rem 0 0.5rem;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0.4rem 0 0.4rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
   color: #ffffff !important;
+  text-align: center;
 }
 
 .signup-sidebar-desc {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.9) !important;
-  line-height: 1.55;
-  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.82) !important;
+  line-height: 1.65;
+  margin-bottom: 1.25rem;
   font-weight: 400;
+  text-align: center;
 }
 
 .signup-features {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.85rem;
+  width: 100%;
   margin-top: auto;
 }
 
@@ -101,32 +191,68 @@
   display: flex;
   align-items: center;
   gap: 0.9rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  text-align: left;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.signup-feature-item:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(67, 176, 42, 0.35);
+  transform: translateX(3px);
 }
 
 .signup-feature-icon {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #0a5ca6 0%, #038d72 100%);
+  /* SLT green accent on icon backgrounds */
+  background: rgba(67, 176, 42, 0.22);
+  color: #7de85d;
+  border: 1px solid rgba(67, 176, 42, 0.3);
+}
+
+.signup-feature-item:nth-child(2) .signup-feature-icon {
+  background: rgba(0, 174, 239, 0.2);
+  color: #6dd7f7;
+  border-color: rgba(0, 174, 239, 0.3);
+}
+
+.signup-feature-item:nth-child(3) .signup-feature-icon {
+  background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .signup-feature-item h4,
 .signup-feature-title {
   margin: 0 0 0.1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.84rem;
+  font-weight: 700;
   color: #ffffff;
 }
 
 .signup-feature-item p {
   margin: 0;
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.73rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ── Footer logo area inside sidebar ─────────────────────────── */
+.signup-sidebar-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  width: 100%;
 }
 
 /* ── Split Layout: Form Section ──────────────────────────────── */
@@ -136,18 +262,10 @@
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  /* Never let wide content (e.g. the 6 OTP inputs) push this column
-     past the card and collapse the sidebar. */
   min-width: 0;
-  /* The card is capped to the viewport, so a long step (identity capture)
-     scrolls inside this column rather than moving the whole page. */
   overflow-y: auto;
 }
 
-/* Centre the form vertically in its column. The step bar stays pinned to the
-   top of the card — the auto margins share the leftover space between the
-   block below it and the bottom edge, and collapse to nothing when the step is
-   tall enough to fill the column, so nothing is ever pushed out of view. */
 .signup-form-section > .signup-form-header {
   margin-top: auto;
 }
@@ -170,34 +288,35 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  color: #5b6472;
+  color: #94a3b8;
   position: relative;
   z-index: 2;
 }
 
 .signup-step.active {
-  color: #047857;
+  color: #003087;
 }
 
 .signup-step-num {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #ffffff;
+  background: #f1f5f9;
   border: 2px solid #cbd5e1;
-  color: #64748b;
+  color: #94a3b8;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.9rem;
   transition: all 0.3s ease;
 }
 
 .signup-step.active .signup-step-num {
-  background: #059669;
-  border-color: #059669;
+  background: #003087;
+  border-color: #003087;
   color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 48, 135, 0.14);
 }
 
 .signup-step span {
@@ -213,6 +332,7 @@
   margin: -22px 10px 0;
   position: relative;
   z-index: 1;
+  transition: background 0.3s ease;
 }
 
 /* ── Form Header ─────────────────────────────────────────────── */
@@ -226,20 +346,23 @@
 .signup-form-header-icon {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
-  background: #eff6ff;
-  color: #2563eb;
+  border-radius: 12px;
+  /* SLT navy blue icon background */
+  background: linear-gradient(135deg, #e8f0fb, #d0e4f7);
+  color: #003087;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid rgba(0, 48, 135, 0.12);
+  flex-shrink: 0;
 }
 
 .signup-form-header h2 {
   margin: 0 0 0.15rem;
   font-family: var(--font-head);
   font-size: 1.25rem;
-  color: #1e293b;
-  font-weight: 700;
+  color: #0f172a;
+  font-weight: 800;
 }
 
 .signup-form-header p {
@@ -252,6 +375,7 @@
 .signup-error {
   background: #fef2f2;
   border: 1px solid #fecaca;
+  border-left: 3px solid #ef4444;
   border-radius: 8px;
   padding: 0.7rem 1rem;
   font-size: 0.84rem;
@@ -283,7 +407,7 @@
 .signup-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #374151;
 }
 
 .signup-required {
@@ -293,13 +417,13 @@
 
 .signup-field-help {
   font-size: 0.72rem;
-  color: #64748b;
+  color: #94a3b8;
   margin: 0.25rem 0 0 0;
 }
 
 .signup-field-error {
   font-size: 0.75rem;
-  color: #b91c1c;
+  color: #ef4444;
   font-weight: 600;
   margin: 0.25rem 0 0 0;
 }
@@ -310,19 +434,19 @@
   display: flex;
   align-items: center;
   background: #ffffff;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #e2e8f0;
   border-radius: 10px;
   transition: all 0.2s ease;
   overflow: hidden;
 }
 
 .signup-input-wrap:hover {
-  border-color: #94a3b8;
+  border-color: #a3b4cc;
 }
 
 .signup-input-wrap:focus-within {
-  border-color: #0f57a8;
-  box-shadow: 0 0 0 3px rgba(15, 87, 168, 0.1);
+  border-color: #003087;
+  box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.08);
 }
 
 .signup-input-wrap.has-error {
@@ -343,14 +467,14 @@
 }
 
 .signup-input-wrap:focus-within .signup-input-icon {
-  color: #0f57a8;
+  color: #003087;
 }
 
 .signup-input-prefix {
   font-size: 0.9rem;
-  color: #0f172a;
+  color: #003087;
   margin-right: 0.4rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* ── Input ────────────────────────────────────────────────────── */
@@ -360,14 +484,14 @@
   background: transparent;
   outline: none;
   font-size: 0.9rem;
-  color: #0f172a;
-  padding: 0.6rem 1rem 0.6rem 0;
+  color: #1e293b;
+  padding: 0.65rem 1rem 0.65rem 0;
   font-family: inherit;
   width: 100%;
 }
 
 .signup-input::placeholder {
-  color: #94a3b8;
+  color: #cbd5e1;
 }
 
 /* ── Password toggle button ───────────────────────────────────── */
@@ -375,7 +499,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #64748b;
+  color: #94a3b8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -386,7 +510,7 @@
 }
 
 .signup-pw-toggle:hover {
-  color: #334155;
+  color: #0057a8;
 }
 
 /* ── Checkbox row ─────────────────────────────────────────────── */
@@ -412,22 +536,23 @@
   border: 1px solid #cbd5e1;
   border-radius: 4px;
   cursor: pointer;
-  accent-color: #0f57a8;
+  accent-color: #0057a8;
 }
 
 /* ── Links ────────────────────────────────────────────────────── */
 .signup-link {
-  color: #0f57a8;
+  color: #003087;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .signup-link:hover {
   text-decoration: underline;
+  color: #001f5c;
 }
 
 .signup-link--accent {
-  color: #047857;
+  color: #003087;
 }
 
 /* ── Action Buttons Row ───────────────────────────────────────── */
@@ -441,19 +566,17 @@
 .signup-btn-secondary {
   flex: 1;
   padding: 0.72rem 1.5rem;
-  border: 1px solid #cbd5e1;
+  border: 1.5px solid #e2e8f0;
   border-radius: 10px;
   font-size: 0.92rem;
   font-weight: 600;
   background: #ffffff;
-  color: #0f57a8;
+  color: #0057a8;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .signup-btn-secondary--auto {
-  /* The base style is flex:1 so Cancel/Continue can split the action row.
-     Standalone buttons (e.g. Change Number) should size to their label. */
   flex: 0 0 auto;
   padding: 0.7rem 1.25rem;
   font-size: 0.9rem;
@@ -463,46 +586,52 @@
 }
 
 .signup-btn-secondary:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: #f0f6ff;
+  border-color: #0057a8;
+  color: #003f7a;
 }
 
-/* ── Submit button ────────────────────────────────────────────── */
+/* ── Submit button — SLT brand navy to green gradient ─────────── */
 .signup-btn {
   flex: 1;
   position: relative;
-  padding: 0.72rem 1.5rem;
+  padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 10px;
   font-size: 0.92rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  background: linear-gradient(90deg, #0f57a8 0%, #059669 100%);
+  background: linear-gradient(135deg, #003087 0%, #004aad 50%, #005fa3 100%);
   color: #ffffff;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 48, 135, 0.32);
+  letter-spacing: 0.01em;
 }
 
 .signup-btn:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #001f5c 0%, #003087 50%, #004aad 100%);
+  box-shadow: 0 6px 22px rgba(0, 48, 135, 0.44);
+  transform: translateY(-2px);
 }
 
 .signup-btn:active:not(:disabled) {
   transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 48, 135, 0.25);
 }
 
 .signup-btn:disabled {
-  background: #cbd5e1;
+  background: #e2e8f0;
+  color: #94a3b8;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* Loading state */
 .signup-btn.loading {
-  background: #0f57a8;
+  background: #0057a8;
 }
 
 /* ── Spinner ──────────────────────────────────────────────────── */
@@ -526,7 +655,7 @@
 .signup-footer-text {
   text-align: center;
   font-size: 0.85rem;
-  color: #475569;
+  color: #64748b;
   margin: 1rem 0 0;
 }
 
@@ -566,6 +695,8 @@
 
   .signup-sidebar {
     width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e8edf5;
   }
 
   .signup-features {
@@ -588,7 +719,8 @@
 
 /* -- Multi-step Form Additional Styles ------------------------- */
 .signup-step-line.active-line {
-  background: #059669;
+  /* SLT navy to green gradient for completed step lines */
+  background: linear-gradient(90deg, #003087, #43B02A);
 }
 
 .signup-select {
@@ -614,7 +746,7 @@
 }
 
 .signup-radio-label input[type="radio"] {
-  accent-color: #059669;
+  accent-color: #0057a8;
   width: 18px;
   height: 18px;
   cursor: pointer;
@@ -632,7 +764,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1.5px solid #e2e8f0;
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 600;
@@ -643,17 +775,20 @@
 }
 
 .signup-contact-method:hover {
-  border-color: #cbd5e1;
+  border-color: #003087;
+  color: #003087;
 }
 
 .signup-contact-method.active {
-  border-color: #059669;
-  background: #f0fdf4;
-  color: #059669;
+  border-color: #003087;
+  background: #e8f0fb;
+  color: #003087;
 }
 
 .signup-secure-box {
-  background: #f0fdf4;
+  background: linear-gradient(135deg, #eef4ff 0%, #edfaee 100%);
+  border: 1px solid rgba(0, 48, 135, 0.10);
+  border-left: 3px solid #43B02A;
   border-radius: 12px;
   padding: 0.9rem 1rem;
   display: flex;
@@ -665,27 +800,28 @@
 .signup-secure-icon {
   width: 40px;
   height: 40px;
-  background: #dcfce7;
-  color: #059669;
+  background: linear-gradient(135deg, #e8f0fb, #d9f2dc);
+  color: #003087;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: 1px solid rgba(0, 48, 135, 0.12);
 }
 
 .signup-secure-box h5,
 .signup-secure-title {
   margin: 0 0 0.2rem;
-  color: #065f46;
-  font-size: 0.95rem;
-  font-weight: 700;
+  color: #003087;
+  font-size: 0.92rem;
+  font-weight: 800;
 }
 
 .signup-secure-box p {
   margin: 0;
-  font-size: 0.8rem;
-  color: #166534;
+  font-size: 0.78rem;
+  color: #2563a0;
   line-height: 1.4;
 }
 
@@ -708,7 +844,7 @@
   text-align: center;
   margin-top: 1rem;
   font-size: 0.85rem;
-  color: #475569;
+  color: #64748b;
 }
 
 /* ── Responsive ───────────────────────────────────────────────── */
@@ -716,8 +852,6 @@
   .signup-card {
     flex-direction: column;
     max-width: 600px;
-    /* Stacked, the card can be taller than the screen — release the
-       viewport cap so the page scrolls normally on small devices. */
     min-height: auto;
     max-height: none;
   }
@@ -729,11 +863,23 @@
   .signup-sidebar {
     width: 100%;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 48, 135, 0.1);
+  }
+
+  /* Logo panel at top adjusts for horizontal layout */
+  .signup-logo-panel {
+    border-radius: 0 0 20px 20px;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 4px solid #43B02A;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+  }
+
+  .signup-logo-panel img {
+    width: 145px;
   }
 
   .signup-sidebar-inner {
-    padding: 3rem 2.5rem;
+    padding: 1.5rem 2rem;
   }
 
   .signup-features {
@@ -771,13 +917,11 @@
     display: none;
   }
 }
+
 /* ══════════════════════════════════════════════════════════════════
    Auth screens — sign-in method tabs, OTP entry, shared a11y bits
    ══════════════════════════════════════════════════════════════════ */
 
-/* Every interactive control on the auth screens gets a clearly visible
-   keyboard focus ring. :focus-visible keeps it out of the way of mouse
-   users while remaining fully visible to anyone navigating by keyboard. */
 .auth-tab:focus-visible,
 .otp-box:focus-visible,
 .auth-link-btn:focus-visible,
@@ -786,7 +930,7 @@
 .signup-pw-toggle:focus-visible,
 .signup-link:focus-visible,
 .auth-verify-btn:focus-visible {
-  outline: 3px solid #0f57a8;
+  outline: 3px solid #003087;
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -795,7 +939,7 @@
 .auth-tabs {
   display: flex;
   gap: 0.35rem;
-  background: #eef2f7;
+  background: #f1f5f9;
   padding: 0.35rem;
   border-radius: 12px;
   margin-bottom: 1.5rem;
@@ -807,7 +951,7 @@
   border: none;
   border-radius: 10px;
   background: transparent;
-  color: #4a5567;
+  color: #64748b;
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: 700;
@@ -820,14 +964,14 @@
 }
 
 .auth-tab:hover:not(.is-active) {
-  color: #0f172a;
-  background: rgba(255, 255, 255, 0.6);
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .auth-tab.is-active {
   background: #ffffff;
-  color: #0b4a91;
-  box-shadow: 0 2px 6px rgba(15, 87, 168, 0.15);
+  color: #003087;
+  box-shadow: 0 2px 8px rgba(0, 48, 135, 0.14);
 }
 
 /* ── Inline text button (resend, etc.) ────────────────────────── */
@@ -835,7 +979,7 @@
   background: none;
   border: none;
   padding: 0.2rem;
-  color: #0b4a91;
+  color: #003087;
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 800;
@@ -847,10 +991,11 @@
 
 .auth-link-btn:hover:not(:disabled) {
   text-decoration: underline;
+  color: #001f5c;
 }
 
 .auth-link-btn:disabled {
-  color: #64748b;
+  color: #94a3b8;
   cursor: not-allowed;
 }
 
@@ -859,21 +1004,23 @@
   padding: 0 1.1rem;
   border: none;
   border-radius: 12px;
-  background: #0b4a91;
+  background: linear-gradient(135deg, #003087, #004aad);
   color: #ffffff;
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
 .auth-verify-btn:hover:not(:disabled) {
-  background: #0a3f7c;
+  background: linear-gradient(135deg, #001f5c, #003087);
+  transform: translateY(-1px);
 }
 
 .auth-verify-btn:disabled {
-  background: #64748b;
+  background: #94a3b8;
   cursor: wait;
 }
 
@@ -883,8 +1030,10 @@
   gap: 0.3rem;
   padding: 0 0.9rem;
   border-radius: 12px;
-  background: #dcfce7;
-  color: #0f7a4d;
+  /* Green verified badge = SLT green success */
+  background: #edfaee;
+  color: #2a8a1a;
+  border: 1px solid rgba(67, 176, 42, 0.3);
   font-size: 0.8rem;
   font-weight: 800;
   white-space: nowrap;
@@ -897,7 +1046,7 @@
   border: 1px dashed #94a3b8;
   border-radius: 8px;
   background: #f8fafc;
-  color: #475569;
+  color: #64748b;
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -915,10 +1064,7 @@
   }
 }
 
-/* ── Short screens: tighten the auth card so it still fits ───────
-   A 1366x768 or 1280x720 laptop has ~690px of usable height. These rules
-   only trim spacing — no font sizes change — so the card keeps its
-   proportions on a full-height display and still fits on a short one. */
+/* ── Short screens: tighten the auth card ────────────────────── */
 @media (min-width: 1025px) and (max-height: 820px) {
   .signup-form-section {
     padding: 1rem 2rem;
@@ -941,31 +1087,28 @@
   }
 
   .signup-sidebar-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   .signup-features {
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
 }
 
-/* ── Mobile: keep the form above the fold ─────────────────────────
-   The brand panel stacks on top below 1024px. Left at desktop
-   proportions it filled the whole first screen, pushing the actual
-   form out of sight, so it is condensed to a compact header. */
+/* ── Mobile: compact brand panel ─────────────────────────────── */
 @media (max-width: 680px) {
   .signup-sidebar-inner {
     padding: 1.5rem 1.5rem 1.75rem;
   }
 
   .signup-sidebar-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     line-height: 1.2;
     margin-top: 0.75rem;
   }
 
   .signup-sidebar-desc {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     margin-top: 0.4rem;
   }
 
@@ -977,8 +1120,6 @@
     padding: 1.75rem 1.25rem 2rem;
   }
 
-  /* Two tabs side by side get very narrow at 375px — stack the label
-     under the icon instead of wrapping mid-phrase. */
   .auth-tab {
     flex-direction: column;
     gap: 0.2rem;
@@ -991,14 +1132,62 @@
 /* Very narrow phones */
 @media (max-width: 380px) {
   .signup-sidebar-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
+}
+
+/* ── OTP boxes ────────────────────────────────────────────────── */
+.otp-boxes {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 0.5rem 0 0;
+}
+
+.otp-box {
+  width: 46px;
+  height: 52px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1e293b;
+  background: #ffffff;
+  outline: none;
+  caret-color: transparent;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.otp-box:focus {
+  border-color: #003087;
+  box-shadow: 0 0 0 3px rgba(0, 48, 135, 0.09);
+  background: #eef4ff;
+}
+
+.otp-box.is-filled {
+  border-color: #003087;
+  background: #eef4ff;
+  color: #003087;
+}
+
+.otp-box.is-error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  animation: otp-shake 0.35s ease;
+}
+
+@keyframes otp-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
 /* ── NIC OCR Scanning Status Banner & Autofill Indicators ── */
 .nic-scan-banner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   padding: 0.85rem 1.1rem;
   border-radius: 12px;
@@ -1009,27 +1198,21 @@
 }
 
 .nic-scan-banner.loading {
-  background: #f0f7ff;
-  border: 1px solid #bae0ff;
-  color: #0050b3;
+  background: #f0f6ff;
+  border: 1px solid rgba(0, 87, 168, 0.2);
+  color: #0057a8;
 }
 
 .nic-scan-banner.success {
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
-  color: #237804;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #16a34a;
 }
 
 .nic-scan-banner.error {
-  background: #fff7e6;
-  border: 1px solid #ffd591;
-  color: #d46b08;
-}
-
-/* The banner sits beside a spinning icon; the text column carries the message
-   and, while a scan is running, a progress bar under it. */
-.nic-scan-banner {
-  align-items: flex-start;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #ea580c;
 }
 
 .nic-scan-text {
@@ -1043,7 +1226,7 @@
   height: 4px;
   margin-top: 0.45rem;
   border-radius: 999px;
-  background: rgba(0, 80, 179, 0.15);
+  background: rgba(0, 87, 168, 0.1);
   overflow: hidden;
 }
 
@@ -1051,12 +1234,10 @@
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: #0050b3;
+  background: linear-gradient(90deg, #0057a8, #0099cc);
   transition: width 0.25s ease;
 }
 
-/* Tesseract reports some phases without a percentage — slide a short bar so the
-   customer can still see that something is happening. */
 .nic-scan-progress-fill.is-indeterminate {
   width: 35%;
   animation: nicScanSlide 1.2s ease-in-out infinite;
@@ -1095,15 +1276,47 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  background: #e6f7ff;
-  color: #096dd9;
-  border: 1px solid #91d5ff;
+  background: #edfaee;
+  color: #2a8a1a;
+  border: 1px solid rgba(67, 176, 42, 0.3);
   padding: 0.15rem 0.45rem;
   border-radius: 6px;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-left: 0.5rem;
   vertical-align: middle;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+/* ── OTP Dialog (modal) ───────────────────────────────────────── */
+.otp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 30, 80, 0.55);
+  backdrop-filter: blur(6px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.otp-dialog {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2.25rem 2rem 2rem;
+  width: 100%;
+  max-width: 380px;
+  box-shadow:
+    0 20px 60px rgba(0, 48, 135, 0.22),
+    0 0 0 1px rgba(0, 48, 135, 0.08);
+  text-align: center;
+  animation: dialog-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: scale(0.88) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
