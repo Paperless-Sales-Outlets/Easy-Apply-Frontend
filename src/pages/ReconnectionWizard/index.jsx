@@ -19,6 +19,7 @@ export default function ReconnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [, setPaymentIntention] = useState('online');
+  const [hasPaymentReceipt, setHasPaymentReceipt] = useState(false);
   const [reconnectionData, setReconnectionData] = useState(null);
 
   // The customer's account is already verified via OTP + real DB lookup
@@ -76,7 +77,7 @@ export default function ReconnectionWizard() {
     submitData.append('serviceType', 'reconnection');
 
     // Ensure phone is 10 digits starting with 0
-    let formattedPhone = formData.verifiedMobile || verifiedMobile || '';
+    let formattedPhone = formData.verifiedMobile || verifiedMobile || reconnectionData?.telephone || '';
 
     if (formattedPhone && formattedPhone.length === 9) {
       formattedPhone = `0${formattedPhone}`;
@@ -85,6 +86,19 @@ export default function ReconnectionWizard() {
     submitData.append('phone', formattedPhone);
 
     delete formData.verifiedMobile;
+
+    // Supplement form data with reconnectionData fields to guarantee they are present
+    // (form hidden inputs may be empty if reconnectionData wasn't available when they rendered)
+    if (reconnectionData) {
+      if (!formData.nic && reconnectionData.nic) formData.nic = reconnectionData.nic;
+      if (!formData.fullName && reconnectionData.fullName) formData.fullName = reconnectionData.fullName;
+      if (!formData.telephone && reconnectionData.telephone) formData.telephone = reconnectionData.telephone;
+      if (!formData.addressLine1 && reconnectionData.addressLine1) formData.addressLine1 = reconnectionData.addressLine1;
+      if (!formData.addressLine2 && reconnectionData.addressLine2) formData.addressLine2 = reconnectionData.addressLine2;
+      if (formData.amountToPay === undefined || formData.amountToPay === '') {
+        formData.amountToPay = String(reconnectionData.outstandingBalance || 0);
+      }
+    }
 
     // Extract digital signature base64 and delete from JSON formData
     const signatureBase64 = formData.digitalSignatureBase64;
@@ -237,6 +251,9 @@ export default function ReconnectionWizard() {
               onPaymentIntentionChange={
                 setPaymentIntention
               }
+              onPaymentReceiptChange={
+                setHasPaymentReceipt
+              }
               reconnectionData={reconnectionData}
               customerType={
                 reconnectionData?.customerType ===
@@ -263,19 +280,22 @@ export default function ReconnectionWizard() {
               isActive={currentStep === 3}
               verifiedPhone={verifiedMobile}
               amount={
-                formRef.current
-                  ? new FormData(
-                      formRef.current
-                    ).get('amountToPay')
-                  : null
+                reconnectionData?.outstandingBalance !== undefined
+                  ? reconnectionData.outstandingBalance
+                  : (formRef.current
+                    ? new FormData(
+                        formRef.current
+                      ).get('amountToPay')
+                    : 0)
               }
               hasPaymentReceipt={
-                formRef.current
+                hasPaymentReceipt ||
+                (formRef.current
                   ? new FormData(
                       formRef.current
                     ).get('paymentReceipt')
                       ?.size > 0
-                  : false
+                  : false)
               }
               onSuccess={() =>
                 handleSubmit({

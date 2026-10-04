@@ -99,20 +99,7 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
 
           <FacilityCard id="voice" icon="phone" label={t('wizards.reconnection.reconnectionDetails.voice', 'Voice (Telephone)')} checked={!!checkedFacilities['voice']} onChange={toggleFacility} />
           <FacilityCard id="peoTv" icon="tv" label={t('wizards.reconnection.reconnectionDetails.peoTv')} checked={!!checkedFacilities['peoTv']} onChange={toggleFacility} />
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <FacilityCard id="broadband" icon="wifi" label={t('wizards.reconnection.reconnectionDetails.broadband')} checked={!!checkedFacilities['broadband']} onChange={toggleFacility} />
-            <AnimatePresence>
-              {checkedFacilities['broadband'] && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-                  <div className="form-group" style={{ padding: '0.75rem 0 0 0' }}>
-                    <input type="text" name="broadbandUsername" className="form-control" style={{ backgroundColor: 'rgba(15, 87, 168, 0.02)', border: '1px solid rgba(15, 87, 168, 0.2)' }} placeholder="Broadband Username *" defaultValue={reconnectionData?.broadbandUsername || ''} required={isActive && checkedFacilities['broadband']} />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
+          <FacilityCard id="broadband" icon="wifi" label={t('wizards.reconnection.reconnectionDetails.broadband')} checked={!!checkedFacilities['broadband']} onChange={toggleFacility} />
         </div>
 
         {/* Inline error shown when user tries to advance without selecting */}
