@@ -16,9 +16,19 @@ const SPEEDS = [
   { id: 'above_500', label: 'Above 500 Mbps' },
 ];
 
+const normalizeTreeName = (name = '') => String(name).toLowerCase().replace(/\s+/g, ' ').trim();
+
 export default function SidebarFilters({
   activeCategory = 'All Products',
   onSelectCategory,
+  // Optional: (node, parentNode) => void. When provided, tree clicks go here instead of
+  // onSelectCategory so the page can filter by the exact node (root or child package).
+  onSelectTreeNode,
+  activeTreeKey = null,
+  // Optional: { [optionId]: number of matching products }. When provided, each checkbox
+  // shows its count and options with no products are greyed out.
+  typeCounts,
+  speedCounts,
   selectedTypes = [],
   onTypeToggle,
   selectedSpeeds = [],
@@ -150,9 +160,14 @@ export default function SidebarFilters({
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               {hierarchy.map((node) => {
-                const isExpanded = expandedNodes[node.id || node.name];
+                const nodeKey = node.id || node.name;
+                const isExpanded = expandedNodes[nodeKey];
                 const hasChildren = Array.isArray(node.children) && node.children.length > 0;
-                const isNodeActive = activeCategory === node.name;
+                const isChildSelected = hasChildren && node.children.some((c) => (c.id || c.name) === activeTreeKey);
+                // Case-insensitive so API names like "Peo TV" still highlight for the "PEO TV" category
+                const isNodeActive = activeTreeKey
+                  ? activeTreeKey === nodeKey || isChildSelected
+                  : activeCategory !== 'All Products' && normalizeTreeName(activeCategory) === normalizeTreeName(node.name);
 
                 return (
                   <div key={node.id || node.name} style={{ borderRadius: '8px', overflow: 'hidden' }}>
@@ -170,8 +185,9 @@ export default function SidebarFilters({
                         transition: 'all 0.15s ease',
                       }}
                       onClick={() => {
-                        if (onSelectCategory) onSelectCategory(node.name);
-                        if (hasChildren) toggleNode(node.id || node.name);
+                        if (onSelectTreeNode) onSelectTreeNode(node, null);
+                        else if (onSelectCategory) onSelectCategory(node.name);
+                        if (hasChildren) toggleNode(nodeKey);
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.84rem', fontWeight: 700, color: isNodeActive ? '#0056b3' : '#1e293b' }}>
@@ -188,7 +204,9 @@ export default function SidebarFilters({
                     {/* Subcategory / Child Nodes */}
                     {hasChildren && isExpanded && (
                       <div style={{ paddingLeft: '1.25rem', paddingTop: '0.35rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        {node.children.map((child) => (
+                        {node.children.map((child) => {
+                          const isChildActive = (child.id || child.name) === activeTreeKey;
+                          return (
                           <div
                             key={child.id || child.name}
                             style={{
@@ -198,11 +216,11 @@ export default function SidebarFilters({
                               padding: '0.35rem 0.5rem',
                               borderRadius: '6px',
                               fontSize: '0.8rem',
-                              color: '#475569',
-                              fontWeight: 600,
+                              color: isChildActive ? '#0056b3' : '#475569',
+                              fontWeight: isChildActive ? 700 : 600,
                               cursor: 'pointer',
-                              backgroundColor: '#ffffff',
-                              border: '1px solid transparent',
+                              backgroundColor: isChildActive ? '#eff6ff' : '#ffffff',
+                              border: `1px solid ${isChildActive ? '#bfdbfe' : 'transparent'}`,
                               transition: 'all 0.15s ease',
                             }}
                             onMouseEnter={(e) => {
@@ -210,17 +228,19 @@ export default function SidebarFilters({
                               e.currentTarget.style.color = '#0056b3';
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = '#ffffff';
-                              e.currentTarget.style.color = '#475569';
+                              e.currentTarget.style.backgroundColor = isChildActive ? '#eff6ff' : '#ffffff';
+                              e.currentTarget.style.color = isChildActive ? '#0056b3' : '#475569';
                             }}
                             onClick={() => {
-                              if (onSelectCategory) onSelectCategory(node.name);
+                              if (onSelectTreeNode) onSelectTreeNode(child, node);
+                              else if (onSelectCategory) onSelectCategory(node.name);
                             }}
                           >
-                            <FiTag size={11} color="#94a3b8" />
+                            <FiTag size={11} color={isChildActive ? '#0056b3' : '#94a3b8'} />
                             <span>{child.name}</span>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -238,30 +258,40 @@ export default function SidebarFilters({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             {PRODUCT_TYPES.map((pt) => {
               const checked = selectedTypes.includes(pt.id);
+              const count = typeCounts ? typeCounts[pt.id] || 0 : null;
+              // A ticked option stays clickable so it can always be unticked
+              const isEmpty = count === 0 && !checked;
               return (
                 <label
                   key={pt.id}
+                  title={isEmpty ? 'No products available' : undefined}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.6rem',
                     fontSize: '0.85rem',
-                    color: '#334155',
-                    cursor: 'pointer',
+                    color: isEmpty ? '#94a3b8' : '#334155',
+                    cursor: isEmpty ? 'not-allowed' : 'pointer',
                   }}
                 >
                   <input
                     type="checkbox"
                     checked={checked}
+                    disabled={isEmpty}
                     onChange={() => onTypeToggle(pt.id)}
                     style={{
                       width: '16px',
                       height: '16px',
                       accentColor: '#0056b3',
-                      cursor: 'pointer',
+                      cursor: isEmpty ? 'not-allowed' : 'pointer',
                     }}
                   />
                   <span>{pt.label}</span>
+                  {count !== null && (
+                    <span style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: 700, color: isEmpty ? '#cbd5e1' : '#64748b' }}>
+                      ({count})
+                    </span>
+                  )}
                 </label>
               );
             })}
@@ -276,30 +306,40 @@ export default function SidebarFilters({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             {SPEEDS.map((sp) => {
               const checked = selectedSpeeds.includes(sp.id);
+              const count = speedCounts ? speedCounts[sp.id] || 0 : null;
+              // A ticked option stays clickable so it can always be unticked
+              const isEmpty = count === 0 && !checked;
               return (
                 <label
                   key={sp.id}
+                  title={isEmpty ? 'No products available' : undefined}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.6rem',
                     fontSize: '0.85rem',
-                    color: '#334155',
-                    cursor: 'pointer',
+                    color: isEmpty ? '#94a3b8' : '#334155',
+                    cursor: isEmpty ? 'not-allowed' : 'pointer',
                   }}
                 >
                   <input
                     type="checkbox"
                     checked={checked}
+                    disabled={isEmpty}
                     onChange={() => onSpeedToggle(sp.id)}
                     style={{
                       width: '16px',
                       height: '16px',
                       accentColor: '#0056b3',
-                      cursor: 'pointer',
+                      cursor: isEmpty ? 'not-allowed' : 'pointer',
                     }}
                   />
                   <span>{sp.label}</span>
+                  {count !== null && (
+                    <span style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: 700, color: isEmpty ? '#cbd5e1' : '#64748b' }}>
+                      ({count})
+                    </span>
+                  )}
                 </label>
               );
             })}

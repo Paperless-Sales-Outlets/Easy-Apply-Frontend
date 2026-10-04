@@ -186,6 +186,32 @@ const getPeoTvChannelsCount = (name = '', price = 0) => {
   return 75;
 };
 
+const normalizeName = (s = '') => String(s).toLowerCase().replace(/\s+/g, ' ').trim();
+
+// Maps a category/name string onto the Product Type filter ids. LTE is checked before
+// broadband because the live API labels LTE products "LTE Broadband".
+const getProductGroup = (text = '') => {
+  const lower = String(text || '').toLowerCase();
+  if (!lower) return null;
+  if (lower.includes('peo') || /\btv\b/.test(lower)) return 'PEO TV';
+  if (lower.includes('voice') || lower.includes('megaline')) return 'Voice';
+  if (lower.includes('lte') || lower.includes('4g')) return 'LTE Home';
+  if (lower.includes('fibre') || lower.includes('fiber') || lower.includes('broadband')) return 'Fibre Broadband';
+  return null;
+};
+
+// Category chip names that the category filter below understands
+const CHIP_CATEGORIES = ['Voice', 'Fibre Broadband', 'PEO TV'];
+
+// Collects ids and names of a hierarchy node and all its descendants
+const collectTreeMatchers = (node, ids = new Set(), names = new Set()) => {
+  if (!node) return { ids, names };
+  if (node.id) ids.add(String(node.id));
+  if (node.name) names.add(normalizeName(node.name));
+  (node.children || []).forEach((child) => collectTreeMatchers(child, ids, names));
+  return { ids, names };
+};
+
 export default function ProductCatalogPage() {
   const { t, i18n } = useTranslation();
   const [products, setProducts] = useState([]);
@@ -195,6 +221,8 @@ export default function ProductCatalogPage() {
 
   // Filters
   const [activeCategory, setActiveCategory] = useState('All Products');
+  // Category Tree selection: { key, ids:Set, names:Set, group } or null
+  const [treeFilter, setTreeFilter] = useState(null);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedSpeeds, setSelectedSpeeds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -321,8 +349,42 @@ export default function ProductCatalogPage() {
     );
   };
 
+  // Category chips select a whole category, so they replace any tree selection
+  const handleSelectCategory = (cat) => {
+    setActiveCategory(cat);
+    setTreeFilter(null);
+  };
+
+  const handleSelectTreeNode = (node, parentNode) => {
+    const key = node.id || node.name;
+
+    if (parentNode) {
+      // Clicking the already-selected package goes back to its parent category
+      if (treeFilter?.key === key) {
+        handleSelectTreeNode(parentNode, null);
+        return;
+      }
+      const parentGroup = getProductGroup(parentNode.name);
+      setActiveCategory(CHIP_CATEGORIES.includes(parentGroup) ? parentGroup : 'All Products');
+      setTreeFilter({ key, group: null, ...collectTreeMatchers(node) });
+      return;
+    }
+
+    // Root node: map "Peo TV" etc. onto the matching chip category; anything else
+    // (e.g. "data") filters by the packages listed under that node.
+    const group = getProductGroup(node.name);
+    if (CHIP_CATEGORIES.includes(group)) {
+      setActiveCategory(group);
+      setTreeFilter(null);
+    } else {
+      setActiveCategory('All Products');
+      setTreeFilter({ key, group, ...collectTreeMatchers(node) });
+    }
+  };
+
   const handleClearAll = () => {
     setActiveCategory('All Products');
+    setTreeFilter(null);
     setSelectedTypes([]);
     setSelectedSpeeds([]);
     setSearchQuery('');
@@ -425,23 +487,29 @@ export default function ProductCatalogPage() {
     return () => window.removeEventListener('easyapply:search', handleCustomSearch);
   }, []);
 
-  // Speed string parser helper (converts "500 Mbps", "1 Gbps", "100 Mbps" to numeric Mbps)
-  const parseSpeedMbps = (speedStr) => {
-    if (!speedStr) return 0;
-    const lower = String(speedStr).toLowerCase();
-    if (lower.includes('gbps') || lower.includes('gb')) {
-      const val = parseFloat(lower);
-      return isNaN(val) ? 1000 : val * 1000;
-    }
-    if (lower.includes('mbps') || lower.includes('mb')) {
-      const val = parseFloat(lower);
-      return isNaN(val) ? 0 : val;
+  // Speed string parser helper (converts "500 Mbps", "1 Gbps", "Up to 100Mbps" to numeric Mbps).
+  // Only Mbps/Gbps units count, so data allowances like "150 GB" are not mistaken for speeds.
+  const parseSpeedMbps = (...values) => {
+    for (const value of values) {
+      const match = String(value || '').toLowerCase().match(/(\d+(?:\.\d+)?)\s*(gbps|mbps|gb\/s|mb\/s)/);
+      if (match) return parseFloat(match[1]) * (match[2].startsWith('g') ? 1000 : 1);
     }
     return 0;
   };
 
-  const filteredProducts = useMemo(() => {
-    let list = products.filter((p) => {
+  const getTypeOf = (p) => getProductGroup(p.category) || getProductGroup(p.name);
+
+  const matchesSpeedRange = (p, speedId) => {
+    const speedVal = parseSpeedMbps(p.speed, p.name);
+    if (speedId === 'up_to_100') return speedVal > 0 && speedVal <= 100;
+    if (speedId === '100_300') return speedVal > 100 && speedVal <= 300;
+    if (speedId === '300_500') return speedVal > 300 && speedVal <= 500;
+    if (speedId === 'above_500') return speedVal > 500;
+    return false;
+  };
+
+  // `skip` leaves one checkbox group out, which is how the per-option counts are worked out
+  const matchesFilters = (p, skip = null) => {
       // Category filter
       if (activeCategory !== 'All Products') {
         const cat = (p.category || p.name || '').toLowerCase();
@@ -449,25 +517,22 @@ export default function ProductCatalogPage() {
         if (activeCategory === 'Fibre Broadband' && !cat.includes('fibre') && !cat.includes('broadband')) return false;
         if (activeCategory === 'PEO TV' && !cat.includes('peo')) return false;
       }
+      // Category Tree filter (matches by product id or name against the selected node's subtree)
+      if (treeFilter) {
+        const prodId = String(p._id || p.id || p.productId || '');
+        const inTree =
+          treeFilter.ids.has(prodId) ||
+          treeFilter.names.has(normalizeName(p.name)) ||
+          (treeFilter.group && getProductGroup(p.category) === treeFilter.group);
+        if (!inTree) return false;
+      }
       // Product Type checkbox filter
-      if (selectedTypes.length > 0) {
-        const matchType = selectedTypes.some((type) => {
-          const catName = (p.category || '').toLowerCase();
-          return catName.includes(type.toLowerCase());
-        });
-        if (!matchType) return false;
+      if (skip !== 'type' && selectedTypes.length > 0) {
+        if (!selectedTypes.includes(getTypeOf(p))) return false;
       }
       // Connection Speed checkbox filter logic
-      if (selectedSpeeds.length > 0) {
-        const speedVal = parseSpeedMbps(p.speed || p.name);
-        const matchSpeed = selectedSpeeds.some((speedId) => {
-          if (speedId === 'up_to_100') return speedVal > 0 && speedVal <= 100;
-          if (speedId === '100_300') return speedVal > 100 && speedVal <= 300;
-          if (speedId === '300_500') return speedVal > 300 && speedVal <= 500;
-          if (speedId === 'above_500') return speedVal > 500;
-          return false;
-        });
-        if (!matchSpeed) return false;
+      if (skip !== 'speed' && selectedSpeeds.length > 0) {
+        if (!selectedSpeeds.some((speedId) => matchesSpeedRange(p, speedId))) return false;
       }
       // Search query filter
       if (searchQuery.trim()) {
@@ -478,7 +543,10 @@ export default function ProductCatalogPage() {
         if (!nameMatch && !catMatch && !speedMatch) return false;
       }
       return true;
-    });
+  };
+
+  const filteredProducts = useMemo(() => {
+    let list = products.filter((p) => matchesFilters(p));
 
     // Sorting logic
     if (sortBy === 'Price Low to High') {
@@ -488,7 +556,25 @@ export default function ProductCatalogPage() {
     }
 
     return list;
-  }, [products, activeCategory, selectedTypes, selectedSpeeds, searchQuery, sortBy]);
+  }, [products, activeCategory, treeFilter, selectedTypes, selectedSpeeds, searchQuery, sortBy]);
+
+  // How many products each sidebar checkbox would show, given the other active filters
+  const { typeCounts, speedCounts } = useMemo(() => {
+    const typeCounts = {};
+    const speedCounts = { up_to_100: 0, '100_300': 0, '300_500': 0, above_500: 0 };
+    products.forEach((p) => {
+      if (matchesFilters(p, 'type')) {
+        const type = getTypeOf(p);
+        if (type) typeCounts[type] = (typeCounts[type] || 0) + 1;
+      }
+      if (matchesFilters(p, 'speed')) {
+        Object.keys(speedCounts).forEach((speedId) => {
+          if (matchesSpeedRange(p, speedId)) speedCounts[speedId] += 1;
+        });
+      }
+    });
+    return { typeCounts, speedCounts };
+  }, [products, activeCategory, treeFilter, selectedTypes, selectedSpeeds, searchQuery]);
 
   // Group filtered products into Category Sections (Voice, Broadband, PEO TV)
   const categorySections = useMemo(() => {
@@ -651,7 +737,7 @@ export default function ProductCatalogPage() {
         <div id="products-section" className="scroll-target">
           <CategoryChips
             activeCategory={activeCategory}
-            onSelectCategory={(cat) => setActiveCategory(cat)}
+            onSelectCategory={handleSelectCategory}
           />
         </div>
 
@@ -661,7 +747,11 @@ export default function ProductCatalogPage() {
           <div className="catalog-sidebar-col">
             <SidebarFilters
               activeCategory={activeCategory}
-              onSelectCategory={(cat) => setActiveCategory(cat)}
+              onSelectCategory={handleSelectCategory}
+              onSelectTreeNode={handleSelectTreeNode}
+              activeTreeKey={treeFilter?.key || null}
+              typeCounts={loading ? undefined : typeCounts}
+              speedCounts={loading ? undefined : speedCounts}
               selectedTypes={selectedTypes}
               onTypeToggle={handleTypeToggle}
               selectedSpeeds={selectedSpeeds}
@@ -684,9 +774,16 @@ export default function ProductCatalogPage() {
                   <SidebarFilters
                     activeCategory={activeCategory}
                     onSelectCategory={(cat) => {
-                      setActiveCategory(cat);
+                      handleSelectCategory(cat);
                       setShowMobileFilters(false);
                     }}
+                    onSelectTreeNode={(node, parentNode) => {
+                      handleSelectTreeNode(node, parentNode);
+                      setShowMobileFilters(false);
+                    }}
+                    activeTreeKey={treeFilter?.key || null}
+                    typeCounts={loading ? undefined : typeCounts}
+                    speedCounts={loading ? undefined : speedCounts}
                     selectedTypes={selectedTypes}
                     onTypeToggle={handleTypeToggle}
                     selectedSpeeds={selectedSpeeds}
