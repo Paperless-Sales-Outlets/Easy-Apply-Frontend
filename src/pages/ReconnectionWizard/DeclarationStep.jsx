@@ -101,7 +101,6 @@ const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange
           type="file"
           name={name}
           accept={accept}
-          required={required && !hasFile}
           ref={inputRef}
           onChange={handleChange}
           style={{ opacity: 0, position: 'absolute', zIndex: -1, width: '1px', height: '1px', left: 0, top: 0 }}
@@ -130,7 +129,7 @@ const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.08)', color: 'var(--slt-blue)', display: 'grid', placeItems: 'center', transition: 'all 0.3s ease' }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -150,7 +149,7 @@ const FileInputWithClear = forwardRef(({ label, name, accept, required, onChange
 });
 
 
-const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customerType = 'Residential', onPaymentIntentionChange, reconnectionData }, ref) {
+const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customerType = 'Residential', onPaymentIntentionChange, onPaymentReceiptChange, reconnectionData }, ref) {
   const { t } = useTranslation();
   const [signatureBase64, setSignatureBase64] = useState('');
   const [signatureError, setSignatureError] = useState(false);
@@ -159,6 +158,10 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
   const signatureFileRef = useRef(null);
 
   const [paymentIntention, setPaymentIntention] = useState('online');
+  const [paymentReceipt, setPaymentReceipt] = useState(null);
+  const [paymentReceiptError, setPaymentReceiptError] = useState(false);
+  const receiptFileRef = useRef(null);
+
   const [isAgreed, setIsAgreed] = useState(false);
 
   // Notify parent whenever payment intention changes
@@ -168,11 +171,44 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
     }
   }, [paymentIntention, onPaymentIntentionChange]);
 
+  const handleReceiptChange = (e) => {
+    const files = e?.target?.files;
+    if (files && files.length > 0) {
+      setPaymentReceipt(files[0]);
+      setPaymentReceiptError(false);
+      if (onPaymentReceiptChange) onPaymentReceiptChange(true);
+    } else {
+      setPaymentReceipt(null);
+      if (onPaymentReceiptChange) onPaymentReceiptChange(false);
+    }
+  };
+
+  const handleSelectIntention = (intention) => {
+    setPaymentIntention(intention);
+    if (intention === 'online') {
+      setPaymentReceiptError(false);
+      if (onPaymentReceiptChange) onPaymentReceiptChange(false);
+    } else if (intention === 'paid') {
+      const hasFile = Boolean(
+        (receiptFileRef.current?.files && receiptFileRef.current.files.length > 0) ||
+        paymentReceipt
+      );
+      if (onPaymentReceiptChange) onPaymentReceiptChange(hasFile);
+    }
+  };
+
   useImperativeHandle(ref, () => ({
     validate: () => {
-      const form = document.querySelector('form');
-      if (form) {
-        const formData = new FormData(form);
+      if (paymentIntention === 'paid') {
+        const hasReceipt = Boolean(
+          (receiptFileRef.current?.files && receiptFileRef.current.files.length > 0) ||
+          paymentReceipt
+        );
+        if (!hasReceipt) {
+          setPaymentReceiptError(true);
+          toast.error('Please upload the payment receipt');
+          return false;
+        }
       }
 
       if (signatureMethod === 'draw' && !signatureBase64) {
@@ -211,7 +247,7 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
           />
           <button 
             type="button" 
-            onClick={() => setPaymentIntention('online')}
+            onClick={() => handleSelectIntention('online')}
             style={{ 
               flex: 1, padding: '0.75rem', background: 'none', border: 'none', borderRadius: '8px', 
               fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', position: 'relative', zIndex: 1,
@@ -223,7 +259,7 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
           </button>
           <button 
             type="button" 
-            onClick={() => setPaymentIntention('paid')}
+            onClick={() => handleSelectIntention('paid')}
             style={{ 
               flex: 1, padding: '0.75rem', background: 'none', border: 'none', borderRadius: '8px', 
               fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', position: 'relative', zIndex: 1,
@@ -241,10 +277,25 @@ const DeclarationStep = forwardRef(function DeclarationStep({ isActive, customer
         {paymentIntention === 'paid' && (
           <div className="form-group mb-2">
             <FileInputWithClear
+              ref={receiptFileRef}
               label="Upload Payment Receipt (PDF/JPG/PNG)"
               name="paymentReceipt"
               accept=".pdf,.jpg,.jpeg,.png"
+              required={true}
+              onChange={handleReceiptChange}
             />
+            {paymentReceiptError && (
+              <p
+                style={{
+                  color: 'var(--danger, #dc3545)',
+                  fontSize: '0.85rem',
+                  marginTop: '0.5rem',
+                  fontWeight: 500,
+                }}
+              >
+                Please upload the payment receipt
+              </p>
+            )}
           </div>
         )}
       </div>

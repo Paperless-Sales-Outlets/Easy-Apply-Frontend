@@ -33,6 +33,7 @@ export default function PaymentStep({
   const parsedAmount = parseFloat(amount) || 0;
   const parsedFee = parseFloat(feeAmount) || 0;
   const totalAmount = parsedAmount + parsedFee;
+  const isZeroAmount = totalAmount === 0;
   const formattedAmount = Number(totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 });
   const formattedPending = Number(parsedAmount).toLocaleString('en-US', { minimumFractionDigits: 2 });
   const formattedFee = Number(parsedFee).toLocaleString('en-US', { minimumFractionDigits: 2 });
@@ -131,6 +132,12 @@ export default function PaymentStep({
   const handlePlaceOrder = async () => {
     // Receipt-upload flow: no payment gateway redirect needed
     if (hasPaymentReceipt) {
+      if (onSuccess) onSuccess(null, mobileNumber);
+      return;
+    }
+
+    // Zero pending amount flow: customer is not required to make payment, continue normally
+    if (isZeroAmount) {
       if (onSuccess) onSuccess(null, mobileNumber);
       return;
     }
@@ -287,10 +294,32 @@ export default function PaymentStep({
                 </div>
                 <h4 style={{ margin: 0, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.9rem' }}>Digital Receipt</h4>
               </div>
+
+              {isZeroAmount && (
+                <div
+                  style={{
+                    backgroundColor: 'rgba(0, 166, 80, 0.1)',
+                    border: '1px solid rgba(0, 166, 80, 0.25)',
+                    borderRadius: '8px',
+                    padding: '0.75rem 1rem',
+                    marginBottom: '1.25rem',
+                    color: '#0f7a4d',
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <Icon name="check-circle" size={18} />
+                  <span>No pending amount to pay</span>
+                </div>
+              )}
               
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: parsedFee > 0 ? 'none' : '2px dashed rgba(0,0,0,0.15)', marginBottom: parsedFee > 0 ? '0.5rem' : '1rem' }}>
                 <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>{amountLabel}</span>
-                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>Rs. {formattedPending}</span>
+                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: isZeroAmount ? '#0f7a4d' : 'var(--text-primary)' }}>Rs. {formattedPending}</span>
               </div>
               
               {parsedFee > 0 && (
@@ -309,7 +338,13 @@ export default function PaymentStep({
 
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Payment Method</span>
-                <span style={{ fontWeight: 700, color: 'var(--slt-blue)' }}>{hasPaymentReceipt ? 'Receipt Uploaded' : 'Pay Online Now'}</span>
+                <span style={{ fontWeight: 700, color: 'var(--slt-blue)' }}>
+                  {hasPaymentReceipt
+                    ? 'Receipt Uploaded'
+                    : isZeroAmount
+                    ? 'No Payment Required'
+                    : 'Pay Online Now'}
+                </span>
               </div>
             </div>
 
@@ -347,8 +382,18 @@ export default function PaymentStep({
                 />
               ) : (
                 <>
-                  {!hasPaymentReceipt ? <Icon name="credit-card" size={20} /> : <Icon name="file-text" size={20} />}
-                  {hasPaymentReceipt ? 'Submit Request' : `Pay Rs. ${formattedAmount} & Confirm`}
+                  {!hasPaymentReceipt && !isZeroAmount ? (
+                    <Icon name="credit-card" size={20} />
+                  ) : hasPaymentReceipt ? (
+                    <Icon name="file-text" size={20} />
+                  ) : (
+                    <Icon name="arrow-right" size={20} />
+                  )}
+                  {hasPaymentReceipt
+                    ? 'Submit Request'
+                    : isZeroAmount
+                    ? 'Continue'
+                    : `Pay Rs. ${formattedAmount} & Confirm`}
                 </>
               )}
             </motion.button>
