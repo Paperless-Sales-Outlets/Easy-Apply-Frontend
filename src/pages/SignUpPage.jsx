@@ -139,15 +139,18 @@ export default function SignUpPage() {
     const state = location.state || {};
     const storedPhone = state.phone || localStorage.getItem('signupPhone') || '';
     const storedNic = state.nic || localStorage.getItem('signupNic') || '';
+    const storedEmail = state.email || localStorage.getItem('signupEmail') || '';
     const isVerified = Boolean(state.phoneVerified || localStorage.getItem('signupPhoneVerified') === 'true');
 
     if (localStorage.getItem('signupPhone')) localStorage.removeItem('signupPhone');
     if (localStorage.getItem('signupNic')) localStorage.removeItem('signupNic');
+    if (localStorage.getItem('signupEmail')) localStorage.removeItem('signupEmail');
     if (localStorage.getItem('signupPhoneVerified')) localStorage.removeItem('signupPhoneVerified');
 
     return {
       phone: storedPhone,
       nic: storedNic,
+      email: storedEmail,
       isVerified,
       step: isVerified && storedPhone && storedNic ? 2 : 1,
     };
@@ -161,7 +164,7 @@ export default function SignUpPage() {
   const [form, setForm] = useState({
     // Step 1
     phone: initInfo.phone,
-    email: '',
+    email: initInfo.email || '',
     // Step 2 — identity documents
     nicFront: '',
     nicBack: '',

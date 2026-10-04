@@ -199,6 +199,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
           <ReadOnlyDetail label="Full Name" value={knownProfile.nameFull} />
           <ReadOnlyDetail label="NIC / ID Number" value={knownProfile.nic} />
           <ReadOnlyDetail label="Verified Mobile" value={knownProfile.mobileNumber} />
+          <ReadOnlyDetail label="Verified Email" value={knownProfile.email} />
           <ReadOnlyDetail label="Date of Birth" value={knownProfile.dob} />
         </div>
       </div>
@@ -344,32 +345,6 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
           </div>
         </motion.div>
       )}
-
-      {/* ── Contact Email for Billing & Updates ── */}
-      <div style={{ marginTop: '1.25rem' }}>
-        <label htmlFor="nc-email" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
-          <FiMail size={14} color="#64748b" /> Email Address (for order updates & e-bill)
-        </label>
-        <input
-          id="nc-email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="customer@example.com"
-          value={formData.email || ''}
-          onChange={handleChange}
-          style={{
-            width: '100%',
-            padding: '0.85rem 1rem',
-            fontSize: '0.95rem',
-            borderRadius: '12px',
-            border: '1.5px solid #e2e8f0',
-            backgroundColor: '#ffffff',
-            color: '#0f172a',
-          }}
-          required
-        />
-      </div>
     </motion.div>
   );
 }

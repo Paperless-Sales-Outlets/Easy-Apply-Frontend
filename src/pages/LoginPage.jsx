@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiLock, FiSmartphone, FiCreditCard, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw } from 'react-icons/fi';
+import { FiLock, FiSmartphone, FiCreditCard, FiMail, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
 import api from '../utils/api';
@@ -36,7 +36,7 @@ async function fetchSltAccounts(phone) {
 
 /**
  * Unified Entry Sign-in / Verification gateway.
- * Prompts user for NIC Number and 9-digit Mobile Number.
+ * Prompts user for NIC Number, Email Address, and 9-digit Mobile Number.
  * Verifies OTP and routes existing customers to Landing Page or new customers to NIC upload.
  */
 export default function LoginPage() {
@@ -50,6 +50,7 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState({});
 
   const [nic, setNic] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
@@ -77,6 +78,13 @@ export default function LoginPage() {
       fe.nic = nicCheck.message || 'Enter a valid NIC number';
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !email.trim()) {
+      fe.email = 'Email address is required';
+    } else if (!emailRegex.test(email.trim())) {
+      fe.email = 'Enter a valid email address (e.g. name@example.com)';
+    }
+
     const digits = phone.replace(/\D/g, '');
     if (digits.length !== 9) {
       fe.phone = 'Enter a valid 9-digit mobile number';
@@ -92,7 +100,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await api.post('/otp/send', { phone: digits });
+      await api.post('/otp/send', { phone: digits, email: email.trim().toLowerCase(), nic: cleanNIC(nic) });
     } catch (err) {
       // Offline/demo mode — still let them key in the code.
     }
@@ -104,6 +112,7 @@ export default function LoginPage() {
   const submitOtp = async (code) => {
     const digits = phone.replace(/\D/g, '');
     const cleanNicVal = cleanNIC(nic);
+    const cleanEmailVal = email.trim().toLowerCase();
     setError('');
     setLoading(true);
 
@@ -111,6 +120,7 @@ export default function LoginPage() {
       const res = await api.post('/auth/verify-entry', {
         phone: digits,
         nic: cleanNicVal,
+        email: cleanEmailVal,
         otp: code,
       });
 
@@ -121,8 +131,8 @@ export default function LoginPage() {
         const accounts = await fetchSltAccounts(customerProfile?.phone || digits);
         saveSession({
           phone: customerProfile?.phone || digits,
-          customer: customerProfile,
-          user: customerProfile,
+          customer: { ...customerProfile, email: customerProfile?.email || cleanEmailVal },
+          user: { ...customerProfile, email: customerProfile?.email || cleanEmailVal },
           accountsList: accounts,
           tokens: { accessToken, refreshToken },
         });
@@ -131,11 +141,13 @@ export default function LoginPage() {
         // New customer -> Navigate to Sign Up Step 2 (NIC Upload)
         localStorage.setItem('signupPhone', digits);
         localStorage.setItem('signupNic', cleanNicVal);
+        localStorage.setItem('signupEmail', cleanEmailVal);
         localStorage.setItem('signupPhoneVerified', 'true');
         navigate('/signup', {
           state: {
             phone: digits,
             nic: cleanNicVal,
+            email: cleanEmailVal,
             phoneVerified: true,
             fromLogin: true,
           },
@@ -148,9 +160,10 @@ export default function LoginPage() {
         if (code === '000000' || code === '123456') {
           localStorage.setItem('signupPhone', digits);
           localStorage.setItem('signupNic', cleanNicVal);
+          localStorage.setItem('signupEmail', cleanEmailVal);
           localStorage.setItem('signupPhoneVerified', 'true');
           navigate('/signup', {
-            state: { phone: digits, nic: cleanNicVal, phoneVerified: true },
+            state: { phone: digits, nic: cleanNicVal, email: cleanEmailVal, phoneVerified: true },
             replace: true,
           });
           return;
@@ -298,6 +311,35 @@ export default function LoginPage() {
                 {fieldErrors.nic
                   ? <p className="signup-field-error" id="login-nic-error">{fieldErrors.nic}</p>
                   : <p className="signup-field-help" id="login-nic-help">Enter your 12-digit or 9-digit (with V/X) National Identity Card number.</p>}
+              </div>
+
+              {/* Email Address Field */}
+              <div className="signup-field">
+                <label className="signup-label" htmlFor="login-email">
+                  Email Address <span className="signup-required" aria-hidden="true">*</span>
+                </label>
+                <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`}>
+                  <span className="signup-input-icon" aria-hidden="true"><FiMail size={16} /></span>
+                  <input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    className="signup-input"
+                    placeholder="name@example.com"
+                    aria-invalid={!!fieldErrors.email}
+                    aria-describedby={fieldErrors.email ? 'login-email-error' : 'login-email-help'}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setFieldErrors((f) => ({ ...f, email: undefined }));
+                    }}
+                  />
+                </div>
+                {fieldErrors.email
+                  ? <p className="signup-field-error" id="login-email-error">{fieldErrors.email}</p>
+                  : <p className="signup-field-help" id="login-email-help">Used for order receipts, e-bills, and status updates.</p>}
               </div>
 
               {/* Mobile Number Field */}
