@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FiPackage, FiShoppingCart, FiUser } from 'react-icons/fi';
 import { VerificationContext } from './verification';
 import { AUTH_UPDATED_EVENT, getSession, isAuthenticated, selectAccount } from '../utils/authSession';
+import LiveStatusBadge from './LiveStatusBadge';
 
 /**
  * Guards the customer-facing pages.
@@ -145,24 +146,28 @@ export default function SessionGate({ children, requireExistingCustomer }) {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.85rem',
+                  justifyContent: 'space-between',
                   textAlign: 'left',
                   padding: '1rem 1.15rem',
                   borderRadius: '16px',
                   border: '1.5px solid #e2e8f0',
                   backgroundColor: '#f8fafc',
                   cursor: 'pointer',
+                  width: '100%',
                 }}
               >
-                <FiUser size={20} color="#0056b3" aria-hidden="true" />
-                <span>
-                  <strong style={{ display: 'block', color: '#0f172a', fontSize: '0.95rem' }}>
-                    {account.fullName || account.customerName || 'SLT Account'}
-                  </strong>
-                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
-                    {account.telephone || account.accountNumber}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                  <FiUser size={20} color="#0056b3" aria-hidden="true" />
+                  <span>
+                    <strong style={{ display: 'block', color: '#0f172a', fontSize: '0.95rem' }}>
+                      {account.fullName || account.customerName || 'SLT Account'}
+                    </strong>
+                    <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                      {account.telephone || account.accountNumber} {account.packageName ? `• ${account.packageName}` : ''}
+                    </span>
                   </span>
-                </span>
+                </div>
+                <LiveStatusBadge status={account.status} size="sm" />
               </button>
             ))}
           </div>

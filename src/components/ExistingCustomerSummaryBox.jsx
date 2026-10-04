@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Icon from './Icon';
+import LiveStatusBadge from './LiveStatusBadge';
 import { useVerifiedContext } from './verification';
 
 export default function ExistingCustomerSummaryBox({ customerData, customerExists }) {
@@ -35,7 +36,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
             gap: '0.5rem',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
             <div
               style={{
                 backgroundColor: '#16a34a',
@@ -55,6 +56,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
             <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#14532d' }}>
               Customer Information Verified
             </span>
+            <LiveStatusBadge status={customerData.status} size="sm" />
           </div>
 
           {accountsList && accountsList.length > 1 && (
@@ -79,7 +81,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
             gap: '1rem',
             alignItems: 'start'
           }}
@@ -119,6 +121,15 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
               {customerData.package || customerData.packageName || '—'}
             </div>
           </div>
+
+          <div>
+            <div style={{ fontSize: '0.72rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+              Status
+            </div>
+            <div style={{ marginTop: '0.2rem' }}>
+              <LiveStatusBadge status={customerData.status} />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -144,14 +155,14 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               style={{
-                background: 'rgba(255, 255, 255, 0.75)',
+                background: 'rgba(255, 255, 255, 0.85)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
                 border: '1px solid rgba(255, 255, 255, 0.8)',
                 borderRadius: '16px',
                 padding: '2.5rem 2rem',
                 width: '90%',
-                maxWidth: '450px',
+                maxWidth: '480px',
                 boxShadow: '0 16px 40px rgba(0, 84, 166, 0.15), inset 0 4px 10px rgba(255,255,255,1)',
                 maxHeight: '90vh',
                 overflowY: 'auto',
@@ -201,21 +212,17 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
                 {accountsList.map((conn, idx) => (
                   <motion.div
                     key={idx}
-                    whileHover={{ scale: 1.02, background: 'rgba(255, 255, 255, 0.9)', boxShadow: '0 8px 24px rgba(0, 174, 239, 0.12)' }}
+                    whileHover={{ scale: 1.02, background: 'rgba(255, 255, 255, 0.95)', boxShadow: '0 8px 24px rgba(0, 174, 239, 0.12)' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       switchAccount(conn);
                       setShowSwitchModal(false);
-                      // Force a tiny delay and reload so the wizard catches the new selectedAccount
-                      // Actually context handles this reactively if the wizard uses selectedAccount from context!
-                      // If the wizard relies on location.state or local state, we should reload.
-                      // Since we update sessionStorage and context in switchAccount, a reload ensures everything is in sync.
                       window.location.reload();
                     }}
                     style={{
                       padding: '1.25rem',
-                      background: 'rgba(255, 255, 255, 0.5)',
-                      border: '1px solid rgba(255, 255, 255, 0.8)',
+                      background: 'rgba(255, 255, 255, 0.75)',
+                      border: '1px solid rgba(255, 255, 255, 0.9)',
                       borderRadius: '16px',
                       cursor: 'pointer',
                       transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -226,12 +233,22 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
                     }}
                   >
                     <div style={{ flex: 1 }}>
-                      <h5 style={{ margin: '0 0 0.25rem 0', color: 'var(--text-primary)', fontSize: '1rem' }}>
-                        {conn.telephone || conn.accountNo}
-                      </h5>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                        {conn.customerType === 'office' ? 'Business' : 'Home'} Connection
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem', gap: '0.5rem' }}>
+                        <h5 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.05rem', fontWeight: 800 }}>
+                          {conn.telephone || conn.accountNo}
+                        </h5>
+                        <LiveStatusBadge status={conn.status} size="sm" />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                          {conn.customerType === 'office' ? 'Business' : 'Home'} Connection
+                        </span>
+                        {conn.packageName && (
+                          <span style={{ color: '#0056b3', fontSize: '0.82rem', fontWeight: 600 }}>
+                            &bull; {conn.packageName}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div style={{ color: 'var(--slt-blue)' }}>
                       <Icon name="chevron-right" size={20} />

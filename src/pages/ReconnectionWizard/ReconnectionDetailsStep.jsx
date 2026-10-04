@@ -128,8 +128,18 @@ const ReconnectionDetailsStep = forwardRef(function ReconnectionDetailsStep({ is
               <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Pending dues for <strong>{reconnectionData.fullName}</strong></p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Total to Pay</p>
-              <h2 style={{ margin: 0, color: '#0f7a4d' }}>Rs. {(reconnectionData.outstandingBalance || 0).toLocaleString()}</h2>
+              <p style={{ margin: '0 0 0.25rem 0', fontSize: '0.82rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>Total to Pay</p>
+              <h2 style={{
+                margin: 0,
+                color: '#0f7a4d',
+                fontFamily: 'var(--font-body)',
+                fontWeight: 800,
+                fontSize: '1.65rem',
+                letterSpacing: '-0.02em',
+                fontVariantNumeric: 'tabular-nums'
+              }}>
+                Rs. {(reconnectionData.outstandingBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </h2>
             </div>
           </div>
         </>
