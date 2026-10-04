@@ -20,16 +20,24 @@ export default function PaymentSuccessPage() {
 
     const orderId = searchParams.get('order_id');
 
-    const finish = async (referenceNumber) => {
+    const finish = async (referenceNumber, serviceType) => {
       // Cart is no longer needed — clear it from the backend and localStorage
       // so the user starts fresh if they come back to the product catalogue.
       await clearSessionCart();
+
+      const messageKey = serviceType === 'reconnection'
+        ? 'completion.successMessages.reconnection'
+        : serviceType === 'relocation'
+        ? 'completion.successMessages.relocation'
+        : serviceType === 'package-migration'
+        ? 'completion.successMessages.packageMigration'
+        : 'completion.successMessages.newConnection';
 
       navigate('/completion', {
         replace: true,
         state: {
           referenceNumber: referenceNumber || orderId || 'PAYHERE-SUCCESS',
-          messageKey: 'completion.successMessages.newConnection',
+          messageKey,
           paymentConfirmed: true,
         },
       });
@@ -44,7 +52,7 @@ export default function PaymentSuccessPage() {
     api
       .get(`/payment/order/${orderId}`)
       .then((res) => {
-        finish(res.data?.referenceNumber || orderId);
+        finish(res.data?.referenceNumber || orderId, res.data?.serviceType);
       })
       .catch(() => {
         // Backend offline or order not found — use orderId as fallback
