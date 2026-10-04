@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fi';
 import { useVerifiedContext } from '../components/verification';
 import { getAuthUser, notifyAuthUpdated } from '../utils/authSession';
+import LiveStatusBadge from '../components/LiveStatusBadge';
 import api from '../utils/api';
 
 const SERVICE_TYPE_LABELS = {
@@ -81,6 +82,9 @@ function accountToProfile(account, mobileNumber, user) {
 
     // SLT connection — only exists for customers who hold a product
     accountNumber: pick(account?.accountNumber),
+    telephone: pick(account?.telephone, account?.phoneNumber, account?.mobileNumber),
+    status: pick(account?.status, (account ? 'active' : '')),
+    outstandingBalance: account?.outstandingBalance !== undefined ? account.outstandingBalance : 0,
     connectionType: pick(account?.serviceType, account?.package),
     packageName: pick(account?.packageName, account?.package),
     registeredDate: account?.registeredDate
@@ -384,11 +388,12 @@ export default function MyProfilePage() {
             <h2 style={{ margin: '0 0 0.35rem', fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.5px', color: '#ffffff' }}>
               {profile.fullName || 'SLTMobitel Customer'}
             </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
               {customerExists ? (
                 <>
-                  <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255,255,255,0.85)' }}>
-                    Account: <strong style={{ color: '#fff' }}>{profile.accountNumber || 'NA'}</strong>
+                  <p style={{ margin: 0, fontSize: '0.95rem', color: 'rgba(255,255,255,0.85)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    Account: <strong style={{ color: '#fff' }}>{profile.accountNumber || profile.telephone || 'NA'}</strong>
+                    {profile.status && <LiveStatusBadge status={profile.status} size="sm" />}
                   </p>
                   <span style={{ color: 'rgba(255,255,255,0.4)' }} aria-hidden="true">|</span>
                   <p style={{ margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)' }}>
@@ -623,7 +628,7 @@ export default function MyProfilePage() {
                         <div style={{ padding: '0.75rem 1rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
                           Select an Account
                         </div>
-                        <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                        <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
                           {accountsList.map(acc => (
                             <div
                               key={acc.accountNumber || acc.telephone}
@@ -635,19 +640,22 @@ export default function MyProfilePage() {
                                 padding: '0.75rem 1rem',
                                 borderBottom: '1px solid #f1f5f9',
                                 cursor: 'pointer',
-                                background: acc.accountNumber === profile.accountNumber ? '#f1f5f9' : '#fff',
+                                background: (acc.accountNumber === profile.accountNumber || acc.telephone === profile.telephone) ? '#f1f5f9' : '#fff',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: '0.25rem',
                               }}
                               onMouseEnter={(e) => {
-                                if (acc.accountNumber !== profile.accountNumber) e.currentTarget.style.backgroundColor = '#f8fafc';
+                                if (acc.accountNumber !== profile.accountNumber && acc.telephone !== profile.telephone) e.currentTarget.style.backgroundColor = '#f8fafc';
                               }}
                               onMouseLeave={(e) => {
-                                if (acc.accountNumber !== profile.accountNumber) e.currentTarget.style.backgroundColor = '#fff';
+                                if (acc.accountNumber !== profile.accountNumber && acc.telephone !== profile.telephone) e.currentTarget.style.backgroundColor = '#fff';
                               }}
                             >
-                              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>{acc.accountNumber}</span>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>{acc.telephone || acc.accountNumber}</span>
+                                <LiveStatusBadge status={acc.status} size="sm" />
+                              </div>
                               <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{acc.package || acc.packageName || 'SLT Connection'}</span>
                             </div>
                           ))}
@@ -679,8 +687,55 @@ export default function MyProfilePage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0.5rem 1.5rem', marginBottom: '1.5rem' }}>
               <InfoField label="Account Number" value={profile.accountNumber} />
+              <InfoField label="Telephone Number" value={profile.telephone} />
+              
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    color: '#64748b',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    marginBottom: '0.4rem',
+                  }}
+                >
+                  Connection Status
+                </label>
+                <div style={{ marginTop: '0.2rem' }}>
+                  {profile.status ? (
+                    <LiveStatusBadge status={profile.status} />
+                  ) : (
+                    <span style={{ color: '#64748b', fontWeight: 600 }}>NA</span>
+                  )}
+                </div>
+              </div>
+
               <InfoField label="Connection Type" value={profile.connectionType} />
               <InfoField label="Current Package" value={profile.packageName} />
+              
+              {profile.outstandingBalance > 0 && (
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: '#64748b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginBottom: '0.4rem',
+                    }}
+                  >
+                    Outstanding Dues
+                  </label>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#dc2626', fontVariantNumeric: 'tabular-nums' }}>
+                    Rs. {Number(profile.outstandingBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+              )}
+
               <InfoField label="Registered Date" value={profile.registeredDate} />
             </div>
 
