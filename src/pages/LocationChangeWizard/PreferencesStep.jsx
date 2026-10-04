@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import {
   FiCalendar,
   FiSliders,
@@ -11,8 +13,136 @@ import {
   FiFileText,
 } from 'react-icons/fi';
 
+const DatePickerStyles = () => (
+  <style>{`
+    .modern-calendar-wrapper {
+      position: relative;
+    }
+    .modern-calendar-wrapper .datepicker-full-width {
+      width: 100%;
+      display: block;
+    }
+    .modern-calendar-wrapper .modern-datepicker-input {
+      height: 56px;
+      font-size: 1.1rem;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(31, 38, 135, 0.05);
+      width: 100%;
+      padding: 0.375rem 1rem;
+      color: var(--text-primary);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .modern-calendar-wrapper .modern-datepicker-input:focus {
+      border-color: var(--slt-blue);
+      box-shadow: 0 0 0 4px rgba(15, 87, 168, 0.1);
+      outline: none;
+      background: rgba(255, 255, 255, 0.8);
+    }
+    .modern-calendar-wrapper .modern-datepicker-input.input-error {
+      border: 1.5px solid #dc2626 !important;
+      background-color: #fef2f2 !important;
+    }
+    
+    /* Calendar Popup UI */
+    .modern-calendar-wrapper .react-datepicker {
+      font-family: inherit;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 16px 40px rgba(0, 84, 166, 0.15), inset 0 4px 10px rgba(255,255,255,1);
+      padding: 1.5rem;
+      border-top-left-radius: 4px; /* Slight tip to indicate popover */
+    }
+    .modern-calendar-wrapper .react-datepicker__header {
+      background: transparent;
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+      padding-bottom: 0.75rem;
+    }
+    .modern-calendar-wrapper .react-datepicker__current-month {
+      color: var(--slt-blue);
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    .modern-calendar-wrapper .react-datepicker__day-name {
+      color: var(--text-secondary);
+      font-weight: 600;
+      width: 2.5rem;
+      margin: 0.2rem;
+    }
+    .modern-calendar-wrapper .react-datepicker__day {
+      width: 2.5rem;
+      line-height: 2.5rem;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      color: var(--text-primary);
+      font-weight: 500;
+      margin: 0.2rem;
+    }
+    .modern-calendar-wrapper .react-datepicker__day:hover:not(.react-datepicker__day--disabled) {
+      background: rgba(0, 174, 239, 0.15);
+      color: var(--slt-blue);
+      border-radius: 50%;
+    }
+    .modern-calendar-wrapper .react-datepicker__day--selected,
+    .modern-calendar-wrapper .react-datepicker__day--keyboard-selected {
+      background: linear-gradient(135deg, var(--slt-blue), #00AEEF) !important;
+      color: white !important;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0, 174, 239, 0.3);
+    }
+    .modern-calendar-wrapper .react-datepicker__day--disabled {
+      color: rgba(0,0,0,0.25);
+    }
+    .modern-calendar-wrapper .react-datepicker__navigation-icon::before {
+      border-color: var(--slt-blue);
+      border-width: 2.5px 2.5px 0 0;
+    }
+    .modern-calendar-wrapper .react-datepicker__triangle {
+      display: none;
+    }
+  `}</style>
+);
+
+const parseDate = (val) => {
+  if (!val) return null;
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+  if (typeof val === 'string') {
+    const parts = val.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+};
+
+const formatDate = (val) => {
+  if (!val) return '';
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const year = val.getFullYear();
+    const month = String(val.getMonth() + 1).padStart(2, '0');
+    const day = String(val.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  if (typeof val === 'string') return val;
+  return '';
+};
+
 export default function PreferencesStep({
   isActive,
+  formData = {},
   selectedServiceType = 'FTTH',
   customerType = 'business',
   onValidationChange,
@@ -30,8 +160,8 @@ export default function PreferencesStep({
   }, [onValidationChange, onDataChange]);
 
   // State Management
-  const [relocationDate, setRelocationDate] = useState('');
-  const [disconnectDate, setDisconnectDate] = useState('');
+  const [relocationDate, setRelocationDate] = useState(() => parseDate(formData?.relocationDate));
+  const [disconnectDate, setDisconnectDate] = useState(() => parseDate(formData?.disconnectDate));
   const [disconnectAction, setDisconnectAction] = useState('all');
   const [keptServices, setKeptServices] = useState({
     incoming: false,
@@ -45,8 +175,8 @@ export default function PreferencesStep({
 
   const [brcFile, setBrcFile] = useState(null);
 
-  // Minimum date selection for preferred relocation date (Today onwards)
-  const today = new Date().toISOString().split('T')[0];
+  const formattedRelocationDate = formatDate(relocationDate);
+  const formattedDisconnectDate = formatDate(disconnectDate);
 
   const handleCheckboxChange = (serviceKey) => {
     setKeptServices((prev) => ({ ...prev, [serviceKey]: !prev[serviceKey] }));
@@ -67,8 +197,8 @@ export default function PreferencesStep({
   useEffect(() => {
     if (onDataChangeRef.current) {
       onDataChangeRef.current({
-        relocationDate,
-        disconnectDate,
+        relocationDate: formattedRelocationDate,
+        disconnectDate: formattedDisconnectDate,
         disconnectAction,
         keptServices,
         callForwarding,
@@ -76,7 +206,7 @@ export default function PreferencesStep({
         brcFile,
       });
     }
-  }, [relocationDate, disconnectDate, disconnectAction, keptServices, callForwarding, forwardingDuration, brcFile]);
+  }, [formattedRelocationDate, formattedDisconnectDate, disconnectAction, keptServices, callForwarding, forwardingDuration, brcFile]);
 
   return (
     <div style={{ width: '100%', margin: '0 auto', fontFamily: 'inherit' }}>
@@ -102,28 +232,27 @@ export default function PreferencesStep({
           </h4>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
-          <div>
-            <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
+        <div className="modern-calendar-wrapper" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
+          <DatePickerStyles />
+          <div style={{ flex: '1' }}>
+            <label htmlFor="rel-relocationDate" style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
               Preferred Relocation Date <span style={{ color: '#dc2626' }}>*</span>
             </label>
-            <input
-              type="date"
-              min={today}
-              value={relocationDate}
-              onChange={(e) => setRelocationDate(e.target.value)}
+            <DatePicker
+              selected={relocationDate}
+              onChange={(date) => setRelocationDate(date)}
+              minDate={new Date()}
+              dateFormat="MMMM d, yyyy"
+              placeholderText="Select preferred relocation date"
+              id="rel-relocationDate"
+              className={`modern-datepicker-input ${showValidationErrors && !relocationDate ? 'input-error' : ''}`}
+              wrapperClassName="datepicker-full-width"
               required={isActive}
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                borderRadius: '12px',
-                border: showValidationErrors && !relocationDate ? '1.5px solid #dc2626' : '1px solid #cbd5e1',
-                backgroundColor: showValidationErrors && !relocationDate ? '#fef2f2' : '#ffffff',
-                fontSize: '0.9rem',
-                fontWeight: 700,
-                color: '#0f172a',
-                outline: 'none',
-              }}
+            />
+            <input
+              type="hidden"
+              name="relocationDate"
+              value={formattedRelocationDate}
             />
             {showValidationErrors && !relocationDate && (
               <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '4px', display: 'block', fontWeight: 700 }}>
@@ -132,26 +261,24 @@ export default function PreferencesStep({
             )}
           </div>
 
-          <div>
-            <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
+          <div style={{ flex: '1' }}>
+            <label htmlFor="rel-disconnectDate" style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', display: 'block', marginBottom: '0.4rem' }}>
               Disconnect Date <span style={{ color: '#dc2626' }}>*</span>
             </label>
-            <input
-              type="date"
-              value={disconnectDate}
-              onChange={(e) => setDisconnectDate(e.target.value)}
+            <DatePicker
+              selected={disconnectDate}
+              onChange={(date) => setDisconnectDate(date)}
+              dateFormat="MMMM d, yyyy"
+              placeholderText="Select disconnect date"
+              id="rel-disconnectDate"
+              className={`modern-datepicker-input ${showValidationErrors && !disconnectDate ? 'input-error' : ''}`}
+              wrapperClassName="datepicker-full-width"
               required={isActive}
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                borderRadius: '12px',
-                border: showValidationErrors && !disconnectDate ? '1.5px solid #dc2626' : '1px solid #cbd5e1',
-                backgroundColor: showValidationErrors && !disconnectDate ? '#fef2f2' : '#ffffff',
-                fontSize: '0.9rem',
-                fontWeight: 700,
-                color: '#0f172a',
-                outline: 'none',
-              }}
+            />
+            <input
+              type="hidden"
+              name="disconnectDate"
+              value={formattedDisconnectDate}
             />
             {showValidationErrors && !disconnectDate && (
               <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '4px', display: 'block', fontWeight: 700 }}>
