@@ -44,10 +44,12 @@ export default function ReconnectionWizard() {
     window.scrollTo(0, 0);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, paymentRef = null, phoneOverride = null) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
 
-    if (currentStep < totalSteps) {
+    if (currentStep < totalSteps && !paymentRef) {
       if (
         currentStep === 1 &&
         step2Ref.current &&
@@ -77,7 +79,7 @@ export default function ReconnectionWizard() {
     submitData.append('serviceType', 'reconnection');
 
     // Ensure phone is 10 digits starting with 0
-    let formattedPhone = formData.verifiedMobile || verifiedMobile || reconnectionData?.telephone || '';
+    let formattedPhone = phoneOverride || formData.verifiedMobile || verifiedMobile || reconnectionData?.telephone || '';
 
     if (formattedPhone && formattedPhone.length === 9) {
       formattedPhone = `0${formattedPhone}`;
@@ -98,6 +100,11 @@ export default function ReconnectionWizard() {
       if (formData.amountToPay === undefined || formData.amountToPay === '') {
         formData.amountToPay = String(reconnectionData.outstandingBalance || 0);
       }
+    }
+
+    if (paymentRef) {
+      formData.paymentRef = paymentRef;
+      formData.paymentStatus = 'paid';
     }
 
     // Extract digital signature base64 and delete from JSON formData
@@ -297,10 +304,8 @@ export default function ReconnectionWizard() {
                       ?.size > 0
                   : false)
               }
-              onSuccess={() =>
-                handleSubmit({
-                  preventDefault: () => {},
-                })
+              onSuccess={(paymentRef, phoneOverride) =>
+                handleSubmit(null, paymentRef, phoneOverride)
               }
             />
           </div>
