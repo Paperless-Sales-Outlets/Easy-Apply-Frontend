@@ -1,14 +1,21 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { FiCheckCircle, FiShield, FiX, FiRefreshCw, FiAlertCircle } from 'react-icons/fi';
+import { FiCheckCircle, FiShield, FiX, FiRefreshCw, FiAlertCircle, FiUser, FiCreditCard, FiPhone, FiMail } from 'react-icons/fi';
 import api from '../../utils/api';
+import { useVerifiedContext, useVerifiedMobile } from '../../components/verification';
 
 const RESEND_SECONDS = 30;
 
 const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref) {
   const { t } = useTranslation();
+  const { selectedAccount } = useVerifiedContext();
+  const verifiedMobile = useVerifiedMobile();
 
+  const [fullName, setFullName] = useState('');
+  const [nic, setNic] = useState('');
+  const [email, setEmail] = useState('');
+  const [remarks, setRemarks] = useState('');
   const [contactNo, setContactNo] = useState('');
   const [verified, setVerified] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,6 +28,14 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
 
   const modalRef = useRef(null);
   const verifyBtnRef = useRef(null);
+
+  // Normalize current account values for cross-validation
+  const currentNic = (selectedAccount?.nic || '').trim().toUpperCase();
+  const rawCurrentPhone = (selectedAccount?.mobileNumber || selectedAccount?.telephone || verifiedMobile || '').replace(/\D/g, '');
+  const currentPhone9 = rawCurrentPhone.slice(-9);
+
+  const isSameNic = Boolean(nic.trim() && currentNic && nic.trim().toUpperCase() === currentNic);
+  const isSamePhone = Boolean(contactNo && currentPhone9 && contactNo === currentPhone9);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -70,20 +85,50 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
   }, [modalOpen, resendIn]);
 
   // Expose validate() so the parent wizard can block advancing past this step
-  // until the new applicant's phone number has been OTP-verified.
   useImperativeHandle(ref, () => ({
     validate: () => {
+      if (!fullName.trim()) {
+        toast.error("Please enter the new owner's full name");
+        return false;
+      }
+      if (!nic.trim()) {
+        toast.error("Please enter the new owner's NIC / Identification");
+        return false;
+      }
+      if (isSameNic) {
+        toast.error("New owner's NIC cannot be identical to current registered owner's NIC");
+        return false;
+      }
+      if (isSamePhone) {
+        toast.error("New owner's mobile number cannot be identical to current registered owner's number");
+        return false;
+      }
       if (!verified) {
-        toast.error('Please verify the new applicant’s phone number to proceed');
+        toast.error("Please verify the new owner's mobile number with OTP to proceed");
+        return false;
+      }
+      if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast.error("Please enter a valid email address for the new owner");
         return false;
       }
       return true;
     },
+    getNewApplicantData: () => ({
+      fullName,
+      nic,
+      contactNo,
+      email,
+      remarks,
+    }),
   }));
 
   const sendOtp = async () => {
     if (contactNo.length !== 9) {
       toast.error('Please enter a valid 9-digit mobile number first');
+      return;
+    }
+    if (isSamePhone) {
+      toast.error("New owner's mobile number cannot match current owner's registered number.");
       return;
     }
     setSending(true);
@@ -175,26 +220,67 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
 
   return (
     <div>
-      <h3 style={{ color: 'var(--slt-blue)', marginBottom: '1.5rem' }}>{t('wizards.ownershipChange.newApplicant.heading')}</h3>
-
-      <div className="form-group">
-        <label className="form-label" htmlFor="na-fullName">{t('wizards.ownershipChange.newApplicant.fullName')}</label>
-        <input id="na-fullName" name="fullName" type="text" className="form-control" required={isActive} />
+      <div style={{ marginBottom: '1.75rem' }}>
+        <h3 style={{ color: 'var(--slt-blue, #0f57a8)', fontWeight: 800, fontSize: '1.35rem', marginBottom: '0.35rem' }}>
+          {t('wizards.ownershipChange.newApplicant.heading')}
+        </h3>
+        <p style={{ color: 'var(--text-secondary, #64748b)', fontSize: '0.92rem' }}>
+          Please enter the verified contact and identification details of the person or entity taking over this line.
+        </p>
       </div>
 
-      <div className="form-group flex flex-col-mobile gap-4">
+      <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+        <label className="form-label" htmlFor="na-fullName" style={{ fontWeight: 600 }}>
+          {t('wizards.ownershipChange.newApplicant.fullName')} <span style={{ color: 'var(--danger, #dc2626)' }}>*</span>
+        </label>
+        <input 
+          id="na-fullName" 
+          name="fullName" 
+          type="text" 
+          className="form-control" 
+          placeholder="e.g. K. A. Perera or ABC Holdings (Pvt) Ltd"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          required={isActive} 
+        />
+      </div>
+
+      <div className="form-group flex flex-col-mobile gap-4" style={{ marginBottom: '1.25rem' }}>
         <div style={{ flex: '1', minWidth: 0 }}>
-          <label className="form-label" htmlFor="na-nic">{t('wizards.ownershipChange.newApplicant.nicBrc')}</label>
-          <input id="na-nic" name="nic" type="text" className="form-control" required={isActive} />
+          <label className="form-label" htmlFor="na-nic" style={{ fontWeight: 600 }}>
+            {t('wizards.ownershipChange.newApplicant.nicBrc')} <span style={{ color: 'var(--danger, #dc2626)' }}>*</span>
+          </label>
+          <input 
+            id="na-nic" 
+            name="nic" 
+            type="text" 
+            className="form-control" 
+            placeholder="e.g. 199012345678 or 901234567V"
+            value={nic}
+            onChange={(e) => setNic(e.target.value)}
+            required={isActive} 
+            style={{
+              borderColor: isSameNic ? '#dc2626' : undefined,
+              backgroundColor: isSameNic ? 'rgba(220, 38, 38, 0.04)' : undefined,
+            }}
+          />
+          {isSameNic && (
+            <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
+              <FiAlertCircle size={14} /> New owner's NIC cannot match current registered owner's NIC ({currentNic}).
+            </span>
+          )}
         </div>
+
         <div style={{ flex: '1', minWidth: 0 }}>
-          <label className="form-label" htmlFor="na-contactNo">{t('wizards.ownershipChange.newApplicant.contactNo')}</label>
+          <label className="form-label" htmlFor="na-contactNo" style={{ fontWeight: 600 }}>
+            {t('wizards.ownershipChange.newApplicant.contactNo')} <span style={{ color: 'var(--danger, #dc2626)' }}>*</span>
+          </label>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
             <div style={{ position: 'relative', flex: 1, display: 'flex', flexWrap: 'nowrap' }}>
               <div
                 style={{
                   backgroundColor: '#f8fafc',
-                  border: '1.5px solid #cbd5e1',
+                  border: isSamePhone ? '1.5px solid #dc2626' : '1.5px solid #cbd5e1',
                   borderRight: 'none',
                   borderRadius: '12px 0 0 12px',
                   padding: '0.85rem 0.75rem',
@@ -208,7 +294,7 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                   whiteSpace: 'nowrap',
                 }}
               >
-                <span>🇱🇰 +94</span>
+                <span>+94</span>
               </div>
               <input
                 id="na-contactNo"
@@ -228,6 +314,8 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                   minWidth: 0,
                   borderRadius: '0 12px 12px 0',
                   paddingRight: verified ? '2.25rem' : undefined,
+                  borderColor: isSamePhone ? '#dc2626' : undefined,
+                  backgroundColor: isSamePhone ? 'rgba(220, 38, 38, 0.04)' : undefined,
                 }}
               />
               {verified && (
@@ -252,35 +340,61 @@ const NewApplicantStep = forwardRef(function NewApplicantStep({ isActive }, ref)
                 type="button"
                 ref={verifyBtnRef}
                 onClick={sendOtp}
-                disabled={sending || contactNo.length !== 9}
+                disabled={sending || contactNo.length !== 9 || isSamePhone}
                 className="btn btn-primary"
                 style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
               >
-                {sending ? 'Sending...' : 'Verify'}
+                {sending ? 'Sending...' : 'Verify OTP'}
               </button>
             )}
           </div>
           {/* Hidden field so the parent form's FormData scrape captures verification status */}
           <input type="hidden" name="contactNoVerified" value={verified ? 'true' : 'false'} />
-          {!verified && (
-            <span style={{ fontSize: '0.78rem', color: '#5b6472', marginTop: '0.35rem', display: 'block' }}>
-              We'll text a 6-digit code to confirm this number belongs to the new applicant.
+          
+          {isSamePhone ? (
+            <span style={{ fontSize: '0.8rem', color: '#dc2626', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
+              <FiAlertCircle size={14} /> New owner's mobile number cannot match current registered owner's number (+94 {currentPhone9}).
             </span>
-          )}
+          ) : !verified ? (
+            <span style={{ fontSize: '0.78rem', color: '#5b6472', marginTop: '0.35rem', display: 'block' }}>
+              We'll send a 6-digit OTP to confirm this mobile number belongs to the new applicant.
+            </span>
+          ) : null}
         </div>
       </div>
 
-      <div className="form-group">
-        <label className="form-label" htmlFor="na-email">{t('wizards.ownershipChange.newApplicant.email')}</label>
-        <input id="na-email" name="email" type="email" className="form-control" required={isActive} />
+      <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+        <label className="form-label" htmlFor="na-email" style={{ fontWeight: 600 }}>
+          {t('wizards.ownershipChange.newApplicant.email')} <span style={{ color: 'var(--danger, #dc2626)' }}>*</span>
+        </label>
+        <input 
+          id="na-email" 
+          name="email" 
+          type="email" 
+          className="form-control" 
+          placeholder="e.g. newowner@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required={isActive} 
+        />
       </div>
 
-      <div className="form-group">
-        <label className="form-label" htmlFor="na-remarks">{t('wizards.ownershipChange.newApplicant.remarks')}</label>
-        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+      <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+        <label className="form-label" htmlFor="na-remarks" style={{ fontWeight: 600 }}>
+          {t('wizards.ownershipChange.newApplicant.remarks')}
+        </label>
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary, #64748b)', marginBottom: '0.5rem' }}>
           {t('wizards.ownershipChange.newApplicant.remarksNote')}
         </p>
-        <textarea id="na-remarks" name="newRemarks" className="form-control" rows="3"></textarea>
+        <textarea 
+          id="na-remarks" 
+          name="newRemarks" 
+          className="form-control" 
+          rows="3"
+          placeholder="Any additional notes or billing details..."
+          value={remarks}
+          onChange={(e) => setRemarks(e.target.value)}
+        ></textarea>
       </div>
 
       {/* OTP Verification Modal — blurs everything behind it.

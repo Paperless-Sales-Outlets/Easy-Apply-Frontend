@@ -13,7 +13,7 @@ import HeroBannerCarousel from '../components/catalog/HeroBannerCarousel';
 import { getProducts, addToCart, removeFromCart, getLocalCart, clearCart } from '../services/productService';
 
 const DEFAULT_MOCKUP_PRODUCTS = [
-  // ── 🌐 Broadband Category (5 Packages) ──
+  // ── Broadband Category (5 Packages) ──
   {
     _id: 'prod-1',
     id: 'prod-1',
@@ -70,7 +70,7 @@ const DEFAULT_MOCKUP_PRODUCTS = [
     features: ['Plug & Play', 'Best for heavy users', '300GB data'],
   },
 
-  // ── 📞 Voice Category (4 Packages - Compulsory 1 Required) ──
+  // ── Voice Category (4 Packages - Compulsory 1 Required) ──
   {
     _id: 'prod-8',
     id: 'prod-8',
@@ -116,7 +116,7 @@ const DEFAULT_MOCKUP_PRODUCTS = [
     features: ['Multi-line Support', 'Auto Attendant', 'Hunting Lines Included'],
   },
 
-  // ── 📺 PEO TV Category (4 Packages) ──
+  // ── PEO TV Category (4 Packages) ──
   {
     _id: 'prod-6',
     id: 'prod-6',
