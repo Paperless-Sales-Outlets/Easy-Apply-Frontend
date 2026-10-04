@@ -97,7 +97,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
             <div style={{ fontSize: '0.72rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Registered Address
             </div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#334155', marginTop: '0.15rem' }}>
+            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>
               {customerData.address || '—'}
             </div>
           </div>

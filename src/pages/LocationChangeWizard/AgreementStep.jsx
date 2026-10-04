@@ -160,7 +160,7 @@ export default function AgreementStep({
             </div>
             <div>
               <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>SERVICE TYPE</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0056b3', marginTop: '0.15rem' }}>{formData.serviceType || '—'}</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>{formData.serviceType || '—'}</div>
             </div>
           </div>
         </div>
@@ -173,11 +173,11 @@ export default function AgreementStep({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', backgroundColor: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
             <div>
               <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>CURRENT ADDRESS</div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', marginTop: '0.15rem' }}>{formData.currentAddress || '—'}</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>{formData.currentAddress || '—'}</div>
             </div>
             <div>
               <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>NEW RELOCATION ADDRESS</div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#16a34a', marginTop: '0.15rem' }}>{formData.newAddress || 'To be specified'}</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>{formData.newAddress || 'To be specified'}</div>
             </div>
           </div>
         </div>
