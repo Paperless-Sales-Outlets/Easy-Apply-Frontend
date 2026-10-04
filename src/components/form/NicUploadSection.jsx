@@ -1,4 +1,5 @@
 import React from 'react';
+import { FiFileText, FiImage } from 'react-icons/fi';
 import FileUploadField from './FileUploadField';
 
 /**
@@ -29,23 +30,84 @@ export default function NicUploadSection({
   return (
     <div role="group" aria-labelledby={groupId}>
       <span id={groupId} className="sr-only">National Identity Card upload</span>
-      <div className="form-group">
-        <label className="form-label" htmlFor={`${idPrefix}-format`}>{formatLabel}</label>
-        <select
-          id={`${idPrefix}-format`}
-          className="form-control"
-          value={format}
-          aria-describedby={`${idPrefix}-format-help`}
-          onChange={(e) => onFormatChange(e.target.value)}
+      <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+        <label className="form-label" style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.6rem' }}>
+          {formatLabel}
+        </label>
+        <div
+          style={{
+            display: 'flex',
+            backgroundColor: 'rgba(15, 87, 168, 0.06)',
+            borderRadius: '12px',
+            padding: '0.3rem',
+            position: 'relative',
+            border: '1px solid rgba(15, 87, 168, 0.15)',
+          }}
         >
-          <option value="pdf">Single PDF (both sides)</option>
-          <option value="jpeg">Two JPEG images (front &amp; back)</option>
-        </select>
+          {/* Animated Background Pill */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '0.3rem',
+              bottom: '0.3rem',
+              left: format === 'pdf' ? '0.3rem' : '50%',
+              width: 'calc(50% - 0.3rem)',
+              backgroundColor: '#ffffff',
+              borderRadius: '9px',
+              boxShadow: '0 2px 8px rgba(0, 43, 73, 0.12)',
+              transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => onFormatChange('pdf')}
+            style={{
+              flex: 1,
+              padding: '0.75rem 1rem',
+              background: 'none',
+              border: 'none',
+              borderRadius: '9px',
+              fontWeight: 700,
+              fontSize: '0.92rem',
+              cursor: 'pointer',
+              position: 'relative',
+              zIndex: 1,
+              color: format === 'pdf' ? 'var(--slt-blue, #0f57a8)' : 'var(--text-secondary, #64748b)',
+              transition: 'color 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <FiFileText size={17} /> Single PDF Document
+          </button>
+          <button
+            type="button"
+            onClick={() => onFormatChange('jpeg')}
+            style={{
+              flex: 1,
+              padding: '0.75rem 1rem',
+              background: 'none',
+              border: 'none',
+              borderRadius: '9px',
+              fontWeight: 700,
+              fontSize: '0.92rem',
+              cursor: 'pointer',
+              position: 'relative',
+              zIndex: 1,
+              color: format === 'jpeg' ? 'var(--slt-blue, #0f57a8)' : 'var(--text-secondary, #64748b)',
+              transition: 'color 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <FiImage size={17} /> Two Photos (Front &amp; Back)
+          </button>
+        </div>
       </div>
-
-      <p id={`${idPrefix}-format-help`} className="sr-only">
-        Choosing a format changes which upload fields are shown below.
-      </p>
 
       {format === 'pdf' ? (
         <FileUploadField
