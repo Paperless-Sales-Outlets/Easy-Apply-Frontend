@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiLock, FiSmartphone, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw, FiUser } from 'react-icons/fi';
 import './SignUpPage.css';
+import signupBgImage from '../assets/team_laptop.jpg';
 import sltLogo from '../assets/removebg-preview-logo.png';
-
 import transzentLogo from '../assets/transzent-logo-bg-removed.png';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
@@ -219,20 +219,26 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="signup-root">
+    <div className="signup-root login-page">
       <div className="signup-card">
-        {/* LEFT SIDEBAR — SLT brand panel with crisp white logo showcase */}
-        <div className="signup-sidebar">
-          {/* White logo panel so the colorful SLT Mobitel logo is crystal clear */}
+        {/* LEFT SIDEBAR — decorative brand panel */}
+        <div
+          className="signup-sidebar"
+          style={{
+            backgroundImage: `url(${signupBgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
           <div className="signup-logo-panel">
             <img
               src={sltLogo}
               alt="SLT Mobitel Logo"
             />
           </div>
-
           <div className="signup-sidebar-inner">
-            <p className="signup-badge" style={{ marginTop: '0.5rem' }}>
+            <p className="signup-badge" style={{ marginTop: '1.25rem' }}>
               <FiLock size={14} aria-hidden="true" /> Secure &amp; Trusted
             </p>
             <h1 className="signup-sidebar-title">Welcome Back</h1>
@@ -263,25 +269,11 @@ export default function LoginPage() {
                 </div>
               </li>
             </ul>
-            <div style={{ marginTop: 'auto', textAlign: 'center', paddingTop: '2.25rem', paddingBottom: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.12)', width: '100%', background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.03))' }}>
-              <img
-                src={transzentLogo}
-                alt="Transzent Logo"
-                style={{
-                  width: '95px',
-                  height: 'auto',
-                  maxWidth: '100%',
-                  filter: 'brightness(1.5) drop-shadow(0 2px 6px rgba(0,0,0,0.5))'
-                }}
-              />
-              <p style={{
-                marginTop: '0.25rem',
-                fontSize: '0.63rem',
-                color: 'rgba(255, 255, 255, 0.7)',
-                fontWeight: 500,
-                margin: '0.25rem 0 0 0'
-              }}>
-                Developed By Digital Platform Division
+            <div className="signup-transzent-footer">
+              <img src={transzentLogo} alt="Transzent Logo" />
+              <p>
+                <span>Developed by</span>
+                <strong>Digital Platform Division</strong>
               </p>
             </div>
           </div>

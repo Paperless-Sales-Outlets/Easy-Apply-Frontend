@@ -11,39 +11,110 @@
 .signup-root {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  /* Subtle SLT-branded background: very light blue-grey tint */
-  background: linear-gradient(135deg, #e8f0f8 0%, #f0f7f0 50%, #e8f0f8 100%);
+  background: linear-gradient(135deg, #edf5f9 0%, #f5faf8 52%, #e9f2f7 100%);
   font-family: var(--font-body);
   color: #334155;
+}
+
+.signup-transzent-footer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+  width: calc(100% + 3.7rem);
+  max-width: none;
+  margin: auto -1.85rem -1.5rem;
+  padding: 0.7rem 1.25rem;
+  background: #ffffff;
+  border: none;
+  border-radius: 18px 0 0;
+  box-shadow: 0 -4px 14px rgba(0, 48, 135, 0.1);
+  overflow: hidden;
+}
+
+.signup-transzent-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #0f57a8 0 62%, #50b748 62% 100%);
+}
+
+.signup-transzent-footer img {
+  display: block;
+  width: 96px;
+  height: auto;
+}
+
+.signup-transzent-footer p {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.06rem;
+  color: #64748b;
+  font-size: 0.4rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.signup-transzent-footer p span {
+  color: #94a3b8;
+  font-size: 0.36rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.signup-transzent-footer p strong {
+  color: #0b2d5b;
+  font-size: 0.48rem;
+  font-weight: 800;
+}
+
+/* Page modifiers keep the shared auth primitives from leaking between the
+   single-step login screen and the multi-step registration screen. */
+.login-page .signup-card {
+  min-height: min(704px, calc(100vh - 4rem));
+  max-height: calc(100vh - 4rem);
+}
+
+.signup-page .signup-card {
+  min-height: min(704px, calc(100vh - 4rem));
+  max-height: calc(100vh - 4rem);
 }
 
 /* ── Card Container ───────────────────────────────────────────── */
 .signup-card {
   position: relative;
   z-index: 1;
-  width: 88%;
-  max-width: 860px;
+  width: 100%;
+  max-width: 910px;
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 21px;
   box-shadow:
     0 4px 6px rgba(0, 0, 0, 0.04),
     0 16px 48px rgba(0, 48, 135, 0.14),
     0 0 0 1px rgba(0, 48, 135, 0.10);
   display: flex;
   overflow: hidden;
-  min-height: min(520px, calc(100vh - 4rem));
+  min-height: min(704px, calc(100vh - 4rem));
   max-height: calc(100vh - 4rem);
 }
 
 /* ── Split Layout: Sidebar ───────────────────────────────────── */
 .signup-sidebar {
   width: 40%;
-  /* Solid SLT deep navy gradient — NOT photo background in CSS */
-  /* The photo background is applied via JSX style attr; overridden here */
-  background: linear-gradient(170deg, #001f5c 0%, #003087 35%, #004aad 65%, #005fa3 100%) !important;
+  background-color: #eef8fa;
   border-right: none;
   position: relative;
   overflow: hidden;
@@ -60,7 +131,7 @@
   width: 240px;
   height: 240px;
   border-radius: 50%;
-  background: rgba(67, 176, 42, 0.08);
+  background: rgba(80, 183, 72, 0.1);
   pointer-events: none;
   z-index: 0;
 }
@@ -73,7 +144,7 @@
   width: 200px;
   height: 200px;
   border-radius: 50%;
-  background: rgba(0, 174, 239, 0.06);
+  background: rgba(15, 87, 168, 0.07);
   pointer-events: none;
   z-index: 0;
 }
@@ -84,7 +155,8 @@
   z-index: 2;
   background: #ffffff;
   border-radius: 0 0 24px 0;
-  padding: 1.5rem 2rem 1.4rem;
+  min-height: 121px;
+  padding: 1.2rem 2rem;
   text-align: center;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   display: flex;
@@ -95,7 +167,7 @@
 }
 
 .signup-logo-panel img {
-  width: 180px;
+  width: 184px;
   height: auto;
   max-width: 100%;
   display: block;
@@ -115,7 +187,7 @@
 .signup-sidebar-inner {
   position: relative;
   z-index: 1;
-  padding: 1.75rem 2rem;
+  padding: 1.65rem 1.85rem 1.25rem;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -146,9 +218,9 @@
   align-items: center;
   gap: 0.5rem;
   /* Green accent badge to match SLT green brand color */
-  background: rgba(67, 176, 42, 0.2);
-  color: #ffffff;
-  border: 1px solid rgba(67, 176, 42, 0.4);
+  background: rgba(255, 255, 255, 0.8);
+  color: #0b2d5b;
+  border: 1px solid rgba(15, 87, 168, 0.18);
   padding: 0.4rem 0.9rem;
   border-radius: 20px;
   font-size: 0.78rem;
@@ -167,12 +239,14 @@
   line-height: 1.25;
   letter-spacing: -0.01em;
   color: #ffffff !important;
+  text-shadow: 0 1px 8px rgba(0, 32, 70, 0.45);
   text-align: center;
 }
 
 .signup-sidebar-desc {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.82) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  text-shadow: 0 1px 6px rgba(0, 32, 70, 0.35);
   line-height: 1.65;
   margin-bottom: 1.25rem;
   font-weight: 400;
@@ -191,18 +265,19 @@
   display: flex;
   align-items: center;
   gap: 0.9rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 12px;
   padding: 0.7rem 1rem;
   text-align: left;
   transition: all 0.2s ease;
-  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 14px rgba(0, 32, 70, 0.18);
+  backdrop-filter: blur(5px);
 }
 
 .signup-feature-item:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(67, 176, 42, 0.35);
+  background: rgba(255, 255, 255, 0.26);
+  border-color: rgba(255, 255, 255, 0.42);
   transform: translateX(3px);
 }
 
@@ -215,21 +290,21 @@
   justify-content: center;
   flex-shrink: 0;
   /* SLT green accent on icon backgrounds */
-  background: rgba(67, 176, 42, 0.22);
-  color: #7de85d;
-  border: 1px solid rgba(67, 176, 42, 0.3);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.24);
 }
 
 .signup-feature-item:nth-child(2) .signup-feature-icon {
-  background: rgba(0, 174, 239, 0.2);
-  color: #6dd7f7;
-  border-color: rgba(0, 174, 239, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.26);
 }
 
 .signup-feature-item:nth-child(3) .signup-feature-icon {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.26);
 }
 
 .signup-feature-item h4,
@@ -238,12 +313,14 @@
   font-size: 0.84rem;
   font-weight: 700;
   color: #ffffff;
+  text-shadow: 0 1px 5px rgba(0, 32, 70, 0.35);
 }
 
 .signup-feature-item p {
   margin: 0;
   font-size: 0.73rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.86);
+  text-shadow: 0 1px 4px rgba(0, 32, 70, 0.3);
 }
 
 /* ── Footer logo area inside sidebar ─────────────────────────── */
@@ -258,7 +335,7 @@
 /* ── Split Layout: Form Section ──────────────────────────────── */
 .signup-form-section {
   flex: 1;
-  padding: 2rem 2.5rem;
+  padding: 2rem 2.1rem;
   display: flex;
   flex-direction: column;
   background: #ffffff;
@@ -687,36 +764,6 @@
   text-transform: uppercase;
 }
 
-/* ── Responsive ───────────────────────────────────────────────── */
-@media (max-width: 1024px) {
-  .signup-card {
-    flex-direction: column;
-  }
-
-  .signup-sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #e8edf5;
-  }
-
-  .signup-features {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 2rem;
-  }
-}
-
-@media (max-width: 680px) {
-  .signup-form-section {
-    padding: 2rem 1.5rem;
-  }
-
-  .signup-stepper {
-    display: none;
-  }
-}
-
 /* -- Multi-step Form Additional Styles ------------------------- */
 .signup-step-line.active-line {
   /* SLT navy to green gradient for completed step lines */
@@ -825,95 +872,83 @@
   line-height: 1.4;
 }
 
-.signup-spinner {
-  width: 22px;
-  height: 22px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #ffffff;
-  animation: signup-spin 0.8s linear infinite;
-}
-
-@keyframes signup-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.signup-footer-text {
-  text-align: center;
-  margin-top: 1rem;
-  font-size: 0.85rem;
-  color: #64748b;
-}
-
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .signup-card {
+  .signup-page .signup-card,
+  .login-page .signup-card {
     flex-direction: column;
     max-width: 600px;
     min-height: auto;
     max-height: none;
   }
 
-  .signup-form-section {
+  .signup-page .signup-form-section,
+  .login-page .signup-form-section {
     overflow-y: visible;
   }
 
-  .signup-sidebar {
+  .signup-page .signup-sidebar,
+  .login-page .signup-sidebar {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid rgba(0, 48, 135, 0.1);
   }
 
   /* Logo panel at top adjusts for horizontal layout */
-  .signup-logo-panel {
+  .signup-page .signup-logo-panel,
+  .login-page .signup-logo-panel {
     border-radius: 0 0 20px 20px;
     padding: 1.2rem 1.5rem;
     border-bottom: 4px solid #43B02A;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
   }
 
-  .signup-logo-panel img {
+  .signup-page .signup-logo-panel img,
+  .login-page .signup-logo-panel img {
     width: 145px;
   }
 
-  .signup-sidebar-inner {
+  .signup-page .signup-sidebar-inner,
+  .login-page .signup-sidebar-inner {
     padding: 1.5rem 2rem;
   }
 
-  .signup-features {
+  .signup-page .signup-features {
     display: none;
   }
 }
 
 @media (max-width: 768px) {
-  .signup-root {
+  .signup-page.signup-root,
+  .login-page.signup-root {
     padding: 2rem 1rem;
   }
 
-  .signup-row {
+  .signup-page .signup-row {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
 
-  .signup-action-row {
+  .signup-page .signup-action-row {
     flex-direction: column-reverse;
     gap: 1rem;
   }
 
-  .signup-btn,
-  .signup-btn-secondary {
+  .signup-page .signup-btn,
+  .signup-page .signup-btn-secondary,
+  .login-page .signup-btn,
+  .login-page .signup-btn-secondary {
     width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-  .signup-form-section {
+  .signup-page .signup-form-section,
+  .login-page .signup-form-section {
     padding: 2rem 1.5rem;
   }
 
-  .signup-stepper {
+  .signup-page .signup-stepper {
     display: none;
   }
 }
@@ -1099,6 +1134,14 @@
 @media (max-width: 680px) {
   .signup-sidebar-inner {
     padding: 1.5rem 1.5rem 1.75rem;
+  }
+
+  .signup-page .signup-transzent-footer,
+  .login-page .signup-transzent-footer {
+    width: calc(100% + 3rem);
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    margin-bottom: -1.75rem;
   }
 
   .signup-sidebar-title {
