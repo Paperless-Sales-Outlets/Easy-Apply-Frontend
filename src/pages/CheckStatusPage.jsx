@@ -126,7 +126,7 @@ export default function CheckStatusPage() {
     <div
       style={{
         minHeight: '85vh',
-        backgroundColor: '#f8fafc',
+        backgroundColor: '#ffffff',
         padding: '2.5rem 1rem',
         display: 'flex',
         justifyContent: 'center',
