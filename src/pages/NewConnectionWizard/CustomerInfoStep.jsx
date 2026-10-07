@@ -6,6 +6,7 @@ import AddressInputWithMap from '../../components/form/AddressInputWithMap';
 import { useVerifiedContext } from '../../components/verification';
 import { getAuthUser } from '../../utils/authSession';
 import { motion } from 'framer-motion';
+import WizardStepHeader from '../../components/wizard/WizardStepHeader';
 
 const SRI_LANKA_CITY_POSTAL_DATA = [
   { label: 'Colombo 01 (Fort) - 00100', city: 'Colombo 01', district: 'Colombo', postalCode: '00100' },
@@ -168,7 +169,14 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      {/* ── Top Verified Profile Summary Card ── */}
+      <WizardStepHeader 
+        stepNumber={4} 
+        totalSteps={9} 
+        title="Service Location Map" 
+        description="Pin the location where the SLT service will be installed or select from your saved addresses." 
+      />
+
+      {/* ── Top Verified Profile Summary Card (Reference Image 2) ── */}
       <div
         style={{
           backgroundColor: '#f8fafc',
@@ -181,7 +189,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
           <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiUser color="#0056b3" /> Verified Contact
+            <FiUser color="#0f57a8" /> Contact Details & Verification
           </h4>
           <span
             style={{
@@ -190,7 +198,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
               gap: '0.35rem',
               backgroundColor: '#dcfce7',
               color: '#15803d',
-              padding: '0.2rem 0.6rem',
+              padding: '0.2rem 0.65rem',
               borderRadius: '9999px',
               fontSize: '0.75rem',
               fontWeight: 700,
@@ -201,19 +209,9 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '0.85rem 1.25rem' }}>
-          <ReadOnlyDetail label="Verified Mobile" value={knownProfile.mobileNumber && `+94 ${knownProfile.mobileNumber}`} />
-          <ReadOnlyDetail label="Verified Email" value={knownProfile.email || formData.email} />
+          <ReadOnlyDetail label="Mobile Number" value={knownProfile.mobileNumber && `+94 ${knownProfile.mobileNumber}`} />
+          <ReadOnlyDetail label="Email Address" value={knownProfile.email || formData.email || 'name@example.com'} />
         </div>
-      </div>
-
-      {/* ── Step Heading ── */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h3 style={{ color: '#0f172a', margin: '0 0 0.4rem 0', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-          Select Installation Location
-        </h3>
-        <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>
-          Choose whether you want the new connection installed at your registered address or a new location.
-        </p>
       </div>
 
       {/* ── Location Option Selection Tiles ── */}

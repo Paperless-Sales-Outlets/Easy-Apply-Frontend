@@ -231,17 +231,28 @@ export default function NewConnectionWizard() {
     }
   };
 
+  const MAP_TO_9_STEP = {
+    location: 4,
+    loop: 4,
+    identity: 5,
+    signature: 6,
+    review: 8,
+    payment: 7,
+  };
+  const active9Step = MAP_TO_9_STEP[step] || 4;
+
   return (
-    <div className="card" style={{ padding: '3rem', width: '100%', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: selectedProduct ? '0.75rem' : '1.5rem' }}>{t('wizards.newConnection.title')}</h2>
+    <div className="card" style={{ padding: '2.5rem 2.75rem', width: '100%', margin: '0 auto', borderRadius: '24px', boxShadow: '0 12px 36px rgba(11, 45, 91, 0.08)' }}>
+      {/* Progress Stepper: Reference 9-Step Bar */}
+      <WizardStepper currentStep={active9Step} />
 
       {selectedProduct && (
         <div
           style={{
-            backgroundColor: '#eff6ff',
+            backgroundColor: '#f0f7ff',
             border: '1.5px solid #bfdbfe',
-            borderRadius: '12px',
-            padding: '0.85rem 1.25rem',
+            borderRadius: '16px',
+            padding: '1rem 1.35rem',
             marginBottom: '1.75rem',
             display: 'flex',
             alignItems: 'center',
@@ -251,21 +262,18 @@ export default function NewConnectionWizard() {
           }}
         >
           <div>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase' }}>Selected Product</span>
-            <h4 style={{ margin: '0.1rem 0 0 0', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0f57a8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Selected Package</span>
+            <h4 style={{ margin: '0.15rem 0 0 0', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
               {selectedProduct.productName}
             </h4>
           </div>
-          <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.88rem', color: '#334155' }}>
-            <span>Monthly: <strong style={{ color: '#0056b3' }}>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
+          <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.9rem', color: '#334155' }}>
+            <span>Monthly: <strong style={{ color: '#0f57a8' }}>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
             <span>Installation: <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong></span>
             {selectedProduct.quantity > 1 && <span>Qty: <strong>{selectedProduct.quantity}</strong></span>}
           </div>
         </div>
       )}
-
-      {/* Progress Stepper: 4 Clean Steps */}
-      <WizardStepper currentStep={stepperStep} steps={STEPPER} />
 
       <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
@@ -327,9 +335,9 @@ export default function NewConnectionWizard() {
           </p>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1.5px solid #e2e8f0', paddingTop: '1.5rem' }}>
           <button type="button" className="btn btn-secondary" onClick={() => (step === 'identity' ? goTo('location') : prevStep())} disabled={stepIndex === 0 || submitting}>
-            {t('common.previous')}
+            ← Back
           </button>
           {NEXT_LABEL[step] && (
             <button type="submit" className="btn btn-primary" disabled={submitting}>

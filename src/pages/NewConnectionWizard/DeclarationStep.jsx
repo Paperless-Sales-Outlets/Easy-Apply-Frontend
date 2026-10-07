@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { FiCheckCircle, FiShield, FiFileText, FiEdit3 } from 'react-icons/fi';
 import DigitalSignatureCanvas from '../../components/form/DigitalSignatureCanvas';
+import WizardStepHeader from '../../components/wizard/WizardStepHeader';
 
 const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) => {
   const { t } = useTranslation();
@@ -49,6 +50,12 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
 
   return (
     <div className="new-connection-declaration-step" style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <WizardStepHeader 
+        stepNumber={6} 
+        totalSteps={9} 
+        title="Digital Signature & Declaration" 
+        description="Review your application details, accept terms & conditions, and sign digitally." 
+      />
       {/* ── Applicant Overview Card ── */}
       <div
         style={{

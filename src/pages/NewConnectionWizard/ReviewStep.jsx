@@ -1,4 +1,5 @@
 import React from 'react';
+import WizardStepHeader from '../../components/wizard/WizardStepHeader';
 
 const Row = ({ label, value }) => (
   <div>
@@ -35,10 +36,12 @@ export default function ReviewStep({ formData, selectedProduct, goTo, onEditCart
   const fee = selectedProduct?.installationFee ?? 2500;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <div>
-        <h3 style={{ color: '#0f172a', margin: '0 0 0.4rem 0', fontSize: '1.4rem', fontWeight: 800 }}>Review Your Application</h3>
-        <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>Check everything below before you continue to payment.</p>
-      </div>
+      <WizardStepHeader 
+        stepNumber={8} 
+        totalSteps={9} 
+        title="Review & Submit Application" 
+        description="Verify all your details before proceeding to payment and submission." 
+      />
 
       <Section title="Contact">
         <Row label="Mobile" value={formData.mobileNumber && `+94 ${formData.mobileNumber}`} />

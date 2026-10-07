@@ -425,55 +425,64 @@ a {
   align-items: center;
   justify-content: center;
   gap: var(--s2);
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1.6rem;
   font-family: var(--font-body);
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.98rem;
+  font-weight: 700;
   border: none;
-  border-radius: var(--radius);
+  border-radius: 12px;
   cursor: pointer;
   text-decoration: none;
-  transition: transform 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-lg {
-  padding: 0.9rem 1.75rem;
+  padding: 0.9rem 1.85rem;
   font-size: 1.05rem;
 }
 
-.btn-primary {
-  background-color: var(--blue);
-  color: #fff;
+/* Primary Action Button (Reference UI Green Pill) */
+.btn-primary, .btn-success, .btn-continue {
+  background: linear-gradient(135deg, #50b748 0%, #3ca836 100%);
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(80, 183, 72, 0.28);
 }
 
-.btn-primary:hover {
-  background-color: var(--blue-deep);
+.btn-primary:hover, .btn-success:hover, .btn-continue:hover {
+  background: linear-gradient(135deg, #44a43c 0%, #32922c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(80, 183, 72, 0.38);
 }
 
-.btn-secondary {
-  background-color: transparent;
-  color: var(--blue);
-  border: 1px solid var(--blue);
+/* Secondary Button (Reference UI Light Blue Pill) */
+.btn-secondary, .btn-back {
+  background-color: #e8effe;
+  color: #0f57a8 !important;
+  border: 1px solid #dbeafe;
 }
 
-.btn-secondary:hover {
-  background-color: rgba(15, 87, 168, 0.06);
+.btn-secondary:hover, .btn-back:hover {
+  background-color: #d4e3fc;
+  color: #0a3f7e !important;
+  transform: translateY(-1px);
 }
 
-/* Legacy class used by wizard submit buttons. Green is reserved for
-   success/progress states, so primary actions render blue. */
-.btn-success {
-  background-color: var(--blue);
-  color: #fff;
+/* Brand Blue Action Button */
+.btn-blue {
+  background-color: #0f57a8;
+  color: #ffffff !important;
 }
 
-.btn-success:hover {
-  background-color: var(--blue-deep);
+.btn-blue:hover {
+  background-color: #0a3f7e;
+  transform: translateY(-1px);
 }
 
 .btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* Forms -------------------------------------------------------------- */
@@ -484,33 +493,33 @@ a {
 
 .form-label {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: var(--s2);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.4rem;
 }
 
 .form-control {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1.1rem;
   font-family: var(--font-body);
-  font-size: 1rem;
-  color: var(--text);
-  background-color: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  transition: var(--transition);
+  font-size: 0.98rem;
+  color: #0f172a;
+  background-color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  transition: all 0.2s ease;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: var(--blue);
+  border-color: #0f57a8;
   box-shadow: 0 0 0 4px rgba(15, 87, 168, 0.15);
 }
 
 .form-control::placeholder {
-  color: var(--muted);
-  opacity: 0.7;
+  color: #94a3b8;
+  opacity: 0.8;
 }
 
 /* Checkboxes & radios */
@@ -554,11 +563,19 @@ a {
 /* Cards --------------------------------------------------------------- */
 
 .card {
-  background-color: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(11, 45, 91, 0.07);
   overflow: hidden;
-  border: 1px solid var(--line);
+  border: 1px solid #e2e8f0;
+}
+
+/* Light Blue Tint Container Card (Reference UI) */
+.card-tint-blue {
+  background-color: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem;
 }
 
 .location-change-card {

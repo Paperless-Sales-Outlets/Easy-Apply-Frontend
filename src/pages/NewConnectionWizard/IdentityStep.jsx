@@ -2,6 +2,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import toast from 'react-hot-toast';
 import { FiRefreshCw, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import IdentityCaptureField from '../../components/form/IdentityCaptureField';
+import WizardStepHeader from '../../components/wizard/WizardStepHeader';
 import { validateNIC, cleanNIC } from '../../utils/nicParser';
 import { scanNICTesseract as scanNIC } from '../../services/tesseractNicService';
 
@@ -109,10 +110,12 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
 
   return (
     <div>
-      <h3 style={{ color: '#0f172a', margin: '0 0 0.4rem 0', fontSize: '1.4rem', fontWeight: 800 }}>Identity Verification</h3>
-      <p style={{ color: '#64748b', margin: '0 0 1.25rem 0', fontSize: '0.9rem' }}>
-        Use your camera to capture both sides of your NIC and a live selfie. Your details are read from the NIC automatically.
-      </p>
+      <WizardStepHeader 
+        stepNumber={5} 
+        totalSteps={9} 
+        title="Identity & KYC — NIC, Selfie & OCR" 
+        description="Provide your NIC details and complete identity verification." 
+      />
 
       {status && (
         <div className={`nic-scan-banner ${status.type}`}>

@@ -1,98 +1,127 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export default function WizardStepper({ currentStep, steps }) {
-  const totalSteps = steps.length;
-  const progressPercent = Math.max(0, Math.min(100, ((currentStep - 1) / (totalSteps - 1)) * 100));
+export const FULL_ONBOARDING_9_STEPS = [
+  'Landing Page',
+  'Contact Verification',
+  'Package Selection',
+  'Service Location',
+  'Identity & KYC',
+  'Digital Signature',
+  'Payment',
+  'Review & Submit',
+  'Tracking'
+];
+
+export default function WizardStepper({ currentStep = 1, steps = FULL_ONBOARDING_9_STEPS, totalStepsOverride = null }) {
+  const stepList = steps && steps.length > 0 ? steps : FULL_ONBOARDING_9_STEPS;
+  const totalSteps = totalStepsOverride || stepList.length;
+  const activeStep = Math.max(1, Math.min(currentStep, totalSteps));
+  const progressPercent = totalSteps > 1 ? Math.max(0, Math.min(100, ((activeStep - 1) / (totalSteps - 1)) * 100)) : 0;
 
   return (
-    <div style={{ position: 'relative', marginBottom: '3rem', marginTop: '1rem' }}>
-      {/* Background Track Container */}
-      <div style={{
-        position: 'absolute', 
-        top: '15px', 
-        left: '50px', 
-        right: '50px', 
-        height: '4px', 
-        zIndex: 0
-      }}>
-        {/* Empty Track */}
-        <div style={{ width: '100%', height: '100%', backgroundColor: 'var(--line)', borderRadius: '8px' }} />
-        {/* Animated Fill Track */}
-        <motion.div 
-          initial={{ width: 0 }}
-          animate={{ width: `${progressPercent}%` }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+    <div className="stepper-wrapper" style={{ position: 'relative', marginBottom: '2.5rem', marginTop: '0.5rem', width: '100%', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+      <div style={{ minWidth: stepList.length > 5 ? '680px' : '100%', position: 'relative' }}>
+        {/* Connecting Progress Bar Track */}
+        <div 
           style={{
             position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            height: '100%', 
-            backgroundColor: 'var(--blue)', 
-            borderRadius: '8px',
-            boxShadow: '0 0 8px rgba(15, 87, 168, 0.4)'
-          }} 
-        />
-      </div>
+            top: '17px', 
+            left: '30px', 
+            right: '30px', 
+            height: '3px', 
+            zIndex: 0
+          }}
+        >
+          <div style={{ width: '100%', height: '100%', backgroundColor: '#e2e8f0', borderRadius: '4px' }} />
+          <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+            style={{
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              height: '100%', 
+              backgroundColor: '#0f57a8', 
+              borderRadius: '4px',
+              boxShadow: '0 0 6px rgba(15, 87, 168, 0.4)'
+            }} 
+          />
+        </div>
 
-      {/* Steps */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
-        {steps.map((label, index) => {
-          const stepNum = index + 1;
-          const isActive = stepNum === currentStep;
-          const isCompleted = stepNum < currentStep;
-          const statusColor = (isActive || isCompleted) ? 'var(--blue)' : 'var(--line)';
+        {/* Step Nodes */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 1 }}>
+          {stepList.map((label, index) => {
+            const stepNum = index + 1;
+            const isActive = stepNum === activeStep;
+            const isCompleted = stepNum < activeStep;
 
-          return (
-            <div key={stepNum} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 0, padding: '0 4px' }}>
-              <motion.div
-                initial={false}
-                animate={{
-                  backgroundColor: (isActive || isCompleted) ? 'var(--blue)' : 'var(--surface)',
-                  borderColor: statusColor,
-                  color: (isActive || isCompleted) ? '#ffffff' : 'var(--muted)',
-                  scale: isActive ? 1.15 : 1
-                }}
-                transition={{ duration: 0.3 }}
-                style={{
-                  width: '34px', 
-                  height: '34px', 
-                  borderRadius: '50%',
+            return (
+              <div 
+                key={stepNum} 
+                style={{ 
                   display: 'flex', 
+                  flexDirection: 'column', 
                   alignItems: 'center', 
-                  justifyContent: 'center', 
-                  fontWeight: 'bold', 
-                  border: '2px solid',
-                  boxShadow: isActive ? '0 0 0 4px rgba(15, 87, 168, 0.15)' : 'none'
+                  flex: 1, 
+                  minWidth: 0, 
+                  padding: '0 4px' 
                 }}
               >
-                {isCompleted ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                ) : (
-                  stepNum
-                )}
-              </motion.div>
-              <motion.span
-                animate={{
-                  color: isActive ? 'var(--text)' : 'var(--muted)',
-                  fontWeight: isActive ? 600 : 400
-                }}
-                style={{
-                  marginTop: '1rem',
-                  fontSize: 'clamp(0.66rem, 2.3vw, 0.85rem)',
-                  textAlign: 'center',
-                  lineHeight: '1.2',
-                  overflowWrap: 'break-word',
-                  maxWidth: '100%',
-                }}
-              >
-                {label}
-              </motion.span>
-            </div>
-          );
-        })}
+                <motion.div
+                  initial={false}
+                  animate={{
+                    backgroundColor: isActive ? '#0f57a8' : isCompleted ? '#0f57a8' : '#e2e8f0',
+                    borderColor: isActive ? '#0f57a8' : isCompleted ? '#0f57a8' : '#cbd5e1',
+                    color: (isActive || isCompleted) ? '#ffffff' : '#64748b',
+                    scale: isActive ? 1.12 : 1
+                  }}
+                  transition={{ duration: 0.25 }}
+                  style={{
+                    width: '32px', 
+                    height: '32px', 
+                    borderRadius: '50%',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    fontWeight: 700, 
+                    fontSize: '0.82rem',
+                    border: '2px solid',
+                    boxShadow: isActive ? '0 0 0 4px rgba(15, 87, 168, 0.2)' : 'none',
+                    cursor: 'default'
+                  }}
+                >
+                  {isCompleted ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    stepNum
+                  )}
+                </motion.div>
+
+                <span
+                  style={{
+                    marginTop: '0.65rem',
+                    fontSize: '0.72rem',
+                    fontWeight: isActive ? 700 : 500,
+                    color: isActive ? '#0f57a8' : isCompleted ? '#1e293b' : '#94a3b8',
+                    textAlign: 'center',
+                    lineHeight: '1.2',
+                    maxWidth: '85px',
+                    whiteSpace: 'normal',
+                    wordBreak: 'break-word',
+                    textDecoration: isActive ? 'underline' : 'none',
+                    textUnderlineOffset: '3px'
+                  }}
+                >
+                  {label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
