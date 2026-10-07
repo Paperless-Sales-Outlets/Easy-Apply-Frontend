@@ -64,6 +64,11 @@ const NAV_ICONS = {
       <path d="M19 8v6M22 11h-6" />
     </svg>
   ),
+  'audit-logs': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4h16v16H4z" /><path d="M8 8h8M8 12h8M8 16h5" />
+    </svg>
+  ),
 };
 
 // Dashboard leads, User Management comes right after it, then every other
@@ -75,6 +80,7 @@ const NAV_ITEMS = [
   { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
   ...OTHER_MODULES.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
   { key: 'privileges', label: 'User Privileges', icon: NAV_ICONS.privileges, roles: ['Admin'] },
+  { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
 ];
 
 const SHORT_FORM_LABELS = {
@@ -214,7 +220,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Main Content ── */}
       <div className="admin-main">
         <div className="admin-topbar" />
-        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users'].includes(activePage) ? ' admin-page-wide' : ''}`}>
+        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users', 'audit-logs'].includes(activePage) ? ' admin-page-wide' : ''}`}>
           {children}
         </div>
       </div>
