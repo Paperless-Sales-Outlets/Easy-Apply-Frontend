@@ -24,7 +24,8 @@ export const updateApplicationStatus = async (id, status, notes = '') => {
   return response.data;
 };
 
-// GET /api/admin/kyc — pending KYC review queue with (signed) document URLs
+// GET /api/admin/kyc — KYC cases (waiting + recently decided) with document URLs,
+// the automated checks and the full decision history
 export const getKycQueue = async () => {
   const response = await api.get('/admin/kyc');
   return response.data;
@@ -33,6 +34,18 @@ export const getKycQueue = async () => {
 // PATCH /api/admin/kyc/:id/review — approve / reject / flag / reopen + staff notes
 export const reviewKycApplication = async (id, status, notes = '') => {
   const response = await api.patch(`/admin/kyc/${id}/review`, { status, notes });
+  return response.data;
+};
+
+// POST /api/admin/kyc/auto-review — automatically review every waiting case that has not been checked yet
+export const runKycAutoReview = async () => {
+  const response = await api.post('/admin/kyc/auto-review');
+  return response.data;
+};
+
+// POST /api/admin/kyc/:id/auto-review — run the automated check again for one case
+export const rerunKycAutoReview = async (id) => {
+  const response = await api.post(`/admin/kyc/${id}/auto-review`);
   return response.data;
 };
 
@@ -183,6 +196,8 @@ export default {
   updateApplicationStatus,
   getKycQueue,
   reviewKycApplication,
+  runKycAutoReview,
+  rerunKycAutoReview,
   getAnalytics,
   getUserReports,
   getApplicationReports,
