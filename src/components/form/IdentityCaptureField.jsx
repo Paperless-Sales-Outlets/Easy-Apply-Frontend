@@ -28,6 +28,7 @@ export default function IdentityCaptureField({
   error = '',
   helpText = '',
   instructions = [],
+  cameraOnly = false, // hide the file-upload fallback — live camera capture only
 }) {
   const isFace = variant === 'face';
 
@@ -383,6 +384,8 @@ export default function IdentityCaptureField({
                   : <><FiCamera size={16} aria-hidden="true" /> Take Photo</>}
               </button>
 
+              {!cameraOnly && (
+                <>
               <button type="button" className="btn btn-secondary" onClick={() => uploadInputRef.current?.click()}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <FiUpload size={16} aria-hidden="true" /> Upload
@@ -397,6 +400,8 @@ export default function IdentityCaptureField({
                 aria-hidden="true"
                 style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
               />
+                </>
+              )}
             </div>
           </div>
         )}

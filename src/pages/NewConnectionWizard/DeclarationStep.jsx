@@ -21,7 +21,7 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
       }
       if (!signatureVal || signatureVal.trim() === '') {
         setSignatureError(true);
-        toast.error(t('wizards.newConnection.declaration.mustSign', 'Please provide your digital signature before continuing to payment.'));
+        toast.error(t('wizards.newConnection.declaration.mustSign', 'Please provide your digital signature before continuing.'));
         return false;
       }
       setSignatureError(false);

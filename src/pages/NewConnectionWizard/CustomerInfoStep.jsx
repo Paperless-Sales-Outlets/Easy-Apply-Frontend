@@ -113,19 +113,24 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
   })();
 
   // Location choice: 'current' (registered address from OCR/profile) vs 'new'
-  const [locationType, setLocationType] = useState('current');
+  const [locationType, setLocationType] = useState(formData.locationType || (knownProfile.registeredAddress ? 'current' : 'new'));
   const [selectedCityObj, setSelectedCityObj] = useState(null);
 
   // Sync profile fields to state
   useEffect(() => {
     if (!setFields) return;
-    setFields({
+    // Only fill what is known — identity details are captured later from the NIC
+    // and must survive the customer coming back to this step.
+    const known = {
       title: knownProfile.title,
       nameFull: knownProfile.nameFull,
       nic: knownProfile.nic,
       dob: knownProfile.dob,
-      email: knownProfile.email || formData.email || '',
-      mobileNumber: knownProfile.mobileNumber || formData.mobileNumber || '',
+      email: knownProfile.email || formData.email,
+      mobileNumber: knownProfile.mobileNumber || formData.mobileNumber,
+    };
+    setFields({
+      ...Object.fromEntries(Object.entries(known).filter(([, v]) => v)),
       isExistingCustomer: selectedAccount ? 'yes' : 'no',
     });
   }, [selectedAccount, authUser]);
@@ -176,7 +181,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
           <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiUser color="#0056b3" /> Verified Customer Profile
+            <FiUser color="#0056b3" /> Verified Contact
           </h4>
           <span
             style={{
@@ -191,15 +196,13 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
               fontWeight: 700,
             }}
           >
-            <FiCheck size={12} /> Auto-Fetched from OCR
+            <FiCheck size={12} /> Verified by OTP
           </span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '0.85rem 1.25rem' }}>
-          <ReadOnlyDetail label="Full Name" value={knownProfile.nameFull} />
-          <ReadOnlyDetail label="NIC / ID Number" value={knownProfile.nic} />
-          <ReadOnlyDetail label="Verified Mobile" value={knownProfile.mobileNumber} />
-          <ReadOnlyDetail label="Date of Birth" value={knownProfile.dob} />
+          <ReadOnlyDetail label="Verified Mobile" value={knownProfile.mobileNumber && `+94 ${knownProfile.mobileNumber}`} />
+          <ReadOnlyDetail label="Verified Email" value={knownProfile.email || formData.email} />
         </div>
       </div>
 
@@ -215,8 +218,8 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
 
       {/* ── Location Option Selection Tiles ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.75rem' }}>
-        {/* Tile 1: Current / Registered Address */}
-        <div
+        {/* Tile 1: Current / Registered Address — only when SLT already holds one */}
+        {knownProfile.registeredAddress && <div
           onClick={() => setLocationType('current')}
           style={{
             border: `2px solid ${locationType === 'current' ? '#0056b3' : '#e2e8f0'}`,
@@ -241,9 +244,9 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
             />
           </div>
           <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', fontWeight: 600, lineHeight: 1.4 }}>
-            {knownProfile.registeredAddress || 'Registered address on file from your identity card / profile.'}
+            {knownProfile.registeredAddress}
           </p>
-        </div>
+        </div>}
 
         {/* Tile 2: New Location */}
         <div
@@ -348,7 +351,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
       {/* ── Contact Email for Billing & Updates ── */}
       <div style={{ marginTop: '1.25rem' }}>
         <label htmlFor="nc-email" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
-          <FiMail size={14} color="#64748b" /> Email Address (for order updates & e-bill)
+          <FiMail size={14} color="#64748b" /> Email Address (verified)
         </label>
         <input
           id="nc-email"
@@ -358,6 +361,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
           placeholder="customer@example.com"
           value={formData.email || ''}
           onChange={handleChange}
+          readOnly={!!knownProfile.email}
           style={{
             width: '100%',
             padding: '0.85rem 1rem',

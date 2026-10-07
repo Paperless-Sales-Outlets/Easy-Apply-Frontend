@@ -20,6 +20,7 @@ import {
   FiCalendar,
   FiZap,
 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import api from '../utils/api';
 import InstallationReviewModal from '../components/InstallationReviewModal';
 
@@ -123,6 +124,11 @@ export default function CheckStatusPage() {
       setIsLoading(false);
     }
   }, [t]);
+
+  // Arriving straight from payment: confirm the submission once.
+  useEffect(() => {
+    if (location.state?.justSubmitted) toast.success('Application submitted successfully! Track its progress below.');
+  }, [location.state?.justSubmitted]);
 
   // Prefer route-state ref (from CompletionPage), then fall back to URL param.
   useEffect(() => {

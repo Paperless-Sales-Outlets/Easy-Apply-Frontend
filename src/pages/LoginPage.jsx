@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiLock, FiSmartphone, FiCreditCard, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw } from 'react-icons/fi';
+import { FiLock, FiSmartphone, FiMail, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
-import { validateNIC, cleanNIC } from '../utils/nicParser';
 
 const RESEND_SECONDS = 30;
 const OTP_LENGTH = 6;
@@ -36,34 +35,35 @@ async function fetchSltAccounts(phone) {
 
 /**
  * Unified Entry Sign-in / Verification gateway.
- * Prompts user for NIC Number and 9-digit Mobile Number.
- * Verifies OTP and routes existing customers to Landing Page or new customers to NIC upload.
+ * Step 1 of the onboarding flow: collects mobile number + email, verifies each
+ * with an OTP, fetches any SLT details held for the number, then opens the
+ * product showcase. NIC / selfie capture happens later, inside the wizard.
  */
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || '/';
 
-  const [phase, setPhase] = useState('entry'); // 'entry' | 'otp'
+  const [phase, setPhase] = useState('entry'); // 'entry' | 'otp' (mobile) | 'emailOtp'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
-  const [nic, setNic] = useState('');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
   const otpRefs = useRef([]);
 
   useEffect(() => {
-    if (phase !== 'otp') return;
+    if (phase === 'entry') return;
     setResendIn(RESEND_SECONDS);
     const id = setTimeout(() => otpRefs.current[0]?.focus(), 50);
     return () => clearTimeout(id);
   }, [phase]);
 
   useEffect(() => {
-    if (phase !== 'otp' || resendIn <= 0) return;
+    if (phase === 'entry' || resendIn <= 0) return;
     const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
     return () => clearTimeout(id);
   }, [phase, resendIn]);
@@ -72,9 +72,8 @@ export default function LoginPage() {
     e.preventDefault();
     const fe = {};
 
-    const nicCheck = validateNIC(nic);
-    if (!nicCheck.valid) {
-      fe.nic = nicCheck.message || 'Enter a valid NIC number';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      fe.email = 'Enter a valid email address';
     }
 
     const digits = phone.replace(/\D/g, '');
@@ -101,67 +100,57 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+  // Both contact points must be verified before the customer is let in.
+  // Mobile goes through the OTP service; email has no mail service yet, so
+  // its code is checked locally (demo code 000000) until one exists.
   const submitOtp = async (code) => {
     const digits = phone.replace(/\D/g, '');
-    const cleanNicVal = cleanNIC(nic);
     setError('');
     setLoading(true);
 
-    try {
-      const res = await api.post('/auth/verify-entry', {
-        phone: digits,
-        nic: cleanNicVal,
-        otp: code,
-      });
-
-      if (res.data?.existing) {
-        // Existing registered customer -> Direct login
-        const customerProfile = res.data.customer || res.data.user;
-        const { accessToken, refreshToken } = res.data;
-        const accounts = await fetchSltAccounts(customerProfile?.phone || digits);
-        saveSession({
-          phone: customerProfile?.phone || digits,
-          customer: customerProfile,
-          user: customerProfile,
-          accountsList: accounts,
-          tokens: { accessToken, refreshToken },
-        });
-        navigate(redirectTo, { replace: true });
-      } else {
-        // New customer -> Navigate to Sign Up Step 2 (NIC Upload)
-        localStorage.setItem('signupPhone', digits);
-        localStorage.setItem('signupNic', cleanNicVal);
-        localStorage.setItem('signupPhoneVerified', 'true');
-        navigate('/signup', {
-          state: {
-            phone: digits,
-            nic: cleanNicVal,
-            phoneVerified: true,
-            fromLogin: true,
-          },
-          replace: true,
-        });
-      }
-    } catch (err) {
-      if (!err.response) {
-        // API unreachable — fallback for local demo mode
-        if (code === '000000' || code === '123456') {
-          localStorage.setItem('signupPhone', digits);
-          localStorage.setItem('signupNic', cleanNicVal);
-          localStorage.setItem('signupPhoneVerified', 'true');
-          navigate('/signup', {
-            state: { phone: digits, nic: cleanNicVal, phoneVerified: true },
-            replace: true,
-          });
-          return;
-        }
-      }
-      setError(err.response?.data?.message || 'Invalid or expired verification code.');
-      setOtp(Array(OTP_LENGTH).fill(''));
-      setTimeout(() => otpRefs.current[0]?.focus(), 50);
-    } finally {
+    if (phase === 'emailOtp') {
       setLoading(false);
+      if (code !== '000000') return failOtp('Invalid or expired verification code.');
+      return finishSignIn(digits);
     }
+
+    try {
+      await api.post('/otp/verify', { phone: digits, otp: code });
+    } catch (err) {
+      const offlineDemo = !err.response && code === '000000';
+      if (!offlineDemo) {
+        setLoading(false);
+        return failOtp(err.response?.data?.message || 'Invalid or expired verification code.');
+      }
+    }
+    setLoading(false);
+    setOtp(Array(OTP_LENGTH).fill(''));
+    setPhase('emailOtp');
+  };
+
+  const failOtp = (message) => {
+    setError(message);
+    setOtp(Array(OTP_LENGTH).fill(''));
+    setTimeout(() => otpRefs.current[0]?.focus(), 50);
+  };
+
+  // Fetch whatever SLT already holds against this mobile number, then start
+  // the session. New customers simply arrive with an empty account list.
+  const finishSignIn = async (digits) => {
+    setLoading(true);
+    const accounts = await fetchSltAccounts(digits);
+    const known = accounts[0] || {};
+    saveSession({
+      phone: digits,
+      customer: {
+        name: known.fullName || known.customerName || '',
+        NIC: known.nic || '',
+        phone: digits,
+        email: email.trim(),
+      },
+      accountsList: accounts,
+    });
+    navigate(redirectTo, { replace: true });
   };
 
   const handleOtpChange = (index, raw) => {
@@ -196,7 +185,9 @@ export default function LoginPage() {
     if (resendIn > 0 || loading) return;
     setOtp(Array(OTP_LENGTH).fill(''));
     setError('');
-    try { await api.post('/otp/send', { phone: phone.replace(/\D/g, '') }); } catch (err) { /* demo code still works */ }
+    if (phase === 'otp') {
+      try { await api.post('/otp/send', { phone: phone.replace(/\D/g, '') }); } catch (err) { /* demo code still works */ }
+    }
     setResendIn(RESEND_SECONDS);
     setTimeout(() => otpRefs.current[0]?.focus(), 50);
   };
@@ -221,7 +212,7 @@ export default function LoginPage() {
             </p>
             <h1 className="signup-sidebar-title">Welcome</h1>
             <p className="signup-sidebar-desc">
-              Enter your NIC and mobile number to sign in or register seamlessly with SLTMobitel EasyApply.
+              Verify your mobile number and email to sign in or start a new application with SLTMobitel EasyApply.
             </p>
             <ul className="signup-features" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               <li className="signup-feature-item">
@@ -254,11 +245,11 @@ export default function LoginPage() {
           <div className="signup-form-header">
             <div className="signup-form-header-icon" aria-hidden="true"><FiSmartphone /></div>
             <div>
-              <h2>{phase === 'entry' ? 'Sign In / Register' : 'Verify Mobile Number'}</h2>
+              <h2>{phase === 'entry' ? 'Sign In / Register' : phase === 'otp' ? 'Verify Mobile Number' : 'Verify Email Address'}</h2>
               <p>
                 {phase === 'entry'
-                  ? 'Enter your NIC and mobile number. We will verify your identity with a quick OTP.'
-                  : `Enter the 6-digit code sent to +94 ${phone}`}
+                  ? 'Enter your mobile number and email address. We will verify both with a quick OTP.'
+                  : `Enter the 6-digit code sent to ${phase === 'otp' ? `+94 ${phone}` : email.trim()}`}
               </p>
             </div>
           </div>
@@ -269,37 +260,6 @@ export default function LoginPage() {
 
           {phase === 'entry' ? (
             <form onSubmit={handleSendOtp} noValidate className="signup-form">
-              {/* NIC Number Field */}
-              <div className="signup-field">
-                <label className="signup-label" htmlFor="login-nic">
-                  NIC Number <span className="signup-required" aria-hidden="true">*</span>
-                </label>
-                <div className={`signup-input-wrap ${fieldErrors.nic ? 'has-error' : ''}`}>
-                  <span className="signup-input-icon" aria-hidden="true"><FiCreditCard size={16} /></span>
-                  <input
-                    id="login-nic"
-                    name="nic"
-                    type="text"
-                    required
-                    autoCapitalize="characters"
-                    className="signup-input"
-                    placeholder="e.g. 1234567890123 or 123456789V"
-                    maxLength={12}
-                    aria-invalid={!!fieldErrors.nic}
-                    aria-describedby={fieldErrors.nic ? 'login-nic-error' : 'login-nic-help'}
-                    value={nic}
-                    onChange={(e) => {
-                      const val = e.target.value.toUpperCase();
-                      setNic(val);
-                      setFieldErrors((f) => ({ ...f, nic: undefined }));
-                    }}
-                  />
-                </div>
-                {fieldErrors.nic
-                  ? <p className="signup-field-error" id="login-nic-error">{fieldErrors.nic}</p>
-                  : <p className="signup-field-help" id="login-nic-help">Enter your 12-digit or 9-digit (with V/X) National Identity Card number.</p>}
-              </div>
-
               {/* Mobile Number Field */}
               <div className="signup-field">
                 <label className="signup-label" htmlFor="login-phone">
@@ -334,6 +294,33 @@ export default function LoginPage() {
                   : <p className="signup-field-help" id="login-phone-help">Sri Lankan mobile number (strictly 9 digits, without leading zero).</p>}
               </div>
 
+              {/* Email Field */}
+              <div className="signup-field">
+                <label className="signup-label" htmlFor="login-email">
+                  Email Address <span className="signup-required" aria-hidden="true">*</span>
+                </label>
+                <div className={`signup-input-wrap ${fieldErrors.email ? 'has-error' : ''}`}>
+                  <span className="signup-input-icon" aria-hidden="true"><FiMail size={16} /></span>
+                  <input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    className="signup-input"
+                    placeholder="name@example.com"
+                    aria-invalid={!!fieldErrors.email}
+                    aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setFieldErrors((f) => ({ ...f, email: undefined }));
+                    }}
+                  />
+                </div>
+                {fieldErrors.email && <p className="signup-field-error" id="login-email-error">{fieldErrors.email}</p>}
+              </div>
+
               <div className="signup-action-row">
                 <button type="submit" className="signup-btn" disabled={loading} aria-busy={loading} style={{ width: '100%' }}>
                   {loading
@@ -345,7 +332,7 @@ export default function LoginPage() {
           ) : (
             <div className="signup-form">
               <p style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '1.25rem' }} id="otp-instructions">
-                Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {phone}</strong>
+                Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>{phase === 'otp' ? `+94 ${phone}` : email.trim()}</strong>
               </p>
 
               <div role="group" aria-labelledby="otp-instructions" className="otp-boxes" onPaste={handleOtpPaste}>

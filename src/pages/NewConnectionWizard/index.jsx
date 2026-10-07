@@ -4,9 +4,11 @@ import toast from 'react-hot-toast';
 import CustomerInfoStep from './CustomerInfoStep';
 import LoopCheckStep from './LoopCheckStep';
 import DeclarationStep from './DeclarationStep';
+import IdentityStep from './IdentityStep';
+import ReviewStep from './ReviewStep';
 import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
-import api from '../../utils/api';
+import api, { clearSessionCart } from '../../utils/api';
 import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
 import { getAuthUser } from '../../utils/authSession';
 import WizardStepper from '../../components/WizardStepper';
@@ -54,9 +56,21 @@ const initialState = {
   staticIP: 'no',
   declarationAccepted: false,
   signature: '',
+  gender: '',
+  nicAddress: '',
+  nicFront: '',
+  nicBack: '',
+  facePhoto: '',
   locationType: 'current',
   city: '',
   district: '',
+};
+
+const NEXT_LABEL = {
+  location: 'Verify Loop Coverage →',
+  identity: 'Continue to Signature →',
+  signature: 'Continue to Review →',
+  review: 'Continue to Payment →',
 };
 
 export default function NewConnectionWizard() {
@@ -66,6 +80,7 @@ export default function NewConnectionWizard() {
   const verifiedMobile = useVerifiedMobile();
   const { customerExists, selectedAccount } = useVerifiedContext();
   const declarationRef = useRef(null);
+  const identityRef = useRef(null);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -83,11 +98,16 @@ export default function NewConnectionWizard() {
     }
   }, [location.state]);
 
-  const [currentStep, setCurrentStep] = useState(1);
+  const [stepIndex, setStepIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
-  const totalSteps = 4;
+  // Flow: location → loop check → NIC & selfie → signature → review → PayHere.
+  // The loop check runs automatically, so it shares the "Location" stepper slot.
+  const STEPS = ['location', 'loop', 'identity', 'signature', 'review', 'payment'];
+  const STEPPER = ['Installation Location', 'NIC & Selfie', 'Digital Signature', 'Review', 'Payment'];
+  const step = STEPS[stepIndex];
+  const stepperStep = stepIndex <= 1 ? 1 : stepIndex;
 
   useEffect(() => {
     if (selectedProduct?.productName) {
@@ -132,11 +152,15 @@ export default function NewConnectionWizard() {
   };
 
   const nextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
+    setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
     window.scrollTo(0, 0);
   };
   const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    setStepIndex((i) => Math.max(i - 1, 0));
+    window.scrollTo(0, 0);
+  };
+  const goTo = (key) => {
+    setStepIndex(STEPS.indexOf(key));
     window.scrollTo(0, 0);
   };
 
@@ -144,23 +168,26 @@ export default function NewConnectionWizard() {
     e.preventDefault();
     setSubmitError('');
 
-    // Step 1 validation
-    if (currentStep === 1) {
+    if (step === 'location') {
       const activeAddress = formData.installAddress || formData.address;
       if (!activeAddress || activeAddress.trim().length === 0) {
         toast.error('Please specify an installation address.');
         return;
       }
     }
+    if (step === 'identity' && !identityRef.current?.validate()) return;
+    if (step === 'signature' && !declarationRef.current?.validate()) return;
 
-    // Step 3 validation (Terms & Signature)
-    if (currentStep === 3) {
-      if (declarationRef.current && !declarationRef.current.validate()) {
-        return;
-      }
-    }
+    nextStep();
+  };
 
-    if (currentStep < totalSteps) nextStep();
+  // Final step of the journey: empty the basket and land on the tracking page.
+  const goToTracking = async (ref) => {
+    await clearSessionCart();
+    navigate(`/check-status?ref=${encodeURIComponent(ref)}`, {
+      replace: true,
+      state: { ref, justSubmitted: true },
+    });
   };
 
   // Real submission — fired after payment succeeds
@@ -189,25 +216,13 @@ export default function NewConnectionWizard() {
       });
 
       const officialRef = res.data?.application?.referenceNumber || res.data?.referenceNumber;
-      navigate('/completion', {
-        state: {
-          referenceNumber: officialRef,
-          messageKey: 'completion.successMessages.newConnection',
-          paymentConfirmed: true,
-        },
-      });
+      await goToTracking(officialRef);
       return officialRef;
     } catch (err) {
       // If backend is offline (no response), still navigate to completion with a mock ref
       if (!err.response) {
         const mockRef = `REQ-${Date.now().toString().slice(-8)}`;
-        navigate('/completion', {
-          state: {
-            referenceNumber: mockRef,
-            messageKey: 'completion.successMessages.newConnection',
-            paymentConfirmed: true,
-          },
-        });
+        await goToTracking(mockRef);
         return mockRef;
       }
       setSubmitError(err.response?.data?.message || t('common.submitError'));
@@ -250,22 +265,13 @@ export default function NewConnectionWizard() {
       )}
 
       {/* Progress Stepper: 4 Clean Steps */}
-      <WizardStepper
-        currentStep={currentStep}
-        steps={[
-          'Installation Location',
-          'Loop Coverage Check',
-          'Terms & Signature',
-          'Payment Gateway',
-        ]}
-      />
+      <WizardStepper currentStep={stepperStep} steps={STEPPER} />
 
       <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form onSubmit={handleSubmit}>
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
-          {/* Step 1: Installation Location (Current or New with City Dropdown & Map) */}
-          {currentStep === 1 && (
+          {step === 'location' && (
             <CustomerInfoStep
               formData={formData}
               handleChange={handleChange}
@@ -274,17 +280,19 @@ export default function NewConnectionWizard() {
             />
           )}
 
-          {/* Step 2: Backend Loop Availability Check */}
-          {currentStep === 2 && (
-            <LoopCheckStep
+          {step === 'loop' && (
+            <LoopCheckStep formData={formData} onAvailable={nextStep} onGoBack={prevStep} />
+          )}
+
+          {step === 'identity' && (
+            <IdentityStep
+              ref={identityRef}
               formData={formData}
-              onAvailable={nextStep}
-              onGoBack={prevStep}
+              setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
             />
           )}
 
-          {/* Step 3: Terms & Conditions & Digital Signature */}
-          {currentStep === 3 && (
+          {step === 'signature' && (
             <DeclarationStep
               ref={declarationRef}
               formData={formData}
@@ -293,10 +301,18 @@ export default function NewConnectionWizard() {
             />
           )}
 
-          {/* Step 4: Payment Gateway */}
-          {currentStep === 4 && (
+          {step === 'review' && (
+            <ReviewStep
+              formData={formData}
+              selectedProduct={selectedProduct}
+              goTo={goTo}
+              onEditCart={() => navigate('/cart')}
+            />
+          )}
+
+          {step === 'payment' && (
             <PaymentStep
-              isActive={currentStep === 4}
+              isActive
               verifiedPhone={verifiedMobile}
               amount={selectedProduct?.installationFee || 2500}
               amountLabel="Installation Fee"
@@ -312,17 +328,12 @@ export default function NewConnectionWizard() {
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-          <button type="button" className="btn btn-secondary" onClick={prevStep} disabled={currentStep === 1 || submitting}>
+          <button type="button" className="btn btn-secondary" onClick={() => (step === 'identity' ? goTo('location') : prevStep())} disabled={stepIndex === 0 || submitting}>
             {t('common.previous')}
           </button>
-          {currentStep === 1 && (
+          {NEXT_LABEL[step] && (
             <button type="submit" className="btn btn-primary" disabled={submitting}>
-              Verify Loop Coverage →
-            </button>
-          )}
-          {currentStep === 3 && (
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
-              Continue to Payment →
+              {NEXT_LABEL[step]}
             </button>
           )}
         </div>
