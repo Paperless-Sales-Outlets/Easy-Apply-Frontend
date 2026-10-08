@@ -38,6 +38,7 @@ import HelpSupportPage from './pages/HelpSupportPage';
 import MyProfilePage from './pages/MyProfilePage';
 import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
+import TempLandingPage from './pages/TempLandingPage';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -269,6 +270,7 @@ const AnimatedRoutes = () => {
         {/* Auth — rendered without the site header/footer */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/templand" element={<TempLandingPage />} />
 
         {/* General Pages */}
         <Route
@@ -441,11 +443,10 @@ const AnimatedRoutes = () => {
 const NavigationLayout = ({ children }) => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
-  // Sign-in and registration are shown on their own — no site header, footer or
-  // cart button competing with the form.
-  const isAuthScreen = ['/login', '/signup'].includes(location.pathname);
+  // Standalone pages (auth screens and temporary landing page) have their own dedicated header/footer
+  const isStandaloneScreen = ['/login', '/signup', '/templand'].includes(location.pathname);
 
-  if (isAdmin || isAuthScreen) {
+  if (isAdmin || isStandaloneScreen) {
     return (
       <div
         style={{
