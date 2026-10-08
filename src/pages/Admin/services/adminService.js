@@ -171,6 +171,12 @@ export const getPrivileges = async () => {
   return response.data;
 };
 
+// GET /api/admin/audit-logs — paginated, filterable admin activity history
+export const getAuditLogs = async (params = {}) => {
+  const response = await api.get('/admin/audit-logs', { params });
+  return response.data;
+};
+
 // POST /api/admin/privileges — create a custom privilege
 export const createPrivilege = async (data) => {
   const response = await api.post('/admin/privileges', data);
@@ -218,6 +224,7 @@ export default {
   updateStaffRole,
   deleteStaffRole,
   getPrivileges,
+  getAuditLogs,
   createPrivilege,
   updatePrivilege,
   deletePrivilege,

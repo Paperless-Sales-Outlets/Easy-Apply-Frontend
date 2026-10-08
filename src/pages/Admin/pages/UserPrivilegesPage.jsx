@@ -78,34 +78,55 @@ export default function UserPrivilegesPage() {
   ];
 
   return (
-    <>
-      <div className="admin-page-header">
-        <h1 className="admin-page-title">User Privileges</h1>
-        <p className="admin-page-subtitle">
-          Review user roles, module access, and registered users
-        </p>
-      </div>
+    <div className="um-page privileges-page">
+      <section className="um-hero privileges-hero">
+        <div className="um-hero-deco" aria-hidden="true">
+          <span className="um-hero-orb" />
+          <span className="um-hero-slash" />
+          <span className="um-hero-grid" />
+        </div>
+        <div className="um-hero-top">
+          <div className="um-hero-text">
+            <span className="um-hero-eyebrow">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" />
+              </svg>
+              Access governance
+            </span>
+            <h1>User Privileges</h1>
+            <p>Review role coverage, module access and the people connected to each permission set.</p>
+          </div>
+          <span className="privileges-hero-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </span>
+        </div>
+        <div className="um-hero-tiles privileges-hero-tiles">
+          {summaryCards.map(card => (
+            <div className={`um-hero-tile ${card.colorClass}`} key={card.key}>
+              <div className="um-hero-tile-head"><span className="um-hero-tile-icon">{card.icon}</span>{card.label}</div>
+              <div className="um-hero-tile-value">{card.value}</div>
+              <div className="um-hero-tile-foot">{card.hint}</div>
+            </div>
+          ))}
+          <div className="um-hero-tile privileges-total">
+            <div className="um-hero-tile-head"><span className="um-hero-tile-icon">{totalPrivileges}</span>Access grants</div>
+            <div className="um-hero-tile-value">{totalPrivileges}</div>
+            <div className="um-hero-tile-foot">Across all modules</div>
+          </div>
+        </div>
+      </section>
 
       {error && <div className="admin-error-banner">{error}</div>}
 
       {/* ── Summary Cards ── */}
-      <div className="admin-summary-grid">
-        {summaryCards.map(card => (
-          <div className="admin-stat-card" key={card.key}>
-            <div className={`admin-stat-icon ${card.colorClass}`}>
-              {card.icon}
-            </div>
-            <div>
-              <div className="admin-stat-label">{card.label}</div>
-              <div className="admin-stat-value">{card.value}</div>
-              <div className="admin-stat-trend">{card.hint}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* ── Role Privilege Cards ── */}
-      <div className="priv-role-grid">
+      <section className="um-panel privileges-section">
+        <div className="privileges-section-head">
+          <div><span className="privileges-kicker">ROLE COVERAGE</span><h2>Roles &amp; module access</h2><p>See how much of the portal each role can access.</p></div>
+        </div>
+        <div className="priv-role-grid">
         {SYSTEM_ROLES.map(role => (
           <div className="priv-role-card" key={role}>
             <div className="priv-role-head">
@@ -120,11 +141,16 @@ export default function UserPrivilegesPage() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      </section>
 
       {/* ── Privilege Matrix ── */}
-      <div className="admin-table-wrap">
-        <table className="admin-table priv-matrix">
+      <section className="um-panel privileges-section privileges-matrix-section">
+        <div className="privileges-section-head">
+          <div><span className="privileges-kicker">PERMISSION MATRIX</span><h2>Module access matrix</h2><p>Every check represents an active role permission.</p></div>
+        </div>
+        <div className="admin-table-wrap um-table-wrap">
+        <table className="admin-table um-table priv-matrix">
           <thead>
             <tr>
               <th>Module</th>
@@ -159,12 +185,13 @@ export default function UserPrivilegesPage() {
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      </section>
 
       {/* ── Registered Users ── */}
-      <div style={{ marginTop: '2rem' }}>
+      <section className="um-panel privileges-section privileges-users-section">
         <div className="priv-users-head">
-          <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--navy)' }}>Registered Users</h3>
+          <div><span className="privileges-kicker">DIRECTORY</span><h2>Registered users</h2><p>Filter people by the role assigned to their account.</p></div>
           <div className="priv-filter-row">
             {['All', ...SYSTEM_ROLES, 'Customer'].filter((v, i, a) => a.indexOf(v) === i).map(r => (
               <button
@@ -186,8 +213,8 @@ export default function UserPrivilegesPage() {
             <p>No users found.</p>
           </div>
         ) : (
-          <div className="admin-table-wrap">
-            <table className="admin-table priv-users-table">
+          <div className="admin-table-wrap um-table-wrap">
+            <table className="admin-table um-table priv-users-table">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -217,7 +244,7 @@ export default function UserPrivilegesPage() {
             </table>
           </div>
         )}
-      </div>
-    </>
+      </section>
+    </div>
   );
 }

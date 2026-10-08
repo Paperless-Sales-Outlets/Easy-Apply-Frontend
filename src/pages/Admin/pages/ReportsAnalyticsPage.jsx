@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { FiDollarSign, FiList, FiPercent, FiUsers } from 'react-icons/fi';
 import { getAnalytics, getUserReports, getApplicationReports } from '../services/adminService';
 import { buildReportPdf } from '../utils/reportPdf';
 
@@ -508,6 +509,11 @@ export default function ReportsAnalyticsPage() {
   const appSummary = appData?.summary;
   const totalStatus = (analytics?.statusBreakdown || []).reduce((s, d) => s + d.count, 0);
   const hasFilters = preset !== '30d' || serviceType !== 'all' || status !== 'all' || !!search;
+  const totalUsers = reportData?.summary?.totalUsers ?? reports.length;
+  const totalTasks = reportData?.summary?.totalTasks ?? reports.reduce((sum, row) => sum + (row.total || 0), 0);
+  const totalCollected = appSummary?.totalCollected ?? 0;
+  const completedTasks = reports.reduce((sum, row) => sum + (row.approved || 0) + (row.confirmed || 0), 0);
+  const completionRate = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   // The report is a single document: per-user progress first as the summary,
   // then the full application detail. Both formats emit the same two sections
@@ -566,19 +572,61 @@ export default function ReportsAnalyticsPage() {
   };
 
   return (
-    <>
-      <div className="analytics-bleed">
-        <div className="admin-page-header">
-          <h1 className="admin-page-title">Reports &amp; Analytics</h1>
-          <p className="admin-page-subtitle">
-            One combined report - per-user progress summary first, then full application details
-          </p>
+    <div className="analytics-page um-page">
+      <section className="um-hero analytics-hero">
+        <div className="um-hero-deco" aria-hidden="true">
+          <span className="um-hero-orb" />
+          <span className="um-hero-slash" />
+          <span className="um-hero-grid" />
         </div>
+        <div className="um-hero-top">
+          <div className="um-hero-text">
+            <span className="um-hero-eyebrow">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 3v18h18M7 16v-5M12 16V8M17 16v-8" />
+              </svg>
+              Operations intelligence
+            </span>
+            <h1>Reports &amp; Analytics</h1>
+            <p>Turn application activity into a clear view of team progress, service demand and operational outcomes.</p>
+          </div>
+          <span className="analytics-hero-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16v-6M20 16V4" />
+            </svg>
+          </span>
+        </div>
+        <div className="um-hero-tiles analytics-hero-tiles">
+          <div className="um-hero-tile total">
+            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiUsers size={16} /></span>Users covered</div>
+            <div className="um-hero-tile-value">{totalUsers}</div>
+            <div className="um-hero-tile-foot">In selected range</div>
+          </div>
+          <div className="um-hero-tile active">
+            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiList size={16} /></span>Tasks handled</div>
+            <div className="um-hero-tile-value">{totalTasks}</div>
+            <div className="um-hero-tile-foot">Across all services</div>
+          </div>
+          <div className="um-hero-tile roles">
+            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiPercent size={16} /></span>Completion rate</div>
+            <div className="um-hero-tile-value">{completionRate}%</div>
+            <div className="um-hero-tile-foot">Approved or confirmed</div>
+          </div>
+          <div className="um-hero-tile analytics-collected">
+            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiDollarSign size={16} /></span>Collected</div>
+            <div className="um-hero-tile-value analytics-money-value">{formatAmount(totalCollected)}</div>
+            <div className="um-hero-tile-foot">From application payments</div>
+          </div>
+        </div>
+      </section>
+
+      <div className="analytics-bleed">
+        <p className="analytics-page-note">One combined report: per-user progress summary first, then full application details.</p>
       </div>
 
       {/* -- Report Filters -- */}
       <div className="analytics-bleed">
-        <div className="analytics-filter-card">
+        <div className="analytics-filter-card um-panel">
           <div className="analytics-filter-head">
             <h3>Report Filters</h3>
             <div className="analytics-filter-summary">
@@ -664,7 +712,7 @@ export default function ReportsAnalyticsPage() {
           {/* -- Combined Report: user progress summary, then application detail -- */}
           <div className="analytics-bleed analytics-report-stack">
             {/* Section 1 */}
-            <div className="analytics-card">
+            <div className="analytics-card um-panel">
               <div className="analytics-card-head">
                 <h3>Section 1 &mdash; User Progress Summary</h3>
                 <div className="analytics-card-actions">
@@ -693,7 +741,7 @@ export default function ReportsAnalyticsPage() {
                 </div>
               ) : (
                 <div className="admin-table-wrap">
-                  <table className="admin-table admin-table-striped report-table">
+                  <table className="admin-table um-table admin-table-striped report-table">
                     <thead>
                       <tr>
                         <th>User</th>
@@ -817,7 +865,7 @@ export default function ReportsAnalyticsPage() {
             </div>
 
             {/* Section 2 */}
-            <div className="analytics-card">
+            <div className="analytics-card um-panel">
               <div className="analytics-card-head">
                 <h3>Section 2 &mdash; Application Information</h3>
                 <div className="analytics-card-actions">
@@ -835,7 +883,7 @@ export default function ReportsAnalyticsPage() {
                 </div>
               ) : (
                 <div className="admin-table-wrap">
-                  <table className="admin-table admin-table-striped app-report-table">
+                  <table className="admin-table um-table admin-table-striped app-report-table">
                     <thead>
                       <tr>
                         <th>Selected Product</th>
@@ -879,11 +927,11 @@ export default function ReportsAnalyticsPage() {
             <>
               <div className="analytics-bleed">
                 <div className="analytics-top-row">
-                  <div className="analytics-card">
+                  <div className="analytics-card um-panel">
                     <h3>Submissions by Service Type</h3>
                     <BarChart data={analytics.byServiceType} />
                   </div>
-                  <div className="analytics-card">
+                  <div className="analytics-card um-panel">
                     <h3>Status Breakdown</h3>
                     <PieChart data={analytics.statusBreakdown} />
                   </div>
@@ -891,7 +939,7 @@ export default function ReportsAnalyticsPage() {
               </div>
 
               <div className="analytics-bleed analytics-bottom-row">
-                <div className="analytics-card">
+                <div className="analytics-card um-panel">
                   <h3>
                     Daily Submissions Trend - {formatInputDay(range.from)} to {formatInputDay(range.to)}
                   </h3>
@@ -906,6 +954,6 @@ export default function ReportsAnalyticsPage() {
           )}
         </>
       )}
-    </>
+    </div>
   );
 }
