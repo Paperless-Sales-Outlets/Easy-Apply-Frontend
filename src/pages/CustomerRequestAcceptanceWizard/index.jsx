@@ -46,10 +46,20 @@ export default function CustomerRequestAcceptanceWizard() {
     const raw = new FormData(e.target);
     const formData = Object.fromEntries(raw.entries());
 
+    if (selectedAccount) {
+      if (!formData.nic && selectedAccount.nic) formData.nic = selectedAccount.nic;
+      if (!formData.fullName && (selectedAccount.fullName || selectedAccount.customerName)) {
+        formData.fullName = selectedAccount.fullName || selectedAccount.customerName;
+      }
+      if (!formData.telephone && (selectedAccount.telephone || selectedAccount.accountNo)) {
+        formData.telephone = selectedAccount.telephone || selectedAccount.accountNo;
+      }
+    }
+
     const submitData = new FormData();
     submitData.append('serviceType', 'customer-request-acceptance');
     
-    let formattedPhone = verifiedMobile || formData.verifiedMobile || '';
+    let formattedPhone = verifiedMobile || formData.verifiedMobile || formData.mobileNo || formData.telephone || '';
     if (formattedPhone && formattedPhone.length === 9) {
       formattedPhone = '0' + formattedPhone;
     }

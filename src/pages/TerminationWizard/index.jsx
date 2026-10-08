@@ -36,13 +36,26 @@ export default function TerminationWizard() {
     const raw = new FormData(formRef.current);
     const formData = Object.fromEntries(raw.entries());
 
+    if (selectedAccount) {
+      if (!formData.nic && selectedAccount.nic) formData.nic = selectedAccount.nic;
+      if (!formData.fullName && (selectedAccount.fullName || selectedAccount.customerName)) {
+        formData.fullName = selectedAccount.fullName || selectedAccount.customerName;
+      }
+      if (!formData.presentNumber && (selectedAccount.telephone || selectedAccount.accountNo)) {
+        formData.presentNumber = selectedAccount.telephone || selectedAccount.accountNo;
+      }
+      if (!formData.contactNo && (selectedAccount.mobileNumber || verifiedMobile)) {
+        formData.contactNo = selectedAccount.mobileNumber || verifiedMobile;
+      }
+    }
+
     setSubmitting(true);
     setSubmitError('');
     try {
       const res = await api.post('/applications', {
         serviceType: 'termination',
         formData,
-        phone: verifiedMobile,
+        phone: verifiedMobile || formData.contactNo || formData.presentNumber,
       });
       navigate('/completion', {
         state: {

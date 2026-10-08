@@ -70,8 +70,8 @@
         "description": "Transfer ownership of an existing connection."
       },
       "packageMigration": {
-        "title": "Package Migration",
-        "description": "Apply for migration of your current package."
+        "title": "Service Upgradation",
+        "description": "Upgrade your existing package or service connection."
       },
       "serviceVacation": {
         "title": "Service Vacation",
@@ -336,14 +336,14 @@
       }
     },
     "packageMigration": {
-      "title": "Application for Package Migration",
-      "subtitle": "Change your existing SLT package.",
+      "title": "Application for Service Upgradation",
+      "subtitle": "Upgrade your existing SLTMobitel package or service connection.",
       "steps": {
         "s1": "Package Details",
         "s2": "Payment",
         "step1": "Existing Account Verification",
-        "step2": "Migration Schedule",
-        "step3": "Declaration"
+        "step2": "Upgradation Schedule",
+        "step3": "Declaration & Signature"
       },
       "profile": {
         "telephone": "Telephone / Account Number",
@@ -353,13 +353,13 @@
         "existingPackage": "Existing Package"
       },
       "packageDetails": {
-        "heading": "Migration Schedule",
-        "requiredPackage": "Required Package",
+        "heading": "Upgradation Schedule",
+        "requiredPackage": "Required Package to Upgrade To",
         "effectiveDate": "With effect from",
         "remarks": "Remarks",
         "declarationHeading": "Customer Declaration",
-        "declarationText": "I hereby declare that the information provided in this package migration application is true and accurate to the best of my knowledge. I understand that migrating to the requested package may change my monthly charges, contract terms, and service features, and I agree to bear any applicable migration fees as per SLT's prevailing terms and conditions. I confirm I am the registered owner of this connection, or an authorized representative, and I consent to SLT processing this request based on the details provided above.",
-        "declarationLabel": "I accept the above declaration and request SLT to change my existing package as requested."
+        "declarationText": "I hereby declare that the information provided in this service upgradation application is true and accurate to the best of my knowledge. I understand that upgrading to the requested package may change my monthly charges, contract terms, and service features, and I agree to bear any applicable upgradation fees as per SLT's prevailing terms and conditions. I confirm I am the registered owner of this connection, or an authorized representative, and I consent to SLT processing this request based on the details provided above.",
+        "declarationLabel": "I accept the above declaration and request SLT to upgrade my existing package as requested."
       }
     },
     "serviceVacation": {
@@ -743,7 +743,7 @@
       "locationChange": "Location Change application submitted successfully!",
       "newConnection": "Application submitted successfully!",
       "ownershipChange": "Ownership Change application submitted successfully!",
-      "packageMigration": "Package Migration application submitted successfully!",
+      "packageMigration": "Service Upgradation application submitted successfully!",
       "reconnection": "Application submitted successfully!",
       "refundRequest": "Refund Request application submitted successfully!",
       "serviceVacation": "Service Vacation application submitted successfully!",

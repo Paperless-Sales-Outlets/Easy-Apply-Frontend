@@ -66,7 +66,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: 'Can I upgrade my broadband package?',
-        a: 'Yes! Use the Package Migration service from Our Services to upgrade or change your current package. The change is typically applied within 24 hours.',
+        a: 'Yes! Use the Service Upgradation service from Our Services to upgrade or change your current package. The change is typically applied within 24 hours.',
       },
       {
         q: 'What is the Fair Usage Policy (FUP)?',

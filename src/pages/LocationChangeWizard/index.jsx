@@ -94,7 +94,9 @@ export default function LocationChangeWizard() {
       ...finalStepData,
       agreed,
       signature,
-      nic: formData.nic || formData.telephone || finalStepData.telephone || '',
+      nic: formData.nic || finalStepData.nic || selectedAccount?.nic || formData.telephone || finalStepData.telephone || '',
+      name: formData.name || finalStepData.name || selectedAccount?.fullName || selectedAccount?.customerName || '',
+      telephone: formData.telephone || finalStepData.telephone || selectedAccount?.telephone || '',
     };
 
     setSubmitting(true);
@@ -103,7 +105,7 @@ export default function LocationChangeWizard() {
     try {
       const fd = new FormData();
       fd.append('serviceType', 'relocation');
-      fd.append('phone', verifiedMobile || formData.mobile || formData.telephone || '');
+      fd.append('phone', verifiedMobile || completePayload.mobile || completePayload.telephone || selectedAccount?.telephone || '');
       fd.append('formData', JSON.stringify(completePayload));
 
       const maybeFiles = [

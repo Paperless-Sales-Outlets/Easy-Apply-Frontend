@@ -30,13 +30,23 @@ export default function InternetServicesWizard() {
     const raw = new FormData(formRef.current);
     const formData = Object.fromEntries(raw.entries());
 
+    if (selectedAccount) {
+      if (!formData.nic && selectedAccount.nic) formData.nic = selectedAccount.nic;
+      if (!formData.nameFull && (selectedAccount.fullName || selectedAccount.customerName)) {
+        formData.nameFull = selectedAccount.fullName || selectedAccount.customerName;
+      }
+      if (!formData.phone && (selectedAccount.telephone || selectedAccount.mobileNumber || verifiedMobile)) {
+        formData.phone = selectedAccount.telephone || selectedAccount.mobileNumber || verifiedMobile;
+      }
+    }
+
     setSubmitting(true);
     setSubmitError('');
     try {
       const res = await api.post('/applications', {
         serviceType: 'internet-services',
         formData,
-        phone: verifiedMobile,
+        phone: verifiedMobile || formData.phone,
       });
       navigate('/completion', {
         state: {

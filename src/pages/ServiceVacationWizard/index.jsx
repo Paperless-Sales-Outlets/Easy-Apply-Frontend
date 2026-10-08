@@ -22,7 +22,8 @@ export default function ServiceVacationWizard() {
   const [submitError, setSubmitError] = useState('');
   
   const [vacationData, setVacationData] = useState(selectedAccount || null);
-  const [paymentIntention, setPaymentIntention] = useState('later'); // 'later', 'paid', 'gateway'
+  const [paymentIntention, setPaymentIntention] = useState('online'); // 'online', 'paid'
+  const [hasPaymentReceipt, setHasPaymentReceipt] = useState(false);
 
   // The customer's account is already verified via OTP + real DB lookup
   // before reaching this wizard — reuse it instead of asking/looking it up again.
@@ -53,9 +54,9 @@ export default function ServiceVacationWizard() {
     window.scrollTo(0, 0);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, paymentRef = null, phoneOverride = null) => {
     if (e?.preventDefault) e.preventDefault();
-    if (currentStep < totalSteps) { nextStep(); return; }
+    if (currentStep < totalSteps && !paymentRef) { nextStep(); return; }
 
     const raw = new FormData(formRef.current);
     const formData = Object.fromEntries(raw.entries());
@@ -64,12 +65,30 @@ export default function ServiceVacationWizard() {
     const submitData = new FormData();
     submitData.append('serviceType', 'service-vacation');
     
-    let formattedPhone = verifiedMobile || formData.verifiedMobile || '';
+    let formattedPhone = phoneOverride || verifiedMobile || formData.verifiedMobile || vacationData?.telephone || '';
     if (formattedPhone && formattedPhone.length === 9) {
       formattedPhone = '0' + formattedPhone;
     }
     submitData.append('phone', formattedPhone);
     delete formData.verifiedMobile;
+
+    // Guarantee essential customer fields are present in formData
+    if (vacationData) {
+      if (!formData.nic && vacationData.nic) formData.nic = vacationData.nic;
+      if (!formData.fullName && (vacationData.fullName || vacationData.customerName)) {
+        formData.fullName = vacationData.fullName || vacationData.customerName;
+      }
+      if (!formData.telephone && (vacationData.telephone || vacationData.accountNo)) {
+        formData.telephone = vacationData.telephone || vacationData.accountNo;
+      }
+      if (formData.outstandingBalance === undefined || formData.outstandingBalance === '') {
+        formData.outstandingBalance = vacationData.outstandingBalance || 0;
+      }
+    }
+
+    if (paymentRef) {
+      formData.paymentRef = paymentRef;
+    }
 
     // Extract signature
     const signatureBase64 = formData.digitalSignatureBase64;
@@ -165,6 +184,7 @@ export default function ServiceVacationWizard() {
               ref={step3Ref}
               isActive={currentStep === 3}
               onPaymentIntentionChange={setPaymentIntention}
+              onPaymentReceiptChange={setHasPaymentReceipt}
             />
           </div>
           <div style={{ display: currentStep === 4 ? 'block' : 'none' }}>
@@ -174,8 +194,8 @@ export default function ServiceVacationWizard() {
               amount={vacationData?.outstandingBalance || 0}
               feeAmount={500}
               feeLabel="Vacation Fee"
-              hasPaymentReceipt={formRef.current ? (new FormData(formRef.current).get('paymentReceipt')?.size > 0) : false}
-              onSuccess={() => handleSubmit({ preventDefault: () => {} })}
+              hasPaymentReceipt={hasPaymentReceipt || paymentIntention === 'paid'}
+              onSuccess={(orderId, phoneNum) => handleSubmit({ preventDefault: () => {} }, orderId, phoneNum)}
             />
           </div>
         </div>

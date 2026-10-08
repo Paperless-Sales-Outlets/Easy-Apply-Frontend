@@ -10,6 +10,10 @@ import toast from 'react-hot-toast';
 const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, verifiedMobile }, ref) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [connectionsList, setConnectionsList] = useState([]);
+  const [errorOccurred, setErrorOccurred] = useState(false);
+  const [showManualLookup, setShowManualLookup] = useState(!vacationData);
+  const [manualLookupNumber, setManualLookupNumber] = useState('');
 
   useImperativeHandle(ref, () => ({
     validate: () => {
@@ -23,13 +27,18 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
 
   const handleApiResponse = (data) => {
     if (Array.isArray(data)) {
-      if (data.length > 0) {
+      if (data.length === 1) {
         selectConnection(data[0]);
+        setConnectionsList([]);
+      } else if (data.length > 1) {
+        setConnectionsList(data);
+        toast.success(`Found ${data.length} connections. Please select one.`, { position: 'top-center' });
       } else {
         toast.error('No active connections found for this number.');
       }
-    } else {
+    } else if (data) {
       selectConnection(data);
+      setConnectionsList([]);
     }
   };
 
@@ -37,12 +46,9 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
     if (onVerifySuccess) {
       onVerifySuccess(connection);
     }
+    setShowManualLookup(false);
     toast.success('Connection details loaded securely.', { position: 'top-center' });
   };
-
-  const [errorOccurred, setErrorOccurred] = useState(false);
-  const [showManualLookup, setShowManualLookup] = useState(false);
-  const [manualLookupNumber, setManualLookupNumber] = useState('');
 
   const performLookup = async (searchNumber) => {
     const sanitizedNumber = (searchNumber || '').toString().replace(/\D/g, '');
@@ -54,7 +60,6 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
       const res = await api.get(`/applications/lookup-connection?phone=${sanitizedNumber}`);
       if (res.data.success && res.data.data) {
         handleApiResponse(res.data.data);
-        setShowManualLookup(false);
       }
     } catch (err) {
       setErrorOccurred(true);
@@ -66,6 +71,15 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
       setLoading(false);
     }
   };
+
+  // Auto-lookup on mount if verified mobile exists and no account selected yet
+  useEffect(() => {
+    if (!vacationData && verifiedMobile) {
+      performLookup(verifiedMobile);
+    } else if (!vacationData) {
+      setShowManualLookup(true);
+    }
+  }, [verifiedMobile]);
 
   return (
     <div>
@@ -128,12 +142,58 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
         </div>
       ) : null}
 
+      {/* Multiple Connections Selection List */}
+      {connectionsList.length > 1 && !vacationData && (
+        <div style={{ marginBottom: '2rem' }}>
+          <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.75rem', fontSize: '1.1rem' }}>
+            {t('wizards.serviceVacation.generalInfo.multipleConnectionsTitle', 'Multiple Connections Found')}
+          </h4>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', fontSize: '0.9rem' }}>
+            {t('wizards.serviceVacation.generalInfo.multipleConnectionsSubtitle', 'Please select the connection you want to put on vacation:')}
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            {connectionsList.map((conn, idx) => (
+              <div
+                key={conn._id || idx}
+                onClick={() => selectConnection(conn)}
+                style={{
+                  padding: '1.25rem',
+                  borderRadius: '12px',
+                  border: '1.5px solid rgba(15, 87, 168, 0.2)',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--slt-blue)'}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(15, 87, 168, 0.2)'}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--slt-blue)', fontSize: '1.05rem' }}>
+                    {conn.telephone || conn.accountNo}
+                  </span>
+                  <span style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem', borderRadius: '4px', background: 'rgba(15, 87, 168, 0.1)', color: 'var(--slt-blue)', fontWeight: 600 }}>
+                    {conn.customerType === 'office' ? 'Business' : 'Home'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                  {conn.fullName || conn.customerName || 'Customer'}
+                </div>
+                <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--green-text)', fontWeight: 600 }}>
+                  Outstanding: Rs. {(conn.outstandingBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <AnimatePresence>
         {vacationData && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
             style={{ 
-              marginTop: '2rem',
+              marginTop: '1.5rem',
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
               gap: '1.5rem' 
@@ -160,10 +220,12 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
                 }}>
                   <Icon name="user" size={32} />
                 </div>
-                <div>
-                  <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', color: 'var(--slt-blue)', fontWeight: 700 }}>
-                    {vacationData.fullName || vacationData.customerName || 'Valued Customer'}
-                  </h4>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', color: 'var(--slt-blue)', fontWeight: 700 }}>
+                      {vacationData.fullName || vacationData.customerName || 'Valued Customer'}
+                    </h4>
+                  </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
                       <Icon name="tag" size={16} />
@@ -173,6 +235,22 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
                       <Icon name="phone" size={16} />
                       <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{vacationData.telephone || vacationData.accountNo}</span>
                     </div>
+                  </div>
+                  <div style={{ marginTop: '1rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowManualLookup(true);
+                        if (onVerifySuccess) onVerifySuccess(null);
+                      }}
+                      style={{
+                        background: 'none', border: 'none', color: 'var(--slt-blue)',
+                        fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', padding: 0,
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      Search / Select Different Connection
+                    </button>
                   </div>
                 </div>
               </div>

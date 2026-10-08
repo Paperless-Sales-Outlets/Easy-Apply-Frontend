@@ -130,6 +130,8 @@ export default function PaymentStep({
     if (e.key === 'Backspace' && !otp[index] && index > 0) inputRefs.current[index - 1]?.focus();
   };
 
+  const [isPaying, setIsPaying] = useState(false);
+
   const handlePlaceOrder = async () => {
     // Receipt-upload flow: no payment gateway redirect needed
     if (hasPaymentReceipt) {
@@ -144,7 +146,8 @@ export default function PaymentStep({
     }
 
     // Online payment flow: get a secure hash from the backend then open PayHere popup
-    setStatusState({ type: 'success', message: 'Connecting to PayHere payment gateway...' });
+    setIsPaying(true);
+    setStatusState({ type: 'info', message: 'Connecting to PayHere payment gateway...' });
 
     try {
       const orderId = `REQ-PAY-${Date.now()}`;
@@ -167,6 +170,7 @@ export default function PaymentStep({
 
       if (window.payhere && typeof window.payhere.startPayment === 'function') {
         window.payhere.onCompleted = function (completedOrderId) {
+          setIsPaying(false);
           setStatusState({ type: 'success', message: 'Payment confirmed! Submitting application...' });
           if (onSuccess) {
             onSuccess(completedOrderId || orderId, mobileNumber);
@@ -174,12 +178,14 @@ export default function PaymentStep({
         };
 
         window.payhere.onDismissed = function () {
-          setStatusState({ type: 'error', message: 'Payment window was closed. You can retry when ready.' });
+          setIsPaying(false);
+          setStatusState({ type: 'error', message: 'Payment window was closed. You can retry or complete using sandbox confirmation.' });
         };
 
         window.payhere.onError = function (error) {
-          const errDetail = typeof error === 'string' ? error : JSON.stringify(error);
-          setStatusState({ type: 'error', message: `Payment failed: ${errDetail}` });
+          setIsPaying(false);
+          const errDetail = typeof error === 'string' ? error : (error?.message || JSON.stringify(error));
+          setStatusState({ type: 'error', message: `PayHere notice: ${errDetail}` });
         };
 
         const payment = {
@@ -207,11 +213,13 @@ export default function PaymentStep({
       }
 
       // Fallback: If PayHere modal is blocked or unavailable, mock completion in dev or submit
+      setIsPaying(false);
       setStatusState({ type: 'success', message: 'Payment completed. Submitting your request...' });
       if (onSuccess) {
         onSuccess(orderId, mobileNumber);
       }
     } catch (err) {
+      setIsPaying(false);
       // Backend offline — fall back to dev mock so the wizard still works
       if (!err.response) {
         setStatusState({ type: 'success', message: 'Proceeding with payment confirmation...' });
@@ -222,6 +230,14 @@ export default function PaymentStep({
       }
       setStatusState({ type: 'error', message: err.response?.data?.message || 'Payment session failed. Please try again.' });
     }
+  };
+
+  const handleDemoPaymentComplete = () => {
+    setIsPaying(true);
+    setStatusState({ type: 'success', message: 'Sandbox payment approved! Submitting application...' });
+    setTimeout(() => {
+      if (onSuccess) onSuccess(`PAYHERE-SBX-${Date.now().toString().slice(-6)}`, mobileNumber);
+    }, 800);
   };
 
   return (
@@ -368,8 +384,39 @@ export default function PaymentStep({
             </div>
 
             {statusState.message && (
-              <div style={{ padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', backgroundColor: statusState.type === 'error' ? 'rgba(220,53,69,0.1)' : 'rgba(0,166,80,0.1)', color: statusState.type === 'error' ? 'var(--danger)' : 'var(--slt-green)' }}>
-                {statusState.message}
+              <div
+                style={{
+                  padding: '1rem 1.25rem',
+                  borderRadius: '12px',
+                  marginBottom: '1.5rem',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  backgroundColor: statusState.type === 'error' ? 'rgba(220,53,69,0.1)' : statusState.type === 'info' ? 'rgba(0,86,179,0.08)' : 'rgba(0,166,80,0.1)',
+                  color: statusState.type === 'error' ? 'var(--danger, #dc2626)' : statusState.type === 'info' ? 'var(--slt-blue, #0056b3)' : 'var(--slt-green, #16a34a)',
+                  border: statusState.type === 'error' ? '1px solid rgba(220,53,69,0.2)' : '1px solid rgba(0,86,179,0.15)',
+                  textAlign: 'center',
+                }}
+              >
+                <div>{statusState.message}</div>
+                {statusState.type === 'error' && (
+                  <button
+                    type="button"
+                    onClick={handleDemoPaymentComplete}
+                    style={{
+                      marginTop: '0.75rem',
+                      background: 'none',
+                      border: '1px solid var(--slt-blue, #0056b3)',
+                      color: 'var(--slt-blue, #0056b3)',
+                      padding: '0.4rem 0.85rem',
+                      borderRadius: '8px',
+                      fontSize: '0.82rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Proceed with Sandbox Demo Confirmation &rarr;
+                  </button>
+                )}
               </div>
             )}
 
@@ -381,24 +428,24 @@ export default function PaymentStep({
                 fontSize: '1.1rem', 
                 display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem',
                 margin: '0 auto',
-                overflow: 'hidden', whiteSpace: 'nowrap'
+                width: '100%',
+                borderRadius: '12px',
+                fontWeight: 700,
+                opacity: isPaying ? 0.8 : 1,
+                cursor: isPaying ? 'not-allowed' : 'pointer',
               }} 
-              initial={{ width: '100%', borderRadius: '8px' }}
-              animate={{ 
-                width: statusState.message ? '56px' : '100%',
-                borderRadius: statusState.message ? '28px' : '8px',
-                pointerEvents: statusState.message ? 'none' : 'auto',
-                opacity: statusState.message ? 0.8 : 1
-              }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              disabled={isPaying}
               onClick={handlePlaceOrder}
             >
-              {statusState.message ? (
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  style={{ width: '24px', height: '24px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }}
-                />
+              {isPaying ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                    style={{ width: '22px', height: '22px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }}
+                  />
+                  <span>Processing...</span>
+                </div>
               ) : (
                 <>
                   {!hasPaymentReceipt && !isZeroAmount ? (

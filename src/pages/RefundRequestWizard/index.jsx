@@ -35,13 +35,26 @@ export default function RefundRequestWizard() {
     const raw = new FormData(formRef.current);
     const formData = Object.fromEntries(raw.entries());
 
+    if (selectedAccount) {
+      if (!formData.nic && selectedAccount.nic) formData.nic = selectedAccount.nic;
+      if (!formData.fullName && (selectedAccount.fullName || selectedAccount.customerName)) {
+        formData.fullName = selectedAccount.fullName || selectedAccount.customerName;
+      }
+      if (!formData.telephone && (selectedAccount.telephone || selectedAccount.accountNo)) {
+        formData.telephone = selectedAccount.telephone || selectedAccount.accountNo;
+      }
+      if (!formData.contactNo && (selectedAccount.mobileNumber || verifiedMobile)) {
+        formData.contactNo = selectedAccount.mobileNumber || verifiedMobile;
+      }
+    }
+
     setSubmitting(true);
     setSubmitError('');
     try {
       const res = await api.post('/applications', {
         serviceType: 'refund-request',
         formData,
-        phone: verifiedMobile,
+        phone: verifiedMobile || formData.contactNo || formData.telephone,
       });
       navigate('/completion', {
         state: {

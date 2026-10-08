@@ -23,13 +23,15 @@ const DOC_LABELS = {
   signature: 'Signature',
   signatureUpload: 'Signature Upload',
   signatureFile: 'Signature',
+  signatureDoc: 'Signature Document',
+  paymentReceipt: 'Payment Receipt',
 };
 
 const FILE_FIELD_KEYS = new Set([
-  'documents', 'signature', 'signatureUpload', 'signatureFile', 'digitalSignature',
+  'documents', 'signature', 'signatureUpload', 'signatureFile', 'signatureDoc', 'digitalSignature',
   'signatureBase64', 'digitalSignatureBase64', 'proofOfAddress', 'authorizationLetter',
   'sketchFile', 'brcFile', 'brc', 'nicFront', 'nicBack', 'passportDoc', 'brcDoc',
-  'vatDoc', 'taxExemptionDoc',
+  'vatDoc', 'taxExemptionDoc', 'paymentReceipt',
 ]);
 
 function looksLikeFileString(value) {

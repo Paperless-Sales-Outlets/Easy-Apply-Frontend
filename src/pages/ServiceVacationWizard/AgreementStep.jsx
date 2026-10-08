@@ -109,7 +109,7 @@ const FileInputWithClear = forwardRef(function FileInputWithClear({ name, label,
 });
 
 
-const AgreementStep = forwardRef(function AgreementStep({ isActive, onPaymentIntentionChange, hidePaymentIntention }, ref) {
+const AgreementStep = forwardRef(function AgreementStep({ isActive, onPaymentIntentionChange, onPaymentReceiptChange, hidePaymentIntention }, ref) {
   const { t } = useTranslation();
   
   const [signatureBase64, setSignatureBase64] = useState('');
@@ -163,7 +163,10 @@ const AgreementStep = forwardRef(function AgreementStep({ isActive, onPaymentInt
           />
           <button 
             type="button" 
-            onClick={() => setPaymentIntention('online')}
+            onClick={() => {
+              setPaymentIntention('online');
+              if (onPaymentReceiptChange) onPaymentReceiptChange(false);
+            }}
             style={{ 
               flex: 1, padding: '0.75rem', background: 'none', border: 'none', borderRadius: '8px', 
               fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', position: 'relative', zIndex: 1,
@@ -195,6 +198,10 @@ const AgreementStep = forwardRef(function AgreementStep({ isActive, onPaymentInt
               label="Upload Payment Receipt (PDF/JPG/PNG)"
               name="paymentReceipt"
               accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => {
+                const hasFile = !!(e.target.files && e.target.files.length > 0);
+                if (onPaymentReceiptChange) onPaymentReceiptChange(hasFile);
+              }}
             />
           </div>
         )}

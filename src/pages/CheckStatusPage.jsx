@@ -45,7 +45,7 @@ export default function CheckStatusPage() {
       case 'ownership-change':
         return t('wizards.ownershipChange.title', 'Ownership Transfer');
       case 'package-migration':
-        return t('wizards.packageMigration.title', 'Package Migration');
+        return t('wizards.packageMigration.title', 'Service Upgradation');
       case 'service-vacation':
         return t('wizards.serviceVacation.title', 'Service Vacation');
       case 'refund-request':

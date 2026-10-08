@@ -46,8 +46,8 @@ export const QUICK_SERVICES = [
   },
   {
     id: 'package-migration',
-    title: 'Package Migration',
-    desc: 'Migrate or upgrade to a new package',
+    title: 'Service Upgradation',
+    desc: 'Upgrade your existing package or service',
     route: '/package-migration',
     icon: FiTrendingUp,
     bgColor: '#eff6ff',
