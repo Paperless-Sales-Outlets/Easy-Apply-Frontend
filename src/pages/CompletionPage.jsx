@@ -10,7 +10,6 @@ import {
   FiSearch,
   FiPhoneCall,
   FiCheckCircle,
-  FiCalendar,
   FiArrowRight,
 } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
@@ -563,7 +562,7 @@ export default function CompletionPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.2 }}
         >
-          {/* Primary CTA: Schedule Physical Installation */}
+          {/* Primary CTA: Track Application Status */}
           <button
             type="button"
             className="cp-btn cp-btn-primary"
@@ -574,14 +573,10 @@ export default function CompletionPage() {
               fontSize: '0.98rem',
               fontWeight: 900,
             }}
-            onClick={() =>
-              navigate(`/schedule-installation/${encodeURIComponent(referenceNumber)}`, {
-                state: { referenceNumber },
-              })
-            }
+            onClick={handleTrackStatus}
           >
-            <FiCalendar size={20} />
-            <span>Schedule Physical Installation Now</span>
+            <FiSearch size={20} />
+            <span>Track Application Status</span>
             <FiArrowRight size={18} />
           </button>
 
@@ -591,16 +586,11 @@ export default function CompletionPage() {
               <span>Download Summary PDF</span>
             </button>
 
-            <button type="button" className="cp-btn cp-btn-secondary" onClick={handleTrackStatus}>
-              <FiSearch size={18} />
-              <span>Track Application Status</span>
+            <button type="button" className="cp-btn cp-btn-ghost" onClick={() => navigate('/')}>
+              <FiHome size={18} />
+              <span>{t('completion.backToDashboard', 'Back to Dashboard')}</span>
             </button>
           </div>
-
-          <button type="button" className="cp-btn cp-btn-ghost" onClick={() => navigate('/')}>
-            <FiHome size={18} />
-            <span>{t('completion.backToDashboard', 'Back to Dashboard')}</span>
-          </button>
         </motion.div>
 
 

@@ -24,6 +24,7 @@ import {
 import { useVerifiedContext } from '../components/verification';
 import { getAuthUser, notifyAuthUpdated } from '../utils/authSession';
 import api from '../utils/api';
+import toast from 'react-hot-toast';
 import InstallationReviewModal from '../components/InstallationReviewModal';
 
 
@@ -63,15 +64,15 @@ function accountToProfile(account, mobileNumber, user) {
 
   return {
     // Identity — verified, not editable here
-    fullName: pick(account?.fullName, account?.customerName, user?.name),
-    nic: pick(account?.nic, user?.NIC),
-    dob: pick(user?.dob),
-    gender: pick(user?.gender),
-    nationality: pick(user?.nationality),
+    fullName: pick(account?.fullName, account?.customerName, account?.nameFull, user?.name, user?.fullName, user?.nameFull),
+    nic: pick(account?.nic, user?.NIC, user?.nic),
+    dob: pick(account?.dob, user?.dob),
+    gender: pick(account?.gender, user?.gender),
+    nationality: pick(account?.nationality, user?.nationality, 'Sri Lankan'),
     phone: pick(account?.mobileNumber, account?.phoneNumber, user?.phone, mobileNumber),
 
     // Contact & address — editable
-    email: pick(account?.email, user?.email),
+    email: pick(user?.email, account?.email),
     // Fall back to the verified mobile rather than showing NA — it is a
     // contact number we definitely hold.
     contactNumber: pick(user?.contactNumber, account?.telephone, account?.mobileNumber, user?.phone, mobileNumber),
@@ -81,7 +82,7 @@ function accountToProfile(account, mobileNumber, user) {
     city: pick(account?.city, user?.city),
     district: pick(account?.district, user?.district),
     postalCode: pick(account?.postalCode, user?.postalCode),
-    preferredContact: pick(user?.preferredContact),
+    preferredContact: pick(user?.preferredContact, 'SMS'),
 
     // SLT connection — only exists for customers who hold a product
     accountNumber: pick(account?.accountNumber),
@@ -223,24 +224,40 @@ export default function MyProfilePage() {
     setEditDraft(mapped);
   }, [selectedAccount, mobileNumber, authUser]);
 
-  // Signed in by email and password but the stored user is missing (e.g. an
-  // older session): pull the registered details back from the API.
+  // Pull fresh customer profile from backend on mount so OCR and database updates reflect immediately
   useEffect(() => {
-    if (authUser || !localStorage.getItem('accessToken')) return;
+    const phone = mobileNumber || getAuthUser()?.phone || localStorage.getItem('verifiedPhone');
+    const authEmail = getAuthUser()?.email || localStorage.getItem('verifiedEmail');
+    if (!phone && !authEmail) return;
     let alive = true;
+    const query = phone ? `phone=${encodeURIComponent(phone)}` : `email=${encodeURIComponent(authEmail)}`;
     api
-      .get('/auth/me')
+      .get(`/customers/profile?${query}`)
       .then((res) => {
-        const customerProfile = res.data?.customer || res.data?.user;
+        const customerProfile = res.data?.customer;
         if (alive && customerProfile) {
           localStorage.setItem('authCustomer', JSON.stringify(customerProfile));
           localStorage.setItem('authUser', JSON.stringify(customerProfile));
           setAuthUser(customerProfile);
+          notifyAuthUpdated();
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Fallback to /auth/me if token exists
+        if (localStorage.getItem('accessToken')) {
+          api.get('/auth/me').then((r) => {
+            const p = r.data?.customer || r.data?.user;
+            if (alive && p) {
+              localStorage.setItem('authCustomer', JSON.stringify(p));
+              localStorage.setItem('authUser', JSON.stringify(p));
+              setAuthUser(p);
+              notifyAuthUpdated();
+            }
+          }).catch(() => {});
+        }
+      });
     return () => { alive = false; };
-  }, [authUser]);
+  }, [mobileNumber]);
 
   // Fetch real application history for the verified phone number
   useEffect(() => {
@@ -290,7 +307,7 @@ export default function MyProfilePage() {
     setEditDraft((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaveError('');
 
     if (editDraft.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editDraft.email)) {
@@ -298,27 +315,58 @@ export default function MyProfilePage() {
       return;
     }
 
-    // Persist the editable fields onto the stored account so they survive a
-    // reload. There is no profile-update endpoint on the backend yet, so this
-    // is local to the browser until one exists.
-    const updated = { ...(authUser || {}) };
-    EDITABLE_FIELDS.forEach((f) => {
-      if (f === 'email') updated.email = editDraft.email;
-      else updated[f] = editDraft[f];
-    });
+    const phone = profile.phone || mobileNumber || getAuthUser()?.phone || localStorage.getItem('verifiedPhone');
     try {
-      localStorage.setItem('authCustomer', JSON.stringify(updated));
-      localStorage.setItem('authUser', JSON.stringify(updated));
-      setAuthUser(updated);
-      notifyAuthUpdated();
-    } catch (err) {
-      setSaveError('Could not save your changes in this browser.');
-      return;
-    }
+      const res = await api.put('/customers/profile', {
+        phone,
+        email: editDraft.email,
+        contactNumber: editDraft.contactNumber,
+        addressLine1: editDraft.addressLine1,
+        addressLine2: editDraft.addressLine2,
+        city: editDraft.city,
+        district: editDraft.district,
+        postalCode: editDraft.postalCode,
+        preferredContact: editDraft.preferredContact,
+      });
 
-    setProfile(editDraft);
-    setIsEditing(false);
-    // In a real app, you would POST this to the backend to update user profile
+      const updatedCustomer = res.data?.customer || {
+        ...(authUser || {}),
+        email: editDraft.email,
+        contactNumber: editDraft.contactNumber,
+        addressLine1: editDraft.addressLine1,
+        addressLine2: editDraft.addressLine2,
+        city: editDraft.city,
+        district: editDraft.district,
+        postalCode: editDraft.postalCode,
+        preferredContact: editDraft.preferredContact,
+      };
+
+      localStorage.setItem('authCustomer', JSON.stringify(updatedCustomer));
+      localStorage.setItem('authUser', JSON.stringify(updatedCustomer));
+      setAuthUser(updatedCustomer);
+      notifyAuthUpdated();
+      setProfile(editDraft);
+      setIsEditing(false);
+      toast.success('Profile updated successfully!');
+    } catch (err) {
+      console.warn('Backend update failed, falling back to local storage:', err);
+      const fallback = { ...(authUser || {}) };
+      EDITABLE_FIELDS.forEach((f) => {
+        fallback[f] = editDraft[f];
+      });
+      try {
+        localStorage.setItem('authCustomer', JSON.stringify(fallback));
+        localStorage.setItem('authUser', JSON.stringify(fallback));
+        setAuthUser(fallback);
+        notifyAuthUpdated();
+      } catch (e) {
+        setSaveError('Could not save your changes in this browser.');
+        return;
+      }
+      setProfile(editDraft);
+      setIsEditing(false);
+      toast.success('Profile saved locally.');
+    }
   };
 
   const handleCancel = () => {

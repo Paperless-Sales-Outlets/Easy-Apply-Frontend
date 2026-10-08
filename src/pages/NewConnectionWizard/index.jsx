@@ -102,12 +102,90 @@ export default function NewConnectionWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
+  const [draftRestored, setDraftRestored] = useState(false);
+
   // Flow: location → loop check → NIC & selfie → signature → review → PayHere.
   // The loop check runs automatically, so it shares the "Location" stepper slot.
   const STEPS = ['location', 'loop', 'identity', 'signature', 'review', 'payment'];
   const STEPPER = ['Installation Location', 'NIC & Selfie', 'Digital Signature', 'Review', 'Payment'];
   const step = STEPS[stepIndex];
   const stepperStep = stepIndex <= 1 ? 1 : stepIndex;
+
+  const getDraftKey = () => {
+    const phone = verifiedMobile || getAuthUser()?.phone || 'active_user';
+    return `slt_new_conn_draft_${phone}`;
+  };
+
+  // 1. Initial State Restoration: Load saved draft from localStorage
+  useEffect(() => {
+    try {
+      const key = getDraftKey();
+      const savedRaw = localStorage.getItem(key);
+      if (savedRaw) {
+        const saved = JSON.parse(savedRaw);
+        if (saved && saved.formData) {
+          dispatch({ type: 'SET_FIELDS', payload: saved.formData });
+
+          // Restore stepIndex from URL query param if present, or from saved draft
+          const searchParams = new URLSearchParams(location.search);
+          const stepParam = searchParams.get('step');
+          if (stepParam && STEPS.includes(stepParam)) {
+            setStepIndex(STEPS.indexOf(stepParam));
+          } else if (typeof saved.stepIndex === 'number' && saved.stepIndex > 0 && saved.stepIndex < STEPS.length) {
+            const restoredIndex = STEPS[saved.stepIndex] === 'loop' ? 0 : saved.stepIndex;
+            setStepIndex(restoredIndex);
+          }
+          toast.success('Resumed from your previously saved application progress.', { id: 'draft-restored', duration: 3500 });
+        }
+      } else {
+        // Sync with ?step query param if no local draft
+        const searchParams = new URLSearchParams(location.search);
+        const stepParam = searchParams.get('step');
+        if (stepParam && STEPS.includes(stepParam)) {
+          setStepIndex(STEPS.indexOf(stepParam));
+        }
+      }
+    } catch (err) {
+      console.warn('Could not read draft from localStorage:', err);
+    } finally {
+      setDraftRestored(true);
+    }
+  }, [verifiedMobile]);
+
+  // 2. Auto-save draft to localStorage whenever formData or stepIndex updates
+  useEffect(() => {
+    if (!draftRestored) return;
+    try {
+      const key = getDraftKey();
+      const payload = {
+        formData,
+        stepIndex,
+        updatedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(key, JSON.stringify(payload));
+    } catch (err) {
+      console.warn('Could not auto-save draft to localStorage:', err);
+    }
+  }, [formData, stepIndex, draftRestored, verifiedMobile]);
+
+  // 3. Clear draft when application is finalized
+  const clearSavedDraft = () => {
+    try {
+      localStorage.removeItem(getDraftKey());
+      localStorage.removeItem('slt_new_conn_draft_active_user');
+      localStorage.removeItem('slt_new_conn_draft_');
+    } catch (_) {}
+  };
+
+  const handleResetDraft = () => {
+    if (window.confirm('Are you sure you want to clear your saved progress and start from the beginning?')) {
+      clearSavedDraft();
+      dispatch({ type: 'SET_FIELDS', payload: initialState });
+      setStepIndex(0);
+      navigate('/new-connection?step=location', { replace: true });
+      toast.success('Application form reset.');
+    }
+  };
 
   useEffect(() => {
     if (selectedProduct?.productName) {
@@ -152,16 +230,51 @@ export default function NewConnectionWizard() {
   };
 
   const nextStep = () => {
-    setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
+    const nextIdx = Math.min(stepIndex + 1, STEPS.length - 1);
+    setStepIndex(nextIdx);
+    navigate(`/new-connection?step=${STEPS[nextIdx]}`, { replace: false });
     window.scrollTo(0, 0);
   };
+
   const prevStep = () => {
-    setStepIndex((i) => Math.max(i - 1, 0));
+    const prevIdx = Math.max(stepIndex - 1, 0);
+    setStepIndex(prevIdx);
+    navigate(`/new-connection?step=${STEPS[prevIdx]}`, { replace: false });
     window.scrollTo(0, 0);
   };
+
   const goTo = (key) => {
-    setStepIndex(STEPS.indexOf(key));
-    window.scrollTo(0, 0);
+    const targetIdx = STEPS.indexOf(key);
+    if (targetIdx !== -1) {
+      setStepIndex(targetIdx);
+      navigate(`/new-connection?step=${STEPS[targetIdx]}`, { replace: false });
+      window.scrollTo(0, 0);
+    }
+  };
+
+  const handleBackNavigation = () => {
+    if (submitting) return;
+
+    // At step 0 (location) -> Navigate back to Cart
+    if (stepIndex === 0 || step === 'location') {
+      navigate('/cart');
+      return;
+    }
+
+    // At identity (step 2) -> Jump back directly to location (step 0), skipping loop check
+    if (step === 'identity') {
+      goTo('location');
+      return;
+    }
+
+    // At loop check (step 1) -> Jump back to location (step 0)
+    if (step === 'loop') {
+      goTo('location');
+      return;
+    }
+
+    // From signature, review, payment -> Step back normally
+    prevStep();
   };
 
   const handleSubmit = (e) => {
@@ -181,8 +294,9 @@ export default function NewConnectionWizard() {
     nextStep();
   };
 
-  // Final step of the journey: empty the basket and land on the tracking page.
+  // Final step of the journey: empty the basket, clear the draft, and land on the tracking page.
   const goToTracking = async (ref) => {
+    clearSavedDraft();
     await clearSessionCart();
     navigate(`/check-status?ref=${encodeURIComponent(ref)}`, {
       replace: true,
@@ -335,12 +449,60 @@ export default function NewConnectionWizard() {
           </p>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1.5px solid #e2e8f0', paddingTop: '1.5rem' }}>
-          <button type="button" className="btn btn-secondary" onClick={() => (step === 'identity' ? goTo('location') : prevStep())} disabled={stepIndex === 0 || submitting}>
-            ← Back
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1.5px solid #e2e8f0', paddingTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleBackNavigation}
+              disabled={submitting}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                fontWeight: 700,
+                fontSize: '0.92rem',
+                padding: '0.65rem 1.25rem',
+                borderRadius: '10px',
+                cursor: 'pointer',
+              }}
+            >
+              {stepIndex === 0 || step === 'location' ? '← Back to Cart' : '← Back'}
+            </button>
+
+            {draftRestored && (
+              <button
+                type="button"
+                onClick={handleResetDraft}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  padding: '0.35rem',
+                }}
+                title="Clear saved draft and start from step 1"
+              >
+                Reset Form
+              </button>
+            )}
+          </div>
+
           {NEXT_LABEL[step] && (
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={submitting}
+              style={{
+                fontWeight: 800,
+                fontSize: '0.95rem',
+                padding: '0.7rem 1.5rem',
+                borderRadius: '10px',
+              }}
+            >
               {NEXT_LABEL[step]}
             </button>
           )}
