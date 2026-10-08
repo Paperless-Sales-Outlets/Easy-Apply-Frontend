@@ -365,7 +365,13 @@ const downloadBlob = (content, filename, mime) => {
 
 const USER_REPORT_COLUMNS = [
   ['Name', r => r.name],
-  ['Role', r => r.role],
+  ['Role', r => {
+    const role = r.role || 'Staff';
+    if (role === 'Admin' || role === 'admin') return 'Administrator';
+    if (role === 'Manage' || role === 'manage' || role === 'Manager') return 'Manager';
+    if (role === 'Staff' || role === 'staff') return 'Staff';
+    return role.replace(/^\[|\]$/g, '').replace(/\[.*?\]/g, '').trim();
+  }],
   ['Email', r => r.email],
   ['Phone', r => r.phone],
   ['Tasks Handled', r => r.total],
@@ -377,7 +383,7 @@ const USER_REPORT_COLUMNS = [
   ['Completion Rate %', r => r.completionRate],
   ['Avg Handle Hours', r => (r.avgHandleHours == null ? '' : r.avgHandleHours)],
   ['Last Activity', r => (r.lastActionedAt ? formatDateTime(r.lastActionedAt) : 'No activity')],
-  ['Top Services', r => r.services.map(s => `${s.service} (${s.count})`).join('; ')],
+  ['Top Services', r => r.services.map(s => `${s.service} (${s.count})`).join(', ')],
 ];
 
 const APPLICATION_REPORT_COLUMNS = [
@@ -728,9 +734,9 @@ export default function ReportsAnalyticsPage() {
                                 </div>
                               </td>
                               <td>
-                                <span className={`admin-badge ${row.role === 'Admin' ? 'confirmed' : 'scheduled'}`}>
-                                  {row.role}
-                                </span>
+                                 <span className={`admin-badge ${row.role === 'Admin' || row.role === 'admin' ? 'confirmed' : 'scheduled'}`}>
+                                   {row.role === 'Admin' || row.role === 'admin' ? 'Administrator' : (row.role === 'Manage' || row.role === 'manage' || row.role === 'Manager' || row.role === 'manager' ? 'Manager' : row.role)}
+                                 </span>
                               </td>
                               <td className="report-num report-strong">{row.total}</td>
                               <td className="report-num report-count approved">{row.approved + row.confirmed}</td>
