@@ -77,11 +77,17 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
 
   // Retrieve user identity from verified context or OCR registration
   const knownProfile = (() => {
+    const sanitizeNic = (val) => {
+      if (!val || typeof val !== 'string') return '';
+      if (val.startsWith('NIC-')) return '';
+      return val;
+    };
+
     if (selectedAccount) {
       return {
         title: selectedAccount.title || 'Mr',
         nameFull: selectedAccount.fullName || selectedAccount.customerName || '',
-        nic: selectedAccount.nic || '',
+        nic: sanitizeNic(selectedAccount.nic || ''),
         dob: selectedAccount.dob || '',
         email: selectedAccount.email || '',
         mobileNumber: selectedAccount.mobileNumber || selectedAccount.phoneNumber || mobileNumber || '',
@@ -95,7 +101,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
       return {
         title: authUser.title || 'Mr',
         nameFull: authUser.name || '',
-        nic: authUser.NIC || authUser.nic || '',
+        nic: sanitizeNic(authUser.NIC || authUser.nic || ''),
         dob: authUser.dob || '',
         email: authUser.email || '',
         mobileNumber: authUser.phone || authUser.mobileNumber || mobileNumber || '',
@@ -105,7 +111,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
     return {
       title: 'Mr',
       nameFull: formData.nameFull || '',
-      nic: formData.nic || '',
+      nic: sanitizeNic(formData.nic || ''),
       dob: formData.dob || '',
       email: formData.email || '',
       mobileNumber: formData.mobileNumber || mobileNumber || '',
@@ -170,8 +176,8 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <WizardStepHeader 
-        stepNumber={4} 
-        totalSteps={9} 
+        stepNumber={2} 
+        totalSteps={7} 
         title="Service Location Map" 
         description="Pin the location where the SLT service will be installed or select from your saved addresses." 
       />

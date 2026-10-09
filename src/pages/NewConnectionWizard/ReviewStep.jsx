@@ -1,5 +1,6 @@
 import React from 'react';
 import WizardStepHeader from '../../components/wizard/WizardStepHeader';
+import { FiCheckCircle } from 'react-icons/fi';
 
 const Row = ({ label, value }) => (
   <div>
@@ -31,16 +32,16 @@ const Thumb = ({ src, label }) => src ? (
   </figure>
 ) : null;
 
-/** Read-only summary of everything collected so far, shown before payment. */
+/** Read-only summary of everything collected and paid, shown before final submission to tracking. */
 export default function ReviewStep({ formData, selectedProduct, goTo, onEditCart }) {
   const fee = selectedProduct?.installationFee ?? 2500;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <WizardStepHeader 
-        stepNumber={8} 
-        totalSteps={9} 
+        stepNumber={6} 
+        totalSteps={7} 
         title="Review & Submit Application" 
-        description="Verify all your details before proceeding to payment and submission." 
+        description="Verify all your details and confirmed payment before final submission." 
       />
 
       <Section title="Contact">
@@ -78,6 +79,17 @@ export default function ReviewStep({ formData, selectedProduct, goTo, onEditCart
         {formData.signature && (
           <img src={formData.signature} alt="Your signature" style={{ maxHeight: '80px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
         )}
+      </Section>
+
+      <Section title="Payment Details" onEdit={() => goTo('payment')}>
+        <div>
+          <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Status</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#16a34a', fontWeight: 800, fontSize: '0.92rem' }}>
+            <FiCheckCircle size={15} /> Paid & Confirmed
+          </span>
+        </div>
+        <Row label="Payment Reference" value={formData.paymentReference || 'PAY-ONLINE-VERIFIED'} />
+        <Row label="Installation Fee Paid" value={`Rs. ${Number(fee).toLocaleString()}`} />
       </Section>
     </div>
   );

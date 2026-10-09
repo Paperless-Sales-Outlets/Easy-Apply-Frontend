@@ -22,6 +22,7 @@ import {
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import InstallationReviewModal from '../components/InstallationReviewModal';
+import WizardStepper from '../components/WizardStepper';
 
 
 export default function CheckStatusPage() {
@@ -329,16 +330,22 @@ export default function CheckStatusPage() {
                   </div>
                 </div>
               ) : (
-                /* SUCCESSFUL RESULT CARD */
-                <div
-                  style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '16px',
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 12px 35px rgba(0, 0, 0, 0.06)',
-                    overflow: 'hidden',
-                  }}
-                >
+                <>
+                  {/* Tracking Step Banner */}
+                  <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0', marginBottom: '1.25rem', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)' }}>
+                    <WizardStepper currentStep={7} />
+                  </div>
+
+                  {/* SUCCESSFUL RESULT CARD */}
+                  <div
+                    style={{
+                      backgroundColor: '#ffffff',
+                      borderRadius: '16px',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 12px 35px rgba(0, 0, 0, 0.06)',
+                      overflow: 'hidden',
+                    }}
+                  >
                   {/* Result Header Bar */}
                   <div
                     style={{
@@ -741,7 +748,8 @@ export default function CheckStatusPage() {
                     </div>
                   </div>
                 </div>
-              )}
+              </>
+            )}
             </motion.div>
           )}
         </AnimatePresence>

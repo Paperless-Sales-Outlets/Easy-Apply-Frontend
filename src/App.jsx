@@ -39,6 +39,7 @@ import HelpSupportPage from './pages/HelpSupportPage';
 import MyProfilePage from './pages/MyProfilePage';
 import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -89,16 +90,28 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       {/* Admin pages share one key so switching between them keeps the portal mounted */}
       <Routes location={location} key={/^\/admin(?!\/login)/.test(location.pathname) ? '/admin' : location.pathname}>
-        {/* Main Dashboard */}
+        {/* Main Dashboard / Landing Entry */}
         <Route
           path="/"
           element={
-            <RequireAuth>
+            isAuthenticated() ? (
               <PageWrapper fullBleed>
                 <Dashboard />
               </PageWrapper>
-            </RequireAuth>
+            ) : (
+              <LandingPage />
+            )
           }
+        />
+
+        <Route
+          path="/welcome"
+          element={<LandingPage />}
+        />
+
+        <Route
+          path="/landing"
+          element={<LandingPage />}
         />
 
         {/* Product Catalog */}
@@ -389,11 +402,13 @@ const AnimatedRoutes = () => {
 const NavigationLayout = ({ children }) => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
-  // Sign-in and registration are shown on their own — no site header, footer or
-  // cart button competing with the form.
-  const isAuthScreen = ['/login', '/signup'].includes(location.pathname);
+  // Landing, sign-in and registration are shown on their own — no site header, footer or
+  // cart button competing with the hero or form.
+  const isAuthOrLanding =
+    ['/login', '/signup', '/welcome', '/landing'].includes(location.pathname) ||
+    (location.pathname === '/' && !isAuthenticated());
 
-  if (isAdmin || isAuthScreen) {
+  if (isAdmin || isAuthOrLanding) {
     return (
       <div
         style={{

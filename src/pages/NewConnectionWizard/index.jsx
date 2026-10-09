@@ -69,8 +69,8 @@ const initialState = {
 const NEXT_LABEL = {
   location: 'Verify Loop Coverage →',
   identity: 'Continue to Signature →',
-  signature: 'Continue to Review →',
-  review: 'Continue to Payment →',
+  signature: 'Continue to Payment →',
+  review: 'Submit Application →',
 };
 
 export default function NewConnectionWizard() {
@@ -104,10 +104,9 @@ export default function NewConnectionWizard() {
   const [formData, dispatch] = useReducer(formReducer, initialState);
   const [draftRestored, setDraftRestored] = useState(false);
 
-  // Flow: location → loop check → NIC & selfie → signature → review → PayHere.
-  // The loop check runs automatically, so it shares the "Location" stepper slot.
-  const STEPS = ['location', 'loop', 'identity', 'signature', 'review', 'payment'];
-  const STEPPER = ['Installation Location', 'NIC & Selfie', 'Digital Signature', 'Review', 'Payment'];
+  // Flow: Package Selection (Step 1) -> Service Location (Step 2) -> Identity & KYC (Step 3) -> Digital Signature (Step 4) -> Payment (Step 5) -> Review & Submit (Step 6) -> Tracking (Step 7)
+  const STEPS = ['location', 'loop', 'identity', 'signature', 'payment', 'review'];
+  const STEPPER = ['Service Location', 'Identity & KYC', 'Digital Signature', 'Payment', 'Review & Submit'];
   const step = STEPS[stepIndex];
   const stepperStep = stepIndex <= 1 ? 1 : stepIndex;
 
@@ -124,7 +123,11 @@ export default function NewConnectionWizard() {
       if (savedRaw) {
         const saved = JSON.parse(savedRaw);
         if (saved && saved.formData) {
-          dispatch({ type: 'SET_FIELDS', payload: saved.formData });
+          const restoredFormData = { ...saved.formData };
+          if (restoredFormData.nic && typeof restoredFormData.nic === 'string' && restoredFormData.nic.startsWith('NIC-')) {
+            restoredFormData.nic = '';
+          }
+          dispatch({ type: 'SET_FIELDS', payload: restoredFormData });
 
           // Restore stepIndex from URL query param if present, or from saved draft
           const searchParams = new URLSearchParams(location.search);
@@ -290,6 +293,16 @@ export default function NewConnectionWizard() {
     }
     if (step === 'identity' && !identityRef.current?.validate()) return;
     if (step === 'signature' && !declarationRef.current?.validate()) return;
+    if (step === 'payment') {
+      if (!formData.paymentReference && !formData.paymentCompleted) {
+        toast.error('Please complete payment before proceeding.');
+        return;
+      }
+    }
+    if (step === 'review') {
+      submitApplication();
+      return;
+    }
 
     nextStep();
   };
@@ -304,12 +317,32 @@ export default function NewConnectionWizard() {
     });
   };
 
-  // Real submission — fired after payment succeeds
+  // Payment confirmation callback -> Advances flow from Payment to Review & Submit
+  const handlePaymentSuccess = async (paymentOrderId, payerMobile) => {
+    const orderId = paymentOrderId || `PAY-${Date.now()}`;
+    dispatch({
+      type: 'SET_FIELDS',
+      payload: {
+        paymentReference: orderId,
+        paymentCompleted: true,
+        paymentStatus: 'PAID',
+        paidAmount: selectedProduct?.installationFee || 2500,
+        payerMobile: payerMobile || formData.mobileNumber,
+      },
+    });
+    toast.success('Payment verified! Please review your application details below.');
+    nextStep();
+  };
+
+  // Real submission — fired when user reviews all details and clicks Submit Application
   const submitApplication = async (paymentRef, phoneOverride) => {
     const authUser = getAuthUser();
-    const phone = phoneOverride || verifiedMobile || formData.mobileNumber || authUser?.phone || '';
-    const nic = formData.nic || authUser?.NIC || authUser?.nic || '';
+    const sanitizeNic = (val) => (!val || typeof val !== 'string' || val.startsWith('NIC-') ? '' : val);
+    const rawNic = formData.nic || authUser?.NIC || authUser?.nic || '';
+    const nic = sanitizeNic(rawNic);
     const nameFull = formData.nameFull || authUser?.name || 'Customer';
+    const effectivePaymentRef = paymentRef || formData.paymentReference || `PAY-${Date.now()}`;
+    const phone = phoneOverride || verifiedMobile || formData.mobileNumber || authUser?.phone || '';
 
     setSubmitting(true);
     setSubmitError('');
@@ -323,7 +356,7 @@ export default function NewConnectionWizard() {
           mobileNumber: phone,
           declarationAccepted: Boolean(formData.declarationAccepted),
           signature: formData.signature || 'DIGITALLY_VERIFIED_OTP',
-          paymentReference: paymentRef,
+          paymentReference: effectivePaymentRef,
           product: selectedProduct,
         },
         phone,
@@ -345,20 +378,21 @@ export default function NewConnectionWizard() {
     }
   };
 
-  const MAP_TO_9_STEP = {
-    location: 4,
-    loop: 4,
-    identity: 5,
-    signature: 6,
-    review: 8,
-    payment: 7,
+  const MAP_TO_7_STEP = {
+    location: 2,
+    loop: 2,
+    identity: 3,
+    signature: 4,
+    payment: 5,
+    review: 6,
+    tracking: 7,
   };
-  const active9Step = MAP_TO_9_STEP[step] || 4;
+  const active7Step = MAP_TO_7_STEP[step] || 2;
 
   return (
     <div className="card" style={{ padding: '2.5rem 2.75rem', width: '100%', margin: '0 auto', borderRadius: '24px', boxShadow: '0 12px 36px rgba(11, 45, 91, 0.08)' }}>
-      {/* Progress Stepper: Reference 9-Step Bar */}
-      <WizardStepper currentStep={active9Step} />
+      {/* Progress Stepper: 7-Step Tracker Bar */}
+      <WizardStepper currentStep={active7Step} />
 
       {selectedProduct && (
         <div
@@ -423,22 +457,22 @@ export default function NewConnectionWizard() {
             />
           )}
 
-          {step === 'review' && (
-            <ReviewStep
-              formData={formData}
-              selectedProduct={selectedProduct}
-              goTo={goTo}
-              onEditCart={() => navigate('/cart')}
-            />
-          )}
-
           {step === 'payment' && (
             <PaymentStep
               isActive
               verifiedPhone={verifiedMobile}
               amount={selectedProduct?.installationFee || 2500}
               amountLabel="Installation Fee"
-              onSuccess={submitApplication}
+              onSuccess={handlePaymentSuccess}
+            />
+          )}
+
+          {step === 'review' && (
+            <ReviewStep
+              formData={formData}
+              selectedProduct={selectedProduct}
+              goTo={goTo}
+              onEditCart={() => navigate('/cart')}
             />
           )}
         </div>
@@ -491,21 +525,29 @@ export default function NewConnectionWizard() {
             )}
           </div>
 
-          {NEXT_LABEL[step] && (
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={submitting}
-              style={{
-                fontWeight: 800,
-                fontSize: '0.95rem',
-                padding: '0.7rem 1.5rem',
-                borderRadius: '10px',
-              }}
-            >
-              {NEXT_LABEL[step]}
-            </button>
-          )}
+          {(() => {
+            const label = step === 'review'
+              ? (submitting ? 'Submitting Application...' : 'Submit Application →')
+              : (step === 'payment' && (formData.paymentReference || formData.paymentCompleted))
+              ? 'Continue to Review →'
+              : NEXT_LABEL[step];
+            if (!label) return null;
+            return (
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={submitting}
+                style={{
+                  fontWeight: 800,
+                  fontSize: '0.95rem',
+                  padding: '0.7rem 1.5rem',
+                  borderRadius: '10px',
+                }}
+              >
+                {label}
+              </button>
+            );
+          })()}
         </div>
       </form>
     </div>

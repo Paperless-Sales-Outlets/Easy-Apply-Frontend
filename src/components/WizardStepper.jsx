@@ -1,9 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export const FULL_ONBOARDING_9_STEPS = [
-  'Landing Page',
-  'Contact Verification',
+export const FULL_ONBOARDING_7_STEPS = [
   'Package Selection',
   'Service Location',
   'Identity & KYC',
@@ -13,8 +11,10 @@ export const FULL_ONBOARDING_9_STEPS = [
   'Tracking'
 ];
 
-export default function WizardStepper({ currentStep = 1, steps = FULL_ONBOARDING_9_STEPS, totalStepsOverride = null }) {
-  const stepList = steps && steps.length > 0 ? steps : FULL_ONBOARDING_9_STEPS;
+export const FULL_ONBOARDING_9_STEPS = FULL_ONBOARDING_7_STEPS;
+
+export default function WizardStepper({ currentStep = 1, steps = FULL_ONBOARDING_7_STEPS, totalStepsOverride = null }) {
+  const stepList = steps && steps.length > 0 ? steps : FULL_ONBOARDING_7_STEPS;
   const totalSteps = totalStepsOverride || stepList.length;
   const activeStep = Math.max(1, Math.min(currentStep, totalSteps));
   const progressPercent = totalSteps > 1 ? Math.max(0, Math.min(100, ((activeStep - 1) / (totalSteps - 1)) * 100)) : 0;

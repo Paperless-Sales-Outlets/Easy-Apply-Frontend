@@ -51,8 +51,8 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
   return (
     <div className="new-connection-declaration-step" style={{ maxWidth: '800px', margin: '0 auto' }}>
       <WizardStepHeader 
-        stepNumber={6} 
-        totalSteps={9} 
+        stepNumber={4} 
+        totalSteps={7} 
         title="Digital Signature & Declaration" 
         description="Review your application details, accept terms & conditions, and sign digitally." 
       />

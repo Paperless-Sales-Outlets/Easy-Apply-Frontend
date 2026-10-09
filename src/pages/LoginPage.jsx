@@ -259,10 +259,13 @@ export default function LoginPage() {
       const accounts = await fetchSltAccounts(digits);
       const known = accounts[0] || {};
 
+      const rawKnownNic = known.nic || '';
+      const safeNic = rawKnownNic.startsWith('NIC-') ? '' : rawKnownNic;
+
       // 3. Save session with verified phone and email
       const customerProfile = {
         name: known.fullName || known.customerName || known.name || '',
-        NIC: known.nic || '',
+        NIC: safeNic,
         phone: digits,
         email: cleanEmail.toLowerCase(),
       };
