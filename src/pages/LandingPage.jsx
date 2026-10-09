@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   FiZap,
   FiArrowRight,
@@ -16,9 +17,22 @@ import sltLogo from '../assets/slt-logo.png';
 import './LandingPage.css';
 import { isAuthenticated } from '../utils/authSession';
 
+const HERO_PHRASES = [
+  { id: 0, text: 'Your connection,' },
+  { id: 1, text: 'just a few taps away.' },
+];
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const isUserAuthenticated = isAuthenticated();
+  const [phraseIndex, setPhraseIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPhraseIndex((prev) => (prev === 0 ? 1 : 0));
+    }, 3200);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleStartApplication = () => {
     // If already signed in, go straight to product catalog / new connection
@@ -38,6 +52,171 @@ export default function LandingPage() {
     <div className="landing-root">
       {/* ── LEFT HERO BRAND PANEL ───────────────────────────────── */}
       <section className="landing-hero">
+        {/* Animated Fiber Optic Light Streams & Network Mesh */}
+        <div className="landing-fiber-bg" aria-hidden="true">
+          <svg
+            className="landing-fiber-svg"
+            viewBox="0 0 1000 1000"
+            preserveAspectRatio="xMidYMid slice"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              {/* Cyan Fiber Gradient */}
+              <linearGradient id="fiberGradCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#00aef0" stopOpacity="0.2" />
+                <stop offset="50%" stopColor="#38bdf8" stopOpacity="1" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
+              </linearGradient>
+
+              {/* Emerald Fiber Gradient */}
+              <linearGradient id="fiberGradEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#059669" stopOpacity="0.2" />
+                <stop offset="50%" stopColor="#34d399" stopOpacity="1" />
+                <stop offset="100%" stopColor="#a7f3d0" stopOpacity="1" />
+              </linearGradient>
+
+              {/* Blue / Violet Gradient */}
+              <linearGradient id="fiberGradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0284c7" stopOpacity="0.2" />
+                <stop offset="50%" stopColor="#60a5fa" stopOpacity="1" />
+                <stop offset="100%" stopColor="#bae6fd" stopOpacity="1" />
+              </linearGradient>
+
+              {/* Node Radial Glow */}
+              <radialGradient id="nodeGlowCyan" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#38bdf8" stopOpacity="1" />
+                <stop offset="60%" stopColor="#0284c7" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#0284c7" stopOpacity="0" />
+              </radialGradient>
+
+              <radialGradient id="nodeGlowEmerald" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
+                <stop offset="60%" stopColor="#059669" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+
+            {/* ── Network Constellation Connecting Mesh Lines ── */}
+            <g className="network-mesh-lines">
+              <line x1="260" y1="200" x2="470" y2="290" className="mesh-line" />
+              <line x1="470" y1="290" x2="620" y2="460" className="mesh-line" />
+              <line x1="620" y1="460" x2="410" y2="610" className="mesh-line" />
+              <line x1="410" y1="610" x2="760" y2="770" className="mesh-line" />
+              <line x1="190" y1="450" x2="410" y2="610" className="mesh-line" />
+              <line x1="190" y1="450" x2="260" y2="200" className="mesh-line" />
+            </g>
+
+            {/* ── Base Fiber Optic Strands (Subtle Glow Guides) ── */}
+            <g className="fiber-base-strands">
+              {/* Strand 1 */}
+              <path
+                d="M -50,180 C 180,90 320,310 560,250 C 780,190 860,420 1050,380"
+                className="fiber-strand fiber-strand-cyan"
+              />
+              {/* Strand 2 */}
+              <path
+                d="M -50,420 C 160,480 340,160 590,220 C 810,270 860,650 1050,710"
+                className="fiber-strand fiber-strand-emerald"
+              />
+              {/* Strand 3 */}
+              <path
+                d="M 140,-50 C 190,240 450,340 410,610 C 370,810 650,890 820,1050"
+                className="fiber-strand fiber-strand-blue"
+              />
+              {/* Strand 4 */}
+              <path
+                d="M -50,760 C 220,710 390,920 660,810 C 850,730 920,880 1050,850"
+                className="fiber-strand fiber-strand-emerald"
+              />
+              {/* Strand 5 */}
+              <path
+                d="M -50,290 C 280,240 460,540 760,470 C 920,430 970,590 1050,570"
+                className="fiber-strand fiber-strand-cyan"
+              />
+            </g>
+
+            {/* ── Active Optical Laser Light Pulses (Flowing along Fibers) ── */}
+            <g className="fiber-active-pulses">
+              {/* Pulse 1: High speed Cyan Beam */}
+              <path
+                d="M -50,180 C 180,90 320,310 560,250 C 780,190 860,420 1050,380"
+                className="fiber-pulse fiber-pulse-1"
+                stroke="url(#fiberGradCyan)"
+              />
+              {/* Pulse 2: Radiant Emerald Data Beam */}
+              <path
+                d="M -50,420 C 160,480 340,160 590,220 C 810,270 860,650 1050,710"
+                className="fiber-pulse fiber-pulse-2"
+                stroke="url(#fiberGradEmerald)"
+              />
+              {/* Pulse 3: Vertical-diagonal Blue Wave */}
+              <path
+                d="M 140,-50 C 190,240 450,340 410,610 C 370,810 650,890 820,1050"
+                className="fiber-pulse fiber-pulse-3"
+                stroke="url(#fiberGradBlue)"
+              />
+              {/* Pulse 4: Lower Loop Emerald Surge */}
+              <path
+                d="M -50,760 C 220,710 390,920 660,810 C 850,730 920,880 1050,850"
+                className="fiber-pulse fiber-pulse-4"
+                stroke="url(#fiberGradEmerald)"
+              />
+              {/* Pulse 5: Mid-line Ultra-fast Photon */}
+              <path
+                d="M -50,290 C 280,240 460,540 760,470 C 920,430 970,590 1050,570"
+                className="fiber-pulse fiber-pulse-5"
+                stroke="url(#fiberGradCyan)"
+              />
+            </g>
+
+            {/* ── Pulsing Network Hub Nodes (ODN / Distribution Hubs) ── */}
+            <g className="network-nodes">
+              {/* Node 1 */}
+              <g className="network-node" transform="translate(260, 200)">
+                <circle className="node-ring node-ring-cyan" r="16" />
+                <circle className="node-halo" r="8" fill="url(#nodeGlowCyan)" />
+                <circle className="node-core node-core-cyan" r="3.5" />
+              </g>
+
+              {/* Node 2 */}
+              <g className="network-node" transform="translate(470, 290)">
+                <circle className="node-ring node-ring-emerald" r="18" style={{ animationDelay: '1.2s' }} />
+                <circle className="node-halo" r="9" fill="url(#nodeGlowEmerald)" />
+                <circle className="node-core node-core-emerald" r="4" />
+              </g>
+
+              {/* Node 3 */}
+              <g className="network-node" transform="translate(620, 460)">
+                <circle className="node-ring node-ring-cyan" r="15" style={{ animationDelay: '0.6s' }} />
+                <circle className="node-halo" r="8" fill="url(#nodeGlowCyan)" />
+                <circle className="node-core node-core-cyan" r="3.5" />
+              </g>
+
+              {/* Node 4 */}
+              <g className="network-node" transform="translate(410, 610)">
+                <circle className="node-ring node-ring-emerald" r="20" style={{ animationDelay: '2.1s' }} />
+                <circle className="node-halo" r="10" fill="url(#nodeGlowEmerald)" />
+                <circle className="node-core node-core-emerald" r="4" />
+              </g>
+
+              {/* Node 5 */}
+              <g className="network-node" transform="translate(760, 770)">
+                <circle className="node-ring node-ring-cyan" r="16" style={{ animationDelay: '1.8s' }} />
+                <circle className="node-halo" r="8" fill="url(#nodeGlowCyan)" />
+                <circle className="node-core node-core-cyan" r="3.5" />
+              </g>
+
+              {/* Node 6 */}
+              <g className="network-node" transform="translate(190, 450)">
+                <circle className="node-ring node-ring-emerald" r="17" style={{ animationDelay: '2.7s' }} />
+                <circle className="node-halo" r="8" fill="url(#nodeGlowEmerald)" />
+                <circle className="node-core node-core-emerald" r="3.5" />
+              </g>
+            </g>
+          </svg>
+        </div>
+
         <div className="landing-hero-content">
           {/* Brand Logo Badge */}
           <div className="landing-brand-badge">
@@ -50,9 +229,20 @@ export default function LandingPage() {
             <span>New connections · 100% online</span>
           </div>
 
-          {/* Main Hero Headline */}
-          <h1 className="landing-hero-title">
-            Your connection, <span className="landing-gradient-text">just a few taps away.</span>
+          {/* Main Hero Headline - Alternating Two-Phase Cycle (Guaranteed No-Overlap) */}
+          <h1 className="landing-hero-title landing-cycle-title">
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={phraseIndex}
+                initial={{ opacity: 0, y: 16, filter: 'blur(5px)' }}
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, y: -16, filter: 'blur(5px)' }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className={`landing-phrase ${phraseIndex === 1 ? 'landing-gradient-text' : 'phrase-lead'}`}
+              >
+                {HERO_PHRASES[phraseIndex].text}
+              </motion.span>
+            </AnimatePresence>
           </h1>
 
           {/* Subtitle */}
@@ -126,7 +316,7 @@ export default function LandingPage() {
               <span className="start-btn-title">
                 {isUserAuthenticated ? 'Continue application' : 'Start new application'}
               </span>
-              <span className="start-btn-sub">About 10 minutes &middot; saves automatically as you go</span>
+
             </div>
             <div className="start-btn-arrow" aria-hidden="true">
               <FiArrowRight size={18} />

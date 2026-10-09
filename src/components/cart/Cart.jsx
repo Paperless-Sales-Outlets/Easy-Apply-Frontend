@@ -380,11 +380,11 @@ const Cart = ({ isOpen, onClose }) => {
               >
                 ×
               </button>
-              
+
               <h3 style={{ marginBottom: '1rem', color: '#1e293b' }}>
                 Complete Your Payment
               </h3>
-              
+
               <div style={{ marginBottom: '1.5rem' }}>
                 <p style={{ color: '#64748b', marginBottom: '0.5rem' }}>
                   Total Amount:
