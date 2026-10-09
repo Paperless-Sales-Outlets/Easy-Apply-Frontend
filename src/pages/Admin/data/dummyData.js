@@ -21,8 +21,14 @@ export const MODULE_ACCESS = [
   { key: 'appointments', label: 'Appointments', roles: ['Admin', 'Staff', 'Manager'] },
   { key: 'technician',   label: 'My Jobs',      roles: ['Admin', 'Staff', 'SalesOfficer'] },
   { key: 'forms',        label: 'Forms',        roles: ['Admin', 'Staff', 'Manager'] },
-  { key: 'analytics',    label: 'Analytics',    roles: ['Admin', 'Staff', 'Manager'] },
+  { key: 'analytics',    label: 'Reports & Analytics', roles: ['Admin', 'Staff', 'Manager'] },
 ];
+
+// ── User Management ────────────────────────────────────────────────────────
+// Roles themselves are no longer a fixed list here — an Admin creates and
+// maintains them from User Management (see services/adminService.js
+// getStaffRoles/createStaffRole/updateStaffRole/deleteStaffRole), each one a
+// name plus a default set of MODULE_ACCESS keys.
 
 // ── Applications ─────────────────────────────────────────────────────────────
 export const DUMMY_APPLICATIONS = [

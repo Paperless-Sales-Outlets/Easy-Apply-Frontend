@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FiMessageSquare } from 'react-icons/fi';
+import { FiActivity, FiCheckCircle, FiFileText, FiMessageSquare } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { getApplications, updateApplicationStatus } from '../services/adminService';
 import { FORM_TYPES, formatDateOnly, normalizeApplication, statusBadgeClass, statusLabel } from '../utils/applicationUtils';
@@ -119,16 +119,16 @@ function FormDetailBarChart({ daily }) {
                 const subH = (d.submitted / maxBar) * 100;
                 const comH = (d.completed / maxBar) * 100;
                 return (
-                  <div className="form-detail-col" key={d.date}>
+                  <div className="form-detail-col" key={d.date} style={{ '--bar-delay': `${index * 35}ms` }}>
                     <div className="form-detail-bars">
                       <div
-                        className="form-weekly-bar completed clickable"
+                        className={`form-weekly-bar completed clickable${d.completed === 0 ? ' is-empty' : ''}`}
                         style={{ height: `${comH}%` }}
                         title={`Completed ${d.date}: ${d.completed}`}
                         onClick={event => handleBarClick(index, 'completed', event)}
                       />
                       <div
-                        className="form-weekly-bar submitted clickable"
+                        className={`form-weekly-bar submitted clickable${d.submitted === 0 ? ' is-empty' : ''}`}
                         style={{ height: `${subH}%` }}
                         title={`Submitted ${d.date}: ${d.submitted}`}
                         onClick={event => handleBarClick(index, 'submitted', event)}
@@ -287,12 +287,16 @@ function RecentHistory({ formId }) {
   };
 
   return (
-    <div className="form-weekly-card">
-      <h2 style={{ fontSize: '1rem', fontFamily: 'var(--font-head)', color: 'var(--navy)', marginBottom: '0.25rem' }}>
-        Recent History
-      </h2>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', alignItems: 'center' }}>
-        <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0 }}>
+    <div className="um-panel form-weekly-card form-history-card">
+      <div className="form-section-heading">
+        <div>
+          <span className="form-section-kicker">APPLICATION QUEUE</span>
+          <h2>Recent History</h2>
+        </div>
+        <span className="form-history-count">{pagination?.totalCount ?? history.length} total</span>
+      </div>
+      <div className="form-history-toolbar">
+        <p>
           Latest submissions for this form type — {pagination?.totalCount ?? history.length} total
         </p>
         <input
@@ -300,15 +304,7 @@ function RecentHistory({ formId }) {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search reference, NIC, phone or name"
-          style={{
-            flex: '1 1 240px',
-            minWidth: 240,
-            padding: '0.75rem 1rem',
-            border: '1px solid var(--line)',
-            borderRadius: '12px',
-            background: 'var(--surface)',
-            color: 'var(--text)',
-          }}
+          aria-label="Search application history"
         />
       </div>
 
@@ -322,8 +318,8 @@ function RecentHistory({ formId }) {
           <p>No submissions found for this form type yet.</p>
         </div>
       ) : (
-        <div className="admin-table-wrap">
-          <table className="admin-table">
+        <div className="admin-table-wrap um-table-wrap">
+          <table className="admin-table um-table form-history-table">
             <thead>
               <tr>
                 <th>Reference</th>
@@ -407,13 +403,7 @@ function RecentHistory({ formId }) {
                           <button
                             type="button"
                             onClick={() => handleActionClick(app.id)}
-                            style={{
-                              border: 'none',
-                              background: 'transparent',
-                              cursor: 'pointer',
-                              color: 'var(--navy)',
-                              padding: '0.25rem',
-                            }}
+                            className="form-comment-button"
                             aria-label={comment ? 'Edit comment' : 'Add comment'}
                             title="Comment"
                           >
@@ -424,6 +414,7 @@ function RecentHistory({ formId }) {
                             busy={busyId === app.id}
                             onStatusChange={handleStatusChange}
                             onView={setDetailApp}
+                            variant="form"
                           />
                         </div>
                       </td>
@@ -547,6 +538,7 @@ export default function FormsPage({ initialFormId }) {
   const daily = useMemo(() => buildDailySeries(chartApps), [chartApps]);
   const totalSubmitted = daily.reduce((s, d) => s + d.submitted, 0);
   const totalCompleted = daily.reduce((s, d) => s + d.completed, 0);
+  const completionRate = totalSubmitted ? Math.round((totalCompleted / totalSubmitted) * 100) : 0;
 
   if (!form) {
     return (
@@ -561,18 +553,51 @@ export default function FormsPage({ initialFormId }) {
   }
 
   return (
-    <>
-      <div className="admin-page-header">
-        <h1 className="admin-page-title" style={{ marginBottom: 0 }}>{form.label}</h1>
-        <p className="admin-page-subtitle">
-          {totalCompleted} completed out of {totalSubmitted} submissions in the last 14 days
-        </p>
+    <div className="um-page forms-um-page">
+      <div className="um-hero form-um-hero">
+        <div className="um-hero-deco" aria-hidden="true">
+          <span className="um-hero-orb" />
+          <span className="um-hero-slash" />
+          <span className="um-hero-grid" />
+        </div>
+        <div className="um-hero-top">
+          <div className="um-hero-text">
+            <span className="um-hero-eyebrow"><FiFileText size={13} /> Form Operations</span>
+            <h1>{form.label}</h1>
+            <p>Track submission flow, completion progress and applicant history in one place.</p>
+          </div>
+          <span className="form-um-hero-icon" aria-hidden="true"><FiActivity size={26} /></span>
+        </div>
+        <div className="um-hero-tiles form-um-tiles">
+          <div className="um-hero-tile total">
+            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiFileText size={16} /></span>Submissions</div>
+            <div className="um-hero-tile-value">{totalSubmitted}</div>
+            <div className="um-hero-tile-foot">Last 14 days</div>
+          </div>
+          <div className="um-hero-tile active">
+            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiCheckCircle size={16} /></span>Completed</div>
+            <div className="um-hero-tile-value">{totalCompleted}</div>
+            <div className="um-hero-tile-foot">Approved or confirmed</div>
+          </div>
+          <div className="um-hero-tile roles">
+            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiActivity size={16} /></span>Completion rate</div>
+            <div className="um-hero-tile-value">{completionRate}%</div>
+            <div className="um-hero-tile-foot">Across this form type</div>
+          </div>
+        </div>
       </div>
 
-      <div className="form-weekly-card">
-        <div className="form-weekly-legend">
-          <span><span className="fw-dot submitted" /> Submitted</span>
-          <span><span className="fw-dot completed" /> Completed</span>
+      <div className="um-panel form-weekly-card form-chart-panel">
+        <div className="form-chart-heading">
+          <div>
+            <span className="form-section-kicker">14-DAY ACTIVITY</span>
+            <h2>Submission performance</h2>
+            <p>Compare incoming submissions with completed applications.</p>
+          </div>
+          <div className="form-weekly-legend">
+            <span><span className="fw-dot submitted" /> Submitted</span>
+            <span><span className="fw-dot completed" /> Completed</span>
+          </div>
         </div>
 
         {chartLoading ? (
@@ -583,6 +608,6 @@ export default function FormsPage({ initialFormId }) {
       </div>
 
       <RecentHistory formId={form.id} />
-    </>
+    </div>
   );
 }

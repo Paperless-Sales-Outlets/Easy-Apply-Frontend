@@ -8,13 +8,15 @@ import FormsPage from './pages/FormsPage';
 import KycReviewPage from './pages/KycReviewPage';
 import AppointmentsCalendarPage from './pages/AppointmentsCalendarPage';
 import FieldTechnicianPage from './pages/FieldTechnicianPage';
-import AdoptionMonitoringPage from './pages/AdoptionMonitoringPage';
+import ReportsAnalyticsPage from './pages/ReportsAnalyticsPage';
 import UserPrivilegesPage from './pages/UserPrivilegesPage';
+import UserManagementPage from './pages/UserManagementPage';
+import AuditLogsPage from './pages/AuditLogsPage';
 import './admin.css';
 
 function getPageFromPath(pathname) {
   const segment = pathname.replace(/\/$/, '').split('/').pop();
-  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges'];
+  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'audit-logs'];
   if (known.includes(segment)) {
     return segment === 'applications' ? 'forms' : segment;
   }
@@ -66,9 +68,13 @@ function AdminDashboardContent() {
       case 'technician':
         return <FieldTechnicianPage />;
       case 'analytics':
-        return <AdoptionMonitoringPage />;
+        return <ReportsAnalyticsPage />;
       case 'privileges':
         return <UserPrivilegesPage />;
+      case 'users':
+        return <UserManagementPage />;
+      case 'audit-logs':
+        return <AuditLogsPage />;
       default:
         return <AdminDashboardPage />;
     }

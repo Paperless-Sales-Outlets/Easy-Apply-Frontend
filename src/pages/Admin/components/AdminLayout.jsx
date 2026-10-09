@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { MODULE_ACCESS, DUMMY_FORM_WEEKLY } from '../data/dummyData';
-import sltLogo from '../../../assets/sltlogoOnly.png';
+import sltLogo from '../../../assets/slt-logo.png';
 
 const NAV_ICONS = {
   dashboard: (
@@ -57,11 +57,30 @@ const NAV_ICONS = {
       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
   ),
+  users: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M19 8v6M22 11h-6" />
+    </svg>
+  ),
+  'audit-logs': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4h16v16H4z" /><path d="M8 8h8M8 12h8M8 16h5" />
+    </svg>
+  ),
 };
 
+// Dashboard leads, User Management comes right after it, then every other
+// module in its usual order, with User Privileges last.
+const [DASHBOARD_MODULE, ...OTHER_MODULES] = MODULE_ACCESS;
+
 const NAV_ITEMS = [
-  ...MODULE_ACCESS.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
+  { ...DASHBOARD_MODULE, icon: NAV_ICONS[DASHBOARD_MODULE.key] },
+  { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
+  ...OTHER_MODULES.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
   { key: 'privileges', label: 'User Privileges', icon: NAV_ICONS.privileges, roles: ['Admin'] },
+  { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
 ];
 
 const SHORT_FORM_LABELS = {
@@ -105,12 +124,9 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
     ? admin.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : 'A';
 
-  const roleLabel = {
-    Admin: 'Administrator',
-    Staff: 'Staff',
-    Manager: 'Manager',
-    SalesOfficer: 'Sales Officer',
-  }[admin?.role] || 'Staff';
+  // 'Admin' and 'Staff' are the only fixed labels — everything else is a
+  // custom role name an Admin defined in User Management, shown as-is.
+  const roleLabel = { Admin: 'Administrator', Staff: 'Staff' }[admin?.role] || admin?.role || 'Staff';
 
   return (
     <div className="admin-shell">
@@ -145,10 +161,10 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Sidebar ── */}
       <aside className={`admin-sidebar${mobileNavOpen ? ' open' : ''}`} aria-label="Admin Navigation">
         <div className="admin-sidebar-logo">
-          <img src={sltLogo} alt="SLTMobitel" style={{ height: 32, width: 'auto' }} />
-          <span>
-            SLTMobitel EasyApply Admin Portal
-           
+          <img className="admin-sidebar-logo-img" src={sltLogo} alt="SLTMobitel" />
+          <span className="admin-sidebar-brand-text">
+            Easy Apply
+            <small>Admin Portal</small>
           </span>
         </div>
 
@@ -204,7 +220,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Main Content ── */}
       <div className="admin-main">
         <div className="admin-topbar" />
-        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges'].includes(activePage) ? ' admin-page-wide' : ''}`}>
+        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users', 'audit-logs'].includes(activePage) ? ' admin-page-wide' : ''}`}>
           {children}
         </div>
       </div>
