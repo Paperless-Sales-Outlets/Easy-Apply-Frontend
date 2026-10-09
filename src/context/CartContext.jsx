@@ -34,6 +34,9 @@ export const CartProvider = ({ children }) => {
     try {
       const response = await getCart();
       setCart(response.data);
+      try {
+        window.dispatchEvent(new Event('easyapply:cart-updated'));
+      } catch (_) {}
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch cart');
     } finally {
