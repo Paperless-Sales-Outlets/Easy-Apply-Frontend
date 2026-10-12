@@ -215,6 +215,7 @@ const GeneralInfoStep = forwardRef(({ isActive, vacationData, onVerifySuccess, v
             <input type="hidden" name="fullName" value={vacationData.fullName || vacationData.customerName || ''} />
             <input type="hidden" name="outstandingBalance" value={vacationData.outstandingBalance || 0} />
             <input type="hidden" name="nic" value={vacationData.nic || ''} />
+            <input type="hidden" name="email" value={vacationData.email || ''} />
           </motion.div>
         )}
       </AnimatePresence>

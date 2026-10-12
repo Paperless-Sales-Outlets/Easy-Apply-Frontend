@@ -6,6 +6,7 @@ import AddressInputWithMap from '../../components/form/AddressInputWithMap';
 import { useVerifiedContext } from '../../components/verification';
 import { getAuthUser } from '../../utils/authSession';
 import { motion } from 'framer-motion';
+import WizardStepHeader from '../../components/wizard/WizardStepHeader';
 
 const SRI_LANKA_CITY_POSTAL_DATA = [
   { label: 'Colombo 01 (Fort) - 00100', city: 'Colombo 01', district: 'Colombo', postalCode: '00100' },
@@ -76,11 +77,17 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
 
   // Retrieve user identity from verified context or OCR registration
   const knownProfile = (() => {
+    const sanitizeNic = (val) => {
+      if (!val || typeof val !== 'string') return '';
+      if (val.startsWith('NIC-')) return '';
+      return val;
+    };
+
     if (selectedAccount) {
       return {
         title: selectedAccount.title || 'Mr',
         nameFull: selectedAccount.fullName || selectedAccount.customerName || '',
-        nic: selectedAccount.nic || '',
+        nic: sanitizeNic(selectedAccount.nic || ''),
         dob: selectedAccount.dob || '',
         email: selectedAccount.email || '',
         mobileNumber: selectedAccount.mobileNumber || selectedAccount.phoneNumber || mobileNumber || '',
@@ -94,7 +101,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
       return {
         title: authUser.title || 'Mr',
         nameFull: authUser.name || '',
-        nic: authUser.NIC || authUser.nic || '',
+        nic: sanitizeNic(authUser.NIC || authUser.nic || ''),
         dob: authUser.dob || '',
         email: authUser.email || '',
         mobileNumber: authUser.phone || authUser.mobileNumber || mobileNumber || '',
@@ -104,7 +111,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
     return {
       title: 'Mr',
       nameFull: formData.nameFull || '',
-      nic: formData.nic || '',
+      nic: sanitizeNic(formData.nic || ''),
       dob: formData.dob || '',
       email: formData.email || '',
       mobileNumber: formData.mobileNumber || mobileNumber || '',
@@ -113,19 +120,24 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
   })();
 
   // Location choice: 'current' (registered address from OCR/profile) vs 'new'
-  const [locationType, setLocationType] = useState('current');
+  const [locationType, setLocationType] = useState(formData.locationType || (knownProfile.registeredAddress ? 'current' : 'new'));
   const [selectedCityObj, setSelectedCityObj] = useState(null);
 
   // Sync profile fields to state
   useEffect(() => {
     if (!setFields) return;
-    setFields({
+    // Only fill what is known — identity details are captured later from the NIC
+    // and must survive the customer coming back to this step.
+    const known = {
       title: knownProfile.title,
       nameFull: knownProfile.nameFull,
       nic: knownProfile.nic,
       dob: knownProfile.dob,
-      email: knownProfile.email || formData.email || '',
-      mobileNumber: knownProfile.mobileNumber || formData.mobileNumber || '',
+      email: knownProfile.email || formData.email,
+      mobileNumber: knownProfile.mobileNumber || formData.mobileNumber,
+    };
+    setFields({
+      ...Object.fromEntries(Object.entries(known).filter(([, v]) => v)),
       isExistingCustomer: selectedAccount ? 'yes' : 'no',
     });
   }, [selectedAccount, authUser]);
@@ -163,7 +175,14 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      {/* ── Top Verified Profile Summary Card ── */}
+      <WizardStepHeader 
+        stepNumber={2} 
+        totalSteps={7} 
+        title="Service Location Map" 
+        description="Pin the location where the SLT service will be installed or select from your saved addresses." 
+      />
+
+      {/* ── Top Verified Profile Summary Card (Reference Image 2) ── */}
       <div
         style={{
           backgroundColor: '#f8fafc',
@@ -176,7 +195,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
           <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiUser color="#0056b3" /> Verified Customer Profile
+            <FiUser color="#0f57a8" /> Contact Details & Verification
           </h4>
           <span
             style={{
@@ -185,38 +204,26 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
               gap: '0.35rem',
               backgroundColor: '#dcfce7',
               color: '#15803d',
-              padding: '0.2rem 0.6rem',
+              padding: '0.2rem 0.65rem',
               borderRadius: '9999px',
               fontSize: '0.75rem',
               fontWeight: 700,
             }}
           >
-            <FiCheck size={12} /> Auto-Fetched from OCR
+            <FiCheck size={12} /> Verified by OTP
           </span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '0.85rem 1.25rem' }}>
-          <ReadOnlyDetail label="Full Name" value={knownProfile.nameFull} />
-          <ReadOnlyDetail label="NIC / ID Number" value={knownProfile.nic} />
-          <ReadOnlyDetail label="Verified Mobile" value={knownProfile.mobileNumber} />
-          <ReadOnlyDetail label="Date of Birth" value={knownProfile.dob} />
+          <ReadOnlyDetail label="Mobile Number" value={knownProfile.mobileNumber && `+94 ${knownProfile.mobileNumber}`} />
+          <ReadOnlyDetail label="Email Address" value={knownProfile.email || formData.email || 'name@example.com'} />
         </div>
-      </div>
-
-      {/* ── Step Heading ── */}
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h3 style={{ color: '#0f172a', margin: '0 0 0.4rem 0', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-          Select Installation Location
-        </h3>
-        <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>
-          Choose whether you want the new connection installed at your registered address or a new location.
-        </p>
       </div>
 
       {/* ── Location Option Selection Tiles ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.75rem' }}>
-        {/* Tile 1: Current / Registered Address */}
-        <div
+        {/* Tile 1: Current / Registered Address — only when SLT already holds one */}
+        {knownProfile.registeredAddress && <div
           onClick={() => setLocationType('current')}
           style={{
             border: `2px solid ${locationType === 'current' ? '#0056b3' : '#e2e8f0'}`,
@@ -241,9 +248,9 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
             />
           </div>
           <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', fontWeight: 600, lineHeight: 1.4 }}>
-            {knownProfile.registeredAddress || 'Registered address on file from your identity card / profile.'}
+            {knownProfile.registeredAddress}
           </p>
-        </div>
+        </div>}
 
         {/* Tile 2: New Location */}
         <div
@@ -345,31 +352,12 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
         </motion.div>
       )}
 
-      {/* ── Contact Email for Billing & Updates ── */}
-      <div style={{ marginTop: '1.25rem' }}>
-        <label htmlFor="nc-email" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.45rem' }}>
-          <FiMail size={14} color="#64748b" /> Email Address (for order updates & e-bill)
-        </label>
-        <input
-          id="nc-email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="customer@example.com"
-          value={formData.email || ''}
-          onChange={handleChange}
-          style={{
-            width: '100%',
-            padding: '0.85rem 1rem',
-            fontSize: '0.95rem',
-            borderRadius: '12px',
-            border: '1.5px solid #e2e8f0',
-            backgroundColor: '#ffffff',
-            color: '#0f172a',
-          }}
-          required
-        />
-      </div>
+      {/* ── Contact Email for Billing & Updates (Passed from verified session) ── */}
+      <input
+        type="hidden"
+        name="email"
+        value={knownProfile.email || formData.email || ''}
+      />
     </motion.div>
   );
 }

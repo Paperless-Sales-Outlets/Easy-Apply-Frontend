@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FiPlusCircle, FiLink, FiMapPin,
@@ -6,6 +6,7 @@ import {
   FiClock, FiDollarSign, FiCheckSquare,
   FiShoppingCart
 } from 'react-icons/fi';
+import { getLocalCart } from '../services/productService';
 
 const SERVICES_DATA = [
   {
@@ -75,6 +76,30 @@ const SERVICES_DATA = [
 
 export default function ServicesPage() {
   const navigate = useNavigate();
+  const [cartCount, setCartCount] = useState(() => {
+    try {
+      return getLocalCart().reduce((sum, item) => sum + (item.quantity || 1), 0);
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  useEffect(() => {
+    const syncCart = () => {
+      try {
+        setCartCount(getLocalCart().reduce((sum, item) => sum + (item.quantity || 1), 0));
+      } catch (e) {
+        setCartCount(0);
+      }
+    };
+    syncCart();
+    window.addEventListener('easyapply:cart-updated', syncCart);
+    window.addEventListener('storage', syncCart);
+    return () => {
+      window.removeEventListener('easyapply:cart-updated', syncCart);
+      window.removeEventListener('storage', syncCart);
+    };
+  }, []);
 
   return (
     <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', paddingBottom: '4rem' }}>
@@ -98,7 +123,7 @@ export default function ServicesPage() {
                 cursor: 'pointer', fontSize: '0.95rem'
               }}
             >
-              <FiShoppingCart size={18} /> Add to Cart
+              <FiShoppingCart size={18} /> {cartCount > 0 ? `View Cart (${cartCount})` : 'View Cart'}
             </button>
             <button
               onClick={() => navigate('/check-status')}

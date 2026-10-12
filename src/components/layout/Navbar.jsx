@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut, FiGrid, FiChevronDown } from 'react-icons/fi';
+import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut, FiGrid, FiChevronDown, FiShoppingCart } from 'react-icons/fi';
 import sltLogo from '../../assets/sltlogoOnly.png';
 import { getVerifiedPhone, getVerifiedName, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../utils/authSession';
 import { QUICK_SERVICES } from '../../data/quickServices';
+import { getLocalCart } from '../../services/productService';
 
 const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : n ? `+94 ${n}` : '');
 
@@ -39,9 +40,33 @@ export default function Navbar() {
   const [searchCategory, setSearchCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [cartCount, setCartCount] = useState(() => {
+    try {
+      return getLocalCart().reduce((sum, item) => sum + (item.quantity || 1), 0);
+    } catch (e) {
+      return 0;
+    }
+  });
   const menuRef = useRef(null);
   const servicesRef = useRef(null);
   const searchRef = useRef(null);
+
+  useEffect(() => {
+    const syncCart = () => {
+      try {
+        setCartCount(getLocalCart().reduce((sum, item) => sum + (item.quantity || 1), 0));
+      } catch (e) {
+        setCartCount(0);
+      }
+    };
+    syncCart();
+    window.addEventListener('easyapply:cart-updated', syncCart);
+    window.addEventListener('storage', syncCart);
+    return () => {
+      window.removeEventListener('easyapply:cart-updated', syncCart);
+      window.removeEventListener('storage', syncCart);
+    };
+  }, []);
 
   // Filter search suggestions
   const suggestions = React.useMemo(() => {
@@ -503,6 +528,58 @@ export default function Navbar() {
               )}
             </div>
 
+            {/* Cart quick-access button */}
+            <Link
+              to="/cart"
+              className="navbar-cart-btn"
+              style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                backgroundColor: isActivePath('/cart') ? '#eff6ff' : '#f8fafc',
+                border: `1px solid ${isActivePath('/cart') ? '#bfdbfe' : '#e2e8f0'}`,
+                borderRadius: '8px',
+                padding: '0.4rem 0.75rem',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#0056b3',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s ease',
+              }}
+              aria-label={`Shopping Cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
+              title={t('nav.cart', 'Shopping Cart')}
+            >
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <FiShoppingCart size={16} />
+                {cartCount > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-10px',
+                      backgroundColor: '#10b981',
+                      color: '#ffffff',
+                      fontSize: '0.68rem',
+                      fontWeight: 800,
+                      minWidth: '17px',
+                      height: '17px',
+                      lineHeight: '17px',
+                      borderRadius: '9999px',
+                      textAlign: 'center',
+                      padding: '0 3px',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.18)',
+                    }}
+                  >
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </div>
+              <span className="navbar-cart-label">{t('nav.cart', 'Cart')}</span>
+            </Link>
+
             {/* Language Switcher */}
             <div
               className="lang-switcher"
@@ -631,6 +708,7 @@ export default function Navbar() {
           <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', padding: '1rem' }}>
             {[
               { to: '/', label: t('nav.home', 'Home') },
+              { to: '/cart', label: `${t('nav.cart', 'Cart')}${cartCount > 0 ? ` (${cartCount})` : ''}` },
               { to: '/check-status', label: t('nav.applicationStatus', 'Application Status') },
               { to: '/help', label: t('nav.help', 'Help & Support') },
             ].map(({ to, label }) => {

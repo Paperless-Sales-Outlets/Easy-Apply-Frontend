@@ -28,6 +28,7 @@ export default function IdentityCaptureField({
   error = '',
   helpText = '',
   instructions = [],
+  cameraOnly = false, // hide the file-upload fallback — live camera capture only
 }) {
   const isFace = variant === 'face';
 
@@ -177,8 +178,12 @@ export default function IdentityCaptureField({
       const denied = err?.name === 'NotAllowedError' || err?.name === 'SecurityError';
       setCameraError(
         denied
-          ? 'Camera access was blocked. Allow camera permission, or upload a photo instead.'
-          : 'No camera available on this device. Please upload a photo instead.'
+          ? (cameraOnly
+              ? 'Camera access was blocked. Please allow camera permissions in your browser.'
+              : 'Camera access was blocked. Allow camera permission, or upload a photo instead.')
+          : (cameraOnly
+              ? 'No camera available on this device. A camera is required for live selfie capture.'
+              : 'No camera available on this device. Please upload a photo instead.')
       );
       stopCamera();
     } finally {
@@ -266,13 +271,19 @@ export default function IdentityCaptureField({
             />
             <div>
               <p style={{ margin: '0 0 0.5rem 0', fontWeight: 700, color: '#0f7a4d', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FiCheckCircle aria-hidden="true" /> Captured
+                <FiCheckCircle aria-hidden="true" /> Image Ready
               </p>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => { onChange(''); openCamera(); }}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem' }}>
-                  <FiRefreshCw size={14} aria-hidden="true" /> Retake
+                  <FiRefreshCw size={14} aria-hidden="true" /> Retake Photo
                 </button>
+                {!cameraOnly && (
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => uploadInputRef.current?.click()}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem' }}>
+                    <FiUpload size={14} aria-hidden="true" /> Re-upload File
+                  </button>
+                )}
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => onChange('')}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem', color: 'var(--danger, #dc3545)' }}>
                   <FiX size={14} aria-hidden="true" /> Remove
@@ -383,6 +394,8 @@ export default function IdentityCaptureField({
                   : <><FiCamera size={16} aria-hidden="true" /> Take Photo</>}
               </button>
 
+              {!cameraOnly && (
+                <>
               <button type="button" className="btn btn-secondary" onClick={() => uploadInputRef.current?.click()}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <FiUpload size={16} aria-hidden="true" /> Upload
@@ -397,6 +410,8 @@ export default function IdentityCaptureField({
                 aria-hidden="true"
                 style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
               />
+                </>
+              )}
             </div>
           </div>
         )}

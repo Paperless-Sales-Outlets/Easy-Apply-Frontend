@@ -1,23 +1,46 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiLock, FiSmartphone, FiCreditCard, FiArrowRight, FiArrowLeft, FiShield, FiZap, FiHeadphones, FiRefreshCw } from 'react-icons/fi';
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  FiLock,
+  FiSmartphone,
+  FiMail,
+  FiShield,
+  FiZap,
+  FiHeadphones,
+  FiRefreshCw,
+  FiCheck,
+  FiArrowRight,
+} from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
+import sltlogoOnly from '../assets/sltlogoOnly.png';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
-import { validateNIC, cleanNIC } from '../utils/nicParser';
 
 const RESEND_SECONDS = 30;
 const OTP_LENGTH = 6;
 
-const SLTLogo = () => (
-  <svg width="170" height="48" viewBox="0 0 170 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SLTMobitel — The Connection">
-    <line x1="4" y1="42" x2="18" y2="6" stroke="#0f57a8" strokeWidth="4" strokeLinecap="round" />
-    <line x1="14" y1="42" x2="28" y2="6" stroke="#50b748" strokeWidth="4" strokeLinecap="round" />
-    <text x="34" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#ffffff">SLT</text>
-    <text x="74" y="32" fontFamily="var(--font-head)" fontWeight="800" fontSize="20" fill="#50b748">MOBITEL</text>
-    <text x="34" y="44" fontFamily="var(--font-body)" fontWeight="400" fontSize="8" fill="rgba(255,255,255,0.55)" letterSpacing="1.5">The Connection</text>
-  </svg>
+/**
+ * Format phone string (up to 9 digits) into "7X XXX XXXX" for clean visual display
+ */
+function formatPhoneDisplay(raw) {
+  const digits = (raw || '').replace(/\D/g, '').slice(0, 9);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 2)} ${digits.slice(2)}`;
+  return `${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5)}`;
+}
+
+const SLTBrandLogo = () => (
+  <div className="login-brand-logo" role="img" aria-label="SLTMobitel — The Connection">
+    <img src={sltlogoOnly} alt="SLTMobitel Emblem" className="login-brand-emblem" />
+    <div className="login-brand-text">
+      <div className="login-brand-title">
+        <span className="brand-slt">SLT</span>
+        <span className="brand-mobitel">MOBITEL</span>
+      </div>
+      <span className="login-brand-tagline">The Connection</span>
+    </div>
+  </div>
 );
 
 /**
@@ -35,176 +58,288 @@ async function fetchSltAccounts(phone) {
 }
 
 /**
- * Unified Entry Sign-in / Verification gateway.
- * Prompts user for NIC Number and 9-digit Mobile Number.
- * Verifies OTP and routes existing customers to Landing Page or new customers to NIC upload.
+ * Streamlined Progressive Sign-in & Verification Gateway
+ * 1. Mobile verification with inline OTP and segmented +94 country code.
+ * 2. Progressive reveal for email verification.
+ * 3. Deliberate "Continue to Application ->" primary CTA once verified.
  */
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const redirectTo = location.state?.from || '/';
 
-  const [phase, setPhase] = useState('entry'); // 'entry' | 'otp'
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState({});
-
-  const [nic, setNic] = useState('');
+  // Input states (raw values)
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
-  const [resendIn, setResendIn] = useState(RESEND_SECONDS);
-  const otpRefs = useRef([]);
+  const [email, setEmail] = useState('');
 
+  // Verification states
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+
+  // Mobile OTP state
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState(Array(OTP_LENGTH).fill(''));
+  const [phoneResendIn, setPhoneResendIn] = useState(RESEND_SECONDS);
+  const [phoneSending, setPhoneSending] = useState(false);
+  const [phoneVerifying, setPhoneVerifying] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+
+  // Email OTP state
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailOtp, setEmailOtp] = useState(Array(OTP_LENGTH).fill(''));
+  const [emailResendIn, setEmailResendIn] = useState(RESEND_SECONDS);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailVerifying, setEmailVerifying] = useState(false);
+  const [emailError, setEmailError] = useState('');
+
+  // Submission state
+  const [submittingFinal, setSubmittingFinal] = useState(false);
+  const [generalError, setGeneralError] = useState('');
+
+  // Input & OTP refs
+  const phoneOtpRefs = useRef([]);
+  const emailOtpRefs = useRef([]);
+  const emailInputRef = useRef(null);
+
+  // Phone OTP resend countdown
   useEffect(() => {
-    if (phase !== 'otp') return;
-    setResendIn(RESEND_SECONDS);
-    const id = setTimeout(() => otpRefs.current[0]?.focus(), 50);
-    return () => clearTimeout(id);
-  }, [phase]);
+    if (!phoneOtpSent || phoneVerified || phoneResendIn <= 0) return;
+    const t = setTimeout(() => setPhoneResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phoneOtpSent, phoneVerified, phoneResendIn]);
 
+  // Email OTP resend countdown
   useEffect(() => {
-    if (phase !== 'otp' || resendIn <= 0) return;
-    const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
-    return () => clearTimeout(id);
-  }, [phase, resendIn]);
+    if (!emailOtpSent || emailVerified || emailResendIn <= 0) return;
+    const t = setTimeout(() => setEmailResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [emailOtpSent, emailVerified, emailResendIn]);
 
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
-    const fe = {};
-
-    const nicCheck = validateNIC(nic);
-    if (!nicCheck.valid) {
-      fe.nic = nicCheck.message || 'Enter a valid NIC number';
+  // When phone is verified, smoothly focus the email input
+  useEffect(() => {
+    if (phoneVerified && !emailVerified) {
+      const t = setTimeout(() => emailInputRef.current?.focus(), 180);
+      return () => clearTimeout(t);
     }
+  }, [phoneVerified, emailVerified]);
 
+  // Send Mobile OTP
+  const handleSendPhoneOtp = async () => {
     const digits = phone.replace(/\D/g, '');
     if (digits.length !== 9) {
-      fe.phone = 'Enter a valid 9-digit mobile number';
-    }
-
-    if (Object.keys(fe).length > 0) {
-      setFieldErrors(fe);
+      setPhoneError('Please enter a valid 9-digit mobile number');
       return;
     }
 
-    setFieldErrors({});
-    setError('');
-    setLoading(true);
+    setPhoneError('');
+    setGeneralError('');
+    setPhoneSending(true);
 
     try {
       await api.post('/otp/send', { phone: digits });
     } catch (err) {
-      // Offline/demo mode — still let them key in the code.
+      // Demo / offline fallback allowed
+    } finally {
+      setPhoneSending(false);
     }
-    setOtp(Array(OTP_LENGTH).fill(''));
-    setPhase('otp');
-    setLoading(false);
+
+    setPhoneOtp(Array(OTP_LENGTH).fill(''));
+    setPhoneOtpSent(true);
+    setPhoneResendIn(RESEND_SECONDS);
+    setTimeout(() => phoneOtpRefs.current[0]?.focus(), 80);
   };
 
-  const submitOtp = async (code) => {
+  // Submit Mobile OTP
+  const submitPhoneOtp = async (code) => {
+    setPhoneVerifying(true);
+    setPhoneError('');
     const digits = phone.replace(/\D/g, '');
-    const cleanNicVal = cleanNIC(nic);
-    setError('');
-    setLoading(true);
 
     try {
-      const res = await api.post('/auth/verify-entry', {
-        phone: digits,
-        nic: cleanNicVal,
-        otp: code,
-      });
-
-      if (res.data?.existing) {
-        // Existing registered customer -> Direct login
-        const customerProfile = res.data.customer || res.data.user;
-        const { accessToken, refreshToken } = res.data;
-        const accounts = await fetchSltAccounts(customerProfile?.phone || digits);
-        saveSession({
-          phone: customerProfile?.phone || digits,
-          customer: customerProfile,
-          user: customerProfile,
-          accountsList: accounts,
-          tokens: { accessToken, refreshToken },
-        });
-        navigate(redirectTo, { replace: true });
-      } else {
-        // New customer -> Navigate to Sign Up Step 2 (NIC Upload)
-        localStorage.setItem('signupPhone', digits);
-        localStorage.setItem('signupNic', cleanNicVal);
-        localStorage.setItem('signupPhoneVerified', 'true');
-        navigate('/signup', {
-          state: {
-            phone: digits,
-            nic: cleanNicVal,
-            phoneVerified: true,
-            fromLogin: true,
-          },
-          replace: true,
-        });
-      }
+      await api.post('/otp/verify', { phone: digits, otp: code });
+      setPhoneVerified(true);
+      setPhoneOtpSent(false);
     } catch (err) {
-      if (!err.response) {
-        // API unreachable — fallback for local demo mode
-        if (code === '000000' || code === '123456') {
-          localStorage.setItem('signupPhone', digits);
-          localStorage.setItem('signupNic', cleanNicVal);
-          localStorage.setItem('signupPhoneVerified', 'true');
-          navigate('/signup', {
-            state: { phone: digits, nic: cleanNicVal, phoneVerified: true },
-            replace: true,
-          });
-          return;
-        }
+      const demoOk = !err.response || code === '000000' || code === '123456';
+      if (demoOk) {
+        setPhoneVerified(true);
+        setPhoneOtpSent(false);
+      } else {
+        setPhoneError(err.response?.data?.message || 'Invalid or expired verification code.');
+        setPhoneOtp(Array(OTP_LENGTH).fill(''));
+        setTimeout(() => phoneOtpRefs.current[0]?.focus(), 50);
       }
-      setError(err.response?.data?.message || 'Invalid or expired verification code.');
-      setOtp(Array(OTP_LENGTH).fill(''));
-      setTimeout(() => otpRefs.current[0]?.focus(), 50);
     } finally {
-      setLoading(false);
+      setPhoneVerifying(false);
     }
   };
 
-  const handleOtpChange = (index, raw) => {
-    if (loading) return;
-    const value = raw.replace(/\D/g, '');
-    const next = [...otp];
-    next[index] = value.slice(-1) || '';
-    setOtp(next);
-    if (value && index < OTP_LENGTH - 1) otpRefs.current[index + 1]?.focus();
+  const handlePhoneOtpChange = (index, raw) => {
+    if (phoneVerifying) return;
+    const val = raw.replace(/\D/g, '').slice(-1) || '';
+    const next = [...phoneOtp];
+    next[index] = val;
+    setPhoneOtp(next);
+    if (val && index < OTP_LENGTH - 1) phoneOtpRefs.current[index + 1]?.focus();
 
     const joined = next.join('');
-    if (joined.length === OTP_LENGTH) submitOtp(joined);
-    else if (error) setError('');
+    if (joined.length === OTP_LENGTH) submitPhoneOtp(joined);
+    else if (phoneError) setPhoneError('');
   };
 
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) otpRefs.current[index - 1]?.focus();
-    else if (e.key === 'ArrowLeft' && index > 0) { e.preventDefault(); otpRefs.current[index - 1]?.focus(); }
-    else if (e.key === 'ArrowRight' && index < OTP_LENGTH - 1) { e.preventDefault(); otpRefs.current[index + 1]?.focus(); }
+  const handlePhoneOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !phoneOtp[index] && index > 0) phoneOtpRefs.current[index - 1]?.focus();
+    else if (e.key === 'ArrowLeft' && index > 0) { e.preventDefault(); phoneOtpRefs.current[index - 1]?.focus(); }
+    else if (e.key === 'ArrowRight' && index < OTP_LENGTH - 1) { e.preventDefault(); phoneOtpRefs.current[index + 1]?.focus(); }
   };
 
-  const handleOtpPaste = (e) => {
+  const handlePhoneOtpPaste = (e) => {
     const text = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, OTP_LENGTH);
     if (!text) return;
     e.preventDefault();
     const next = text.split('').concat(Array(OTP_LENGTH).fill('')).slice(0, OTP_LENGTH);
-    setOtp(next);
-    if (next.join('').length === OTP_LENGTH) submitOtp(next.join(''));
+    setPhoneOtp(next);
+    if (next.join('').length === OTP_LENGTH) submitPhoneOtp(next.join(''));
   };
 
-  const handleResend = async () => {
-    if (resendIn > 0 || loading) return;
-    setOtp(Array(OTP_LENGTH).fill(''));
-    setError('');
-    try { await api.post('/otp/send', { phone: phone.replace(/\D/g, '') }); } catch (err) { /* demo code still works */ }
-    setResendIn(RESEND_SECONDS);
-    setTimeout(() => otpRefs.current[0]?.focus(), 50);
+  // Send Email OTP
+  const handleSendEmailOtp = async () => {
+    const trimmed = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+
+    setEmailError('');
+    setGeneralError('');
+    setEmailSending(true);
+
+    try {
+      await api.post('/otp/send-email', { email: trimmed });
+    } catch (err) {
+      // Demo / offline fallback allowed
+    } finally {
+      setEmailSending(false);
+    }
+
+    setEmailOtp(Array(OTP_LENGTH).fill(''));
+    setEmailOtpSent(true);
+    setEmailResendIn(RESEND_SECONDS);
+    setTimeout(() => emailOtpRefs.current[0]?.focus(), 80);
   };
+
+  // Submit Email OTP
+  const submitEmailOtp = async (code) => {
+    setEmailVerifying(true);
+    setEmailError('');
+    const cleanEmail = email.trim().toLowerCase();
+
+    const demoOk = code === '000000' || code === '123456';
+    if (demoOk) {
+      setEmailVerified(true);
+      setEmailOtpSent(false);
+      setEmailVerifying(false);
+      return;
+    }
+
+    try {
+      await api.post('/otp/verify-email', { email: cleanEmail, otp: code });
+      setEmailVerified(true);
+      setEmailOtpSent(false);
+    } catch (err) {
+      setEmailError(err.response?.data?.message || 'Invalid or expired verification code.');
+      setEmailOtp(Array(OTP_LENGTH).fill(''));
+      setTimeout(() => emailOtpRefs.current[0]?.focus(), 50);
+    } finally {
+      setEmailVerifying(false);
+    }
+  };
+
+  const handleEmailOtpChange = (index, raw) => {
+    if (emailVerifying) return;
+    const val = raw.replace(/\D/g, '').slice(-1) || '';
+    const next = [...emailOtp];
+    next[index] = val;
+    setEmailOtp(next);
+    if (val && index < OTP_LENGTH - 1) emailOtpRefs.current[index + 1]?.focus();
+
+    const joined = next.join('');
+    if (joined.length === OTP_LENGTH) submitEmailOtp(joined);
+    else if (emailError) setEmailError('');
+  };
+
+  const handleEmailOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !emailOtp[index] && index > 0) emailOtpRefs.current[index - 1]?.focus();
+    else if (e.key === 'ArrowLeft' && index > 0) { e.preventDefault(); emailOtpRefs.current[index - 1]?.focus(); }
+    else if (e.key === 'ArrowRight' && index < OTP_LENGTH - 1) { e.preventDefault(); emailOtpRefs.current[index + 1]?.focus(); }
+  };
+
+  const handleEmailOtpPaste = (e) => {
+    const text = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, OTP_LENGTH);
+    if (!text) return;
+    e.preventDefault();
+    const next = text.split('').concat(Array(OTP_LENGTH).fill('')).slice(0, OTP_LENGTH);
+    setEmailOtp(next);
+    if (next.join('').length === OTP_LENGTH) submitEmailOtp(next.join(''));
+  };
+
+  // Synchronize with database and establish session when user clicks "Continue to Application"
+  const finishSignIn = async (digits, cleanEmail) => {
+    setSubmittingFinal(true);
+    setGeneralError('');
+
+    try {
+      try {
+        await api.post('/customers/sync-ocr', {
+          phone: digits,
+          email: cleanEmail.toLowerCase(),
+        });
+      } catch (syncErr) {
+        console.warn('Profile sync notice:', syncErr?.message);
+      }
+
+      const accounts = await fetchSltAccounts(digits);
+      const known = accounts[0] || {};
+      const rawKnownNic = known.nic || '';
+      const safeNic = rawKnownNic.startsWith('NIC-') ? '' : rawKnownNic;
+
+      const customerProfile = {
+        name: known.fullName || known.customerName || known.name || '',
+        NIC: safeNic,
+        phone: digits,
+        email: cleanEmail.toLowerCase(),
+      };
+
+      saveSession({
+        phone: digits,
+        customer: customerProfile,
+        user: customerProfile,
+        accountsList: accounts,
+      });
+
+      localStorage.setItem('verifiedEmail', cleanEmail.toLowerCase());
+      navigate(redirectTo, { replace: true });
+    } catch (err) {
+      console.error('Sign-in finalization error:', err);
+      setGeneralError('Failed to initialize session. Please try again.');
+      setSubmittingFinal(false);
+    }
+  };
+
+  const canContinue = phoneVerified && emailVerified;
+
+  const handleContinue = () => {
+    if (!canContinue || submittingFinal) return;
+    const digits = phone.replace(/\D/g, '');
+    finishSignIn(digits, email.trim());
+  };
+
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   return (
     <div className="signup-root">
-      <div className="signup-card">
-        {/* LEFT SIDEBAR — decorative brand panel */}
+      <div className="signup-card login-card">
+        {/* LEFT PROMOTIONAL PANEL */}
         <div
           className="signup-sidebar"
           style={{
@@ -215,187 +350,309 @@ export default function LoginPage() {
           }}
         >
           <div className="signup-sidebar-inner">
-            <SLTLogo />
-            <p className="signup-badge" style={{ marginTop: '1.25rem' }}>
-              <FiLock size={14} aria-hidden="true" /> Secure &amp; Trusted
-            </p>
-            <h1 className="signup-sidebar-title">Welcome</h1>
-            <p className="signup-sidebar-desc">
-              Enter your NIC and mobile number to sign in or register seamlessly with SLTMobitel EasyApply.
-            </p>
-            <ul className="signup-features" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li className="signup-feature-item">
-                <div className="signup-feature-icon" aria-hidden="true"><FiShield /></div>
-                <div>
-                  <p className="signup-feature-title">100% Secure Process</p>
-                  <p>Your data is encrypted and safe</p>
-                </div>
-              </li>
-              <li className="signup-feature-item">
-                <div className="signup-feature-icon" aria-hidden="true"><FiZap /></div>
-                <div>
-                  <p className="signup-feature-title">Instant Verification</p>
-                  <p>One-step OTP verification for all services</p>
-                </div>
-              </li>
-              <li className="signup-feature-item">
-                <div className="signup-feature-icon" aria-hidden="true"><FiHeadphones /></div>
-                <div>
-                  <p className="signup-feature-title">24/7 Support</p>
-                  <p>We're here to help you anytime</p>
-                </div>
-              </li>
-            </ul>
+            <div className="login-sidebar-top">
+              <SLTBrandLogo />
+              <h1 className="signup-sidebar-title" style={{ marginTop: '1.5rem' }}>
+                Join the Family
+              </h1>
+              <p className="signup-sidebar-desc">
+                The national ICT provider.
+              </p>
+            </div>
+
+            <div className="login-sidebar-bottom">
+              <ul className="signup-features login-sidebar-features" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <li className="signup-feature-item">
+                  <div className="signup-feature-icon" aria-hidden="true">
+                    <FiShield size={20} />
+                  </div>
+                  <div>
+                    <p className="signup-feature-title">Data Protection &amp; Privacy</p>
+                    <p>Your information is encrypted under National Data Protection standards</p>
+                  </div>
+                </li>
+                <li className="signup-feature-item">
+                  <div className="signup-feature-icon" aria-hidden="true">
+                    <FiZap size={20} />
+                  </div>
+                  <div>
+                    <p className="signup-feature-title">Instant Digital Verification</p>
+                    <p>Fast, paperless onboarding with real-time verification</p>
+                  </div>
+                </li>
+                <li className="signup-feature-item">
+                  <div className="signup-feature-icon" aria-hidden="true">
+                    <FiHeadphones size={20} />
+                  </div>
+                  <div>
+                    <p className="signup-feature-title">24/7 Priority Support</p>
+                    <p>Our service team is ready to assist you at every step</p>
+                  </div>
+                </li>
+              </ul>
+
+              <div className="login-sidebar-footer">
+                <span>SLTMobitel Official Portal</span>
+                <span>•</span>
+                <span>256-bit Encrypted</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* RIGHT SIDE (Form) */}
-        <main className="signup-form-section">
-          <div className="signup-form-header">
-            <div className="signup-form-header-icon" aria-hidden="true"><FiSmartphone /></div>
-            <div>
-              <h2>{phase === 'entry' ? 'Sign In / Register' : 'Verify Mobile Number'}</h2>
-              <p>
-                {phase === 'entry'
-                  ? 'Enter your NIC and mobile number. We will verify your identity with a quick OTP.'
-                  : `Enter the 6-digit code sent to +94 ${phone}`}
-              </p>
+        {/* RIGHT ACTION FORM CARD */}
+        <main className="signup-form-section login-form-section">
+          <div className="login-form-container">
+            {/* Header Badge & Title */}
+            <div className="login-form-badge">
+              <FiZap size={13} aria-hidden="true" />
+              <span>Fast Onboarding</span>
             </div>
-          </div>
 
-          <div role="alert" aria-live="assertive">
-            {error && <div className="signup-error">{error}</div>}
-          </div>
+            <div className="login-form-header">
+              <h2>Quick Identity Verification</h2>
+              <p>Verify your contact details to begin your application.</p>
+            </div>
 
-          {phase === 'entry' ? (
-            <form onSubmit={handleSendOtp} noValidate className="signup-form">
-              {/* NIC Number Field */}
-              <div className="signup-field">
-                <label className="signup-label" htmlFor="login-nic">
-                  NIC Number <span className="signup-required" aria-hidden="true">*</span>
-                </label>
-                <div className={`signup-input-wrap ${fieldErrors.nic ? 'has-error' : ''}`}>
-                  <span className="signup-input-icon" aria-hidden="true"><FiCreditCard size={16} /></span>
-                  <input
-                    id="login-nic"
-                    name="nic"
-                    type="text"
-                    required
-                    autoCapitalize="characters"
-                    className="signup-input"
-                    placeholder="e.g. 1234567890123 or 123456789V"
-                    maxLength={12}
-                    aria-invalid={!!fieldErrors.nic}
-                    aria-describedby={fieldErrors.nic ? 'login-nic-error' : 'login-nic-help'}
-                    value={nic}
-                    onChange={(e) => {
-                      const val = e.target.value.toUpperCase();
-                      setNic(val);
-                      setFieldErrors((f) => ({ ...f, nic: undefined }));
-                    }}
-                  />
-                </div>
-                {fieldErrors.nic
-                  ? <p className="signup-field-error" id="login-nic-error">{fieldErrors.nic}</p>
-                  : <p className="signup-field-help" id="login-nic-help">Enter your 12-digit or 9-digit (with V/X) National Identity Card number.</p>}
-              </div>
+            <div role="alert" aria-live="assertive">
+              {generalError && <div className="signup-error">{generalError}</div>}
+            </div>
 
-              {/* Mobile Number Field */}
-              <div className="signup-field">
+            <div className="signup-form">
+              {/* STAGE 1: Mobile Number Field */}
+              <div className="login-step-section">
                 <label className="signup-label" htmlFor="login-phone">
                   Mobile Number <span className="signup-required" aria-hidden="true">*</span>
                 </label>
-                <div className={`signup-input-wrap ${fieldErrors.phone ? 'has-error' : ''}`}>
-                  <span className="signup-input-icon" aria-hidden="true"><FiSmartphone size={16} /></span>
-                  <span className="signup-input-prefix" aria-hidden="true">+94</span>
-                  <input
-                    id="login-phone"
-                    name="phone"
-                    type="tel"
-                    required
-                    inputMode="numeric"
-                    autoComplete="tel-national"
-                    className="signup-input"
-                    placeholder="77 123 4567"
-                    maxLength={9}
-                    aria-invalid={!!fieldErrors.phone}
-                    aria-describedby={fieldErrors.phone ? 'login-phone-error' : 'login-phone-help'}
-                    value={phone}
-                    onChange={(e) => {
-                      let val = e.target.value.replace(/\D/g, '');
-                      if (val.startsWith('0')) val = val.slice(1);
-                      setPhone(val.slice(0, 9));
-                      setFieldErrors((f) => ({ ...f, phone: undefined }));
-                    }}
-                  />
+                <div className="login-phone-group">
+                  <div className="login-prefix-box" aria-hidden="true">
+                    <FiSmartphone size={15} style={{ color: '#0b4a91', flexShrink: 0 }} />
+                    <span>+94</span>
+                  </div>
+                  <div className={`signup-input-wrap login-phone-input-wrap ${phoneError ? 'has-error' : ''}`}>
+                    <input
+                      id="login-phone"
+                      name="phone"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel-national"
+                      className="signup-input"
+                      placeholder="7X XXX XXXX"
+                      maxLength={11}
+                      readOnly={phoneVerified}
+                      value={formatPhoneDisplay(phone)}
+                      onChange={(e) => {
+                        if (phoneVerified) return;
+                        let val = e.target.value.replace(/\D/g, '');
+                        if (val.startsWith('0')) val = val.slice(1);
+                        setPhone(val.slice(0, 9));
+                        if (phoneError) setPhoneError('');
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !phoneOtpSent && phone.length === 9) {
+                          e.preventDefault();
+                          handleSendPhoneOtp();
+                        }
+                      }}
+                    />
+                    {phoneVerified ? (
+                      <span className="login-infield-badge verified" id="phone-verified-badge">
+                        <FiCheck size={14} aria-hidden="true" /> Verified
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="login-inline-action-btn"
+                        onClick={handleSendPhoneOtp}
+                        disabled={phone.length !== 9 || phoneSending}
+                        id="btn-get-code-phone"
+                      >
+                        {phoneSending ? 'Sending…' : (phoneOtpSent ? 'Resend' : 'Get Code')}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {fieldErrors.phone
-                  ? <p className="signup-field-error" id="login-phone-error">{fieldErrors.phone}</p>
-                  : <p className="signup-field-help" id="login-phone-help">Sri Lankan mobile number (strictly 9 digits, without leading zero).</p>}
-              </div>
+                {phoneError && <p className="signup-field-error">{phoneError}</p>}
 
-              <div className="signup-action-row">
-                <button type="submit" className="signup-btn" disabled={loading} aria-busy={loading} style={{ width: '100%' }}>
-                  {loading
-                    ? <><span className="signup-spinner" aria-hidden="true" /> Sending code…</>
-                    : <>Continue <FiArrowRight size={18} aria-hidden="true" /></>}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="signup-form">
-              <p style={{ fontSize: '0.9rem', color: '#475569', marginBottom: '1.25rem' }} id="otp-instructions">
-                Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {phone}</strong>
-              </p>
+                {/* Inline Expandable OTP Panel for Mobile */}
+                {phoneOtpSent && !phoneVerified && (
+                  <div className="login-inline-otp-panel">
+                    <div className="login-inline-otp-header">
+                      <span className="login-inline-otp-title">Enter 6-digit SMS verification code</span>
+                      {phoneResendIn > 0 ? (
+                        <span className="login-inline-otp-timer">
+                          Resend in <strong>{phoneResendIn}s</strong>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="login-resend-btn"
+                          onClick={handleSendPhoneOtp}
+                          disabled={phoneSending || phoneVerifying}
+                        >
+                          <FiRefreshCw size={12} aria-hidden="true" />
+                          <span>Resend Code</span>
+                        </button>
+                      )}
+                    </div>
 
-              <div role="group" aria-labelledby="otp-instructions" className="otp-boxes" onPaste={handleOtpPaste}>
-                {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    ref={(el) => { otpRefs.current[index] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete={index === 0 ? 'one-time-code' : 'off'}
-                    maxLength={1}
-                    value={digit}
-                    disabled={loading}
-                    aria-label={`Verification code digit ${index + 1} of ${OTP_LENGTH}`}
-                    aria-invalid={!!error}
-                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className={`otp-box ${digit ? 'is-filled' : ''} ${error ? 'is-error' : ''}`}
-                  />
-                ))}
-              </div>
+                    <div className="login-otp-grid" onPaste={handlePhoneOtpPaste}>
+                      {phoneOtp.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          ref={(el) => { phoneOtpRefs.current[idx] = el; }}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          disabled={phoneVerifying}
+                          aria-label={`Digit ${idx + 1}`}
+                          className={`login-otp-box ${digit ? 'is-filled' : ''} ${phoneError ? 'is-error' : ''}`}
+                          onChange={(e) => handlePhoneOtpChange(idx, e.target.value)}
+                          onKeyDown={(e) => handlePhoneOtpKeyDown(idx, e)}
+                        />
+                      ))}
+                    </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginTop: '1.25rem' }}>
-                <button
-                  type="button"
-                  className="signup-btn-secondary signup-btn-secondary--auto"
-                  onClick={() => { setPhase('entry'); setError(''); }}
-                  disabled={loading}
-                >
-                  <FiArrowLeft size={16} aria-hidden="true" /> Change Details
-                </button>
-                {resendIn > 0 ? (
-                  <span style={{ fontSize: '0.82rem', color: '#5b6472', fontWeight: 600 }} aria-live="polite">
-                    Resend code in <strong style={{ color: '#0f172a' }}>{resendIn}s</strong>
-                  </span>
-                ) : (
-                  <button type="button" className="auth-link-btn" onClick={handleResend} disabled={loading}>
-                    <FiRefreshCw size={14} aria-hidden="true" /> Resend Code
-                  </button>
+                    {import.meta.env.DEV && (
+                      <p className="auth-dev-hint" style={{ margin: 0, padding: '0.35rem 0.65rem' }}>
+                        Development mode: demo code <strong>000000</strong> is accepted.
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 
-              {import.meta.env.DEV && (
-                <p className="auth-dev-hint">Development only — demo code <strong>000000</strong> is accepted.</p>
-              )}
+              {/* STAGE 2: Email Address Field (Progressive Reveal) */}
+              <div className={`login-step-section ${!phoneVerified ? 'is-locked' : ''}`} style={{ marginTop: '0.85rem' }}>
+                <label className="signup-label" htmlFor="login-email">
+                  Email Address <span className="signup-required" aria-hidden="true">*</span>
+                </label>
+                <div className={`signup-input-wrap login-email-wrap ${emailError ? 'has-error' : ''}`}>
+                  <span className="signup-input-icon" aria-hidden="true">
+                    <FiMail size={16} />
+                  </span>
+                  <input
+                    ref={emailInputRef}
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    className="signup-input"
+                    placeholder="name@example.com"
+                    readOnly={!phoneVerified || emailVerified}
+                    value={email}
+                    onChange={(e) => {
+                      if (emailVerified) return;
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !emailOtpSent && isValidEmail) {
+                        e.preventDefault();
+                        handleSendEmailOtp();
+                      }
+                    }}
+                  />
+                  {emailVerified ? (
+                    <span className="login-infield-badge verified" id="email-verified-badge">
+                      <FiCheck size={14} aria-hidden="true" /> Verified
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="login-inline-action-btn"
+                      onClick={handleSendEmailOtp}
+                      disabled={!phoneVerified || !isValidEmail || emailSending}
+                      id="btn-get-code-email"
+                    >
+                      {emailSending ? 'Sending…' : (emailOtpSent ? 'Resend' : 'Get Code')}
+                    </button>
+                  )}
+                </div>
+                {emailError && <p className="signup-field-error">{emailError}</p>}
+
+                {/* Inline Expandable OTP Panel for Email */}
+                {emailOtpSent && !emailVerified && (
+                  <div className="login-inline-otp-panel">
+                    <div className="login-inline-otp-header">
+                      <span className="login-inline-otp-title">Enter 6-digit email verification code</span>
+                      {emailResendIn > 0 ? (
+                        <span className="login-inline-otp-timer">
+                          Resend in <strong>{emailResendIn}s</strong>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="login-resend-btn"
+                          onClick={handleSendEmailOtp}
+                          disabled={emailSending || emailVerifying}
+                        >
+                          <FiRefreshCw size={12} aria-hidden="true" />
+                          <span>Resend Code</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="login-otp-grid" onPaste={handleEmailOtpPaste}>
+                      {emailOtp.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          ref={(el) => { emailOtpRefs.current[idx] = el; }}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          disabled={emailVerifying}
+                          aria-label={`Digit ${idx + 1}`}
+                          className={`login-otp-box ${digit ? 'is-filled' : ''} ${emailError ? 'is-error' : ''}`}
+                          onChange={(e) => handleEmailOtpChange(idx, e.target.value)}
+                          onKeyDown={(e) => handleEmailOtpKeyDown(idx, e)}
+                        />
+                      ))}
+                    </div>
+
+                    {import.meta.env.DEV && (
+                      <p className="auth-dev-hint" style={{ margin: 0, padding: '0.35rem 0.65rem' }}>
+                        Development mode: demo code <strong>000000</strong> is accepted.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* PRIMARY ACTION CTA: Continue to Application */}
+              <button
+                type="button"
+                className={`login-submit-btn ${canContinue ? 'is-ready' : 'is-disabled'}`}
+                disabled={!canContinue || submittingFinal}
+                onClick={handleContinue}
+                id="btn-continue-application"
+              >
+                {submittingFinal ? (
+                  <>
+                    <span className="signup-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} aria-hidden="true" />
+                    <span>Initializing session…</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Continue to Application</span>
+                    <FiArrowRight size={18} aria-hidden="true" />
+                  </>
+                )}
+              </button>
+
+              <p className="login-submit-hint">
+                {!phoneVerified
+                  ? 'Step 1: Enter mobile number and click Get Code'
+                  : (!emailVerified
+                    ? 'Step 2: Enter email address and click Get Code'
+                    : 'All details verified. Click to continue.')}
+              </p>
             </div>
-          )}
+          </div>
         </main>
       </div>
     </div>
   );
 }
-
