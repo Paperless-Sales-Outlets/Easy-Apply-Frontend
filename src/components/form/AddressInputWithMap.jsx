@@ -9,6 +9,8 @@ export default function AddressInputWithMap({
   label = 'Address',
   value = '',
   onChange,
+  onLocationSelect,
+  selectedCoords = null,
   placeholder = 'Enter address...',
   rows = 3,
   required = false,
@@ -20,7 +22,15 @@ export default function AddressInputWithMap({
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [internalValue, setInternalValue] = useState(value || '');
+  const [currentCoords, setCurrentCoords] = useState(selectedCoords || null);
   const textareaRef = useRef(null);
+
+  // Sync coords if prop changes
+  useEffect(() => {
+    if (selectedCoords) {
+      setCurrentCoords(selectedCoords);
+    }
+  }, [selectedCoords]);
 
   // A hidden <input> that Google Maps Autocomplete attaches to.
   // google.maps.places.Autocomplete ONLY accepts HTMLInputElement —
@@ -46,11 +56,18 @@ export default function AddressInputWithMap({
           });
           autocomplete.addListener('place_changed', () => {
             const place = autocomplete.getPlace();
+            let coords = null;
+            if (place?.geometry?.location) {
+              coords = {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+              };
+            }
             if (place?.formatted_address) {
               const cleaned = cleanGoogleAddress([place]);
-              triggerChange(cleaned || place.formatted_address);
+              triggerChange(cleaned || place.formatted_address, coords);
             } else if (place?.name) {
-              triggerChange(place.name);
+              triggerChange(place.name, coords);
             }
             // Clear the hidden input after selection so it doesn't show stale text
             if (hiddenInputRef.current) hiddenInputRef.current.value = '';
@@ -64,10 +81,19 @@ export default function AddressInputWithMap({
       });
   }, [disabled, readOnly]);
 
-  const triggerChange = (newAddressValue) => {
+  const triggerChange = (newAddressValue, coords = null) => {
     setInternalValue(newAddressValue);
+    if (coords) {
+      setCurrentCoords(coords);
+    }
     if (onChange) {
-      onChange({ target: { name, value: newAddressValue } });
+      onChange({
+        target: { name, value: newAddressValue },
+        coords: coords || currentCoords,
+      });
+    }
+    if (onLocationSelect && coords) {
+      onLocationSelect(coords, newAddressValue);
     }
   };
 
@@ -85,11 +111,13 @@ export default function AddressInputWithMap({
     }
 
     setIsDetectingLocation(true);
-    setStatusMessage('Detecting current location...');
+    setStatusMessage('Detecting GPS location...');
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
+        const coords = { lat: latitude, lng: longitude };
+        setCurrentCoords(coords);
         try {
           // Try Google Maps Geocoding first
           if (window.google?.maps?.Geocoder) {
@@ -102,8 +130,8 @@ export default function AddressInputWithMap({
 
             const cleaned = cleanGoogleAddress(results);
             if (cleaned) {
-              triggerChange(cleaned);
-              setStatusMessage('Location detected!');
+              triggerChange(cleaned, coords);
+              setStatusMessage('GPS location detected!');
               setIsDetectingLocation(false);
               setTimeout(() => setStatusMessage(''), 3000);
               return;
@@ -118,8 +146,8 @@ export default function AddressInputWithMap({
           const data = await response.json();
           const cleanedNom = cleanNominatimAddress(data);
 
-          triggerChange(cleanedNom || getFallbackAddressText());
-          setStatusMessage('Location detected!');
+          triggerChange(cleanedNom || getFallbackAddressText(), coords);
+          setStatusMessage('GPS location detected!');
         } catch (error) {
           console.error('Error fetching address:', error);
           setStatusMessage('Failed to get address.');
@@ -142,12 +170,14 @@ export default function AddressInputWithMap({
     );
   };
 
-  const handleModalSelectAddress = (selectedAddress) => {
+  const handleModalSelectAddress = (selectedAddress, position) => {
     if (disabled || readOnly) return;
-    triggerChange(selectedAddress);
-    setStatusMessage('Address selected from map!');
+    const coords = position ? { lat: position.lat, lng: position.lng } : null;
+    triggerChange(selectedAddress, coords);
+    setStatusMessage('Address & exact GPS coordinates selected!');
     setTimeout(() => setStatusMessage(''), 3000);
   };
+
 
   return (
     <div className="form-group" style={{ marginBottom: '1.25rem' }}>
@@ -210,7 +240,7 @@ export default function AddressInputWithMap({
             title="Auto-detect current location"
           >
             <FiNavigation style={{ color: '#0284c7', fontSize: '0.95rem' }} />
-            {isDetectingLocation ? 'Detecting...' : 'Detect My Location'}
+            {isDetectingLocation ? 'Detecting...' : 'Detect My Location (GPS)'}
           </button>
 
           <button
@@ -223,6 +253,26 @@ export default function AddressInputWithMap({
             Pick on Map
           </button>
 
+          {currentCoords && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                backgroundColor: '#eff6ff',
+                color: '#1d4ed8',
+                border: '1px solid #bfdbfe',
+                padding: '0.3rem 0.65rem',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+              }}
+            >
+              <FiNavigation size={12} />
+              GPS: {Number(currentCoords.lat).toFixed(4)}°, {Number(currentCoords.lng).toFixed(4)}°
+            </span>
+          )}
+
           {statusMessage && (
             <span style={statusMessageStyle}>
               {statusMessage}
@@ -230,6 +280,7 @@ export default function AddressInputWithMap({
           )}
         </div>
       )}
+
 
       {/* Interactive Map Modal */}
       <LocationPickerModal

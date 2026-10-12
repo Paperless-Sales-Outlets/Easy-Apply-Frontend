@@ -58,7 +58,11 @@ export default function ReviewStep({ formData, selectedProduct, goTo, onEditCart
       <Section title="Installation Location" onEdit={() => goTo('location')}>
         <Row label="Address" value={formData.installAddress || formData.address} />
         <Row label="City" value={formData.city} />
+        {formData.latitude && formData.longitude && (
+          <Row label="GPS Coordinates" value={`${Number(formData.latitude).toFixed(5)}° N, ${Number(formData.longitude).toFixed(5)}° E (Verified by GPS)`} />
+        )}
       </Section>
+
 
       <Section title="Identity (from your NIC)" onEdit={() => goTo('identity')}>
         <Row label="Full Name" value={formData.nameFull} />

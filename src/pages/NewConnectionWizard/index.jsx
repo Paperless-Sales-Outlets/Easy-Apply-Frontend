@@ -64,6 +64,9 @@ const initialState = {
   locationType: 'current',
   city: '',
   district: '',
+  latitude: null,
+  longitude: null,
+  gpsCoordinates: null,
 };
 
 const NEXT_LABEL = {
@@ -231,20 +234,40 @@ export default function NewConnectionWizard() {
     }
   };
 
-  const MAP_TO_9_STEP = {
-    location: 4,
-    loop: 4,
-    identity: 5,
-    signature: 6,
-    review: 8,
-    payment: 7,
+  const MAP_TO_6_STEP = {
+    location: 1,
+    loop: 1,
+    identity: 2,
+    signature: 3,
+    payment: 4,
+    review: 5,
   };
-  const active9Step = MAP_TO_9_STEP[step] || 4;
+  const active6Step = MAP_TO_6_STEP[step] || 1;
+
+  const handleStepClick = (targetStepNumber) => {
+    // Map target 1..6 step back to internal step key index
+    const REVERSE_MAP = {
+      1: 0, // location
+      2: 2, // identity
+      3: 3, // signature
+      4: 5, // payment
+      5: 4, // review
+    };
+    const targetIndex = REVERSE_MAP[targetStepNumber];
+    if (targetIndex !== undefined) {
+      if (targetIndex < stepIndex) {
+        setStepIndex(targetIndex);
+        window.scrollTo(0, 0);
+      } else if (targetIndex > stepIndex) {
+        toast.error('Please complete the current step before proceeding.');
+      }
+    }
+  };
 
   return (
     <div className="card" style={{ padding: '2.5rem 2.75rem', width: '100%', margin: '0 auto', borderRadius: '24px', boxShadow: '0 12px 36px rgba(11, 45, 91, 0.08)' }}>
-      {/* Progress Stepper: Reference 9-Step Bar */}
-      <WizardStepper currentStep={active9Step} />
+      {/* 6-Step Navigation Bar starting from 4th point with bubbling effect */}
+      <WizardStepper currentStep={active6Step} onStepClick={handleStepClick} />
 
       {selectedProduct && (
         <div
@@ -289,7 +312,25 @@ export default function NewConnectionWizard() {
           )}
 
           {step === 'loop' && (
-            <LoopCheckStep formData={formData} onAvailable={nextStep} onGoBack={prevStep} />
+            <LoopCheckStep
+              formData={formData}
+              selectedProduct={selectedProduct}
+              onSelectAlternativeProduct={(newProd) => {
+                setSelectedProduct(newProd);
+                try {
+                  localStorage.setItem('selectedProduct', JSON.stringify(newProd));
+                } catch (e) {}
+                dispatch({
+                  type: 'UPDATE_FIELD',
+                  payload: {
+                    name: 'otherBroadbandPackage',
+                    value: `${newProd.name || newProd.productName} (Qty: 1)`,
+                  },
+                });
+              }}
+              onAvailable={nextStep}
+              onGoBack={prevStep}
+            />
           )}
 
           {step === 'identity' && (
