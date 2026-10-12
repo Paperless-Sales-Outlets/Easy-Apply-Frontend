@@ -178,8 +178,12 @@ export default function IdentityCaptureField({
       const denied = err?.name === 'NotAllowedError' || err?.name === 'SecurityError';
       setCameraError(
         denied
-          ? 'Camera access was blocked. Allow camera permission, or upload a photo instead.'
-          : 'No camera available on this device. Please upload a photo instead.'
+          ? (cameraOnly
+              ? 'Camera access was blocked. Please allow camera permissions in your browser.'
+              : 'Camera access was blocked. Allow camera permission, or upload a photo instead.')
+          : (cameraOnly
+              ? 'No camera available on this device. A camera is required for live selfie capture.'
+              : 'No camera available on this device. Please upload a photo instead.')
       );
       stopCamera();
     } finally {

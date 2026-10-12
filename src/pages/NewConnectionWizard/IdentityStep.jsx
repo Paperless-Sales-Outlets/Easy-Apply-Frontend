@@ -8,7 +8,9 @@ import {
   FiCheckCircle, 
   FiUserPlus, 
   FiInfo,
-  FiSearch
+  FiSearch,
+  FiX,
+  FiUploadCloud
 } from 'react-icons/fi';
 import IdentityCaptureField from '../../components/form/IdentityCaptureField';
 import WizardStepHeader from '../../components/wizard/WizardStepHeader';
@@ -31,12 +33,14 @@ const inputStyle = {
  * Identity & KYC Step:
  * 1. Prompt customer to enter NIC and click Verify.
  * 2. If existing customer found in DB:
- *    - Automatically waive NIC Front & NIC Back uploads (hides them).
- *    - Only Live Selfie is mandatory.
+ *    - Check whether NIC front and back copies are available in DB.
+ *    - If BOTH copies are on file: Waive physical NIC document uploads (only Live Selfie required).
+ *    - If copies are MISSING: Prompt with error popup modal and mandate NIC Front & Back upload.
  *    - Auto-fills registered customer details from SLT database.
  * 3. If new customer (not found in DB):
  *    - Keeps all upload fields (NIC Front, NIC Back, Live Selfie) visible and mandatory.
  *    - OCR auto-scans NIC Front/Back to extract and verify details.
+ * 4. Live selfie: Camera capture ONLY (no file upload).
  */
 const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
   const sanitize = (val) => (!val || typeof val !== 'string' || val.startsWith('NIC-') ? '' : val);
@@ -46,6 +50,13 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
   const [nicVerified, setNicVerified] = useState(false);
   const [isVerifyingNic, setIsVerifyingNic] = useState(false);
   const [verifyMessage, setVerifyMessage] = useState(null);
+  const [missingDocsModal, setMissingDocsModal] = useState({
+    isOpen: false,
+    customerName: '',
+    nic: '',
+    missingFront: true,
+    missingBack: true,
+  });
 
   const [status, setStatus] = useState(null);
   const [errors, setErrors] = useState({});
@@ -60,6 +71,17 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
       setNicInput(cleanInitial);
     }
   }, [formData.nic, nicInput]);
+
+  // Close modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && missingDocsModal.isOpen) {
+        setMissingDocsModal((prev) => ({ ...prev, isOpen: false }));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [missingDocsModal.isOpen]);
 
   const handleVerifyNic = async (manualNic) => {
     const rawNic = manualNic !== undefined ? manualNic : (nicInput || formData.nic || '');
@@ -87,12 +109,16 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
       const isGenuine = cust && !custNic.startsWith('NIC-') && (cust.name !== 'Customer' || cust.addressLine1 || cust.phone);
 
       if (res.data?.success && cust && isGenuine) {
-        setIsExistingCustomer(true);
-        setNicVerified(true);
+        // Customer record found in DB
+        const hasFront = Boolean(cust.hasNicFront || (cust.identityDocuments?.nicFront && String(cust.identityDocuments.nicFront).trim()));
+        const hasBack = Boolean(cust.hasNicBack || (cust.identityDocuments?.nicBack && String(cust.identityDocuments.nicBack).trim()));
+        const hasBothDocs = hasFront && hasBack;
+
+        const customerName = cust.name || cust.fullName || cust.nameFull || formData.nameFull || '';
 
         const updates = {
           nic: clean,
-          nameFull: cust.name || cust.fullName || cust.nameFull || formData.nameFull || '',
+          nameFull: customerName,
           dob: cust.dob || formData.dob || '',
           gender: cust.gender || formData.gender || '',
           title: cust.title || formData.title || '',
@@ -102,7 +128,6 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           city: cust.city || formData.city || '',
           district: cust.district || formData.district || '',
           postalCode: cust.postalCode || formData.postalCode || '',
-          isExistingCustomer: true,
           nicVerified: true,
         };
 
@@ -113,14 +138,50 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           if (!updates.gender && parsed.gender) updates.gender = parsed.gender === 'FEMALE' ? 'Female' : 'Male';
         }
 
-        setFields(updates);
-        setErrors((prev) => ({ ...prev, nicFront: undefined, nicBack: undefined, nic: undefined }));
-        setVerifyMessage({
-          type: 'existing',
-          title: 'Existing SLT Customer Verified',
-          description: 'Your customer records were found in the SLT database. Physical NIC Front & Back document uploads have been waived. Please take or upload a Live Selfie to complete verification.',
-        });
-        toast.success('Existing customer record verified!');
+        if (hasBothDocs) {
+          // Existing customer AND has both NIC front & back copies in DB
+          setIsExistingCustomer(true);
+          setNicVerified(true);
+          updates.isExistingCustomer = true;
+          if (cust.identityDocuments?.nicFront && !formData.nicFront) {
+            updates.nicFront = cust.identityDocuments.nicFront;
+          }
+          if (cust.identityDocuments?.nicBack && !formData.nicBack) {
+            updates.nicBack = cust.identityDocuments.nicBack;
+          }
+
+          setFields(updates);
+          setErrors((prev) => ({ ...prev, nicFront: undefined, nicBack: undefined, nic: undefined, nicInput: undefined }));
+          setVerifyMessage({
+            type: 'existing_verified',
+            title: 'Existing SLT Customer Verified — NIC Copies on File',
+            description: 'Your customer record was found in the SLT database and your NIC copies are on file. Physical NIC document uploads have been waived. Please capture a Live Selfie to complete verification.',
+          });
+          toast.success('Existing customer verified! NIC documents on file.');
+        } else {
+          // Existing customer record in DB, BUT NIC front and/or back copies are missing!
+          setIsExistingCustomer(false);
+          setNicVerified(true);
+          updates.isExistingCustomer = false;
+          setFields(updates);
+
+          setVerifyMessage({
+            type: 'missing_docs',
+            title: 'Customer Record Found — NIC Images Required',
+            description: 'Your SLT account was found, but scanned copies of your NIC (front and/or back) are missing from our database. Please upload or capture both sides of your NIC below.',
+          });
+
+          // Show prominent error message popup modal
+          setMissingDocsModal({
+            isOpen: true,
+            customerName: customerName || 'Valued Customer',
+            nic: clean,
+            missingFront: !hasFront,
+            missingBack: !hasBack,
+          });
+
+          toast.error('NIC document copies are missing on file. Please upload your NIC images.');
+        }
 
         // Update auth session
         try {
@@ -165,7 +226,7 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
     setVerifyMessage({
       type: 'new',
       title: 'New Customer Application',
-      description: 'No prior SLT connection was found for this NIC. All fields are mandatory: please upload your NIC Front, NIC Back, and Live Selfie.',
+      description: 'No prior SLT connection was found for this NIC. All fields are mandatory: please upload your NIC Front, NIC Back, and capture a Live Selfie.',
     });
     toast.success('NIC format validated. Please upload the required documents.');
   };
@@ -185,7 +246,7 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
       }
 
       if (!formData.facePhoto) {
-        e.facePhoto = 'Take a live selfie or upload your portrait photo';
+        e.facePhoto = 'Take a live selfie to verify your identity';
       }
 
       // If NOT an existing customer, NIC Front and Back are mandatory
@@ -338,6 +399,9 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           const updates = { [name]: val };
           if (name === 'nic') {
             setNicInput(val);
+            setIsExistingCustomer(false);
+            setNicVerified(false);
+            setVerifyMessage(null);
             const parsed = parseSriLankanNIC(cleanNIC(val));
             if (parsed?.isValid) {
               if (parsed.dob && !formData.dob) updates.dob = parsed.dob;
@@ -392,7 +456,7 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
               NIC Verification & Customer Check
             </h4>
             <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
-              Enter your NIC to verify your customer status. Existing customers skip NIC document uploads!
+              Enter your NIC to verify your customer status. Existing customers with verified documents skip NIC uploads!
             </p>
           </div>
         </div>
@@ -408,6 +472,9 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
                 const val = e.target.value.toUpperCase();
                 setNicInput(val);
                 setFields({ nic: val });
+                setIsExistingCustomer(false);
+                setNicVerified(false);
+                setVerifyMessage(null);
                 setErrors((prev) => ({ ...prev, nicInput: undefined, nic: undefined }));
               }}
               onKeyDown={(e) => {
@@ -444,7 +511,11 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
               minHeight: '45px',
               borderRadius: '10px',
               border: 'none',
-              backgroundColor: isExistingCustomer ? '#059669' : '#0056b3',
+              backgroundColor: isExistingCustomer
+                ? '#059669'
+                : verifyMessage?.type === 'missing_docs'
+                ? '#d97706'
+                : '#0056b3',
               color: '#ffffff',
               fontSize: '0.9rem',
               fontWeight: 700,
@@ -462,6 +533,11 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
               <>
                 <FiCheck size={16} />
                 <span>Verified Existing</span>
+              </>
+            ) : verifyMessage?.type === 'missing_docs' ? (
+              <>
+                <FiAlertCircle size={16} />
+                <span>NIC Images Needed</span>
               </>
             ) : nicVerified ? (
               <>
@@ -484,16 +560,29 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
               marginTop: '1rem',
               padding: '0.85rem 1rem',
               borderRadius: '10px',
-              border: `1px solid ${verifyMessage.type === 'existing' ? '#bbf7d0' : '#bfdbfe'}`,
-              backgroundColor: verifyMessage.type === 'existing' ? '#f0fdf4' : '#eff6ff',
+              border: `1px solid ${
+                verifyMessage.type === 'existing_verified'
+                  ? '#bbf7d0'
+                  : verifyMessage.type === 'missing_docs'
+                  ? '#fed7aa'
+                  : '#bfdbfe'
+              }`,
+              backgroundColor:
+                verifyMessage.type === 'existing_verified'
+                  ? '#f0fdf4'
+                  : verifyMessage.type === 'missing_docs'
+                  ? '#fff7ed'
+                  : '#eff6ff',
               display: 'flex',
               alignItems: 'flex-start',
               gap: '0.75rem',
             }}
           >
             <div style={{ marginTop: '0.1rem', flexShrink: 0 }}>
-              {verifyMessage.type === 'existing' ? (
+              {verifyMessage.type === 'existing_verified' ? (
                 <FiCheckCircle size={20} color="#16a34a" />
+              ) : verifyMessage.type === 'missing_docs' ? (
+                <FiAlertCircle size={20} color="#ea580c" />
               ) : (
                 <FiUserPlus size={20} color="#2563eb" />
               )}
@@ -503,7 +592,12 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
                 style={{
                   fontSize: '0.88rem',
                   fontWeight: 800,
-                  color: verifyMessage.type === 'existing' ? '#166534' : '#1e40af',
+                  color:
+                    verifyMessage.type === 'existing_verified'
+                      ? '#166534'
+                      : verifyMessage.type === 'missing_docs'
+                      ? '#9a3412'
+                      : '#1e40af',
                   marginBottom: '0.2rem',
                 }}
               >
@@ -513,7 +607,12 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
                 style={{
                   fontSize: '0.82rem',
                   lineHeight: '1.4',
-                  color: verifyMessage.type === 'existing' ? '#15803d' : '#1d4ed8',
+                  color:
+                    verifyMessage.type === 'existing_verified'
+                      ? '#15803d'
+                      : verifyMessage.type === 'missing_docs'
+                      ? '#c2410c'
+                      : '#1d4ed8',
                 }}
               >
                 {verifyMessage.description}
@@ -534,73 +633,98 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
       )}
 
       {/* ── Conditional Document Upload Section ──────────────────── */}
-      {isExistingCustomer ? (
-        /* If Existing Customer: Hide NIC uploads and display waived notice */
-        <div
-          style={{
-            padding: '1rem 1.25rem',
-            backgroundColor: '#f8fafc',
-            border: '1.5px dashed #cbd5e1',
-            borderRadius: '12px',
-            marginBottom: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-          }}
-        >
-          <FiCheckCircle size={22} color="#059669" />
-          <div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>
-              NIC Documents Waived
-            </div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-              Your National Identity Card is already registered with SLT. Only a Live Selfie is required.
+      <div id="nic-upload-section">
+        {isExistingCustomer ? (
+          /* If Existing Customer with documents verified: Hide NIC uploads and display waived notice */
+          <div
+            style={{
+              padding: '1rem 1.25rem',
+              backgroundColor: '#f0fdf4',
+              border: '1.5px solid #86efac',
+              borderRadius: '12px',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+            }}
+          >
+            <FiCheckCircle size={22} color="#059669" />
+            <div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>
+                NIC Documents Waived
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#166534' }}>
+                Your National Identity Card copies are already verified and on file with SLT. Only a Live Selfie is required.
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        /* If New Customer / Unverified: Keep NIC Front and Back upload fields visible & mandatory */
-        <>
-          <IdentityCaptureField
-            label="NIC — Front Side"
-            variant="document"
-            required
-            value={formData.nicFront}
-            error={errors.nicFront}
-            onChange={capture('nicFront', front, true)}
-            instructions={[
-              'Place the front of your NIC on a flat, dark surface or upload a clear photo',
-              'Keep all four corners inside the frame',
-              'Avoid glare so the number is readable',
-            ]}
-          />
-          <IdentityCaptureField
-            label="NIC — Back Side"
-            variant="document"
-            required
-            value={formData.nicBack}
-            error={errors.nicBack}
-            onChange={capture('nicBack', back, true)}
-            instructions={[
-              'Turn the card over and capture or upload the reverse side',
-              'Keep the whole card inside the frame',
-            ]}
-          />
-        </>
-      )}
+        ) : (
+          /* If New Customer OR Existing Customer with missing documents: Show NIC Front and Back */
+          <>
+            {verifyMessage?.type === 'missing_docs' && (
+              <div
+                style={{
+                  padding: '0.85rem 1rem',
+                  backgroundColor: '#fffbeb',
+                  border: '1px solid #fde68a',
+                  borderRadius: '10px',
+                  marginBottom: '1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.65rem',
+                  color: '#92400e',
+                  fontSize: '0.83rem',
+                  fontWeight: 600,
+                }}
+              >
+                <FiAlertCircle size={18} color="#d97706" style={{ flexShrink: 0 }} />
+                <span>
+                  Customer record was found in the database, but physical NIC copies are missing. Please upload both front and back images below.
+                </span>
+              </div>
+            )}
+            <IdentityCaptureField
+              label="NIC — Front Side"
+              variant="document"
+              required
+              value={formData.nicFront}
+              error={errors.nicFront}
+              onChange={capture('nicFront', front, true)}
+              instructions={[
+                'Place the front of your NIC on a flat, dark surface or upload a clear photo',
+                'Keep all four corners inside the frame',
+                'Avoid glare so the number is readable',
+              ]}
+            />
+            <IdentityCaptureField
+              label="NIC — Back Side"
+              variant="document"
+              required
+              value={formData.nicBack}
+              error={errors.nicBack}
+              onChange={capture('nicBack', back, true)}
+              instructions={[
+                'Turn the card over and capture or upload the reverse side',
+                'Keep the whole card inside the frame',
+              ]}
+            />
+          </>
+        )}
+      </div>
 
-      {/* Live Selfie is MANDATORY for both existing and new customers */}
+      {/* Live Selfie is MANDATORY for both existing and new customers — CAMERA CAPTURE ONLY */}
       <IdentityCaptureField
         label="Live Selfie"
         variant="face"
+        cameraOnly={true}
         required
         value={formData.facePhoto}
         error={errors.facePhoto}
         onChange={capture('facePhoto', { current: null }, false)}
         instructions={[
-          'Look straight at the camera or upload a clear portrait photo',
-          'Centre your face in the oval',
-          'No hat, sunglasses or face covering',
+          'Look straight at the camera to capture a live selfie',
+          'Centre your face in the oval guide',
+          'Ensure good lighting and avoid hats or sunglasses',
         ]}
       />
 
@@ -617,6 +741,257 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
       <div style={{ marginTop: '1rem' }}>
         {text('nicAddress', 'Address (as on NIC)')}
       </div>
+
+      {/* ── Missing NIC Documents Error Popup Modal ──────────────── */}
+      {missingDocsModal.isOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="missing-docs-modal-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setMissingDocsModal((prev) => ({ ...prev, isOpen: false }));
+            }
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              maxWidth: '520px',
+              width: '100%',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #fee2e2',
+              overflow: 'hidden',
+              animation: 'fadeIn 0.2s ease-out',
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '1.25rem 1.5rem',
+                borderBottom: '1px solid #f1f5f9',
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: '1rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '10px',
+                    backgroundColor: '#fef2f2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#dc2626',
+                    flexShrink: 0,
+                  }}
+                >
+                  <FiAlertCircle size={24} />
+                </div>
+                <div>
+                  <h3
+                    id="missing-docs-modal-title"
+                    style={{
+                      margin: 0,
+                      fontSize: '1.05rem',
+                      fontWeight: 800,
+                      color: '#0f172a',
+                    }}
+                  >
+                    NIC Document Images Required
+                  </h3>
+                  <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                    Record exists but digital copies are not on file
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMissingDocsModal((prev) => ({ ...prev, isOpen: false }))}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '6px',
+                }}
+                aria-label="Close modal"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '1.25rem 1.5rem' }}>
+              <p style={{ margin: '0 0 1rem 0', fontSize: '0.88rem', color: '#334155', lineHeight: '1.5' }}>
+                Your customer profile was found in our system for NIC{' '}
+                <strong style={{ color: '#0f172a' }}>{missingDocsModal.nic}</strong>
+                {missingDocsModal.customerName && (
+                  <span>
+                    {' '}
+                    registered to <strong style={{ color: '#0f172a' }}>{missingDocsModal.customerName}</strong>
+                  </span>
+                )}
+                . However, scanned copies of your National Identity Card are missing from our database.
+              </p>
+
+              {/* Status details checklist */}
+              <div
+                style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '10px',
+                  padding: '0.85rem 1rem',
+                  marginBottom: '1rem',
+                }}
+              >
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.5px' }}>
+                  Document Status Check
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem' }}>
+                    <span style={{ color: '#334155', fontWeight: 600 }}>NIC Front Copy:</span>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '6px',
+                        backgroundColor: missingDocsModal.missingFront ? '#fef2f2' : '#f0fdf4',
+                        color: missingDocsModal.missingFront ? '#dc2626' : '#16a34a',
+                      }}
+                    >
+                      {missingDocsModal.missingFront ? 'Missing — Upload Required' : 'Available on File'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem' }}>
+                    <span style={{ color: '#334155', fontWeight: 600 }}>NIC Back Copy:</span>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '6px',
+                        backgroundColor: missingDocsModal.missingBack ? '#fef2f2' : '#f0fdf4',
+                        color: missingDocsModal.missingBack ? '#dc2626' : '#16a34a',
+                      }}
+                    >
+                      {missingDocsModal.missingBack ? 'Missing — Upload Required' : 'Available on File'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem' }}>
+                    <span style={{ color: '#334155', fontWeight: 600 }}>Live Selfie:</span>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '6px',
+                        backgroundColor: '#eff6ff',
+                        color: '#2563eb',
+                      }}
+                    >
+                      Live Camera Capture Required
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.5rem',
+                  fontSize: '0.8rem',
+                  color: '#64748b',
+                  lineHeight: '1.45',
+                }}
+              >
+                <FiInfo size={16} color="#0056b3" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+                <span>
+                  Please upload clear images of your NIC (or take photos) in the fields below, then take a live selfie with your camera to proceed with your application.
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: '1rem 1.5rem',
+                backgroundColor: '#f8fafc',
+                borderTop: '1px solid #f1f5f9',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '0.75rem',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setMissingDocsModal((prev) => ({ ...prev, isOpen: false }))}
+                style={{
+                  padding: '0.65rem 1.1rem',
+                  borderRadius: '8px',
+                  border: '1.5px solid #cbd5e1',
+                  backgroundColor: '#ffffff',
+                  color: '#334155',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Dismiss
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMissingDocsModal((prev) => ({ ...prev, isOpen: false }));
+                  setTimeout(() => {
+                    const el = document.getElementById('nic-upload-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                }}
+                style={{
+                  padding: '0.65rem 1.25rem',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#0056b3',
+                  color: '#ffffff',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
+              >
+                <FiUploadCloud size={16} />
+                <span>Upload NIC Documents</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });
