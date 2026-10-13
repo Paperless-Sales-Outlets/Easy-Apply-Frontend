@@ -802,3 +802,10 @@ textarea.form-control { padding: 12px 14px; }
 .pay__status.is-error { background: #fdecea; color: var(--danger); border: 1px solid #f5c2be; }
 .pay__status.is-ok { background: #e8f5ea; color: var(--green-text); border: 1px solid #bfe3c4; }
 .pay__actions { display: grid; gap: 10px; }
+
+/* Phones: the floating cart becomes a bottom bar that reserves its own space,
+   instead of a pill sitting on top of the product buttons. */
+@media (max-width: 900px) {
+  .float-cart { left: 12px; right: 12px; bottom: 12px; justify-content: center; border-radius: 8px; min-height: 52px; }
+  .shop-page, .page-wide { padding-bottom: 76px; }
+}
