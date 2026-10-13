@@ -1189,3 +1189,60 @@ html { scrollbar-gutter: stable; }
   .shop-hero__copy .btn-ds { min-height: 46px; }
   .shop-page { gap: 18px; }
 }
+
+/* ============================================================
+   Wizard breathing room
+   ============================================================ */
+.wz-card { padding: 32px clamp(20px, 3vw, 40px) 36px; gap: 32px; }
+.wz-body { gap: 40px; }
+.wz-head { gap: 8px; margin-bottom: 4px; }
+.wz-head__eyebrow { display: none; }               /* the progress band already says which step */
+.wz-head__title { font-size: clamp(26px, 2.6vw, 34px); }
+.wz-head__desc { font-size: 17px; }
+.wz-step { gap: 36px; }
+.wz-actions { margin-top: 12px; padding-top: 28px; }
+.wz-aside { gap: 16px; }
+
+/* Summary column: only what a new customer needs to recognise */
+.wz-aside .wz-order, .wz-aside .verified-box { padding: 20px 22px; }
+.wz-aside .verified-box__grid > div:nth-child(n + 3) { display: none; }
+.wz-aside .verified-box__grid { grid-template-columns: 1fr; gap: 14px; }
+.wz-aside .wz-order__meta { display: grid; gap: 4px; }
+
+/* Step 2 */
+.wz-section { display: grid; gap: 16px; }
+.wz-section__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.wz-section__head h3, .wz-section__legend { margin: 0; font-size: 20px; color: var(--navy); font-weight: 700; padding: 0; }
+.wz-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.wz-fieldset .wz-section__legend { margin-bottom: 16px; }
+.wz-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 12px; font-size: 14px; font-weight: 700; }
+.wz-pill--ok { background: #e3f3e5; color: var(--green-text); }
+.wz-contact { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 32px; }
+.wz-contact dt { font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.wz-contact dd { margin: 4px 0 0; font-size: 18px; font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
+.wz-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px; }
+.wz-option {
+  display: flex; gap: 16px; align-items: flex-start; padding: 22px 24px; cursor: pointer;
+  background: #fff; border: 1.5px solid var(--line-strong); border-radius: 12px;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+.wz-option:hover { border-color: var(--blue); }
+.wz-option.is-on { border-color: var(--blue); background: #f2f8ff; box-shadow: 0 0 0 1px var(--blue); }
+.wz-option input { flex: none; width: 22px; height: 22px; margin-top: 2px; accent-color: var(--blue); cursor: pointer; }
+.wz-option__text { display: grid; gap: 6px; }
+.wz-option__text strong { display: flex; align-items: center; gap: 8px; font-size: 18px; color: var(--navy); }
+.wz-option__text > span { font-size: 16px; color: var(--muted); line-height: 1.5; }
+.wz-panel { padding: 26px 28px; border: 1px solid var(--line); border-radius: 12px; background: var(--tint); gap: 24px; }
+.wz-panel .field { display: grid; gap: 10px; }
+@media (max-width: 760px) {
+  .wz-card { padding: 20px 16px 24px; gap: 24px; }
+  .wz-step { gap: 28px; }
+  .wz-contact { grid-template-columns: 1fr; }
+  .wz-option { padding: 18px; }
+}
+
+/* narrow screens: summary line first, form underneath (they used to share row 1) */
+@media (max-width: 1080px) {
+  .wz-aside { grid-row: 1; }
+  .wz-body > form { grid-row: 2; }
+}

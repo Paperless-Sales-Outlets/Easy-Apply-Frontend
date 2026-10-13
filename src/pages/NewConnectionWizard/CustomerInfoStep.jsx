@@ -173,159 +173,97 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
     }
   };
 
+  const contactMobile = knownProfile.mobileNumber && `+94 ${knownProfile.mobileNumber}`;
+  const contactEmail = knownProfile.email || formData.email || '';
+
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <WizardStepHeader 
-        stepNumber={2} 
-        totalSteps={7} 
-        title="Service Location Map" 
-        description="Pin the location where the SLT service will be installed or select from your saved addresses." 
+    <motion.div className="wz-step" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: 'easeOut' }}>
+      <WizardStepHeader
+        stepNumber={2}
+        totalSteps={7}
+        title="Where should we install?"
+        description="Choose your registered address, or tell us a different place."
       />
 
-      {/* ── Top Verified Profile Summary Card (Reference Image 2) ── */}
-      <div
-        style={{
-          backgroundColor: '#f8fafc',
-          border: '1.5px solid #e2e8f0',
-          borderRadius: '16px',
-          padding: '1.25rem 1.5rem',
-          marginBottom: '1.75rem',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-          <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiUser color="#0f57a8" /> Contact Details & Verification
-          </h4>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              backgroundColor: '#dcfce7',
-              color: '#15803d',
-              padding: '0.2rem 0.65rem',
-              borderRadius: '9999px',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-            }}
-          >
-            <FiCheck size={12} /> Verified by OTP
+      {/* Contact details: plain facts, no card inside a card */}
+      <section className="wz-section" aria-labelledby="contact-h">
+        <div className="wz-section__head">
+          <h3 id="contact-h">Contact details</h3>
+          <span className="wz-pill wz-pill--ok">
+            <FiCheck size={14} aria-hidden="true" /> Verified by OTP
           </span>
         </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '0.85rem 1.25rem' }}>
-          <ReadOnlyDetail label="Mobile Number" value={knownProfile.mobileNumber && `+94 ${knownProfile.mobileNumber}`} />
-          <ReadOnlyDetail label="Email Address" value={knownProfile.email || formData.email || 'name@example.com'} />
-        </div>
-      </div>
-
-      {/* ── Location Option Selection Tiles ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.75rem' }}>
-        {/* Tile 1: Current / Registered Address — only when SLT already holds one */}
-        {knownProfile.registeredAddress && <div
-          onClick={() => setLocationType('current')}
-          style={{
-            border: `2px solid ${locationType === 'current' ? '#0056b3' : '#e2e8f0'}`,
-            backgroundColor: locationType === 'current' ? '#f0f7ff' : '#ffffff',
-            borderRadius: '14px',
-            padding: '1.25rem',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            position: 'relative',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ fontWeight: 800, fontSize: '0.98rem', color: locationType === 'current' ? '#0056b3' : '#1e293b', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <FiMapPin size={16} /> Current / Registered Address
-            </span>
-            <input
-              type="radio"
-              name="locationOption"
-              checked={locationType === 'current'}
-              onChange={() => setLocationType('current')}
-              style={{ accentColor: '#0056b3', width: '18px', height: '18px' }}
-            />
+        <dl className="wz-contact">
+          <div>
+            <dt>Mobile number</dt>
+            <dd>{contactMobile || '—'}</dd>
           </div>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', fontWeight: 600, lineHeight: 1.4 }}>
-            {knownProfile.registeredAddress}
-          </p>
-        </div>}
+          <div>
+            <dt>Email address</dt>
+            <dd>{contactEmail || '—'}</dd>
+          </div>
+        </dl>
+      </section>
 
-        {/* Tile 2: New Location */}
-        <div
-          onClick={() => setLocationType('new')}
-          style={{
-            border: `2px solid ${locationType === 'new' ? '#0056b3' : '#e2e8f0'}`,
-            backgroundColor: locationType === 'new' ? '#f0f7ff' : '#ffffff',
-            borderRadius: '14px',
-            padding: '1.25rem',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            position: 'relative',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <span style={{ fontWeight: 800, fontSize: '0.98rem', color: locationType === 'new' ? '#0056b3' : '#1e293b', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <FiNavigation size={16} /> New Installation Location
-            </span>
+      {/* Install location */}
+      <fieldset className="wz-section wz-fieldset">
+        <legend className="wz-section__legend">Installation address</legend>
+        <div className="wz-options">
+          {knownProfile.registeredAddress && (
+            <label className={`wz-option${locationType === 'current' ? ' is-on' : ''}`}>
+              <input
+                type="radio"
+                name="locationOption"
+                checked={locationType === 'current'}
+                onChange={() => setLocationType('current')}
+              />
+              <span className="wz-option__text">
+                <strong>
+                  <FiMapPin size={18} aria-hidden="true" /> Registered address
+                </strong>
+                <span>{knownProfile.registeredAddress}</span>
+              </span>
+            </label>
+          )}
+
+          <label className={`wz-option${locationType === 'new' ? ' is-on' : ''}`}>
             <input
               type="radio"
               name="locationOption"
               checked={locationType === 'new'}
               onChange={() => setLocationType('new')}
-              style={{ accentColor: '#0056b3', width: '18px', height: '18px' }}
             />
-          </div>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', fontWeight: 500, lineHeight: 1.4 }}>
-            Select a new city from dropdown and specify your premises address or pick on map.
-          </p>
+            <span className="wz-option__text">
+              <strong>
+                <FiNavigation size={18} aria-hidden="true" /> A different address
+              </strong>
+              <span>Choose a city, then type the address or mark it on the map.</span>
+            </span>
+          </label>
         </div>
-      </div>
+      </fieldset>
 
-      {/* ── If New Location Selected: City Dropdown & Interactive Address Input ── */}
       {locationType === 'new' && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          style={{
-            backgroundColor: '#ffffff',
-            border: '1.5px solid #bfdbfe',
-            borderRadius: '16px',
-            padding: '1.5rem',
-            marginBottom: '1.5rem',
-            boxShadow: '0 4px 15px rgba(0, 86, 179, 0.04)',
-          }}
+        <motion.section
+          className="wz-section wz-panel"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
         >
-          {/* 1. City Dropdown */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label
-              htmlFor="nc-city-select"
-              style={{ display: 'block', fontSize: '0.88rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.45rem' }}
-            >
-              Select City / Area <span style={{ color: '#dc2626' }}>*</span>
+          <div className="field">
+            <label className="field-label" htmlFor="nc-city-select">
+              City / area <span className="req" aria-hidden="true">*</span>
             </label>
             <select
               id="nc-city-select"
               name="city"
+              className="form-control"
               value={formData.city || ''}
               onChange={handleCitySelect}
-              style={{
-                width: '100%',
-                padding: '0.85rem 1rem',
-                fontSize: '0.95rem',
-                borderRadius: '12px',
-                border: '1.5px solid #cbd5e1',
-                backgroundColor: '#ffffff',
-                color: '#0f172a',
-                fontWeight: 600,
-                outline: 'none',
-              }}
               required
             >
               <option value="" disabled>
-                -- Choose your city or area --
+                Choose your city or area
               </option>
               {SRI_LANKA_CITY_POSTAL_DATA.map((item) => (
                 <option key={item.label} value={item.city}>
@@ -335,11 +273,10 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
             </select>
           </div>
 
-          {/* 2. Detailed Address & Map Picker */}
-          <div>
-            <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.45rem' }}>
-              Street Address & Map Location <span style={{ color: '#dc2626' }}>*</span>
-            </label>
+          <div className="field">
+            <span className="field-label">
+              Street address &amp; map location <span className="req" aria-hidden="true">*</span>
+            </span>
             <AddressInputWithMap
               name="installAddress"
               label="Installation Address"
@@ -349,15 +286,11 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
               required
             />
           </div>
-        </motion.div>
+        </motion.section>
       )}
 
-      {/* ── Contact Email for Billing & Updates (Passed from verified session) ── */}
-      <input
-        type="hidden"
-        name="email"
-        value={knownProfile.email || formData.email || ''}
-      />
+      {/* Contact email travels with the form (from the verified session) */}
+      <input type="hidden" name="email" value={contactEmail} />
     </motion.div>
   );
 }
