@@ -394,164 +394,161 @@ export default function NewConnectionWizard() {
       {/* Progress Stepper: 7-Step Tracker Bar */}
       <WizardStepper currentStep={active7Step} />
 
-      {/* Full summary while choosing the location; a one-line brief afterwards so the
-          task of each later step starts on the first screen. */}
-      {step === 'location' || step === 'loop' ? (
-      <div className="wz-info">
-        {selectedProduct && (
-          <div className="wz-order">
-            <div>
-              <span className="wz-order__label">Selected Package</span>
-              <h4>{selectedProduct.productName}</h4>
-            </div>
-            <div className="wz-order__meta">
-              <span>Monthly: <strong>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
-              <span>Installation: <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong></span>
-              {selectedProduct.quantity > 1 && <span>Qty: <strong>{selectedProduct.quantity}</strong></span>}
-            </div>
+      <div className="wz-body">
+        <aside className="wz-aside" aria-label="Application summary">
+          {/* Desktop: the full package + verified-customer summary lives in a sticky side
+              column so the form gets the whole first screen. */}
+          <div className="wz-info">
+            {selectedProduct && (
+              <div className="wz-order">
+                <div>
+                  <span className="wz-order__label">Selected Package</span>
+                  <h4>{selectedProduct.productName}</h4>
+                </div>
+                <div className="wz-order__meta">
+                  <span>Monthly: <strong>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
+                  <span>Installation: <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong></span>
+                  {selectedProduct.quantity > 1 && <span>Qty: <strong>{selectedProduct.quantity}</strong></span>}
+                </div>
+              </div>
+            )}
+
+            <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
           </div>
-        )}
 
-        <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
-      </div>
-      ) : (
-        <div className="wz-brief" aria-label="Application summary">
-          {selectedProduct && (
-            <span>
-              <small>Package</small>
-              <strong>{selectedProduct.productName}</strong>
-            </span>
-          )}
-          {selectedProduct && (
-            <span>
-              <small>Monthly</small>
-              <strong>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong>
-            </span>
-          )}
-          {selectedProduct && (
-            <span>
-              <small>Installation</small>
-              <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong>
-            </span>
-          )}
-          {customerExists && selectedAccount && (
-            <span>
-              <small>Account</small>
-              <strong>{selectedAccount.fullName || selectedAccount.customerName || selectedAccount.telephone}</strong>
-            </span>
-          )}
-        </div>
-      )}
+          {/* Phones and tablets: one compact line instead. */}
+          <div className="wz-brief" aria-hidden="true">
+            {selectedProduct && (
+              <span>
+                <small>Package</small>
+                <strong>{selectedProduct.productName}</strong>
+              </span>
+            )}
+            {selectedProduct && (
+              <span>
+                <small>Monthly</small>
+                <strong>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong>
+              </span>
+            )}
+            {selectedProduct && (
+              <span>
+                <small>Installation</small>
+                <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong>
+              </span>
+            )}
+          </div>
+        </aside>
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ minHeight: '240px', marginBottom: '1.25rem' }}>
-          {step === 'location' && (
-            <CustomerInfoStep
-              formData={formData}
-              handleChange={handleChange}
-              setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
-              selectedProduct={selectedProduct}
-            />
-          )}
+        <form onSubmit={handleSubmit}>
+          <div style={{ minHeight: '240px', marginBottom: '1.25rem' }}>
+            {step === 'location' && (
+              <CustomerInfoStep
+                formData={formData}
+                handleChange={handleChange}
+                setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
+                selectedProduct={selectedProduct}
+              />
+            )}
 
-          {step === 'loop' && (
-            <LoopCheckStep formData={formData} onAvailable={nextStep} onGoBack={prevStep} />
-          )}
+            {step === 'loop' && (
+              <LoopCheckStep formData={formData} onAvailable={nextStep} onGoBack={prevStep} />
+            )}
 
-          {step === 'identity' && (
-            <IdentityStep
-              ref={identityRef}
-              formData={formData}
-              setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
-            />
-          )}
+            {step === 'identity' && (
+              <IdentityStep
+                ref={identityRef}
+                formData={formData}
+                setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
+              />
+            )}
 
-          {step === 'signature' && (
-            <DeclarationStep
-              ref={declarationRef}
-              formData={formData}
-              handleChange={handleChange}
-              setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
-            />
-          )}
+            {step === 'signature' && (
+              <DeclarationStep
+                ref={declarationRef}
+                formData={formData}
+                handleChange={handleChange}
+                setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
+              />
+            )}
 
-          {step === 'payment' && (
-            <PaymentStep
-              isActive
-              verifiedPhone={verifiedMobile}
-              amount={selectedProduct?.installationFee || 2500}
-              amountLabel="Installation Fee"
-              onSuccess={handlePaymentSuccess}
-            />
-          )}
+            {step === 'payment' && (
+              <PaymentStep
+                isActive
+                verifiedPhone={verifiedMobile}
+                amount={selectedProduct?.installationFee || 2500}
+                amountLabel="Installation Fee"
+                onSuccess={handlePaymentSuccess}
+              />
+            )}
 
-          {step === 'review' && (
-            <ReviewStep
-              formData={formData}
-              selectedProduct={selectedProduct}
-              goTo={goTo}
-              onEditCart={() => navigate('/cart')}
-            />
-          )}
-        </div>
-
-        {submitError && (
-          <p className="wz-error" role="alert" style={{ marginBottom: '1rem' }}>
-            {submitError}
-          </p>
-        )}
-
-        <div className="wz-actions">
-          <div className="wz-actions__left">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={handleBackNavigation}
-              disabled={submitting}
-            >
-              {stepIndex === 0 || step === 'location' ? '← Back to Cart' : '← Back'}
-            </button>
-
-            {draftRestored && (
-              <button
-                type="button"
-                onClick={handleResetDraft}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#94a3b8',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  padding: '0.35rem',
-                }}
-                title="Clear saved draft and start from step 1"
-              >
-                Reset Form
-              </button>
+            {step === 'review' && (
+              <ReviewStep
+                formData={formData}
+                selectedProduct={selectedProduct}
+                goTo={goTo}
+                onEditCart={() => navigate('/cart')}
+              />
             )}
           </div>
 
-          {(() => {
-            const label = step === 'review'
-              ? (submitting ? 'Submitting Application...' : 'Submit Application →')
-              : (step === 'payment' && (formData.paymentReference || formData.paymentCompleted))
-              ? 'Continue to Review →'
-              : NEXT_LABEL[step];
-            if (!label) return null;
-            return (
+          {submitError && (
+            <p className="wz-error" role="alert" style={{ marginBottom: '1rem' }}>
+              {submitError}
+            </p>
+          )}
+
+          <div className="wz-actions">
+            <div className="wz-actions__left">
               <button
-                type="submit"
-                className={`btn ${step === 'review' ? 'btn-success' : 'btn-primary'} btn-lg`}
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleBackNavigation}
                 disabled={submitting}
               >
-                {label}
+                {stepIndex === 0 || step === 'location' ? '← Back to Cart' : '← Back'}
               </button>
-            );
-          })()}
-        </div>
-      </form>
+
+              {draftRestored && (
+                <button
+                  type="button"
+                  onClick={handleResetDraft}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    padding: '0.35rem',
+                  }}
+                  title="Clear saved draft and start from step 1"
+                >
+                  Reset Form
+                </button>
+              )}
+            </div>
+
+            {(() => {
+              const label = step === 'review'
+                ? (submitting ? 'Submitting Application...' : 'Submit Application →')
+                : (step === 'payment' && (formData.paymentReference || formData.paymentCompleted))
+                ? 'Continue to Review →'
+                : NEXT_LABEL[step];
+              if (!label) return null;
+              return (
+                <button
+                  type="submit"
+                  className={`btn ${step === 'review' ? 'btn-success' : 'btn-primary'} btn-lg`}
+                  disabled={submitting}
+                >
+                  {label}
+                </button>
+              );
+            })()}
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

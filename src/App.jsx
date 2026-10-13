@@ -305,14 +305,14 @@ const AnimatedRoutes = () => {
           }
         />
 
+        {/* Public: anyone with a reference code can look it up. Signed-out visitors get the
+            bare page (no site header/footer); signed-in customers get the full shell. */}
         <Route
           path="/check-status"
           element={
-            <RequireAuth>
-              <PageWrapper>
-                <CheckStatusPage />
-              </PageWrapper>
-            </RequireAuth>
+            <PageWrapper fullBleed>
+              <CheckStatusPage />
+            </PageWrapper>
           }
         />
 
@@ -406,7 +406,7 @@ const NavigationLayout = ({ children }) => {
   // cart button competing with the hero or form.
   const isAuthOrLanding =
     ['/login', '/signup', '/welcome', '/landing'].includes(location.pathname) ||
-    (location.pathname === '/' && !isAuthenticated());
+    (['/', '/check-status'].includes(location.pathname) && !isAuthenticated());
 
   if (isAdmin || isAuthOrLanding) {
     return (

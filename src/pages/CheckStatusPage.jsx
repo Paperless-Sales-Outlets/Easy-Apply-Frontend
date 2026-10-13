@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -18,9 +18,12 @@ import {
   FiShield,
   FiStar,
   FiZap,
+  FiArrowLeft,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
+import { isAuthenticated } from '../utils/authSession';
+import sltLogo from '../assets/slt-logo.png';
 import InstallationReviewModal from '../components/InstallationReviewModal';
 import WizardStepper from '../components/WizardStepper';
 
@@ -140,151 +143,73 @@ export default function CheckStatusPage() {
     }
   };
 
+  const standalone = !isAuthenticated();
+
   return (
-    <div
-      style={{
-        minHeight: '85vh',
-        backgroundColor: '#f8fafc',
-        padding: '2.5rem 1rem',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-      }}
-    >
-      <div style={{ maxWidth: '820px', width: '100%', display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-        
-        {/* Main Card Container */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            boxShadow: '0 20px 50px rgba(0, 86, 179, 0.07)',
-            border: '1px solid #e2e8f0',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Top Blue Accent Gradient Bar */}
-          <div style={{ height: '6px', background: 'linear-gradient(90deg, #0056b3 0%, #003b73 50%, #10b981 100%)' }} />
+    <div className={`track-page${standalone ? ' track-page--bare' : ''}${result ? ' has-result' : ''}`}>
+      {standalone && (
+        <header className="track-bar">
+          <Link to="/" aria-label="SLTMobitel EasyApply home">
+            <img src={sltLogo} alt="SLTMobitel, The Connection" />
+          </Link>
+          <Link to="/" className="btn-ds btn-ds--text">
+            <FiArrowLeft size={18} aria-hidden="true" />
+            <span>Back</span>
+          </Link>
+        </header>
+      )}
 
-          <div style={{ padding: '2.25rem 2.25rem 1.75rem 2.25rem' }}>
-            {/* Header Badge & Title */}
-            <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  fontSize: '0.78rem',
-                  fontWeight: 900,
-                  color: '#0056b3',
-                  backgroundColor: '#eff6ff',
-                  padding: '0.35rem 0.9rem',
-                  borderRadius: '9999px',
-                  border: '1px solid #bfdbfe',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  marginBottom: '0.75rem',
-                }}
-              >
-                <FiSearch size={14} />
-                Real-Time Application Status
-              </span>
+      <div className="track-inner">
+        <section className="track-card" aria-labelledby="track-h">
+          <span className="shop-hero__tag" style={{ justifySelf: 'start' }}>
+            REAL-TIME STATUS
+          </span>
+          <h1 id="track-h" className="track-card__title">Check Application Status</h1>
+          <p className="track-card__lead">
+            Enter the reference number from your SMS or confirmation to see where your SLTMobitel request is.
+          </p>
 
-              <h1 style={{ fontSize: '1.9rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
-                Check Application Status
-              </h1>
-
-              <p style={{ fontSize: '0.94rem', color: '#64748b', margin: 0, fontWeight: 600 }}>
-                Track live status updates and timeline for your SLTMobitel request.
-              </p>
-            </div>
-
-            {/* Search Input Form */}
-            <form onSubmit={handleCheck} style={{ marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: '280px', position: 'relative' }}>
-                  <input
-                    id="reference"
-                    type="text"
-                    aria-label="Application reference number"
-                    value={reference}
-                    onChange={(e) => setReference(e.target.value)}
-                    placeholder="Enter Reference Number (e.g. REQ-36670371)"
-                    style={{
-                      width: '100%',
-                      padding: '0.9rem 2.75rem 0.9rem 1.15rem',
-                      borderRadius: '16px',
-                      border: '1.5px solid #cbd5e1',
-                      fontSize: '1rem',
-                      fontWeight: 800,
-                      color: '#0f172a',
-                      outline: 'none',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                      transition: 'all 0.2s ease',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                  {reference && (
-                    <button
-                      type="button"
-                      onClick={() => setReference('')}
-                      style={{
-                        position: 'absolute',
-                        right: '14px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        color: '#475569',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        display: 'flex',
-                      }}
-                    >
-                      <FiX size={18} />
-                    </button>
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading || !reference.trim()}
-                  style={{
-                    padding: '0.9rem 2rem',
-                    borderRadius: '16px',
-                    background: isLoading || !reference.trim() ? '#e2e8f0' : 'var(--brand-gradient-soft)',
-                    color: isLoading || !reference.trim() ? '#475569' : '#ffffff',
-                    border: 'none',
-                    fontWeight: 800,
-                    fontSize: '0.95rem',
-                    cursor: isLoading || !reference.trim() ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    boxShadow: isLoading || !reference.trim() ? 'none' : '0 4px 16px rgba(0, 86, 179, 0.3)',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {isLoading ? (
-                    <>
-                      <FiRefreshCw className="spin" size={18} />
-                      <span>Checking...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Check Status</span>
-                      <FiArrowRight size={18} />
-                    </>
-                  )}
-                </button>
+          <form onSubmit={handleCheck} className="track-form">
+            <label htmlFor="reference" className="label">Reference number</label>
+            <div className="track-form__row">
+              <div className="track-form__field">
+                <input
+                  id="reference"
+                  type="text"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  inputMode="text"
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  placeholder="e.g. REQ-36670371"
+                  className="form-control"
+                />
+                {reference && (
+                  <button type="button" className="track-form__clear" onClick={() => setReference('')} aria-label="Clear reference number">
+                    <FiX size={18} aria-hidden="true" />
+                  </button>
+                )}
               </div>
-            </form>
-          </div>
-        </motion.div>
+              <button type="submit" className="btn-ds btn-ds--primary" disabled={isLoading || !reference.trim()} style={{ minHeight: 52 }}>
+                {isLoading ? (
+                  <>
+                    <FiRefreshCw className="spin" size={18} aria-hidden="true" />
+                    <span>Checking...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Check Status</span>
+                    <FiArrowRight size={18} aria-hidden="true" />
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          <p className="track-card__help">
+            <FiPhoneCall size={16} aria-hidden="true" /> Need help? Call <strong>1212</strong>
+          </p>
+        </section>
 
         {/* STATUS RESULT CARD */}
         <AnimatePresence mode="wait">

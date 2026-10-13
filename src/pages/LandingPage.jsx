@@ -12,6 +12,7 @@ import {
   FiShield,
 } from 'react-icons/fi';
 import sltLogo from '../assets/slt-logo.png';
+import ConnectionArt from '../components/ConnectionArt';
 import { isAuthenticated } from '../utils/authSession';
 
 const TRUST = [
@@ -50,8 +51,6 @@ export default function LandingPage() {
 
       <main className="landing__main">
         <section className="landing__hero">
-          <span className="shop-hero__slab" aria-hidden="true" style={{ width: 130, height: 380, right: -30, bottom: -150, background: '#1b6bb8' }} />
-          <span className="shop-hero__slab" aria-hidden="true" style={{ width: 60, height: 300, right: 60, bottom: -150, background: 'var(--green)' }} />
           <div className="landing__hero-copy">
             <span className="shop-hero__tag">NEW CONNECTION</span>
             <h1>Your connection, just a few taps away.</h1>
@@ -64,6 +63,9 @@ export default function LandingPage() {
                 </li>
               ))}
             </ul>
+          </div>
+          <div className="landing__art">
+            <ConnectionArt />
           </div>
         </section>
 

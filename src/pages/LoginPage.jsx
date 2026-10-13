@@ -12,6 +12,7 @@ import {
   FiArrowRight,
 } from 'react-icons/fi';
 import './SignUpPage.css';
+import ConnectionArt from '../components/ConnectionArt';
 import signupBgImage from '../assets/team_laptop.jpg';
 import sltlogoOnly from '../assets/sltlogoOnly.png';
 import api from '../utils/api';
@@ -360,6 +361,9 @@ export default function LoginPage() {
               </p>
             </div>
 
+            <div className="login-sidebar-art" aria-hidden="true">
+            <ConnectionArt />
+          </div>
             <div className="login-sidebar-bottom">
               <ul className="signup-features login-sidebar-features" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 <li className="signup-feature-item">

@@ -121,7 +121,11 @@ export default function Navbar() {
   useLayoutEffect(() => {
     const el = menuRef.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    const update = () => setNavHeight(el.offsetHeight);
+    const update = () => {
+      setNavHeight(el.offsetHeight);
+      // Sticky page elements (filters, wizard summary) sit just under the header.
+      document.documentElement.style.setProperty('--nav-h', `${el.offsetHeight}px`);
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
