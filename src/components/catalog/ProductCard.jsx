@@ -34,6 +34,60 @@ export default function ProductCard({
     else onAddToCart(product);
   };
 
+  // One quiet line of detail: speed when it means something, else the first feature.
+  const firstFeature = Array.isArray(product.features) && product.features.length ? product.features[0] : '';
+  const showSpeed = product.speed && !['voice', 'hd tv'].includes(String(product.speed).toLowerCase());
+  const detail = showSpeed ? product.speed : firstFeature || category;
+
+  const cartButton = (
+    <button
+      type="button"
+      className={`btn-ds ${isInCart ? 'btn-ds--outline' : 'btn-ds--buy'}`}
+      onClick={handleCart}
+      disabled={disabled}
+      aria-label={isInCart ? `${name}: ${t('catalog.card.removeFromCart', 'remove from cart')}` : undefined}
+    >
+      {isInCart ? (
+        <>
+          <FiCheck size={18} aria-hidden="true" />
+          <span>{t('catalog.card.inCart', 'In Cart')}</span>
+        </>
+      ) : disabled ? (
+        <span>{disabledReason}</span>
+      ) : (
+        <>
+          <FiShoppingCart size={18} aria-hidden="true" />
+          <span>{t('catalog.card.addToCart', 'Add to Cart')}</span>
+        </>
+      )}
+    </button>
+  );
+
+  if (viewMode !== 'list') {
+    return (
+      <article className={`pc pc--tile${isSelected ? ' is-selected' : ''}`}>
+        <button type="button" className="pc__open" onClick={() => onSelect(product)} aria-label={`${name}, ${money(monthlyPrice)}, ${t('catalog.card.viewDetails', 'View details')}`}>
+          <span className="pc__pic" aria-hidden="true">
+            {bannerUrl && !imgFailed ? (
+              <img src={bannerUrl} alt="" loading="lazy" onError={() => setImgFailed(true)} />
+            ) : (
+              <span className="pc__graphic">
+                <ProductDeviceGraphic name={name} category={category} />
+              </span>
+            )}
+          </span>
+          <span className="pc__title">{name}</span>
+          <span className="pc__detail">{detail}</span>
+        </button>
+        <p className="pc__price">
+          <strong>{money(monthlyPrice)}</strong>
+          <small>{t('catalog.card.perMonth', '/ month')}</small>
+        </p>
+        <div className="pc__buy">{cartButton}</div>
+      </article>
+    );
+  }
+
   return (
     <article className={`pc${viewMode === 'list' ? ' pc--row' : ''}${isSelected ? ' is-selected' : ''}`}>
       <div className="pc__media" aria-hidden="true">
