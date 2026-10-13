@@ -903,3 +903,14 @@ textarea.form-control { padding: 12px 14px; }
 @media (max-width: 960px) {
   .ad-visual__img { width: 88%; border-radius: 12px; }
 }
+
+/* Sign-in: always one view, no page scroll (compact vertical rhythm) */
+.signup-root, .signup-root .signup-card.login-card { height: 100vh; height: 100dvh; max-height: 100dvh; overflow: hidden; }
+.signup-root .login-form-section { overflow-y: auto; padding-block: clamp(16px, 3vh, 48px); }
+.signup-root .login-form-container { gap: clamp(10px, 1.8vh, 18px); }
+.signup-root .login-form-header h2 { font-size: clamp(22px, 3.2vh, 28px); margin: 0; }
+.signup-root .login-form-header p { margin: 4px 0 0; }
+.signup-root .login-logo { height: clamp(36px, 6vh, 48px); margin-bottom: clamp(4px, 1.5vh, 16px); }
+@media (max-width: 900px) {
+  .signup-root, .signup-root .signup-card.login-card { height: auto; max-height: none; min-height: 100dvh; overflow: visible; }
+}

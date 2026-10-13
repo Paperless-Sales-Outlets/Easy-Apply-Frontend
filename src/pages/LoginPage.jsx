@@ -338,11 +338,6 @@ export default function LoginPage() {
           <div className="login-form-container">
             <img className="login-logo" src={sltLogoFull} alt="SLTMobitel, The Connection" />
             {/* Header Badge & Title */}
-            <div className="login-form-badge">
-              <FiZap size={13} aria-hidden="true" />
-              <span>Fast Onboarding</span>
-            </div>
-
             <div className="login-form-header">
               <h2>Quick Identity Verification</h2>
               <p>Verify your contact details to begin your application.</p>
@@ -585,20 +580,6 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <ul className="login-trust">
-              <li>
-                <FiShield size={18} aria-hidden="true" />
-                <span>Your information is encrypted under National Data Protection standards</span>
-              </li>
-              <li>
-                <FiZap size={18} aria-hidden="true" />
-                <span>Fast, paperless onboarding with real-time verification</span>
-              </li>
-              <li>
-                <FiHeadphones size={18} aria-hidden="true" />
-                <span>24/7 support, call 1212</span>
-              </li>
-            </ul>
           </div>
         </main>
       </div>
