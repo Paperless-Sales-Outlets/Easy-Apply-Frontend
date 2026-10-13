@@ -330,7 +330,7 @@ export default function LoginPage() {
       <div className="signup-card login-card">
         {/* BRAND PHOTOGRAPHY — decorative, feathered into the page */}
         <div className="signup-sidebar login-visual" aria-hidden="true">
-          <HeroVisual focus="mobile" />
+          <HeroVisual />
         </div>
 
         {/* RIGHT ACTION FORM CARD */}

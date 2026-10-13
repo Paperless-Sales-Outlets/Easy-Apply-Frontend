@@ -838,41 +838,35 @@ textarea.form-control { padding: 12px 14px; }
 .lp__foot span { display: inline-flex; gap: 8px; align-items: center; }
 .lp__copy-note { margin-left: auto; }
 
-.lp__visual { position: relative; min-height: 0; background: #fff; overflow: hidden; }
+.lp__visual { position: relative; min-height: 0; background: #0b2f5e; overflow: hidden; }
 
-/* Feathered photography: the stage keeps the artwork's aspect, the mask melts
-   every edge into the panel so there is no frame or hard border. */
-.hero-visual { position: absolute; inset: 0; overflow: hidden; }
-.hero-visual__stage { position: absolute; top: 0; left: 0; height: 100%; aspect-ratio: 1919 / 669; will-change: transform; }
-.hero-visual__stage::before {
-  /* the artwork carries SLT's own logo in its top-left corner; the page shows the real one */
-  content: ''; position: absolute; z-index: 1; left: 0; top: 0; width: 24%; height: 25%; background: #fff;
+/* Advert panel: blurred colour wash + the advert with feathered edges */
+.ad-visual { position: absolute; inset: 0; overflow: hidden; background: #0b2f5e; display: grid; place-items: center; }
+.ad-visual__ambient {
+  position: absolute; inset: -12%; width: 124%; height: 124%; object-fit: cover;
+  filter: blur(80px) saturate(1.1); opacity: 0.85; transform: scale(1.1);
 }
-.hero-visual__stage img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
-.hero-visual {
-  -webkit-mask-image: radial-gradient(ellipse 78% 74% at 58% 52%, #000 48%, transparent 100%);
-  mask-image: radial-gradient(ellipse 78% 74% at 58% 52%, #000 48%, transparent 100%);
+.ad-visual__img {
+  position: relative; display: block; width: min(90%, 800px); height: auto; border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(4, 18, 44, 0.45), 0 2px 10px rgba(4, 18, 44, 0.3);
+  /* soften the outer 3% so the picture dissolves instead of ending in a hard line */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 3.5%, #000 96.5%, transparent), linear-gradient(to bottom, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 3.5%, #000 96.5%, transparent), linear-gradient(to bottom, transparent, #000 6%, #000 94%, transparent);
+  mask-composite: intersect;
 }
-.hero-visual__signal { position: absolute; width: 0; height: 0; }
-.hero-visual__signal i {
-  position: absolute; left: 0; top: 0; width: clamp(90px, 9vw, 150px); aspect-ratio: 1; margin: calc(clamp(90px, 9vw, 150px) / -2) 0 0 calc(clamp(90px, 9vw, 150px) / -2);
-  border-radius: 50%; border: 1.5px solid var(--blue); opacity: 0; transform: scale(0.35);
-  animation: signal 5.4s cubic-bezier(0.23, 1, 0.32, 1) infinite;
-}
-.hero-visual__signal i:nth-child(2) { animation-delay: 1.8s; border-color: var(--green); }
-.hero-visual__signal i:nth-child(3) { animation-delay: 3.6s; }
-@keyframes signal {
-  0% { opacity: 0; transform: scale(0.35); }
-  12% { opacity: 0.55; }
-  100% { opacity: 0; transform: scale(1.9); }
-}
+.ad-visual::after { content: ''; position: absolute; inset: 0; background: rgba(6, 26, 58, 0.28); }
+.ad-visual__img { z-index: 1; }
+.ad-visual.is-fallback { background: #fff; }
+.ad-visual.is-fallback::after { display: none; }
+.ad-visual.is-fallback .ad-visual__ambient { display: none; }
+.ad-visual.is-fallback .ad-visual__img { width: 100%; border-radius: 0; box-shadow: none; -webkit-mask-image: none; mask-image: none; }
 
 /* Entrance: one calm, staggered rise on first paint (rare view, so it earns it) */
 .rise { animation: rise 520ms cubic-bezier(0.23, 1, 0.32, 1) both; animation-delay: calc(var(--i, 0) * 55ms); }
 @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .rise { animation: none; }
-  .hero-visual__signal i { animation: none; }
 }
 
 @media (max-width: 960px) {
@@ -881,7 +875,7 @@ textarea.form-control { padding: 12px 14px; }
   .lp__logo { height: 44px; }
   .lp__ready { grid-template-columns: 1fr 1fr; }
   .lp__cta { width: 100%; }
-  .lp__visual { height: 220px; order: -1; }
+  .lp__visual { height: 210px; order: -1; }
   .lp__copy-note { display: none; }
 }
 @media (max-height: 700px) and (min-width: 961px) {
@@ -905,9 +899,7 @@ textarea.form-control { padding: 12px 14px; }
   .login-trust { display: none; }
 }
 
-/* Phones: show the handset portrait only, so nobody is cut in half */
+
 @media (max-width: 960px) {
-  .hero-visual__stage { transform: translateX(-50%) !important; }
-  .hero-visual__signal { display: none; }
-  .hero-visual { -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%); mask-image: linear-gradient(to bottom, #000 70%, transparent 100%); }
+  .ad-visual__img { width: 88%; border-radius: 12px; }
 }

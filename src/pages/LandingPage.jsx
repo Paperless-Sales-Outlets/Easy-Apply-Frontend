@@ -1,16 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowRight, FiCreditCard, FiCamera, FiHome, FiPackage, FiPhoneCall, FiShield } from 'react-icons/fi';
+import { FiArrowRight, FiPackage, FiPhoneCall } from 'react-icons/fi';
 import sltLogo from '../assets/slt-logo.png';
 import HeroVisual from '../components/HeroVisual';
 import { isAuthenticated } from '../utils/authSession';
-
-const READY = [
-  { icon: FiCreditCard, text: 'NIC, front & back' },
-  { icon: FiCamera, text: 'Phone or laptop camera' },
-  { icon: FiHome, text: 'Installation address' },
-  { icon: FiCreditCard, text: 'Card for the fee' },
-];
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -28,14 +21,7 @@ export default function LandingPage() {
         <img className="lp__logo rise" style={{ '--i': 0 }} src={sltLogo} alt="SLTMobitel, The Connection" />
 
         <div className="lp__body">
-          <p className="lp__eyebrow rise" style={{ '--i': 1 }}>
-            <span className="lp__tick" aria-hidden="true">
-              <i />
-              <i />
-            </span>
-            New connection
-          </p>
-          <h1 className="lp__title rise" style={{ '--i': 2 }}>
+          <h1 className="lp__title rise" style={{ '--i': 1 }}>
             Your connection,
             <br />
             just a few taps away.
@@ -59,29 +45,18 @@ export default function LandingPage() {
             Already started? Enter your mobile number to pick up where you left off. Your progress is saved automatically.
           </p>
 
-          <ul className="lp__ready rise" style={{ '--i': 6 }} aria-label="Have these ready">
-            {READY.map(({ icon: Icon, text }) => (
-              <li key={text}>
-                <Icon size={20} aria-hidden="true" />
-                <span>{text}</span>
-              </li>
-            ))}
-          </ul>
         </div>
 
         <footer className="lp__foot rise" style={{ '--i': 7 }}>
           <a href="tel:1212">
             <FiPhoneCall size={16} aria-hidden="true" /> Need help? Call 1212
           </a>
-          <span>
-            <FiShield size={16} aria-hidden="true" /> Protected connection
-          </span>
           <span className="lp__copy-note">&copy; 2026 SLT-Mobitel</span>
         </footer>
       </section>
 
       <aside className="lp__visual">
-        <HeroVisual focus="mobile" />
+        <HeroVisual />
       </aside>
     </div>
   );

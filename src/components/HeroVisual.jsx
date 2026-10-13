@@ -1,32 +1,32 @@
-import React from 'react';
-import heroArt from '../assets/HeroSLT.png';
+import React, { useState } from 'react';
+import fallbackArt from '../assets/HeroSLT.png';
+
+// A live SLT advert, referenced straight from slt.lk. If SLT rotates the banner
+// and the URL stops resolving, the page falls back to the bundled brand artwork
+// instead of showing a broken image.
+export const AD_URL =
+  'https://www.slt.lk/sites/default/files/2026-06/home_slider/Asset%201-100%203.jpg';
 
 /**
- * Brand photography with soft, feathered edges (no hard frame) and a quiet
- * "signal" motion: three thin rings widen from the handset and fade, once
- * every few seconds. It says "connected" without decorating.
- *
- * `focus` picks which of the two people in the SLT artwork is shown.
- * Only transform/opacity animate; reduced motion shows the still image.
+ * Right-hand brand panel: the advert sits centred with softened, feathered
+ * edges over a blurred wash of its own colours, so there is no hard frame
+ * and no blank margin. Static by design; the page's own entrance does the
+ * motion.
  */
-const FOCUS = {
-  // translateX % of the stage + where the signal source sits inside it (% of stage)
-  mobile: { shift: -16, x: 22.4, y: 70.2 },
-  voice: { shift: -50, x: 66.5, y: 36 },
-};
+export default function HeroVisual({ className = '' }) {
+  const [src, setSrc] = useState(AD_URL);
+  const failed = src !== AD_URL;
 
-export default function HeroVisual({ focus = 'mobile', className = '' }) {
-  const f = FOCUS[focus] || FOCUS.mobile;
   return (
-    <div className={`hero-visual ${className}`} aria-hidden="true">
-      <div className="hero-visual__stage" style={{ transform: `translateX(${f.shift}%)` }}>
-        <img src={heroArt} alt="" draggable="false" />
-        <span className="hero-visual__signal" style={{ left: `${f.x}%`, top: `${f.y}%` }}>
-          <i />
-          <i />
-          <i />
-        </span>
-      </div>
+    <div className={`ad-visual${failed ? ' is-fallback' : ''} ${className}`} aria-hidden="true">
+      <img className="ad-visual__ambient" src={src} alt="" draggable="false" />
+      <img
+        className="ad-visual__img"
+        src={src}
+        alt=""
+        draggable="false"
+        onError={() => setSrc(fallbackArt)}
+      />
     </div>
   );
 }
