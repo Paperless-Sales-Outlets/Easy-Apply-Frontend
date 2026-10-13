@@ -505,88 +505,6 @@ textarea.form-control { padding: 12px 14px; }
 .verified-box__grid dd { margin: 2px 0 0; font-weight: 700; color: var(--text); overflow-wrap: anywhere; }
 @media (max-width: 760px) { .verified-box__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-/* ---------- Landing (signed-out entry) ---------- */
-.landing { min-height: 100vh; background: var(--page-bg); display: flex; flex-direction: column; }
-.landing__bar {
-  background: #fff; box-shadow: 0 2px 8px rgba(23, 60, 113, 0.1);
-  display: flex; justify-content: space-between; align-items: center; gap: 12px;
-  padding: 10px var(--page-gutter, 24px);
-}
-.landing__bar img { height: 44px; width: auto; display: block; }
-.landing__help { display: inline-flex; align-items: center; gap: 8px; color: var(--navy); font-weight: 700; text-decoration: none; min-height: 44px; }
-.landing__main {
-  flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 28px var(--page-gutter, 24px);
-  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 480px); gap: 28px; align-items: stretch;
-}
-.landing__hero {
-  position: relative; overflow: hidden; background: var(--blue); border-radius: 12px; color: #fff;
-  display: grid; align-content: center; padding: 48px; min-height: 480px;
-}
-.landing__hero-copy { position: relative; display: grid; gap: 18px; justify-items: start; max-width: 520px; }
-.landing__hero h1 { color: #fff; font-size: clamp(30px, 3.6vw, 44px); line-height: 1.15; margin: 0; }
-.landing__hero p { color: #e4eefc; font-size: 18px; margin: 0; }
-.landing__trust { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
-.landing__trust li { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; }
-.landing__trust svg { flex: none; margin-top: 2px; color: #7bd472; }
-.landing__card {
-  background: #fff; border: 1px solid var(--line); border-top: 5px solid var(--blue); border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(23, 60, 113, 0.12); padding: 28px; display: grid; gap: 16px; align-content: start;
-}
-.landing__card h2 { margin: 0; font-size: 26px; }
-.landing__card h3 { margin: 0 0 8px; font-size: 16px; }
-.landing__muted { margin: 0; color: var(--muted); font-size: 15px; }
-.landing__cta { min-height: 60px; font-size: 18px; }
-.landing__ready ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.landing__ready li { display: flex; gap: 10px; align-items: center; font-size: 15px; font-weight: 600; }
-.landing__ready-ic { flex: none; width: 36px; height: 36px; border-radius: 8px; background: var(--sky); color: var(--blue); display: grid; place-items: center; }
-.landing__track {
-  display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; cursor: pointer;
-  background: #fff; border: 1.5px solid var(--blue); border-radius: 8px; color: var(--blue); font-family: var(--font-body);
-}
-.landing__track:hover { background: var(--sky); }
-.landing__track strong { display: block; color: var(--navy); font-size: 16px; }
-.landing__track small { color: var(--muted); font-size: 14px; font-weight: 600; }
-.landing__foot { text-align: center; padding: 16px; color: var(--muted); font-size: 14px; }
-@media (max-width: 900px) {
-  .landing__main { grid-template-columns: 1fr; padding-top: 16px; gap: 16px; }
-  .landing__hero { padding: 24px 20px; min-height: 0; }
-  .landing__hero p { font-size: 16px; }
-  .landing__trust { grid-template-columns: 1fr; gap: 8px; }
-  .landing__card { padding: 20px; }
-  .landing__ready ul { grid-template-columns: 1fr; }
-  .landing__bar img { height: 36px; }
-}
-
-/* ---------- Sign-in / registration (login-* and signup-*) ----------
-   The pages keep their markup; this block swaps the gradient panel and
-   hairline type for the SLT blue panel and readable sizes. The sidebar
-   background-image is inline in the JSX, hence the one !important. */
-.signup-root { background: var(--page-bg); }
-.signup-root .signup-card { border-radius: 12px; box-shadow: 0 10px 30px rgba(23, 60, 113, 0.12); border: 1px solid var(--line); }
-.signup-root .signup-sidebar { background-image: none !important; background-color: var(--blue); }
-.signup-root .signup-sidebar-title { font-size: 34px; line-height: 1.15; color: #fff; }
-.signup-root .signup-sidebar-desc { font-size: 17px; color: #e4eefc; opacity: 1; }
-.signup-root .signup-feature-icon { background: #fff; color: var(--blue); border-radius: 10px; }
-.signup-root .signup-feature-title { font-size: 16px; font-weight: 700; color: #fff; }
-.signup-root .signup-feature-item p { font-size: 15px; color: #e4eefc; opacity: 1; }
-.signup-root .login-sidebar-footer { font-size: 14px; color: #d6e8ff; opacity: 1; }
-.signup-root .login-form-badge { font-size: 14px; font-weight: 700; background: var(--sky); color: var(--blue); border-color: transparent; }
-.signup-root .login-form-header h2, .signup-root .signup-form-header h2 { font-size: 26px; color: var(--navy); }
-.signup-root .login-form-header p, .signup-root .signup-form-header p { font-size: 16px; color: var(--muted); }
-.signup-root .signup-label { font-size: 15px; font-weight: 700; color: var(--navy); }
-.signup-root .signup-input-wrap { min-height: 52px; border: 1.5px solid var(--line-strong); border-radius: 4px; background: #fff; }
-.signup-root .signup-input-wrap:focus-within { border-color: var(--blue); box-shadow: none; outline: 3px solid var(--bright); outline-offset: 1px; }
-.signup-root .signup-input { font-size: 16px; color: var(--text); }
-.signup-root .signup-input::placeholder { color: #6b7a93; }
-.signup-root .login-prefix-box { font-size: 16px; font-weight: 700; color: var(--navy); border-radius: 4px 0 0 4px; }
-.signup-root .signup-field-help, .signup-root .signup-footer-text, .signup-root .login-step-hint { font-size: 14px; color: var(--muted); }
-.signup-root .signup-field-error, .signup-root .signup-error { font-size: 14px; font-weight: 600; color: var(--danger); }
-.signup-root .signup-btn { min-height: 52px; border-radius: 4px; background: var(--blue); color: #fff; font-size: 17px; font-weight: 700; box-shadow: none; border: 2px solid transparent; }
-.signup-root .signup-btn:hover:not(:disabled) { background: var(--blue-deep); box-shadow: none; transform: none; }
-.signup-root .signup-btn:disabled { background: #e3e8f0; color: #5b6880; }
-.signup-root .login-inline-action-btn, .signup-root .login-resend-btn { font-size: 14px; font-weight: 700; min-height: 36px; border-radius: 4px; }
-.signup-root .login-otp-box { min-height: 56px; font-size: 22px; font-weight: 700; border: 1.5px solid var(--line-strong); border-radius: 4px; }
-.signup-root .login-otp-box:focus { border-color: var(--blue); outline: 3px solid var(--bright); outline-offset: 1px; }
 
 /* ---------- Generic page frame + services grid ---------- */
 .page-wide { max-width: var(--page-max); margin: 0 auto; padding: 24px var(--page-gutter, 24px) 8px; display: grid; gap: 20px; }
@@ -810,69 +728,19 @@ textarea.form-control { padding: 12px 14px; }
   .shop-page, .page-wide { padding-bottom: 76px; }
 }
 
-/* ---------- Connection art (landing + sign-in) ---------- */
-.conn-art { --px: 0; --py: 0; width: 100%; height: 100%; display: grid; place-items: center; pointer-events: auto; }
-.conn-art svg { width: 100%; height: 100%; max-height: 100%; overflow: visible; }
-.conn-art__layer { transition: transform 600ms cubic-bezier(0.23, 1, 0.32, 1); }
-.conn-art__layer--back { transform: translate(calc(var(--px) * -10px), calc(var(--py) * -8px)); }
-.conn-art__layer--mid { transform: translate(calc(var(--px) * 6px), calc(var(--py) * 5px)); }
-.conn-art__layer--front { transform: translate(calc(var(--px) * 14px), calc(var(--py) * 10px)); }
-.conn-art__line { fill: none; stroke: rgba(255, 255, 255, 0.35); stroke-width: 3; stroke-linecap: round; }
-.conn-art__slash { fill: none; stroke-width: 26; stroke-linecap: round; opacity: 0.18; }
-.conn-art__slash--blue { stroke: #8cc4ff; }
-.conn-art__slash--green { stroke: #7bd472; }
-.conn-art__pulse {
-  fill: #7bd472; offset-distance: 0%; opacity: 0;
-  animation: conn-run 5s linear infinite;
-}
-.conn-art__pulse--burst { fill: #fff; animation: none; }
-.conn-art:hover .conn-art__pulse--burst { animation: conn-run 1.7s linear infinite; }
-@keyframes conn-run {
-  0% { offset-distance: 0%; opacity: 0; }
-  8% { opacity: 1; }
-  92% { opacity: 1; }
-  100% { offset-distance: 100%; opacity: 0; }
-}
-.conn-art__ring {
-  fill: none; stroke: #fff; stroke-width: 2; opacity: 0; transform-box: fill-box; transform-origin: center;
-  animation: conn-ring 5s ease-out infinite;
-}
-@keyframes conn-ring {
-  0%, 82% { opacity: 0; transform: scale(1); }
-  86% { opacity: 0.9; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.55); }
-}
-.conn-art__hub-ring { fill: rgba(255, 255, 255, 0.18); }
-.conn-art__node { transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1); }
-@media (prefers-reduced-motion: reduce) {
-  .conn-art__pulse, .conn-art__ring { animation: none; }
-  .conn-art__layer { transition: none; transform: none; }
-}
 
 /* ============================================================
    One-screen layouts (signed-out entry pages fit the viewport)
    ============================================================ */
-.landing { height: 100vh; height: 100dvh; min-height: 560px; }
-.landing__main { min-height: 0; padding-top: 16px; padding-bottom: 8px; }
-.landing__hero { min-height: 0; padding: 36px 40px 0; grid-template-rows: auto minmax(0, 1fr); align-content: stretch; }
-.landing__hero-copy { max-width: 560px; }
-.landing__art { position: relative; min-height: 0; margin: 0 -40px; }
-.landing__card { align-self: center; max-height: 100%; overflow: auto; }
-.landing__foot { padding: 8px; }
 @media (max-width: 900px) {
-  .landing { height: auto; min-height: 100dvh; }
-  .landing__hero { padding: 22px 18px 0; }
-  .landing__art { height: 180px; margin: 0 -18px; }
-}
+      }
 @media (max-height: 680px) and (min-width: 901px) {
-  .landing__hero p, .landing__trust { display: none; }
-}
+  }
 
 /* Sign-in: the card is exactly one screen, never taller */
 .signup-root { min-height: 100vh; min-height: 100dvh; }
 .signup-root .login-sidebar-art { position: absolute; inset: 0; z-index: 0; opacity: 0.9; pointer-events: none; }
-.signup-root .login-sidebar-art .conn-art { pointer-events: auto; }
-.signup-root .signup-sidebar { position: relative; overflow: hidden; }
+.signup-root .login-sidebar-art .signup-root .signup-sidebar { position: relative; overflow: hidden; }
 .signup-root .signup-sidebar-inner { position: relative; z-index: 1; }
 
 /* Track page */
@@ -891,8 +759,6 @@ textarea.form-control { padding: 12px 14px; }
 .track-form__field { flex: 1 1 260px; position: relative; }
 .track-form__field .form-control { font-weight: 700; font-size: 18px; letter-spacing: .02em; padding-right: 44px; }
 .track-form__clear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border: 0; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
-.landing__art .conn-art, .login-sidebar-art .conn-art { position: absolute; inset: 0; }
-.landing__art svg, .login-sidebar-art svg { width: 100%; height: 100%; }
 
 /* Sign-in as a full-screen split: brand art left, form right, one view */
 .signup-root { padding: 0 !important; display: block; }
@@ -913,8 +779,7 @@ textarea.form-control { padding: 12px 14px; }
 }
 .signup-root .signup-card.login-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .signup-root .login-sidebar-art { min-height: 240px; }
-.login-sidebar-art svg, .landing__art svg { overflow: hidden; }
-@media (max-width: 900px) { .signup-root .signup-card.login-card { grid-template-columns: 1fr; } .signup-root .login-sidebar-art { min-height: 150px; } }
+.login-sidebar-art svg, @media (max-width: 900px) { .signup-root .signup-card.login-card { grid-template-columns: 1fr; } .signup-root .login-sidebar-art { min-height: 150px; } }
 .signup-root .signup-sidebar { flex: 1 1 50%; width: 50%; max-width: none; }
 .signup-root .signup-form-section { flex: 1 1 50%; width: 50%; max-width: none; }
 .signup-root .login-form-container { width: 100%; max-width: 460px; margin: 0 auto; }
@@ -946,4 +811,103 @@ textarea.form-control { padding: 12px 14px; }
   .signup-root .signup-sidebar-desc { display: none; }
   .signup-root .login-sidebar-art { min-height: 90px; max-height: 110px; }
   .signup-root .signup-form-section { padding: 18px 20px 28px; align-items: start; }
+}
+
+/* ============================================================
+   Landing — full-bleed split: copy left, brand photography right
+   ============================================================ */
+.lp { height: 100vh; height: 100dvh; min-height: 600px; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); background: #fff; overflow: hidden; }
+.lp__copy { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: clamp(24px, 3.6vw, 52px) clamp(24px, 5vw, 80px); min-height: 0; }
+.lp__logo { height: 52px; width: auto; justify-self: start; }
+.lp__body { align-self: center; display: grid; gap: 18px; max-width: 620px; }
+.lp__eyebrow { margin: 0; display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--blue); }
+.lp__tick { display: inline-flex; gap: 3px; }
+.lp__tick i { display: block; width: 4px; height: 20px; transform: skewX(-20deg); border-radius: 1px; }
+.lp__tick i:first-child { background: var(--blue); }
+.lp__tick i:last-child { background: var(--green); }
+.lp__title { margin: 0; font-size: clamp(34px, 4.2vw, 58px); line-height: 1.06; letter-spacing: -0.015em; font-weight: 700; color: var(--navy); }
+.lp__lead { margin: 0; max-width: 520px; font-size: clamp(16px, 1.25vw, 19px); color: var(--muted); }
+.lp__actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.lp__cta { min-height: 56px; padding: 0 28px; font-size: 17px; }
+.lp__note { margin: 0; font-size: 14px; color: var(--muted); max-width: 520px; }
+.lp__ready { list-style: none; margin: 8px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.lp__ready li { display: grid; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.35; }
+.lp__ready svg { color: var(--blue); }
+.lp__foot { display: flex; gap: 8px 28px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--muted); font-weight: 600; }
+.lp__foot a { color: var(--navy); text-decoration: none; display: inline-flex; gap: 8px; align-items: center; }
+.lp__foot span { display: inline-flex; gap: 8px; align-items: center; }
+.lp__copy-note { margin-left: auto; }
+
+.lp__visual { position: relative; min-height: 0; background: #fff; overflow: hidden; }
+
+/* Feathered photography: the stage keeps the artwork's aspect, the mask melts
+   every edge into the panel so there is no frame or hard border. */
+.hero-visual { position: absolute; inset: 0; overflow: hidden; }
+.hero-visual__stage { position: absolute; top: 0; left: 0; height: 100%; aspect-ratio: 1919 / 669; will-change: transform; }
+.hero-visual__stage::before {
+  /* the artwork carries SLT's own logo in its top-left corner; the page shows the real one */
+  content: ''; position: absolute; z-index: 1; left: 0; top: 0; width: 24%; height: 25%; background: #fff;
+}
+.hero-visual__stage img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+.hero-visual {
+  -webkit-mask-image: radial-gradient(ellipse 78% 74% at 58% 52%, #000 48%, transparent 100%);
+  mask-image: radial-gradient(ellipse 78% 74% at 58% 52%, #000 48%, transparent 100%);
+}
+.hero-visual__signal { position: absolute; width: 0; height: 0; }
+.hero-visual__signal i {
+  position: absolute; left: 0; top: 0; width: clamp(90px, 9vw, 150px); aspect-ratio: 1; margin: calc(clamp(90px, 9vw, 150px) / -2) 0 0 calc(clamp(90px, 9vw, 150px) / -2);
+  border-radius: 50%; border: 1.5px solid var(--blue); opacity: 0; transform: scale(0.35);
+  animation: signal 5.4s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+.hero-visual__signal i:nth-child(2) { animation-delay: 1.8s; border-color: var(--green); }
+.hero-visual__signal i:nth-child(3) { animation-delay: 3.6s; }
+@keyframes signal {
+  0% { opacity: 0; transform: scale(0.35); }
+  12% { opacity: 0.55; }
+  100% { opacity: 0; transform: scale(1.9); }
+}
+
+/* Entrance: one calm, staggered rise on first paint (rare view, so it earns it) */
+.rise { animation: rise 520ms cubic-bezier(0.23, 1, 0.32, 1) both; animation-delay: calc(var(--i, 0) * 55ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  .hero-visual__signal i { animation: none; }
+}
+
+@media (max-width: 960px) {
+  .lp { grid-template-columns: 1fr; grid-template-rows: auto auto; height: auto; min-height: 100dvh; overflow: visible; }
+  .lp__copy { padding: 20px 20px 24px; gap: 20px; grid-template-rows: auto auto auto; }
+  .lp__logo { height: 44px; }
+  .lp__ready { grid-template-columns: 1fr 1fr; }
+  .lp__cta { width: 100%; }
+  .lp__visual { height: 220px; order: -1; }
+  .lp__copy-note { display: none; }
+}
+@media (max-height: 700px) and (min-width: 961px) {
+  .lp__lead, .lp__note { display: none; }
+}
+
+/* ============================================================
+   Sign-in — form left, feathered brand photography right
+   ============================================================ */
+.signup-root .signup-card.login-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); background: #fff; }
+.signup-root .login-visual { order: 2; position: relative; background: #fff !important; padding: 0; min-height: 0; flex: 1 1 50%; }
+.signup-root .login-form-section { order: 1; background: #fff; }
+.signup-root .login-form-container { display: grid; gap: 18px; align-content: center; }
+.login-logo { height: 48px; width: auto; justify-self: start; margin-bottom: 8px; }
+.login-trust { list-style: none; margin: 8px 0 0; padding: 16px 0 0; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.login-trust li { display: flex; gap: 12px; align-items: flex-start; color: var(--muted); font-size: 14px; font-weight: 600; }
+.login-trust svg { flex: none; color: var(--blue); margin-top: 2px; }
+@media (max-width: 900px) {
+  .signup-root .login-visual { order: -1; height: 150px; flex: none; }
+  .signup-root .signup-card.login-card { grid-template-columns: 1fr; }
+  .login-trust { display: none; }
+}
+
+/* Phones: show the handset portrait only, so nobody is cut in half */
+@media (max-width: 960px) {
+  .hero-visual__stage { transform: translateX(-50%) !important; }
+  .hero-visual__signal { display: none; }
+  .hero-visual { -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%); mask-image: linear-gradient(to bottom, #000 70%, transparent 100%); }
 }

@@ -1,32 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  FiArrowRight,
-  FiCheck,
-  FiCreditCard,
-  FiCamera,
-  FiHome,
-  FiPackage,
-  FiChevronRight,
-  FiPhoneCall,
-  FiShield,
-} from 'react-icons/fi';
+import { FiArrowRight, FiCreditCard, FiCamera, FiHome, FiPackage, FiPhoneCall, FiShield } from 'react-icons/fi';
 import sltLogo from '../assets/slt-logo.png';
-import ConnectionArt from '../components/ConnectionArt';
+import HeroVisual from '../components/HeroVisual';
 import { isAuthenticated } from '../utils/authSession';
 
-const TRUST = [
-  'No password needed',
-  'No Teleshop visit required',
-  'Save & continue anytime',
-  'SLT secure payment gateway',
-];
-
 const READY = [
-  { icon: FiCreditCard, text: 'Your NIC (front & back)' },
-  { icon: FiCamera, text: 'Phone or laptop with a camera' },
+  { icon: FiCreditCard, text: 'NIC, front & back' },
+  { icon: FiCamera, text: 'Phone or laptop camera' },
   { icon: FiHome, text: 'Installation address' },
-  { icon: FiCreditCard, text: 'Card for the connection fee' },
+  { icon: FiCreditCard, text: 'Card for the fee' },
 ];
 
 export default function LandingPage() {
@@ -40,80 +23,66 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="landing">
-      <header className="landing__bar">
-        <img src={sltLogo} alt="SLTMobitel, The Connection" />
-        <a className="landing__help" href="tel:1212">
-          <FiPhoneCall size={18} aria-hidden="true" />
-          <span>Need help? Call 1212</span>
-        </a>
-      </header>
+    <div className="lp">
+      <section className="lp__copy">
+        <img className="lp__logo rise" style={{ '--i': 0 }} src={sltLogo} alt="SLTMobitel, The Connection" />
 
-      <main className="landing__main">
-        <section className="landing__hero">
-          <div className="landing__hero-copy">
-            <span className="shop-hero__tag">NEW CONNECTION</span>
-            <h1>Your connection, just a few taps away.</h1>
-            <p>Apply for a new connection, manage your services and track requests, all in one secure place.</p>
-            <ul className="landing__trust">
-              {TRUST.map((item) => (
-                <li key={item}>
-                  <FiCheck size={18} aria-hidden="true" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="landing__art">
-            <ConnectionArt />
-          </div>
-        </section>
-
-        <section className="landing__card" aria-labelledby="landing-start-h">
-          <h2 id="landing-start-h">Let's get you connected</h2>
-          <p className="landing__muted">Start a new application or pick up right where you left off.</p>
-
-          <button type="button" id="btn-start-application" className="btn-ds btn-ds--buy btn-ds--block landing__cta" onClick={handleStartApplication}>
-            <span>{isUserAuthenticated ? 'Continue application' : 'Start new application'}</span>
-            <FiArrowRight size={20} aria-hidden="true" />
-          </button>
-
-          <p className="landing__muted">
-            Already started? Enter your <strong>mobile number</strong> to pick up right where you left off. Your progress is saved automatically.
+        <div className="lp__body">
+          <p className="lp__eyebrow rise" style={{ '--i': 1 }}>
+            <span className="lp__tick" aria-hidden="true">
+              <i />
+              <i />
+            </span>
+            New connection
+          </p>
+          <h1 className="lp__title rise" style={{ '--i': 2 }}>
+            Your connection,
+            <br />
+            just a few taps away.
+          </h1>
+          <p className="lp__lead rise" style={{ '--i': 3 }}>
+            Apply for a new connection, manage your services and track requests, all in one secure place. No password,
+            no teleshop visit.
           </p>
 
-          <div className="landing__ready">
-            <h3>Have these ready</h3>
-            <ul>
-              {READY.map(({ icon: Icon, text }) => (
-                <li key={text}>
-                  <span className="landing__ready-ic" aria-hidden="true">
-                    <Icon size={18} />
-                  </span>
-                  <span>{text}</span>
-                </li>
-              ))}
-            </ul>
+          <div className="lp__actions rise" style={{ '--i': 4 }}>
+            <button type="button" id="btn-start-application" className="btn-ds btn-ds--primary lp__cta" onClick={handleStartApplication}>
+              <span>{isUserAuthenticated ? 'Continue application' : 'Start new application'}</span>
+              <FiArrowRight size={20} aria-hidden="true" />
+            </button>
+            <button type="button" id="card-track-application" className="btn-ds btn-ds--outline lp__cta" onClick={() => navigate('/check-status')}>
+              <FiPackage size={20} aria-hidden="true" />
+              <span>Track my application</span>
+            </button>
           </div>
+          <p className="lp__note rise" style={{ '--i': 5 }}>
+            Already started? Enter your mobile number to pick up where you left off. Your progress is saved automatically.
+          </p>
 
-          <button type="button" id="card-track-application" className="landing__track" onClick={() => navigate('/check-status')}>
-            <span className="landing__ready-ic" aria-hidden="true">
-              <FiPackage size={18} />
-            </span>
-            <span style={{ flex: 1, textAlign: 'left' }}>
-              <strong>Track my application</strong>
-              <small>Check the status of a submitted application</small>
-            </span>
-            <FiChevronRight size={20} aria-hidden="true" />
-          </button>
+          <ul className="lp__ready rise" style={{ '--i': 6 }} aria-label="Have these ready">
+            {READY.map(({ icon: Icon, text }) => (
+              <li key={text}>
+                <Icon size={20} aria-hidden="true" />
+                <span>{text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          <p className="landing__muted" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <footer className="lp__foot rise" style={{ '--i': 7 }}>
+          <a href="tel:1212">
+            <FiPhoneCall size={16} aria-hidden="true" /> Need help? Call 1212
+          </a>
+          <span>
             <FiShield size={16} aria-hidden="true" /> Protected connection
-          </p>
-        </section>
-      </main>
+          </span>
+          <span className="lp__copy-note">&copy; 2026 SLT-Mobitel</span>
+        </footer>
+      </section>
 
-      <footer className="landing__foot">&copy; 2026 SLT-Mobitel &middot; The National ICT Solutions Provider</footer>
+      <aside className="lp__visual">
+        <HeroVisual focus="mobile" />
+      </aside>
     </div>
   );
 }

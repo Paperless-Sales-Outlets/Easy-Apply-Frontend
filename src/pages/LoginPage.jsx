@@ -12,8 +12,8 @@ import {
   FiArrowRight,
 } from 'react-icons/fi';
 import './SignUpPage.css';
-import ConnectionArt from '../components/ConnectionArt';
-import signupBgImage from '../assets/team_laptop.jpg';
+import HeroVisual from '../components/HeroVisual';
+import sltLogoFull from '../assets/slt-logo.png';
 import sltlogoOnly from '../assets/sltlogoOnly.png';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
@@ -31,18 +31,6 @@ function formatPhoneDisplay(raw) {
   return `${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5)}`;
 }
 
-const SLTBrandLogo = () => (
-  <div className="login-brand-logo" role="img" aria-label="SLTMobitel — The Connection">
-    <img src={sltlogoOnly} alt="SLTMobitel Emblem" className="login-brand-emblem" />
-    <div className="login-brand-text">
-      <div className="login-brand-title">
-        <span className="brand-slt">SLT</span>
-        <span className="brand-mobitel">MOBITEL</span>
-      </div>
-      <span className="login-brand-tagline">The Connection</span>
-    </div>
-  </div>
-);
 
 /**
  * Look up the SLT connections behind a phone number so the rest of the app
@@ -340,73 +328,15 @@ export default function LoginPage() {
   return (
     <div className="signup-root">
       <div className="signup-card login-card">
-        {/* LEFT PROMOTIONAL PANEL */}
-        <div
-          className="signup-sidebar"
-          style={{
-            backgroundImage: `linear-gradient(160deg, rgba(6, 40, 110, 0.95) 0%, rgba(6, 40, 110, 0.88) 40%, rgba(3, 70, 50, 0.95) 100%), url(${signupBgImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center bottom',
-            backgroundRepeat: 'no-repeat',
-          }}
-        >
-          <div className="signup-sidebar-inner">
-            <div className="login-sidebar-top">
-              <SLTBrandLogo />
-              <h1 className="signup-sidebar-title" style={{ marginTop: '1.5rem' }}>
-                Join the Family
-              </h1>
-              <p className="signup-sidebar-desc">
-                The national ICT provider.
-              </p>
-            </div>
-
-            <div className="login-sidebar-art" aria-hidden="true">
-            <ConnectionArt />
-          </div>
-            <div className="login-sidebar-bottom">
-              <ul className="signup-features login-sidebar-features" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                <li className="signup-feature-item">
-                  <div className="signup-feature-icon" aria-hidden="true">
-                    <FiShield size={20} />
-                  </div>
-                  <div>
-                    <p className="signup-feature-title">Data Protection &amp; Privacy</p>
-                    <p>Your information is encrypted under National Data Protection standards</p>
-                  </div>
-                </li>
-                <li className="signup-feature-item">
-                  <div className="signup-feature-icon" aria-hidden="true">
-                    <FiZap size={20} />
-                  </div>
-                  <div>
-                    <p className="signup-feature-title">Instant Digital Verification</p>
-                    <p>Fast, paperless onboarding with real-time verification</p>
-                  </div>
-                </li>
-                <li className="signup-feature-item">
-                  <div className="signup-feature-icon" aria-hidden="true">
-                    <FiHeadphones size={20} />
-                  </div>
-                  <div>
-                    <p className="signup-feature-title">24/7 Priority Support</p>
-                    <p>Our service team is ready to assist you at every step</p>
-                  </div>
-                </li>
-              </ul>
-
-              <div className="login-sidebar-footer">
-                <span>SLTMobitel Official Portal</span>
-                <span>•</span>
-                <span>256-bit Encrypted</span>
-              </div>
-            </div>
-          </div>
+        {/* BRAND PHOTOGRAPHY — decorative, feathered into the page */}
+        <div className="signup-sidebar login-visual" aria-hidden="true">
+          <HeroVisual focus="mobile" />
         </div>
 
         {/* RIGHT ACTION FORM CARD */}
         <main className="signup-form-section login-form-section">
           <div className="login-form-container">
+            <img className="login-logo" src={sltLogoFull} alt="SLTMobitel, The Connection" />
             {/* Header Badge & Title */}
             <div className="login-form-badge">
               <FiZap size={13} aria-hidden="true" />
@@ -654,6 +584,21 @@ export default function LoginPage() {
                     : 'All details verified. Click to continue.')}
               </p>
             </div>
+
+            <ul className="login-trust">
+              <li>
+                <FiShield size={18} aria-hidden="true" />
+                <span>Your information is encrypted under National Data Protection standards</span>
+              </li>
+              <li>
+                <FiZap size={18} aria-hidden="true" />
+                <span>Fast, paperless onboarding with real-time verification</span>
+              </li>
+              <li>
+                <FiHeadphones size={18} aria-hidden="true" />
+                <span>24/7 support, call 1212</span>
+              </li>
+            </ul>
           </div>
         </main>
       </div>
