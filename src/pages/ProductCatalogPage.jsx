@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiAlertCircle } from 'react-icons/fi';
+import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiFilter } from 'react-icons/fi';
 import CategoryChips from '../components/catalog/CategoryChips';
 import SidebarFilters from '../components/catalog/SidebarFilters';
 import ProductCard from '../components/catalog/ProductCard';
@@ -10,7 +10,7 @@ import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
 import PackageDetailModal from '../components/PackageDetailModal';
 import SkeletonCard from '../components/catalog/SkeletonCard';
 import Toast from '../components/common/Toast';
-import HeroBannerCarousel from '../components/catalog/HeroBannerCarousel';
+import CatalogHero from '../components/catalog/CatalogHero';
 import { getProducts, addToCart, removeFromCart, getLocalCart, clearCart } from '../services/productService';
 
 const DEFAULT_MOCKUP_PRODUCTS = [
@@ -576,6 +576,35 @@ export default function ProductCatalogPage() {
     return { typeCounts, speedCounts };
   }, [products, activeCategory, treeFilter, selectedTypes, selectedSpeeds, searchQuery]);
 
+  // Filter options come from the live API products: only types / speed bands the
+  // catalogue really contains are offered (counts above still follow the active filters).
+  const typeOptions = useMemo(() => {
+    const present = new Set();
+    products.forEach((p) => {
+      const type = getTypeOf(p);
+      if (type) present.add(type);
+    });
+    return ['PEO TV', 'Fibre Broadband', 'LTE Home', 'Voice']
+      .filter((id) => present.has(id))
+      .map((id) => ({ id, label: id }));
+  }, [products]);
+
+  const speedOptions = useMemo(
+    () =>
+      [
+        { id: 'up_to_100', label: 'Up to 100 Mbps' },
+        { id: '100_300', label: '100 – 300 Mbps' },
+        { id: '300_500', label: '300 – 500 Mbps' },
+        { id: 'above_500', label: 'Above 500 Mbps' },
+      ].filter((opt) => products.some((p) => matchesSpeedRange(p, opt.id))),
+    [products]
+  );
+
+  const availableChipCategories = useMemo(
+    () => CHIP_CATEGORIES.filter((c) => products.some((p) => getTypeOf(p) === c)),
+    [products]
+  );
+
   // Group filtered products into Category Sections (Voice, Broadband, PEO TV)
   const categorySections = useMemo(() => {
     const voiceProds = filteredProducts.filter((p) => (p.category || p.name || '').toLowerCase().includes('voice'));
@@ -593,8 +622,6 @@ export default function ProductCatalogPage() {
         title: t('catalog.sections.voiceTitle', 'Voice Packages (Max 1)'),
         subtitle: t('catalog.sections.voiceSubtitle', 'Voice packages for crystal clear home & office calls'),
         icon: <FiPhone />,
-        bgColor: '#eff6ff',
-        iconColor: '#0b4a91',
         products: voiceProds,
       });
     }
@@ -605,8 +632,6 @@ export default function ProductCatalogPage() {
         title: t('catalog.sections.broadbandTitle', 'Broadband Packages (Fibre & LTE - Max 1)'),
         subtitle: t('catalog.sections.broadbandSubtitle', 'High-speed internet for home, gaming & business'),
         icon: <FiGlobe />,
-        bgColor: '#eff6ff',
-        iconColor: '#0b4a91',
         products: broadbandProds,
       });
     }
@@ -617,8 +642,6 @@ export default function ProductCatalogPage() {
         title: t('catalog.sections.peoTvTitle', 'PEO TV Packages (Max 1)'),
         subtitle: t('catalog.sections.peoTvSubtitle', 'Live HD channels, catch-up TV & 4K entertainment'),
         icon: <FiTv />,
-        bgColor: '#eff6ff',
-        iconColor: '#0b4a91',
         products: peoTvProds,
       });
     }
@@ -626,153 +649,60 @@ export default function ProductCatalogPage() {
     return sections;
   }, [filteredProducts, activeCategory, t, i18n.language]);
 
+  const sidebarProps = {
+    activeCategory,
+    onSelectTreeNode: handleSelectTreeNode,
+    onSelectCategory: handleSelectCategory,
+    activeTreeKey: treeFilter?.key || null,
+    typeOptions: loading ? undefined : typeOptions,
+    speedOptions: loading ? undefined : speedOptions,
+    typeCounts: loading ? undefined : typeCounts,
+    speedCounts: loading ? undefined : speedCounts,
+    selectedTypes,
+    onTypeToggle: handleTypeToggle,
+    selectedSpeeds,
+    onSpeedToggle: handleSpeedToggle,
+    onClearAll: handleClearAll,
+  };
+
+  const valueProps = [
+    { icon: FiCheckCircle, title: t('catalog.value.guaranteed', '100% Guaranteed'), text: t('catalog.value.guaranteedText', 'Authentic SLT Services') },
+    { icon: FiClock, title: t('catalog.value.express', 'Express Activation'), text: t('catalog.value.expressText', 'Connected in 24-48 Hrs') },
+    { icon: FiShield, title: t('catalog.value.secure', 'Secure Payments'), text: t('catalog.value.secureText', 'Bank Grade Security') },
+    { icon: FiSliders, title: t('catalog.value.flexi', 'Flexi Customization'), text: t('catalog.value.flexiText', 'Tailored Add-on Options') },
+    { icon: FiLock, title: t('catalog.value.paperless', 'Paperless Process'), text: t('catalog.value.paperlessText', '100% Online Verification') },
+  ];
+
   return (
-    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', paddingBottom: '3rem' }}>
+    <div>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      {/* Main Container */}
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem' }}>
-        {/* ── Top Hero Banner & Quick Actions Section ── */}
-        <HeroBannerCarousel
-          onShopNow={() => {
-            document
-              .getElementById('products-section')
-              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }}
+      <div className="shop-page">
+        <CatalogHero
+          onShopNow={() =>
+            document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
         />
 
-        {/* ── Voice Compulsory & Bundle Rules Status Bar (Commented out: single package selection allowed) ──
-        <div
-          style={{
-            backgroundColor: cartCategoryAnalysis.hasVoice ? '#f0fdf4' : '#eff6ff',
-            border: `1.5px solid ${cartCategoryAnalysis.hasVoice ? '#86efac' : '#93c5fd'}`,
-            borderRadius: '16px',
-            padding: '0.85rem 1.25rem',
-            marginTop: '1.25rem',
-            marginBottom: '0.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '0.75rem',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <span style={{ fontSize: '1.2rem', color: cartCategoryAnalysis.hasVoice ? '#0f7a4d' : '#0b4a91' }}>
-              {cartCategoryAnalysis.hasVoice ? <FiCheckCircle /> : <FiAlertCircle />}
-            </span>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: cartCategoryAnalysis.hasVoice ? '#14532d' : '#1e40af' }}>
-                {cartCategoryAnalysis.hasVoice ? t('catalog.bundleRules.selected', 'Voice Package Selected') : t('catalog.bundleRules.required', 'Voice Package Required (Compulsory)')}
-              </div>
-              <div style={{ fontSize: '0.78rem', color: cartCategoryAnalysis.hasVoice ? '#15803d' : '#1e3a8a', fontWeight: 600 }}>
-                {t('catalog.bundleRules.allowedBundles', 'Allowed bundles:')} <strong>{t('catalog.bundleRules.voiceOnly', 'Voice Only')}</strong> • <strong>{t('catalog.bundleRules.voiceBroadband', 'Voice + Broadband')}</strong> • <strong>{t('catalog.bundleRules.voiceBroadbandPeoTv', 'Voice + Broadband + PEO TV')}</strong> {t('catalog.bundleRules.maxOne', '(Max 1 package per category)')}
-              </div>
-            </div>
+        <div className="shop-layout" id="products-section" style={{ scrollMarginTop: 140 }}>
+          {/* Filters: live category tree + product-type / speed options derived from the API */}
+          <div className="shop-sidebar">
+            <SidebarFilters {...sidebarProps} />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <span
-              style={{
-                padding: '0.25rem 0.65rem',
-                borderRadius: '9999px',
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                backgroundColor: cartCategoryAnalysis.hasVoice ? '#dcfce7' : '#dbeafe',
-                color: cartCategoryAnalysis.hasVoice ? '#0f7a4d' : '#0b4a91',
-              }}
-            >
-              {t('catalog.bundleRules.voiceLabel', 'Voice:')} {cartCategoryAnalysis.hasVoice ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.requiredCount', 'Required (0/1)')}
-            </span>
-            <span
-              style={{
-                padding: '0.25rem 0.65rem',
-                borderRadius: '9999px',
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                backgroundColor: cartCategoryAnalysis.hasBroadband ? '#dcfce7' : '#f1f5f9',
-                color: cartCategoryAnalysis.hasBroadband ? '#15803d' : '#556070',
-              }}
-            >
-              {t('catalog.bundleRules.broadbandLabel', 'Broadband:')} {cartCategoryAnalysis.hasBroadband ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.optionalCount', 'Optional (0/1)')}
-            </span>
-            <span
-              style={{
-                padding: '0.25rem 0.65rem',
-                borderRadius: '9999px',
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                backgroundColor: cartCategoryAnalysis.hasPeoTv ? '#dcfce7' : '#f1f5f9',
-                color: cartCategoryAnalysis.hasPeoTv ? '#15803d' : '#556070',
-              }}
-            >
-              {t('catalog.bundleRules.peoTvLabel', 'PEO TV:')} {cartCategoryAnalysis.hasPeoTv ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.optionalCount', 'Optional (0/1)')}
-            </span>
-
-            {cartItems.length > 0 && (
-              <button
-                onClick={handleClearCartSelection}
-                type="button"
-                style={{
-                  backgroundColor: '#fee2e2',
-                  color: '#dc2626',
-                  border: '1px solid #fca5a5',
-                  padding: '0.25rem 0.65rem',
-                  borderRadius: '9999px',
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {t('catalog.bundleRules.resetSelection', 'Reset Selection')} ↺
-              </button>
-            )}
-          </div>
-        </div>
-        ── */}
-
-        {/* ── Horizontal Category Pill Chips Bar ── */}
-        <div id="products-section" className="scroll-target">
-          <CategoryChips
-            activeCategory={activeCategory}
-            onSelectCategory={handleSelectCategory}
-          />
-        </div>
-
-        {/* ── Main Catalog Body Layout (Sidebar Filters + Category-Wise Products) ── */}
-        <div className="catalog-layout-grid" style={{ display: 'grid', gap: '1.5rem', marginTop: '1.5rem' }}>
-          {/* Left Sidebar Filter Column — desktop only; hidden ≤900px in favor of the "Filters" popup below */}
-          <div className="catalog-sidebar-col">
-            <SidebarFilters
-              activeCategory={activeCategory}
-              onSelectCategory={handleSelectCategory}
-              onSelectTreeNode={handleSelectTreeNode}
-              activeTreeKey={treeFilter?.key || null}
-              typeCounts={loading ? undefined : typeCounts}
-              speedCounts={loading ? undefined : speedCounts}
-              selectedTypes={selectedTypes}
-              onTypeToggle={handleTypeToggle}
-              selectedSpeeds={selectedSpeeds}
-              onSpeedToggle={handleSpeedToggle}
-              onClearAll={handleClearAll}
-            />
-          </div>
-
-          {/* Mobile/tablet filter popup. Portaled to <body> because position:fixed
-              breaks under the PageWrapper's animated (transformed) ancestor otherwise. */}
+          {/* Phone filter sheet. Portaled to <body> because position:fixed breaks
+              under the PageWrapper's animated (transformed) ancestor otherwise. */}
           {showMobileFilters &&
             createPortal(
               <div
-                className="catalog-filter-modal-backdrop"
+                className="filter-sheet-backdrop"
                 onClick={(e) => {
                   if (e.target === e.currentTarget) setShowMobileFilters(false);
                 }}
               >
-                <div className="catalog-sidebar-col-inner">
+                <div className="filter-sheet" role="dialog" aria-modal="true" aria-label={t('catalog.filters.title', 'Filter products')}>
                   <SidebarFilters
-                    activeCategory={activeCategory}
+                    {...sidebarProps}
                     onSelectCategory={(cat) => {
                       handleSelectCategory(cat);
                       setShowMobileFilters(false);
@@ -781,14 +711,6 @@ export default function ProductCatalogPage() {
                       handleSelectTreeNode(node, parentNode);
                       setShowMobileFilters(false);
                     }}
-                    activeTreeKey={treeFilter?.key || null}
-                    typeCounts={loading ? undefined : typeCounts}
-                    speedCounts={loading ? undefined : speedCounts}
-                    selectedTypes={selectedTypes}
-                    onTypeToggle={handleTypeToggle}
-                    selectedSpeeds={selectedSpeeds}
-                    onSpeedToggle={handleSpeedToggle}
-                    onClearAll={handleClearAll}
                     onApply={() => setShowMobileFilters(false)}
                     onCloseMobile={() => setShowMobileFilters(false)}
                   />
@@ -797,271 +719,154 @@ export default function ProductCatalogPage() {
               document.body
             )}
 
-          {/* Right Product Listing Area */}
-          <div>
-            {/* Toolbar Header */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.2rem',
-                width: '100%',
-                flexWrap: 'wrap',
-                gap: '0.75rem',
-              }}
-            >
-              <div style={{ fontSize: '0.92rem', color: '#475569', fontWeight: 600 }}>
-                {t('catalog.controls.showingResults', { count: filteredProducts.length, defaultValue: 'Showing {{count}} total results across categories' })}
-              </div>
+          <div className="shop-main">
+            <CategoryChips
+              activeCategory={activeCategory}
+              onSelectCategory={handleSelectCategory}
+              available={loading ? undefined : availableChipCategories}
+            />
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <div className="shop-toolbar">
+              <h2>
+                {t('catalog.title', 'All packages')}
+                {!loading && (
+                  <span className="shop-count">
+                    {t('catalog.controls.results', { count: filteredProducts.length, defaultValue: '{{count}} results' })}
+                  </span>
+                )}
+              </h2>
+              <div className="shop-toolbar__ctrls">
                 <button
                   type="button"
-                  className="catalog-filter-toggle-btn"
-                  onClick={() => setShowMobileFilters((prev) => !prev)}
-                  style={{
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                    padding: '0.45rem 0.85rem',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    backgroundColor: showMobileFilters ? '#0056b3' : '#ffffff',
-                    color: showMobileFilters ? '#ffffff' : '#0f172a',
-                    fontSize: '0.82rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
+                  className="btn-ds btn-ds--outline filter-toggle"
+                  onClick={() => setShowMobileFilters(true)}
+                  style={{ minHeight: 44 }}
                 >
-                  <FiSliders size={14} />
+                  <FiFilter size={16} aria-hidden="true" />
                   <span>{t('catalog.controls.filters', 'Filters')}</span>
                 </button>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>{t('catalog.controls.sortBy', 'Sort by:')}</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    aria-label={t('catalog.controls.sortBy', 'Sort by:')}
-                    style={{
-                      padding: '0.4rem 0.75rem',
-                      borderRadius: '8px',
-                      border: '1px solid #cbd5e1',
-                      backgroundColor: '#ffffff',
-                      fontSize: '0.82rem',
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      cursor: 'pointer',
-                      outline: 'none',
-                    }}
-                  >
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, color: 'var(--muted)' }}>
+                  <span>{t('catalog.controls.sortBy', 'Sort by:')}</span>
+                  <select className="ctrl-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                     <option value="Popularity">{t('catalog.controls.popularity', 'Popularity')}</option>
                     <option value="Price Low to High">{t('catalog.controls.priceLowHigh', 'Price: Low → High')}</option>
                     <option value="Price High to Low">{t('catalog.controls.priceHighLow', 'Price: High → Low')}</option>
                   </select>
-                </div>
-
-                <div style={{ display: 'flex', gap: '2px', backgroundColor: '#f1f5f9', padding: '3px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    aria-label="Grid view"
-                    aria-pressed={viewMode === 'grid'}
-                    style={{
-                      border: 'none',
-                      backgroundColor: viewMode === 'grid' ? '#0056b3' : 'transparent',
-                      color: viewMode === 'grid' ? '#ffffff' : '#64748b',
-                      padding: '0.35rem 0.55rem',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <FiGrid size={15} aria-hidden="true" />
+                </label>
+                <div className="view-toggle" role="group" aria-label={t('catalog.controls.view', 'View')}>
+                  <button type="button" onClick={() => setViewMode('grid')} aria-label="Grid view" aria-pressed={viewMode === 'grid'}>
+                    <FiGrid size={18} aria-hidden="true" />
                   </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    aria-label="List view"
-                    aria-pressed={viewMode === 'list'}
-                    style={{
-                      border: 'none',
-                      backgroundColor: viewMode === 'list' ? '#0056b3' : 'transparent',
-                      color: viewMode === 'list' ? '#ffffff' : '#64748b',
-                      padding: '0.35rem 0.55rem',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <FiList size={15} aria-hidden="true" />
+                  <button type="button" onClick={() => setViewMode('list')} aria-label="List view" aria-pressed={viewMode === 'list'}>
+                    <FiList size={18} aria-hidden="true" />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Category-Wise Product Sections */}
             {loading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: '1.25rem' }}>
-                <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
+              <div className="pgrid" aria-busy="true">
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
               </div>
             ) : error ? (
-              <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '2rem', color: '#991b1b', textAlign: 'center' }}>
-                <p style={{ fontWeight: 600, margin: 0 }}>{error}</p>
+              <div className="empty-state" role="alert">
+                <p style={{ fontWeight: 700, color: 'var(--danger)', margin: 0 }}>{error}</p>
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '3rem 1.5rem', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>{t('catalog.empty.title', 'No Products Found')}</h3>
-                <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' }}>{t('catalog.empty.subtitle', 'Try adjusting your filters or search keywords.')}</p>
-                <button onClick={handleClearAll} style={{ backgroundColor: '#0056b3', color: '#fff', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
+              <div className="empty-state">
+                <h3 style={{ margin: 0 }}>{t('catalog.empty.title', 'No Products Found')}</h3>
+                <p style={{ margin: 0, color: 'var(--muted)' }}>
+                  {t('catalog.empty.subtitle', 'Try adjusting your filters or search keywords.')}
+                </p>
+                <button type="button" className="btn-ds btn-ds--primary" onClick={handleClearAll}>
                   {t('catalog.empty.resetFilters', 'Reset Filters')}
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-                {categorySections.map((section) => {
-                  if (section.products.length === 0) return null;
-                  return (
-                    <div key={section.id} style={{ backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-                      {/* Section Header — flexWrap lets the "Packages Available" badge
-                          drop to its own line on narrow screens instead of being
-                          squeezed into a sliver of a column and wrapping into an
-                          illegible multi-line blob. */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', rowGap: '0.65rem', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '2px solid #f1f5f9' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
-                          <div style={{ backgroundColor: section.bgColor, color: section.iconColor, width: '38px', height: '38px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 900, flexShrink: 0 }}>
-                            {section.icon}
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>{section.title}</h3>
-                            <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{section.subtitle}</span>
-                          </div>
-                        </div>
-                        <span style={{ backgroundColor: '#f1f5f9', color: '#0056b3', padding: '0.3rem 0.85rem', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                          {t('catalog.sections.packagesAvailable', { count: section.products.length, defaultValue: '{{count}} Packages Available' })}
-                        </span>
+              categorySections.map((section) => {
+                if (section.products.length === 0) return null;
+                return (
+                  <section key={section.id} className="cat-section" aria-labelledby={`${section.id}-h`}>
+                    <div className="cat-section__head">
+                      <span className="cat-section__tile" aria-hidden="true">
+                        {section.icon}
+                      </span>
+                      <div>
+                        <h3 id={`${section.id}-h`}>{section.title}</h3>
+                        <p>{section.subtitle}</p>
                       </div>
+                      <span className="cat-section__count">
+                        {t('catalog.sections.packagesAvailable', {
+                          count: section.products.length,
+                          defaultValue: '{{count}} Packages Available',
+                        })}
+                      </span>
+                    </div>
 
-                      {/* Section Cards Grid */}
-                      <div
-                        style={
-                          viewMode === 'list'
-                            ? { display: 'flex', flexDirection: 'column', gap: '0.85rem' }
-                            : {
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))',
-                              gap: '1.15rem',
-                            }
-                        }
-                      >
-                        {section.products.map((prod) => {
-                          const prodId = String(prod._id || prod.id);
-                          const isSelected = selectedProduct && String(selectedProduct._id || selectedProduct.id) === prodId;
+                    <div className={`pgrid${viewMode === 'list' ? ' pgrid--list' : ''}`}>
+                      {section.products.map((prod) => {
+                        const prodId = String(prod._id || prod.id);
+                        const isSelected = selectedProduct && String(selectedProduct._id || selectedProduct.id) === prodId;
 
-                          const catName = (prod.category || prod.name || '').toLowerCase();
-                          const prodGroup = catName.includes('voice') ? 'Voice' : catName.includes('peo') ? 'PEO TV' : 'Broadband';
+                        const catName = (prod.category || prod.name || '').toLowerCase();
+                        const prodGroup = catName.includes('voice') ? 'Voice' : catName.includes('peo') ? 'PEO TV' : 'Broadband';
 
-                          const isInCart = cartCategoryAnalysis.selectedProdIds.has(prodId);
-                          const isGroupTaken = cartCategoryAnalysis.categoriesInCart.has(prodGroup);
+                        const isInCart = cartCategoryAnalysis.selectedProdIds.has(prodId);
+                        const isGroupTaken = cartCategoryAnalysis.categoriesInCart.has(prodGroup);
 
-                          // Rule: Max 1 package per category -> disable other packages in same category once selected
-                          const isCategoryDisabled = isGroupTaken && !isInCart;
-                          const groupLabel = prodGroup === 'Voice'
+                        // Rule: Max 1 package per category -> disable other packages in same category once selected
+                        const isCategoryDisabled = isGroupTaken && !isInCart;
+                        const groupLabel =
+                          prodGroup === 'Voice'
                             ? t('catalog.categories.voice', 'Voice')
                             : prodGroup === 'PEO TV'
                               ? t('catalog.categories.peoTv', 'PEO TV')
                               : t('catalog.categories.broadband', 'Broadband');
-                          const disabledReason = t('catalog.card.categorySelectedReason', { group: groupLabel, defaultValue: '1 {{group}} Selected' });
+                        const disabledReason = t('catalog.card.categorySelectedReason', {
+                          group: groupLabel,
+                          defaultValue: '1 {{group}} Selected',
+                        });
 
-                          return (
-                            <ProductCard
-                              key={prodId}
-                              product={prod}
-                              isSelected={isSelected}
-                              isFavorite={favorites.includes(prodId)}
-                              isInCart={isInCart}
-                              onSelect={(p) => setSelectedProduct(p)}
-                              onToggleFavorite={handleToggleFavorite}
-                              onAddToCart={(p) => handleAddToCart(p, 1)}
-                              onRemoveFromCart={handleRemoveFromCart}
-                              disabled={isCategoryDisabled}
-                              disabledReason={disabledReason}
-                              viewMode={viewMode}
-                            />
-                          );
-                        })}
-                      </div>
+                        return (
+                          <ProductCard
+                            key={prodId}
+                            product={prod}
+                            isSelected={isSelected}
+                            isFavorite={favorites.includes(prodId)}
+                            isInCart={isInCart}
+                            onSelect={(p) => setSelectedProduct(p)}
+                            onToggleFavorite={handleToggleFavorite}
+                            onAddToCart={(p) => handleAddToCart(p, 1)}
+                            onRemoveFromCart={handleRemoveFromCart}
+                            disabled={isCategoryDisabled}
+                            disabledReason={disabledReason}
+                            viewMode={viewMode}
+                          />
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
+                  </section>
+                );
+              })
             )}
           </div>
         </div>
 
-        {/* ── Bottom Value Propositions Footer Strip (Exact 5 Icons Bar) ── */}
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            padding: '1.25rem 2rem',
-            marginTop: '2.5rem',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '1.5rem',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FiCheckCircle size={22} />
+        <div className="value-strip">
+          {valueProps.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="value-strip__item">
+              <span className="value-strip__ic">
+                <Icon size={22} aria-hidden="true" />
+              </span>
+              <div>
+                <strong>{title}</strong>
+                <span>{text}</span>
+              </div>
             </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>100% Guaranteed</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Authentic SLT Services</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FiClock size={22} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Express Activation</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Connected in 24-48 Hrs</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FiShield size={22} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Secure Payments</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Bank Grade Security</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FiSliders size={22} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Flexi Customization</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Tailored Add-on Options</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FiLock size={22} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Paperless Process</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>100% Online Verification</div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 

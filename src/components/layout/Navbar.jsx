@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut, FiGrid, FiChevronDown, FiShoppingCart } from 'react-icons/fi';
-import sltLogo from '../../assets/sltlogoOnly.png';
+import { FiSearch, FiUser, FiLogOut, FiGrid, FiChevronDown, FiShoppingCart } from 'react-icons/fi';
+import sltLogo from '../../assets/slt-logo.png';
 import { getVerifiedPhone, getVerifiedName, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../utils/authSession';
 import { QUICK_SERVICES } from '../../data/quickServices';
 import { getLocalCart } from '../../services/productService';
@@ -11,8 +11,8 @@ const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slic
 
 // A little extra breathing room below the fixed nav so page content never
 // feels flush against it, even before the exact height is measured.
-const NAV_HEIGHT_ESTIMATE = 88;
-const NAV_SPACER_BUFFER = 16;
+const NAV_HEIGHT_ESTIMATE = 120;
+const NAV_SPACER_BUFFER = 0;
 
 // Searchable products dataset for navbar suggestions
 const SEARCHABLE_PRODUCTS = [
@@ -203,324 +203,165 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutsideServices);
   }, [servicesOpen]);
 
+  const lang = (i18n.language || 'en').slice(0, 2);
+  const displayName = verifiedName || formatPhone(verifiedPhone);
+  const hideSearch =
+    location.pathname.startsWith('/schedule-installation') || location.pathname.startsWith('/completion');
+
   return (
     <>
-      <nav className="top-navbar-wrapper" ref={menuRef} style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: 'clamp(0.75rem, 2.5vw, 1.15rem) clamp(0.5rem, 4vw, 1.5rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'clamp(0.5rem, 2vw, 1.25rem)' }}>
-
-          {/* ── Left: Logo ── */}
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', gap: '0.45rem', flexShrink: 0 }}>
-            <img
-              src={sltLogo}
-              alt="SLTMobitel logo"
-              style={{ height: '26px', width: 'auto', objectFit: 'contain' }}
-            />
-            <span
-              style={{
-                fontFamily: 'var(--font-head)',
-                fontSize: '1.05rem',
-                fontWeight: 800,
-                color: '#191970',
-                letterSpacing: '-0.02em',
-                whiteSpace: 'nowrap',
-                display: 'inline-flex',
-                gap: '0.3rem',
-              }}
-            >
-              <span>SLTMobitel</span>
-              <span style={{ fontWeight: 700 }}>EasyApply</span>
-            </span>
+      <header className="site-nav" ref={menuRef}>
+        {/* Row 1: logo · search · language · cart · account */}
+        <div className="site-nav__main">
+          <Link to="/" className="site-nav__logo" aria-label="SLTMobitel EasyApply home">
+            <img src={sltLogo} alt="SLTMobitel, The Connection" />
           </Link>
 
-          {/* ── Center Search Input Bar (Hidden on checkout/scheduling funnel pages) ── */}
-          {!location.pathname.startsWith('/schedule-installation') && !location.pathname.startsWith('/completion') && (
-          <div
-            ref={searchRef}
-            style={{ flex: 1, maxWidth: '580px', display: 'flex', alignItems: 'center', position: 'relative' }}
-            className="nav-center-search"
-          >
-            <form
-              onSubmit={handleSearchSubmit}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-                backgroundColor: '#ffffff',
-                border: '1.5px solid #cbd5e1',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              }}
-            >
-              <FiSearch
-                style={{ color: '#94a3b8', marginLeft: '0.75rem', flexShrink: 0 }}
-                size={16}
-                aria-hidden="true"
-              />
-              <input
-                type="text"
-                aria-label="Search packages, speeds, products"
-                placeholder="Search packages, speeds, products..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  padding: '0.5rem 0.75rem',
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: '0.85rem',
-                  color: '#0f172a',
-                  backgroundColor: 'transparent',
-                }}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setShowSuggestions(false);
+          {!hideSearch && (
+            <div ref={searchRef} className="site-nav__search">
+              <form className="site-nav__form" role="search" onSubmit={handleSearchSubmit}>
+                <input
+                  type="search"
+                  aria-label={t('nav.searchLabel', 'Search packages, speeds, products')}
+                  placeholder={t('nav.searchPlaceholder', 'Search packages, speeds, PEO TV...')}
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(true);
                   }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#94a3b8',
-                    cursor: 'pointer',
-                    padding: '0 0.4rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                />
+                <select
+                  value={searchCategory}
+                  onChange={(e) => setSearchCategory(e.target.value)}
+                  aria-label="Filter search by category"
                 >
-                  <FiX size={14} />
+                  <option value="All">All</option>
+                  <option value="Fibre">Fibre</option>
+                  <option value="LTE">LTE</option>
+                  <option value="PEO TV">PEO TV</option>
+                  <option value="Voice">Voice</option>
+                </select>
+                <button type="submit" aria-label="Search">
+                  <FiSearch size={18} aria-hidden="true" />
+                  <span>{t('nav.search', 'Search')}</span>
                 </button>
-              )}
-              <select
-                value={searchCategory}
-                onChange={(e) => setSearchCategory(e.target.value)}
-                aria-label="Filter search by category"
-                style={{
-                  border: 'none',
-                  borderLeft: '1px solid #e2e8f0',
-                  backgroundColor: 'transparent',
-                  padding: '0.5rem 0.6rem',
-                  fontSize: '0.8rem',
-                  color: '#475569',
-                  fontWeight: 600,
-                  outline: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <option value="All">All</option>
-                <option value="Fibre">Fibre</option>
-                <option value="LTE">LTE</option>
-                <option value="PEO TV">PEO TV</option>
-                <option value="Voice">Voice</option>
-              </select>
-              <button
-                type="submit"
-                aria-label="Search"
-                style={{
-                  backgroundColor: '#0056b3',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '0.55rem 1.1rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <FiSearch size={16} aria-hidden="true" />
-              </button>
-            </form>
+              </form>
 
-            {/* Live Search Suggestions Dropdown */}
-            {showSuggestions && searchQuery.trim() && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 4px)',
-                  left: 0,
-                  right: 0,
-                  backgroundColor: '#ffffff',
-                  borderRadius: '12px',
-                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
-                  border: '1px solid #e2e8f0',
-                  zIndex: 1000,
-                  overflow: 'hidden',
-                  maxHeight: '380px',
-                  overflowY: 'auto',
-                }}
-              >
-                {suggestions.length > 0 ? (
-                  suggestions.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => handleSelectSuggestion(item)}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #f1f5f9',
-                        transition: 'background-color 0.15s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f8fafc';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
-                          {item.name}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
-                          <span style={{ backgroundColor: '#eff6ff', color: '#0056b3', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
-                            {item.category}
+              {showSuggestions && searchQuery.trim() && (
+                <div className="site-nav__suggest" role="listbox">
+                  {suggestions.length > 0 ? (
+                    suggestions.map((item) => (
+                      <button
+                        type="button"
+                        role="option"
+                        key={item.id}
+                        className="site-nav__suggest-item"
+                        onClick={() => handleSelectSuggestion(item)}
+                      >
+                        <span>
+                          <strong style={{ display: 'block', color: 'var(--navy)', fontSize: 15 }}>{item.name}</strong>
+                          <span style={{ color: 'var(--muted)', fontSize: 14 }}>
+                            {item.category} · {item.speed}
                           </span>
-                          <span>• {item.speed}</span>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 900, color: '#0056b3', whiteSpace: 'nowrap' }}>
-                        Rs. {item.monthlyPrice.toLocaleString()} <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>/mo</span>
-                      </div>
+                        </span>
+                        <strong style={{ color: 'var(--navy)', whiteSpace: 'nowrap' }}>
+                          Rs. {item.monthlyPrice.toLocaleString()}
+                        </strong>
+                      </button>
+                    ))
+                  ) : (
+                    <div style={{ padding: 16, textAlign: 'center', color: 'var(--muted)' }}>
+                      No matching packages found for "<strong>{searchQuery}</strong>"
                     </div>
-                  ))
-                ) : (
-                  <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
-                    No matching packages found for "<strong>{searchQuery}</strong>"
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
-          {/* ── Right: Navigation, Services, Language and Authentication ── */}
-          <div
-            className="navbar-right"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              justifyContent: 'flex-end',
-              gap: 'clamp(0.35rem, 2vw, 1.25rem)',
-              rowGap: '0.5rem',
-              flexShrink: 0,
-            }}
-          >
-            {/* Desktop Nav Links */}
-            <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '1.5rem' }}>
-              <Link to="/" style={navLinkStyle('/')}>
-                {t('nav.home', 'Home')}
-              </Link>
-              <Link to="/check-status" style={navLinkStyle('/check-status')}>
-                {t('nav.applicationStatus', 'Application Status')}
-              </Link>
-              <Link to="/help" style={navLinkStyle('/help')}>
-                {t('nav.help', 'Help & Support')}
-              </Link>
+          <div className="site-nav__right">
+            <div className="lang-seg" role="group" aria-label="Language">
+              {[
+                ['en', 'EN', 'English'],
+                ['si', 'සිං', 'සිංහල'],
+                ['ta', 'த', 'தமிழ்'],
+              ].map(([code, short, full]) => (
+                <button
+                  key={code}
+                  type="button"
+                  aria-pressed={lang === code}
+                  aria-label={full}
+                  title={full}
+                  onClick={() => i18n.changeLanguage(code)}
+                >
+                  {short}
+                </button>
+              ))}
             </div>
 
-            {/* Services quick-access dropdown */}
-            <div className="navbar-services" ref={servicesRef} style={{ position: 'relative' }}>
+            <Link
+              to="/cart"
+              className="nav-iconbtn"
+              aria-label={`Shopping Cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
+              title={t('nav.cart', 'Shopping Cart')}
+            >
+              <FiShoppingCart size={22} aria-hidden="true" />
+              {cartCount > 0 && <span className="nav-badge">{cartCount > 99 ? '99+' : cartCount}</span>}
+            </Link>
+
+            {verifiedPhone ? (
+              <>
+                <Link to="/profile" className="nav-account" title={t('nav.goToProfile', 'Go to My Profile')}>
+                  <FiUser size={18} aria-hidden="true" />
+                  <span className="nav-account__label">{displayName}</span>
+                </Link>
+                <button type="button" className="nav-logout" onClick={handleLogout} aria-label={t('nav.logout', 'Logout')}>
+                  <FiLogOut size={18} aria-hidden="true" />
+                  <span>{t('nav.logout', 'Logout')}</span>
+                </button>
+              </>
+            ) : (
+              <button type="button" className="nav-account" onClick={() => navigate('/login')}>
+                <FiUser size={18} aria-hidden="true" />
+                <span className="nav-account__label">{t('nav.login', 'Login')}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Row 2: SLT-blue navigation band */}
+        <nav className="site-nav__band" aria-label="Main">
+          <div className="site-nav__band-in">
+            <Link to="/" className={`band-link${isActivePath('/') ? ' is-active' : ''}`} aria-current={isActivePath('/') ? 'page' : undefined}>
+              {t('nav.home', 'Home')}
+            </Link>
+
+            <div className="band-services" ref={servicesRef}>
               <button
                 type="button"
+                className={`band-link${servicesOpen ? ' is-active' : ''}`}
                 onClick={() => setServicesOpen((prev) => !prev)}
                 aria-haspopup="true"
                 aria-expanded={servicesOpen}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  backgroundColor: servicesOpen ? '#eff6ff' : '#f8fafc',
-                  border: `1px solid ${servicesOpen ? '#bfdbfe' : '#e2e8f0'}`,
-                  borderRadius: '8px',
-                  padding: '0.4rem 0.65rem',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  color: '#0056b3',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
               >
-                <FiGrid size={15} />
+                <FiGrid size={16} aria-hidden="true" />
                 <span>{t('nav.services', 'Services')}</span>
-                <FiChevronDown
-                  size={13}
-                  style={{
-                    transform: servicesOpen ? 'rotate(180deg)' : 'none',
-                    transition: 'transform 0.15s ease',
-                  }}
-                />
+                <FiChevronDown size={14} aria-hidden="true" style={{ transform: servicesOpen ? 'rotate(180deg)' : 'none' }} />
               </button>
-
               {servicesOpen && (
-                <div
-                  role="menu"
-                  aria-label={t('nav.services', 'Services')}
-                  style={{
-                    position: 'fixed',
-                    top: navHeight + 8,
-                    right: '1rem',
-                    width: 'min(320px, calc(100vw - 2rem))',
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    boxShadow: '0 12px 30px rgba(15, 23, 42, 0.14)',
-                    padding: '0.5rem',
-                    zIndex: 200,
-                    maxHeight: '70vh',
-                    overflowY: 'auto',
-                  }}
-                >
+                <div className="band-menu" role="menu" aria-label={t('nav.services', 'Services')}>
                   {QUICK_SERVICES.map((srv) => {
                     const IconComp = srv.icon;
                     return (
-                      <Link
-                        key={srv.id}
-                        to={srv.route}
-                        role="menuitem"
-                        className="navbar-services-item"
-                        onClick={() => setServicesOpen(false)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.65rem',
-                          padding: '0.55rem 0.6rem',
-                          borderRadius: '8px',
-                          textDecoration: 'none',
-                          color: '#0f172a',
-                        }}
-                      >
-                        <div
-                          style={{
-                            backgroundColor: srv.bgColor,
-                            color: srv.iconColor,
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <IconComp size={15} />
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{srv.title}</div>
-                          <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.1rem' }}>
-                            {srv.desc}
-                          </div>
-                        </div>
+                      <Link key={srv.id} to={srv.route} role="menuitem" onClick={() => setServicesOpen(false)}>
+                        <span className="tile-sm">
+                          <IconComp size={18} aria-hidden="true" />
+                        </span>
+                        <span>
+                          <strong style={{ display: 'block', color: 'var(--navy)', fontSize: 15 }}>{srv.title}</strong>
+                          <span style={{ color: 'var(--muted)', fontSize: 14 }}>{srv.desc}</span>
+                        </span>
                       </Link>
                     );
                   })}
@@ -528,245 +369,30 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Cart quick-access button */}
             <Link
-              to="/cart"
-              className="navbar-cart-btn"
-              style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                backgroundColor: isActivePath('/cart') ? '#eff6ff' : '#f8fafc',
-                border: `1px solid ${isActivePath('/cart') ? '#bfdbfe' : '#e2e8f0'}`,
-                borderRadius: '8px',
-                padding: '0.4rem 0.75rem',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                color: '#0056b3',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.2s ease',
-              }}
-              aria-label={`Shopping Cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
-              title={t('nav.cart', 'Shopping Cart')}
+              to="/check-status"
+              className={`band-link${isActivePath('/check-status') ? ' is-active' : ''}`}
+              aria-current={isActivePath('/check-status') ? 'page' : undefined}
             >
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <FiShoppingCart size={16} />
-                {cartCount > 0 && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '-8px',
-                      right: '-10px',
-                      backgroundColor: '#10b981',
-                      color: '#ffffff',
-                      fontSize: '0.68rem',
-                      fontWeight: 800,
-                      minWidth: '17px',
-                      height: '17px',
-                      lineHeight: '17px',
-                      borderRadius: '9999px',
-                      textAlign: 'center',
-                      padding: '0 3px',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.18)',
-                    }}
-                  >
-                    {cartCount > 99 ? '99+' : cartCount}
-                  </span>
-                )}
-              </div>
-              <span className="navbar-cart-label">{t('nav.cart', 'Cart')}</span>
+              {t('nav.applicationStatus', 'Application Status')}
             </Link>
-
-            {/* Language Switcher */}
-            <div
-              className="lang-switcher"
-              style={{
-                alignItems: 'center',
-                gap: '0.35rem',
-                backgroundColor: '#f8fafc',
-                padding: '0.35rem 0.65rem',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-              }}
+            <Link
+              to="/help"
+              className={`band-link${isActivePath('/help') ? ' is-active' : ''}`}
+              aria-current={isActivePath('/help') ? 'page' : undefined}
             >
-              <FiGlobe style={{ color: '#0056b3' }} size={15} />
-              <select
-                value={i18n.language}
-                onChange={(e) => i18n.changeLanguage(e.target.value)}
-                aria-label="Language"
-                style={{
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  outline: 'none',
-                  fontSize: '0.82rem',
-                  fontWeight: 600,
-                  color: '#334155',
-                  cursor: 'pointer',
-                }}
-              >
-                <option value="en">English</option>
-                <option value="si">සිංහල</option>
-                <option value="ta">தமிழ்</option>
-              </select>
-            </div>
-
-            {/* Login / Logout */}
-            {verifiedPhone ? (
-              <div
-                className="navbar-auth"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.6rem',
-                  borderLeft: '1px solid #cbd5e1',
-                  paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)',
-                }}
-              >
-                <Link
-                  to="/profile"
-                  className="navbar-auth-phone"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                    color: '#334155',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    textDecoration: 'none',
-                    padding: '0.4rem 0.75rem',
-                    borderRadius: '9999px',
-                    backgroundColor: isActivePath('/profile') ? '#eff6ff' : '#f8fafc',
-                    border: `1px solid ${isActivePath('/profile') ? '#bfdbfe' : '#e2e8f0'}`,
-                  }}
-                  title={t('nav.goToProfile', 'Go to My Profile')}
-                >
-                  <FiUser size={15} style={{ color: '#50b748' }} />
-                  {verifiedName || formatPhone(verifiedPhone)}
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    background: 'none',
-                    border: 'none',
-                    color: '#dc2626',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    padding: 0,
-                  }}
-                >
-                  <FiLogOut size={15} />
-                  <span>{t('nav.logout', 'Logout')}</span>
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="navbar-login-btn"
-                onClick={() => navigate('/login')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  background: 'none',
-                  border: 'none',
-                  borderLeft: '1px solid #cbd5e1',
-                  paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)',
-                  color: '#0056b3',
-                  fontWeight: 700,
-                  fontSize: '0.88rem',
-                  cursor: 'pointer',
-                }}
-              >
-                <FiUser size={16} />
-                <span>{t('nav.login', 'Login')}</span>
+              {t('nav.help', 'Help & Support')}
+            </Link>
+            {verifiedPhone && (
+              <button type="button" className="band-link band-logout" onClick={handleLogout}>
+                <FiLogOut size={16} aria-hidden="true" />
+                <span>{t('nav.logout', 'Logout')}</span>
               </button>
             )}
-
-            {/* Mobile Hamburger */}
-            <button
-              className="hamburger-btn"
-              type="button"
-              onClick={() => setMenuOpen((prev) => !prev)}
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={menuOpen}
-              style={{ cursor: 'pointer' }}
-            >
-              {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-            </button>
           </div>
-        </div>
-        {/* Mobile Slide Menu */}
-        {menuOpen && (
-          <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', padding: '1rem' }}>
-            {[
-              { to: '/', label: t('nav.home', 'Home') },
-              { to: '/cart', label: `${t('nav.cart', 'Cart')}${cartCount > 0 ? ` (${cartCount})` : ''}` },
-              { to: '/check-status', label: t('nav.applicationStatus', 'Application Status') },
-              { to: '/help', label: t('nav.help', 'Help & Support') },
-            ].map(({ to, label }) => {
-              const active = isActivePath(to);
-              return (
-                <Link
-                  key={to}
-                  to={to}
-                  style={{
-                    display: 'block',
-                    padding: '0.6rem 0.75rem',
-                    color: active ? '#0056b3' : '#0f172a',
-                    textDecoration: 'none',
-                    fontWeight: active ? 800 : 600,
-                    backgroundColor: active ? '#eff6ff' : 'transparent',
-                    borderRadius: '8px',
-                    borderLeft: active ? '3px solid #0056b3' : '3px solid transparent',
-                  }}
-                >
-                  {label}
-                </Link>
-              );
-            })}
-
-            <div style={{ borderTop: '1px solid #e2e8f0', margin: '0.5rem 0', paddingTop: '0.5rem' }}>
-              {verifiedPhone ? (
-                <>
-                  <Link
-                    to="/profile"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', color: isActivePath('/profile') ? '#0056b3' : '#0f172a', textDecoration: 'none', fontWeight: isActivePath('/profile') ? 800 : 600, fontSize: '0.95rem', backgroundColor: isActivePath('/profile') ? '#eff6ff' : 'transparent', borderRadius: '8px', borderLeft: isActivePath('/profile') ? '3px solid #0056b3' : '3px solid transparent' }}
-                  >
-                    <FiUser size={16} style={{ color: '#50b748' }} />
-                    <span>{verifiedName || formatPhone(verifiedPhone)}</span>
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
-                  >
-                    <FiLogOut size={16} />
-                    <span>{t('nav.logout', 'Logout')}</span>
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => navigate('/login')}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#0056b3', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
-                >
-                  <FiUser size={16} />
-                  <span>{t('nav.login', 'Login')}</span>
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </nav>
-      {/* Spacer so fixed-position nav doesn't cover page content; height tracks the nav's own (responsive) height, plus a little breathing room */}
+        </nav>
+      </header>
+      {/* Spacer so the fixed header doesn't cover page content */}
       <div style={{ height: navHeight + NAV_SPACER_BUFFER }} aria-hidden="true" />
     </>
   );
