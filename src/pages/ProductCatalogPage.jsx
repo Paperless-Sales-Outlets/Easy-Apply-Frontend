@@ -9,6 +9,7 @@ import ProductCard from '../components/catalog/ProductCard';
 import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
 import PackageDetailModal from '../components/PackageDetailModal';
 import SkeletonCard from '../components/catalog/SkeletonCard';
+import useScrollLock from '../utils/useScrollLock';
 import Toast from '../components/common/Toast';
 import CatalogHero from '../components/catalog/CatalogHero';
 import { getProducts, addToCart, removeFromCart, getLocalCart, clearCart } from '../services/productService';
@@ -229,6 +230,7 @@ export default function ProductCatalogPage() {
   const [sortBy, setSortBy] = useState('Popularity');
   const [viewMode, setViewMode] = useState('grid');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  useScrollLock(showMobileFilters);
 
   // Cart Items State Sync (reads the same local cart used by the Cart page & navbar badge)
   const [cartItems, setCartItems] = useState(() => getLocalCart());
@@ -827,10 +829,8 @@ export default function ProductCatalogPage() {
                             key={prodId}
                             product={prod}
                             isSelected={isSelected}
-                            isFavorite={favorites.includes(prodId)}
                             isInCart={isInCart}
                             onSelect={(p) => setSelectedProduct(p)}
-                            onToggleFavorite={handleToggleFavorite}
                             onAddToCart={(p) => handleAddToCart(p, 1)}
                             onRemoveFromCart={handleRemoveFromCart}
                             disabled={isCategoryDisabled}
@@ -854,6 +854,9 @@ export default function ProductCatalogPage() {
         <PackageDetailModal
           isOpen={Boolean(selectedProduct)}
           product={selectedProduct}
+          isInCart={cartCategoryAnalysis.selectedProdIds.has(String(selectedProduct._id || selectedProduct.id))}
+          isFavorite={favorites.includes(String(selectedProduct._id || selectedProduct.id))}
+          onToggleFavorite={handleToggleFavorite}
           onClose={() => setSelectedProduct(null)}
           onSelectPackage={(prod) => {
             handleAddToCart(prod, 1);
