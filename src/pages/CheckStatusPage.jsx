@@ -161,9 +161,6 @@ export default function CheckStatusPage() {
 
       <div className="track-inner">
         <section className="track-card" aria-labelledby="track-h">
-          <span className="shop-hero__tag" style={{ justifySelf: 'start' }}>
-            REAL-TIME STATUS
-          </span>
           <h1 id="track-h" className="track-card__title">Check Application Status</h1>
           <p className="track-card__lead">
             Enter the reference number from your SMS or confirmation to see where your SLTMobitel request is.

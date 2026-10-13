@@ -914,3 +914,16 @@ textarea.form-control { padding: 12px 14px; }
 @media (max-width: 900px) {
   .signup-root, .signup-root .signup-card.login-card { height: auto; max-height: none; min-height: 100dvh; overflow: visible; }
 }
+
+/* Sign-in type scale, one step up for readability (still one view) */
+.signup-root .login-form-header h2 { font-size: clamp(26px, 3.6vh, 32px); }
+.signup-root .login-form-header p { font-size: 18px; }
+.signup-root .signup-label { font-size: 17px; }
+.signup-root .signup-input { font-size: 18px; }
+.signup-root .login-prefix-box { font-size: 18px; }
+.signup-root .signup-input-wrap, .signup-root .login-prefix-box { min-height: 58px; }
+.signup-root .login-inline-action-btn, .signup-root .login-resend-btn { font-size: 15px; min-height: 40px; }
+.signup-root .login-submit-btn { min-height: 58px; font-size: 18px; }
+.signup-root .login-submit-hint, .signup-root .signup-field-help, .signup-root .signup-field-error { font-size: 15px; }
+.signup-root .login-otp-box { min-height: 60px; font-size: 24px; }
+.signup-root .login-inline-otp-title, .signup-root .login-inline-otp-timer { font-size: 15px; }
