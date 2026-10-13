@@ -927,3 +927,36 @@ textarea.form-control { padding: 12px 14px; }
 .signup-root .login-submit-hint, .signup-root .signup-field-help, .signup-root .signup-field-error { font-size: 15px; }
 .signup-root .login-otp-box { min-height: 60px; font-size: 24px; }
 .signup-root .login-inline-otp-title, .signup-root .login-inline-otp-timer { font-size: 15px; }
+
+/* ---------- One-time-code panel ----------
+   Six equal boxes spanning the full width, a quiet panel, a clear timer. */
+.signup-root .login-inline-otp-panel {
+  background: var(--tint); border: 1px solid var(--line); border-radius: 10px;
+  padding: 16px 16px 14px; display: grid; gap: 14px;
+  animation: otp-in 200ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@keyframes otp-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.signup-root .login-inline-otp-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0; }
+.signup-root .login-inline-otp-title { font-size: 16px; font-weight: 700; color: var(--navy); }
+.signup-root .login-inline-otp-timer { font-size: 15px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.signup-root .login-inline-otp-timer strong { color: var(--navy); }
+.signup-root .login-resend-btn {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px;
+  background: #fff; color: var(--blue); border: 1.5px solid var(--blue); border-radius: 4px; font-weight: 700; cursor: pointer;
+}
+.signup-root .login-resend-btn:hover:not(:disabled) { background: var(--sky); }
+.signup-root .login-otp-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+.signup-root .login-otp-box {
+  width: 100%; min-width: 0; height: 60px; padding: 0; text-align: center;
+  font: 700 26px var(--font-body); font-variant-numeric: tabular-nums; color: var(--navy);
+  background: #fff; border: 1.5px solid var(--line-strong); border-radius: 8px; caret-color: var(--blue);
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+.signup-root .login-otp-box:focus { border-color: var(--blue); outline: 3px solid var(--bright); outline-offset: 1px; background: #fff; }
+.signup-root .login-otp-box.is-filled { border-color: var(--blue); background: #f2f8ff; }
+.signup-root .login-otp-box.is-error { border-color: var(--danger); background: #fff5f4; }
+.signup-root .login-otp-box:disabled { background: #eef1f6; color: #6b7a93; }
+.signup-root .login-otp-error-msg { font-size: 15px; font-weight: 600; color: var(--danger); margin: 0; }
+.signup-root .auth-dev-hint { border: 0; background: transparent; padding: 0 !important; font-size: 13px; color: var(--muted); }
+@media (max-width: 420px) { .signup-root .login-otp-grid { gap: 6px; } .signup-root .login-otp-box { height: 54px; font-size: 22px; } }
+@media (prefers-reduced-motion: reduce) { .signup-root .login-inline-otp-panel { animation: none; } }

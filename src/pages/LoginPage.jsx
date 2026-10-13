@@ -432,6 +432,7 @@ export default function LoginPage() {
                           ref={(el) => { phoneOtpRefs.current[idx] = el; }}
                           type="text"
                           inputMode="numeric"
+                          autoComplete={idx === 0 ? 'one-time-code' : 'off'}
                           maxLength={1}
                           value={digit}
                           disabled={phoneVerifying}
@@ -530,6 +531,7 @@ export default function LoginPage() {
                           ref={(el) => { emailOtpRefs.current[idx] = el; }}
                           type="text"
                           inputMode="numeric"
+                          autoComplete={idx === 0 ? 'one-time-code' : 'off'}
                           maxLength={1}
                           value={digit}
                           disabled={emailVerifying}
