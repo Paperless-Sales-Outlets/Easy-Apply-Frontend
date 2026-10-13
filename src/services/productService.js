@@ -340,6 +340,8 @@ export const addToCart = async (productOrId, quantity = 1) => {
       price: itemPrice,
       installationFee: prodObj.installationFee !== undefined ? prodObj.installationFee : 2500,
       speed: prodObj.speed || 'HD TV',
+      bannerUrl: prodObj.bannerUrl || prodObj.image || undefined,
+      image: prodObj.image || prodObj.bannerUrl || undefined,
       category: prodObj.category || 'PEO TV',
       popular: !!prodObj.popular,
       quantity,

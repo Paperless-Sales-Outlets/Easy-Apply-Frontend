@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -9,17 +9,16 @@ import {
   FiShoppingCart,
   FiShield,
   FiWifi,
-  FiHeadphones,
   FiTag,
   FiBookmark,
   FiArrowRight,
   FiGrid,
-  FiZap,
 } from 'react-icons/fi';
 import ProductCard from '../components/catalog/ProductCard';
 import ProductDeviceGraphic from '../components/catalog/ProductDeviceGraphic';
 import { getCart, removeFromCart, addToCart, getProducts, getLocalCart } from '../services/productService';
 import Toast from '../components/common/Toast';
+import { resolveProductImage, matchCatalogProduct } from '../utils/productImage';
 
 export default function CartPage() {
   const { t } = useTranslation();
@@ -28,6 +27,7 @@ export default function CartPage() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [recommended, setRecommended] = useState([]);
+  const [catalog, setCatalog] = useState([]);
   const [toast, setToast] = useState(null);
 
   const fetchCartData = async () => {
@@ -44,13 +44,24 @@ export default function CartPage() {
     }
   };
 
+  // One catalogue request (same API as the product page) feeds both the
+  // "recommended" row and the pictures/specs of the lines already in the cart.
   const fetchRecommended = async () => {
     try {
-      const productsRes = await getProducts({ limit: 4 });
-      const products = productsRes.data || productsRes.products || productsRes || [];
-      setRecommended(products.slice(0, 4));
+      const productsRes = await getProducts({ limit: 100 });
+      const list = productsRes.data || productsRes.products || productsRes || [];
+      const products = Array.isArray(list) ? list : [];
+      setCatalog(products);
+      setRecommended(
+        products.slice(0, 4).map((p) => ({
+          ...p,
+          name: p.name || p.productName,
+          monthlyPrice: p.monthlyPrice ?? p.price,
+          bannerUrl: resolveProductImage(p),
+        }))
+      );
     } catch (err) {
-      console.warn('Could not fetch recommended products:', err);
+      console.warn('Could not fetch catalogue for cart:', err);
     }
   };
 
@@ -86,7 +97,25 @@ export default function CartPage() {
     }
   };
 
-  const items = cart?.items || [];
+  // Cart lines only store a few fields; fill in picture, speed, features and
+  // category from the live catalogue so a line looks the same as on the product page.
+  const rawItems = cart?.items || [];
+  const items = useMemo(
+    () =>
+      rawItems.map((item) => {
+        const live = matchCatalogProduct(item, catalog);
+        const merged = live
+          ? {
+              ...item,
+              bannerUrl: item.bannerUrl || resolveProductImage(live),
+              speed: live.speed || item.speed,
+              category: live.category || item.category,
+            }
+          : item;
+        return { ...merged, bannerUrl: resolveProductImage(merged) };
+      }),
+    [rawItems, catalog]
+  );
   const monthlyTotal = items.reduce((sum, item) => sum + (item.price || item.monthlyPrice || 0) * item.quantity, 0);
   const installationTotal = items.reduce((sum, item) => sum + (item.installationFee !== undefined ? item.installationFee : 2500) * item.quantity, 0);
   const grandTotal = monthlyTotal + installationTotal;
@@ -119,13 +148,6 @@ export default function CartPage() {
   };
 
   const money = (n) => `Rs. ${Number(n || 0).toLocaleString('en-LK')}`;
-
-  const benefits = [
-    { title: 'Free Installation', text: 'On all eligible packages', Icon: FiZap },
-    { title: '24/7 Customer Support', text: "We're here to help you", Icon: FiHeadphones },
-    { title: 'Trusted Network', text: "Sri Lanka's No.1 Network", Icon: FiWifi },
-    { title: '100% Secure Payments', text: 'Your payments are safe with us', Icon: FiShield },
-  ];
 
   return (
     <div className="page-wide">
@@ -181,13 +203,12 @@ export default function CartPage() {
               const monthly = item.price || item.monthlyPrice || 0;
               const instFee = item.installationFee !== undefined ? item.installationFee : 2500;
               const qty = item.quantity || 1;
-              const feats = Array.isArray(item.features) ? item.features.slice(0, 3) : [];
 
               return (
                 <article key={prodId || idx} className="cart-item">
                   <div className="cart-item__media" aria-hidden="true">
-                    {item.bannerUrl || item.image ? (
-                      <img src={item.bannerUrl || item.image} alt="" />
+                    {item.bannerUrl ? (
+                      <img src={item.bannerUrl} alt="" />
                     ) : (
                       <ProductDeviceGraphic name={prodName} category={item.category || ''} />
                     )}
@@ -196,13 +217,6 @@ export default function CartPage() {
                   <div className="cart-item__main">
                     <h3>{prodName}</h3>
                     {item.speed && <span className="pc__speed"><FiWifi size={16} aria-hidden="true" />{item.speed}</span>}
-                    {feats.length > 0 && (
-                      <ul className="pc__feats">
-                        {feats.map((f) => (
-                          <li key={f}>{f}</li>
-                        ))}
-                      </ul>
-                    )}
                     <p className="cart-item__price">
                       <strong>{money(monthly)}</strong> <span>/ month</span>
                       <span className="cart-item__fee">Installation {money(instFee)} (one time)</span>
@@ -314,19 +328,6 @@ export default function CartPage() {
         </section>
       )}
 
-      <div className="value-strip">
-        {benefits.map(({ title, text, Icon }) => (
-          <div key={title} className="value-strip__item">
-            <span className="value-strip__ic" aria-hidden="true">
-              <Icon size={22} />
-            </span>
-            <div>
-              <strong>{title}</strong>
-              <span>{text}</span>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
