@@ -14,6 +14,11 @@ const tagFor = (category = '', name = '') => {
 
 const money = (n) => `Rs. ${Number(n || 0).toLocaleString('en-LK')}`;
 
+/**
+ * Product card. Content sits on the left; the product image lives on the right
+ * and dissolves into the card (feathered mask), so there is no image box and no
+ * hard edge. The same markup serves grid and list view; CSS decides the layout.
+ */
 export default function ProductCard({
   product,
   isSelected,
@@ -64,114 +69,88 @@ export default function ProductCard({
     else onAddToCart(product);
   };
 
-  const media = (
-    <div className="pc__media">
-      <span className={`pc__tag pc__tag--${tag.mod}`}>{tag.label}</span>
-      {bannerUrl && !imgFailed ? (
-        <img src={bannerUrl} alt="" loading="lazy" onError={() => setImgFailed(true)} />
-      ) : (
-        <div className="pc__graphic" aria-hidden="true">
-          <ProductDeviceGraphic name={name} category={category} />
-        </div>
-      )}
+  return (
+    <article className={`pc${viewMode === 'list' ? ' pc--row' : ''}${isSelected ? ' is-selected' : ''}`}>
+      <div className="pc__media" aria-hidden="true">
+        {bannerUrl && !imgFailed ? (
+          <img src={bannerUrl} alt="" loading="lazy" onError={() => setImgFailed(true)} />
+        ) : (
+          <div className="pc__graphic">
+            <ProductDeviceGraphic name={name} category={category} />
+          </div>
+        )}
+      </div>
+
       <button
         type="button"
         className="pc__fav"
         aria-pressed={isFavorite}
         aria-label={isFavorite ? `Remove ${name} from favourites` : `Save ${name} to favourites`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleFavorite(productId);
-        }}
+        onClick={() => onToggleFavorite(productId)}
       >
         <FiHeart size={20} aria-hidden="true" fill={isFavorite ? 'currentColor' : 'none'} />
       </button>
-    </div>
-  );
 
-  const priceBlock = (
-    <div className="pc__price">
-      <strong>
-        {money(monthlyPrice)} <small>{t('catalog.card.perMonth', '/ month')}</small>
-      </strong>
-      <span>
-        {fee > 0
-          ? t('catalog.card.installFee', { amount: money(fee), defaultValue: '+ {{amount}} installation' })
-          : t('catalog.card.noInstallFee', 'No installation fee')}
-      </span>
-    </div>
-  );
-
-  const actions = (
-    <div className="pc__actions">
-      <button
-        type="button"
-        className={`btn-ds ${isInCart ? 'btn-ds--outline' : 'btn-ds--buy'} btn-ds--block`}
-        onClick={handleCart}
-        disabled={disabled}
-        aria-label={isInCart ? `${name}: ${t('catalog.card.removeFromCart', 'remove from cart')}` : undefined}
-      >
-        {isInCart ? (
-          <>
-            <FiCheck size={18} aria-hidden="true" />
-            <span>{t('catalog.card.inCart', 'In Cart')}</span>
-          </>
-        ) : disabled ? (
-          <span>{disabledReason}</span>
-        ) : (
-          <>
-            <FiShoppingCart size={18} aria-hidden="true" />
-            <span>{t('catalog.card.addToCart', 'Add to Cart')}</span>
-          </>
-        )}
-      </button>
-      <button type="button" className="pc__link" onClick={() => onSelect(product)}>
-        <span>{t('catalog.card.viewDetails', 'View details')}</span>
-        <FiChevronRight size={16} aria-hidden="true" />
-      </button>
-    </div>
-  );
-
-  const main = (
-    <div className="pc__main" style={viewMode === 'list' ? undefined : { display: 'grid', gap: 10 }}>
-      <h3 className="pc__name">{name}</h3>
-      {showSpeed && (
-        <span className="pc__speed">
-          <FiWifi size={16} aria-hidden="true" />
-          {speed}
-        </span>
-      )}
-      <ul className="pc__feats">
-        {features.slice(0, 3).map((f) => (
-          <li key={f}>
-            <FiCheck size={14} aria-hidden="true" />
-            <span>{f}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-
-  if (viewMode === 'list') {
-    return (
-      <article className={`pc pc--row${isSelected ? ' is-selected' : ''}`}>
-        {media}
-        <div className="pc__body">
-          {main}
-          {priceBlock}
-          {actions}
+      <div className="pc__content">
+        <div className="pc__info">
+          <span className={`pc__tag pc__tag--${tag.mod}`}>{tag.label}</span>
+          <h3 className="pc__name">{name}</h3>
+          {showSpeed && (
+            <span className="pc__speed">
+              <FiWifi size={16} aria-hidden="true" />
+              {speed}
+            </span>
+          )}
+          <ul className="pc__feats">
+            {features.slice(0, 3).map((f) => (
+              <li key={f}>
+                <FiCheck size={14} aria-hidden="true" />
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-      </article>
-    );
-  }
 
-  return (
-    <article className={`pc${isSelected ? ' is-selected' : ''}`}>
-      {media}
-      <div className="pc__body">
-        {main}
-        {priceBlock}
-        {actions}
+        <div className="pc__foot">
+          <div className="pc__price">
+            <strong>
+              {money(monthlyPrice)} <small>{t('catalog.card.perMonth', '/ month')}</small>
+            </strong>
+            <span>
+              {fee > 0
+                ? t('catalog.card.installFee', { amount: money(fee), defaultValue: '+ {{amount}} installation' })
+                : t('catalog.card.noInstallFee', 'No installation fee')}
+            </span>
+          </div>
+
+          <div className="pc__actions">
+            <button
+              type="button"
+              className={`btn-ds ${isInCart ? 'btn-ds--outline' : 'btn-ds--buy'}`}
+              onClick={handleCart}
+              disabled={disabled}
+              aria-label={isInCart ? `${name}: ${t('catalog.card.removeFromCart', 'remove from cart')}` : undefined}
+            >
+              {isInCart ? (
+                <>
+                  <FiCheck size={18} aria-hidden="true" />
+                  <span>{t('catalog.card.inCart', 'In Cart')}</span>
+                </>
+              ) : disabled ? (
+                <span>{disabledReason}</span>
+              ) : (
+                <>
+                  <FiShoppingCart size={18} aria-hidden="true" />
+                  <span>{t('catalog.card.addToCart', 'Add to Cart')}</span>
+                </>
+              )}
+            </button>
+            <button type="button" className="pc__link" onClick={() => onSelect(product)}>
+              <span>{t('catalog.card.viewDetails', 'View details')}</span>
+              <FiChevronRight size={16} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
       </div>
     </article>
   );

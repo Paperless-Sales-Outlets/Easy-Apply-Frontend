@@ -13,12 +13,12 @@ export const AD_URL =
  * and no blank margin. Static by design; the page's own entrance does the
  * motion.
  */
-export default function HeroVisual({ className = '' }) {
+export default function HeroVisual({ className = '', variant = 'panel' }) {
   const [src, setSrc] = useState(AD_URL);
   const failed = src !== AD_URL;
 
   return (
-    <div className={`ad-visual${failed ? ' is-fallback' : ''} ${className}`} aria-hidden="true">
+    <div className={`ad-visual ad-visual--${variant}${failed ? ' is-fallback' : ''} ${className}`} aria-hidden="true">
       <img className="ad-visual__ambient" src={src} alt="" draggable="false" />
       <img
         className="ad-visual__img"

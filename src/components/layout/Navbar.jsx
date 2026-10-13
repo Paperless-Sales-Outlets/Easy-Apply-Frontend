@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiSearch, FiUser, FiLogOut, FiGrid, FiChevronDown, FiShoppingCart } from 'react-icons/fi';
+import { FiSearch, FiUser, FiLogOut, FiChevronDown, FiShoppingCart } from 'react-icons/fi';
 import sltLogo from '../../assets/slt-logo.png';
 import { getVerifiedPhone, getVerifiedName, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../utils/authSession';
-import { QUICK_SERVICES } from '../../data/quickServices';
 import { getLocalCart } from '../../services/productService';
 
 const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : n ? `+94 ${n}` : '');
@@ -36,7 +35,7 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [searchCategory, setSearchCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -48,7 +47,7 @@ export default function Navbar() {
     }
   });
   const menuRef = useRef(null);
-  const servicesRef = useRef(null);
+  const accountRef = useRef(null);
   const searchRef = useRef(null);
 
   useEffect(() => {
@@ -180,7 +179,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setMenuOpen(false);
-    setServicesOpen(false);
+    setAccountOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -197,15 +196,15 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleClickOutsideServices = (e) => {
-      if (servicesRef.current && !servicesRef.current.contains(e.target)) {
-        setServicesOpen(false);
+      if (accountRef.current && !accountRef.current.contains(e.target)) {
+        setAccountOpen(false);
       }
     };
-    if (servicesOpen) {
+    if (accountOpen) {
       document.addEventListener('mousedown', handleClickOutsideServices);
     }
     return () => document.removeEventListener('mousedown', handleClickOutsideServices);
-  }, [servicesOpen]);
+  }, [accountOpen]);
 
   const lang = (i18n.language || 'en').slice(0, 2);
   const displayName = verifiedName || formatPhone(verifiedPhone);
@@ -322,16 +321,34 @@ export default function Navbar() {
             </Link>
 
             {verifiedPhone ? (
-              <>
-                <Link to="/profile" className="nav-account" title={t('nav.goToProfile', 'Go to My Profile')}>
+              <div className="nav-menu" ref={accountRef}>
+                <button
+                  type="button"
+                  className="nav-account"
+                  aria-haspopup="menu"
+                  aria-expanded={accountOpen}
+                  onClick={() => setAccountOpen((prev) => !prev)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setAccountOpen(false);
+                  }}
+                >
                   <FiUser size={18} aria-hidden="true" />
                   <span className="nav-account__label">{displayName}</span>
-                </Link>
-                <button type="button" className="nav-logout" onClick={handleLogout} aria-label={t('nav.logout', 'Logout')}>
-                  <FiLogOut size={18} aria-hidden="true" />
-                  <span>{t('nav.logout', 'Logout')}</span>
+                  <FiChevronDown size={16} aria-hidden="true" className="nav-account__caret" />
                 </button>
-              </>
+                {accountOpen && (
+                  <div className="nav-menu__list" role="menu" aria-label={t('nav.account', 'Account')}>
+                    <Link to="/profile" role="menuitem" onClick={() => setAccountOpen(false)}>
+                      <FiUser size={18} aria-hidden="true" />
+                      <span>{t('nav.profile', 'My Profile')}</span>
+                    </Link>
+                    <button type="button" role="menuitem" className="is-danger" onClick={handleLogout}>
+                      <FiLogOut size={18} aria-hidden="true" />
+                      <span>{t('nav.logout', 'Logout')}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button type="button" className="nav-account" onClick={() => navigate('/login')}>
                 <FiUser size={18} aria-hidden="true" />
@@ -348,38 +365,6 @@ export default function Navbar() {
               {t('nav.home', 'Home')}
             </Link>
 
-            <div className="band-services" ref={servicesRef}>
-              <button
-                type="button"
-                className={`band-link${servicesOpen ? ' is-active' : ''}`}
-                onClick={() => setServicesOpen((prev) => !prev)}
-                aria-haspopup="true"
-                aria-expanded={servicesOpen}
-              >
-                <FiGrid size={16} aria-hidden="true" />
-                <span>{t('nav.services', 'Services')}</span>
-                <FiChevronDown size={14} aria-hidden="true" style={{ transform: servicesOpen ? 'rotate(180deg)' : 'none' }} />
-              </button>
-              {servicesOpen && (
-                <div className="band-menu" role="menu" aria-label={t('nav.services', 'Services')}>
-                  {QUICK_SERVICES.map((srv) => {
-                    const IconComp = srv.icon;
-                    return (
-                      <Link key={srv.id} to={srv.route} role="menuitem" onClick={() => setServicesOpen(false)}>
-                        <span className="tile-sm">
-                          <IconComp size={18} aria-hidden="true" />
-                        </span>
-                        <span>
-                          <strong style={{ display: 'block', color: 'var(--navy)', fontSize: 15 }}>{srv.title}</strong>
-                          <span style={{ color: 'var(--muted)', fontSize: 14 }}>{srv.desc}</span>
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
             <Link
               to="/check-status"
               className={`band-link${isActivePath('/check-status') ? ' is-active' : ''}`}
@@ -394,12 +379,6 @@ export default function Navbar() {
             >
               {t('nav.help', 'Help & Support')}
             </Link>
-            {verifiedPhone && (
-              <button type="button" className="band-link band-logout" onClick={handleLogout}>
-                <FiLogOut size={16} aria-hidden="true" />
-                <span>{t('nav.logout', 'Logout')}</span>
-              </button>
-            )}
           </div>
         </nav>
       </header>

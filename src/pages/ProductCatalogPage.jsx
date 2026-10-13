@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiFilter } from 'react-icons/fi';
+import { FiGrid, FiList, FiPhone, FiGlobe, FiTv, FiFilter } from 'react-icons/fi';
 import CategoryChips from '../components/catalog/CategoryChips';
 import SidebarFilters from '../components/catalog/SidebarFilters';
 import ProductCard from '../components/catalog/ProductCard';
@@ -665,14 +665,6 @@ export default function ProductCatalogPage() {
     onClearAll: handleClearAll,
   };
 
-  const valueProps = [
-    { icon: FiCheckCircle, title: t('catalog.value.guaranteed', '100% Guaranteed'), text: t('catalog.value.guaranteedText', 'Authentic SLT Services') },
-    { icon: FiClock, title: t('catalog.value.express', 'Express Activation'), text: t('catalog.value.expressText', 'Connected in 24-48 Hrs') },
-    { icon: FiShield, title: t('catalog.value.secure', 'Secure Payments'), text: t('catalog.value.secureText', 'Bank Grade Security') },
-    { icon: FiSliders, title: t('catalog.value.flexi', 'Flexi Customization'), text: t('catalog.value.flexiText', 'Tailored Add-on Options') },
-    { icon: FiLock, title: t('catalog.value.paperless', 'Paperless Process'), text: t('catalog.value.paperlessText', '100% Online Verification') },
-  ];
-
   return (
     <div>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
@@ -855,19 +847,6 @@ export default function ProductCatalogPage() {
           </div>
         </div>
 
-        <div className="value-strip">
-          {valueProps.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="value-strip__item">
-              <span className="value-strip__ic">
-                <Icon size={22} aria-hidden="true" />
-              </span>
-              <div>
-                <strong>{title}</strong>
-                <span>{text}</span>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* Product Details & Specifications Hub Modal */}
