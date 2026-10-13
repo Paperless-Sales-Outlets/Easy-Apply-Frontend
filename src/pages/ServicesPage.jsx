@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   FiPlusCircle, FiLink, FiMapPin,
   FiTrash2, FiUserCheck, FiTrendingUp,
   FiClock, FiDollarSign, FiCheckSquare,
-  FiShoppingCart
+  FiShoppingCart, FiChevronRight
 } from 'react-icons/fi';
 import { getLocalCart } from '../services/productService';
 
@@ -13,63 +13,63 @@ const SERVICES_DATA = [
     id: 'new-connection',
     title: 'New Connection',
     description: 'Request for new connection of FTTH, LTE, or Copper services.',
-    icon: <FiPlusCircle size={22} color="#0056b3" />,
+    icon: <FiPlusCircle size={26} aria-hidden="true" />,
     route: '/new-connection',
   },
   {
     id: 'reconnection',
     title: 'Reactivate Account',
     description: 'Quickly restore your disconnected SLT services.',
-    icon: <FiLink size={22} color="#0056b3" />,
+    icon: <FiLink size={26} aria-hidden="true" />,
     route: '/reconnection',
   },
   {
     id: 'relocation',
     title: 'Relocation',
     description: 'Request relocation of a connection (FTTH, LTE, Copper, or PEO TV).',
-    icon: <FiMapPin size={22} color="#0056b3" />,
+    icon: <FiMapPin size={26} aria-hidden="true" />,
     route: '/location-change',
   },
   {
     id: 'termination',
     title: 'Termination (Disconnection)',
     description: 'Request termination or disconnection of services.',
-    icon: <FiTrash2 size={22} color="#0056b3" />,
+    icon: <FiTrash2 size={26} aria-hidden="true" />,
     route: '/termination',
   },
   {
     id: 'transfer',
     title: 'Transfer (Change of Ownership)',
     description: 'Transfer ownership of an existing connection.',
-    icon: <FiUserCheck size={22} color="#0056b3" />,
+    icon: <FiUserCheck size={26} aria-hidden="true" />,
     route: '/ownership-change',
   },
   {
     id: 'package-upgration',
     title: 'Package Upgration',
     description: 'Apply for upgrade of your current package.',
-    icon: <FiTrendingUp size={22} color="#0056b3" />,
+    icon: <FiTrendingUp size={26} aria-hidden="true" />,
     route: '/package-upgration',
   },
   {
     id: 'service-vacation',
     title: 'Service Vacation',
     description: 'Apply for temporary service vacation.',
-    icon: <FiClock size={22} color="#0056b3" />,
+    icon: <FiClock size={26} aria-hidden="true" />,
     route: '/service-vacation',
   },
   {
     id: 'refund-request',
     title: 'Refund Request',
     description: 'Request a refund for deposits or overpayments.',
-    icon: <FiDollarSign size={22} color="#0056b3" />,
+    icon: <FiDollarSign size={26} aria-hidden="true" />,
     route: '/refund-request',
   },
   {
     id: 'customer-request',
     title: 'General Customer Request',
     description: 'General application for accepting various customer requests.',
-    icon: <FiCheckSquare size={22} color="#0056b3" />,
+    icon: <FiCheckSquare size={26} aria-hidden="true" />,
     route: '/customer-request-acceptance',
   },
 ];
@@ -102,116 +102,45 @@ export default function ServicesPage() {
   }, []);
 
   return (
-    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', paddingBottom: '4rem' }}>
-      <div style={{ padding: '2rem var(--page-gutter)', maxWidth: 'var(--page-max)', margin: '0 auto' }}>
-        {/* Header bar area */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', gap: '4px', fontStyle: 'italic', fontSize: '1.8rem', fontWeight: 900 }}>
-              <span style={{ color: '#10b981' }}>/</span><span style={{ color: '#0056b3' }}>/</span>
-            </div>
-            <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>Online Application Forms</h1>
-          </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button
-              onClick={() => navigate('/cart')}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                backgroundColor: '#0056b3', color: 'white',
-                border: 'none', borderRadius: '8px',
-                padding: '0.6rem 1.2rem', fontWeight: 600,
-                cursor: 'pointer', fontSize: '0.95rem'
-              }}
-            >
-              <FiShoppingCart size={18} /> {cartCount > 0 ? `View Cart (${cartCount})` : 'View Cart'}
-            </button>
-            <button
-              onClick={() => navigate('/check-status')}
-              style={{
-                backgroundColor: '#eff6ff', color: '#0056b3',
-                border: '1px solid #bfdbfe', borderRadius: '8px',
-                padding: '0.6rem 1.2rem', fontWeight: 600,
-                cursor: 'pointer', fontSize: '0.95rem'
-              }}
-            >
-              Check Status
-            </button>
-          </div>
+    <div className="page-wide">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">
+            <span className="slash" aria-hidden="true"><i /><i /></span>
+            Online Application Forms
+          </h1>
+          <p className="page-lead">Apply online for changes to your SLT connection. No forms to print, no queues.</p>
         </div>
-
-        {/* Services Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-          gap: '1.5rem',
-          marginTop: '3rem'
-        }}>
-          {SERVICES_DATA.map((service) => (
-            <div
-              key={service.id}
-              onClick={() => navigate(service.route)}
-              role="button"
-              tabIndex={0}
-              aria-label={`${service.title}: ${service.description}`}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigate(service.route);
-                }
-              }}
-              style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                padding: '1.5rem',
-                display: 'flex',
-                gap: '1.25rem',
-                cursor: 'pointer',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                position: 'relative',
-                overflow: 'hidden',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-3px)';
-                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
-              }}
-            >
-              {/* Top Gradient Border */}
-              <div style={{
-                position: 'absolute',
-                top: 0, left: 0, right: 0, height: '4px',
-                background: 'linear-gradient(90deg, #0056b3 0%, #10b981 100%)'
-              }} />
-
-              <div style={{
-                backgroundColor: '#f1f5f9',
-                width: '52px',
-                height: '52px',
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                marginTop: '0.2rem'
-              }}>
-                {service.icon}
-              </div>
-              <div>
-                <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.05rem', color: '#1e293b', fontWeight: 700 }}>
-                  {service.title}
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>
-                  {service.description}
-                </p>
-              </div>
-            </div>
-          ))}
+        <div className="page-head__actions">
+          <button type="button" className="btn-ds btn-ds--buy" onClick={() => navigate('/cart')}>
+            <FiShoppingCart size={18} aria-hidden="true" />
+            <span>{cartCount > 0 ? `View Cart (${cartCount})` : 'View Cart'}</span>
+          </button>
+          <button type="button" className="btn-ds btn-ds--outline" onClick={() => navigate('/check-status')}>
+            Check Status
+          </button>
         </div>
       </div>
+
+      <ul className="svc-grid">
+        {SERVICES_DATA.map((service) => (
+          <li key={service.id}>
+            <button
+              type="button"
+              className="svc-card"
+              onClick={() => navigate(service.route)}
+              aria-label={`${service.title}: ${service.description}`}
+            >
+              <span className="svc-card__tile">{service.icon}</span>
+              <span className="svc-card__text">
+                <strong>{service.title}</strong>
+                <span>{service.description}</span>
+              </span>
+              <FiChevronRight size={22} aria-hidden="true" className="svc-card__go" />
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

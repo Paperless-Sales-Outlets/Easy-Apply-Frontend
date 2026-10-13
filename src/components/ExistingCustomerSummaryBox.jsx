@@ -13,114 +13,40 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
 
   return (
     <>
-      <div
-        style={{
-          backgroundColor: '#f0fdf4',
-          border: '1.5px solid #86efac',
-          borderRadius: '16px',
-          padding: '1.25rem 1.5rem',
-          marginBottom: '1.5rem',
-          boxShadow: '0 4px 15px rgba(16,185,129,0.08)',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '1rem',
-            borderBottom: '1px solid #bbf7d0',
-            paddingBottom: '0.65rem',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-            <div
-              style={{
-                backgroundColor: '#16a34a',
-                color: '#ffffff',
-                borderRadius: '50%',
-                width: '22px',
-                height: '22px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '0.75rem',
-                fontWeight: 900,
-              }}
-            >
-              <FiCheck size={13} aria-hidden="true" />
-            </div>
-            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#14532d' }}>
-              Customer Information Verified
+      <section className="verified-box" aria-label="Customer information">
+        <div className="verified-box__head">
+          <span className="verified-box__title">
+            <span className="verified-box__tick" aria-hidden="true">
+              <FiCheck size={14} />
             </span>
-          </div>
-
+            Customer Information Verified
+          </span>
           {accountsList && accountsList.length > 1 && (
-            <button
-              onClick={() => setShowSwitchModal(true)}
-              type="button"
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#0056b3',
-                fontSize: '0.82rem',
-                fontWeight: 800,
-                cursor: 'pointer',
-                textDecoration: 'underline',
-              }}
-            >
+            <button onClick={() => setShowSwitchModal(true)} type="button" className="btn-ds btn-ds--text" style={{ minHeight: 40 }}>
               Switch Account
             </button>
           )}
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1rem',
-            alignItems: 'start'
-          }}
-        >
+        <dl className="verified-box__grid">
           <div>
-            <div style={{ fontSize: '0.72rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-              Customer Name
-            </div>
-            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>
-              {customerData.fullName || customerData.customerName || '—'}
-            </div>
+            <dt>Customer Name</dt>
+            <dd>{customerData.fullName || customerData.customerName || '—'}</dd>
           </div>
-
           <div>
-            <div style={{ fontSize: '0.72rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-              Registered Address
-            </div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#334155', marginTop: '0.15rem' }}>
-              {customerData.address || '—'}
-            </div>
+            <dt>Registered Address</dt>
+            <dd>{customerData.address || '—'}</dd>
           </div>
-
           <div>
-            <div style={{ fontSize: '0.72rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-              Telephone Number
-            </div>
-            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>
-              {customerData.telephone || customerData.phoneNumber || '—'}
-            </div>
+            <dt>Telephone Number</dt>
+            <dd>{customerData.telephone || customerData.phoneNumber || '—'}</dd>
           </div>
-
           <div>
-            <div style={{ fontSize: '0.72rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-              Current Package
-            </div>
-            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>
-              {customerData.package || customerData.packageName || '—'}
-            </div>
+            <dt>Current Package</dt>
+            <dd>{customerData.package || customerData.packageName || '—'}</dd>
           </div>
-        </div>
-      </div>
+        </dl>
+      </section>
 
       {showSwitchModal && createPortal(
         <AnimatePresence>

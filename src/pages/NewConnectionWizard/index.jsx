@@ -390,33 +390,18 @@ export default function NewConnectionWizard() {
   const active7Step = MAP_TO_7_STEP[step] || 2;
 
   return (
-    <div className="card" style={{ padding: '2.5rem 2.75rem', width: '100%', margin: '0 auto', borderRadius: '24px', boxShadow: '0 12px 36px rgba(11, 45, 91, 0.08)' }}>
+    <div className="wz-card">
       {/* Progress Stepper: 7-Step Tracker Bar */}
       <WizardStepper currentStep={active7Step} />
 
       {selectedProduct && (
-        <div
-          style={{
-            backgroundColor: '#f0f7ff',
-            border: '1.5px solid #bfdbfe',
-            borderRadius: '16px',
-            padding: '1rem 1.35rem',
-            marginBottom: '1.75rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '0.75rem',
-          }}
-        >
+        <div className="wz-order">
           <div>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0f57a8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Selected Package</span>
-            <h4 style={{ margin: '0.15rem 0 0 0', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
-              {selectedProduct.productName}
-            </h4>
+            <span className="wz-order__label">Selected Package</span>
+            <h4>{selectedProduct.productName}</h4>
           </div>
-          <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.9rem', color: '#334155' }}>
-            <span>Monthly: <strong style={{ color: '#0f57a8' }}>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
+          <div className="wz-order__meta">
+            <span>Monthly: <strong>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
             <span>Installation: <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong></span>
             {selectedProduct.quantity > 1 && <span>Qty: <strong>{selectedProduct.quantity}</strong></span>}
           </div>
@@ -426,7 +411,7 @@ export default function NewConnectionWizard() {
       <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form onSubmit={handleSubmit}>
-        <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
+        <div style={{ minHeight: '240px', marginBottom: '1.25rem' }}>
           {step === 'location' && (
             <CustomerInfoStep
               formData={formData}
@@ -478,28 +463,18 @@ export default function NewConnectionWizard() {
         </div>
 
         {submitError && (
-          <p style={{ color: 'var(--danger, #dc3545)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+          <p className="wz-error" role="alert" style={{ marginBottom: '1rem' }}>
             {submitError}
           </p>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1.5px solid #e2e8f0', paddingTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="wz-actions">
+          <div className="wz-actions__left">
             <button
               type="button"
               className="btn btn-secondary"
               onClick={handleBackNavigation}
               disabled={submitting}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                fontWeight: 700,
-                fontSize: '0.92rem',
-                padding: '0.65rem 1.25rem',
-                borderRadius: '10px',
-                cursor: 'pointer',
-              }}
             >
               {stepIndex === 0 || step === 'location' ? '← Back to Cart' : '← Back'}
             </button>
@@ -535,14 +510,8 @@ export default function NewConnectionWizard() {
             return (
               <button
                 type="submit"
-                className="btn btn-primary"
+                className={`btn ${step === 'review' ? 'btn-success' : 'btn-primary'} btn-lg`}
                 disabled={submitting}
-                style={{
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  padding: '0.7rem 1.5rem',
-                  borderRadius: '10px',
-                }}
               >
                 {label}
               </button>
