@@ -23,6 +23,9 @@ export default function CategoryChips({ activeCategory, onSelectCategory, availa
     (cat) => cat.name === 'All Products' || !available || available.includes(cat.name)
   );
 
+  // "All" plus a single category is the same list twice — don't show chips.
+  if (visible.length < 3) return null;
+
   return (
     <div className="chip-row" role="group" aria-label={t('catalog.categories.label', 'Categories')}>
       {visible.map((cat) => {

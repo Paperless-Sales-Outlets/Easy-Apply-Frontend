@@ -31,7 +31,8 @@ const iconFor = (name = '') => {
 
 function CheckGroup({ title, options, selected, counts, onToggle }) {
   const { t } = useTranslation();
-  if (!options.length) return null;
+  // One option can't narrow anything, so a single-choice group is just noise.
+  if (options.length < 2) return null;
   return (
     <div className="filter-group">
       <h3>{title}</h3>
@@ -93,13 +94,9 @@ export default function SidebarFilters({
       try {
         const data = await getProductHierarchy();
         if (!isMounted) return;
-        const list = Array.isArray(data) ? data : [];
-        setHierarchy(list);
-        const initial = {};
-        list.forEach((node) => {
-          initial[node.id || node.name] = true;
-        });
-        setExpandedNodes(initial);
+        // Categories start collapsed: the tree is a long list on the live API
+        // and expanding it all would push the products off the first screen.
+        setHierarchy(Array.isArray(data) ? data : []);
       } catch (e) {
         console.warn('Hierarchy fetch error:', e);
       } finally {

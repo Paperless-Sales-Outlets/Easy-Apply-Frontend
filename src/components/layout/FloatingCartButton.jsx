@@ -31,7 +31,16 @@ export default function FloatingCartButton() {
   }, []);
 
   // Do not surface the floating button when already on the cart page or inside admin portal
-  const isExcludedPage = location.pathname.startsWith('/cart') || location.pathname.includes('/admin');
+  // Also hidden inside the application funnel itself, where it only competes with the Next button.
+  const path = location.pathname;
+  const isExcludedPage =
+    path.startsWith('/cart') ||
+    path.includes('/admin') ||
+    path === '/new-connection' ||
+    path.startsWith('/completion') ||
+    path.startsWith('/schedule-installation') ||
+    path.startsWith('/payment') ||
+    path.startsWith('/add-to-cart');
   if (cartCount <= 0 || isExcludedPage) {
     return null;
   }
@@ -41,26 +50,9 @@ export default function FloatingCartButton() {
       type="button"
       onClick={() => navigate('/cart')}
       aria-label={`View cart, ${cartCount} item${cartCount === 1 ? '' : 's'}`}
-      style={{
-        position: 'fixed',
-        right: 'clamp(1rem, 4vw, 2rem)',
-        bottom: 'clamp(1rem, 4vw, 2rem)',
-        zIndex: 90,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        backgroundColor: '#0f172a',
-        color: '#ffffff',
-        border: 'none',
-        borderRadius: '9999px',
-        padding: '1.15rem 2rem',
-        fontSize: '1.1rem',
-        fontWeight: 700,
-        cursor: 'pointer',
-        boxShadow: '0 14px 32px rgba(15, 23, 42, 0.35)',
-      }}
+      className="float-cart"
     >
-      <FiShoppingCart size={22} />
+      <FiShoppingCart size={20} aria-hidden="true" />
       <span>View cart &bull; {cartCount}</span>
     </button>
   );

@@ -224,7 +224,7 @@ export default function PaymentStep({
   };
 
   return (
-    <div style={{ maxWidth: '640px', margin: '0 auto', textAlign: 'center' }}>
+    <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center' }}>
       {/* Hidden input so parent form can read the authenticated number */}
       {phase === 'verified' && <input type="hidden" name="verifiedMobile" value={mobileNumber} />}
 
@@ -281,140 +281,68 @@ export default function PaymentStep({
         )}
 
         {phase === 'verified' && (
-          <motion.div key="verified" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: 'rgba(0,166,80,0.1)', color: 'var(--green-text)', display: 'grid', placeItems: 'center', margin: '0 auto 1.25rem' }}>
-              <FiCheckCircle size={30} />
+          <motion.div key="verified" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pay">
+            <div className="pay__head">
+              <span className="pay__tick" aria-hidden="true">
+                <FiCheckCircle size={30} />
+              </span>
+              <h3>Verification Complete</h3>
+              <p>Choose your preferred payment method to complete the connection request.</p>
             </div>
-            <h3 style={{ color: 'var(--green-text)', marginBottom: '0.35rem', fontSize: '1.35rem' }}>Verification Complete</h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.75rem', fontSize: '0.92rem' }}>Choose your preferred payment method to complete the connection request.</p>
 
-            {/* PayHere Gateway Banner & Badges */}
-            <div
-              style={{
-                backgroundColor: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '14px',
-                padding: '1.25rem',
-                marginBottom: '1.5rem',
-                textAlign: 'left',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <FiLock color="#0056b3" size={16} />
-                  <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0f172a' }}>PayHere Secured Gateway</span>
-                </div>
-                <span style={{ fontSize: '0.72rem', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: 800, padding: '0.2rem 0.55rem', borderRadius: '20px', textTransform: 'uppercase' }}>
-                  256-Bit SSL Encrypted
+            <div className="pay__gateway">
+              <div className="pay__gateway-top">
+                <span>
+                  <FiLock size={16} aria-hidden="true" /> PayHere Secured Gateway
                 </span>
+                <span className="pay__ssl">256-Bit SSL Encrypted</span>
               </div>
-
-              {/* Supported payment icons */}
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div className="pay__brands">
                 {['VISA', 'MasterCard', 'AMEX', 'eZ Cash', 'mCash', 'FriMi', 'Genie'].map((brand) => (
-                  <span
-                    key={brand}
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      backgroundColor: '#ffffff',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '6px',
-                      padding: '0.3rem 0.6rem',
-                      color: '#334155',
-                    }}
-                  >
-                    {brand}
-                  </span>
+                  <span key={brand} className="badge-plain">{brand}</span>
                 ))}
               </div>
             </div>
 
-            {/* Digital Receipt Breakdown */}
-            <div 
-              style={{ 
-                padding: '1.75rem 1.5rem', borderRadius: '14px', textAlign: 'left', marginBottom: '1.75rem',
-                backgroundColor: '#ffffff',
-                boxShadow: '0 4px 20px rgba(0, 86, 179, 0.06)',
-                border: '1px solid #e2e8f0',
-                position: 'relative'
-              }}
-            >
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: '#0056b3', borderRadius: '14px 14px 0 0' }} />
-              
-              <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', display: 'grid', placeItems: 'center', margin: '0 auto 0.4rem', color: 'var(--slt-blue)' }}>
-                  <FiFileText size={18} />
-                </div>
-                <h4 style={{ margin: 0, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '1.5px', fontSize: '0.85rem', fontWeight: 800 }}>Digital Order Receipt</h4>
+            <section className="pay__receipt" aria-label="Order receipt">
+              <h4>
+                <FiFileText size={18} aria-hidden="true" /> Digital Order Receipt
+              </h4>
+              <div className="pay__row">
+                <span>{amountLabel}</span>
+                <strong>Rs. {formattedPending}</strong>
               </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: parsedFee > 0 ? 'none' : '1px dashed #cbd5e1', marginBottom: parsedFee > 0 ? '0.4rem' : '0.75rem' }}>
-                <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.92rem' }}>{amountLabel}</span>
-                <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>Rs. {formattedPending}</span>
-              </div>
-              
               {parsedFee > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: '1px dashed #cbd5e1', marginBottom: '0.75rem' }}>
-                  <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.92rem' }}>{feeLabel || 'Fee'}</span>
-                  <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>Rs. {formattedFee}</span>
+                <div className="pay__row">
+                  <span>{feeLabel || 'Fee'}</span>
+                  <strong>Rs. {formattedFee}</strong>
                 </div>
               )}
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.85rem', borderBottom: '1px solid #f1f5f9', marginBottom: '0.85rem' }}>
-                <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.05rem' }}>Total Amount Due</span>
-                <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0056b3' }}>Rs. {formattedAmount}</span>
+              <div className="pay__row pay__row--total">
+                <span>Total Amount Due</span>
+                <strong>Rs. {formattedAmount}</strong>
               </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.88rem' }}>Gateway Mode</span>
-                <span style={{ fontWeight: 700, color: '#059669', fontSize: '0.88rem' }}>PayHere Sandbox Verified</span>
+              <div className="pay__row pay__row--meta">
+                <span>Gateway Mode</span>
+                <span className="pay__mode">PayHere Sandbox Verified</span>
               </div>
-            </div>
+            </section>
 
             {statusState.message && (
-              <div style={{ padding: '0.85rem 1rem', borderRadius: '8px', marginBottom: '1.25rem', backgroundColor: statusState.type === 'error' ? '#fef2f2' : '#ecfdf5', color: statusState.type === 'error' ? '#dc2626' : '#059669', border: `1px solid ${statusState.type === 'error' ? '#fecaca' : '#a7f3d0'}`, fontSize: '0.92rem', fontWeight: 600 }}>
+              <div
+                className={`pay__status ${statusState.type === 'error' ? 'is-error' : 'is-ok'}`}
+                role={statusState.type === 'error' ? 'alert' : 'status'}
+              >
                 {statusState.message}
               </div>
             )}
 
-            {/* Action Buttons: PayHere Sandbox Gateway & Fast Demo Checkout */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <button
-                type="button"
-                className="btn btn-primary"
-                style={{
-                  height: '52px',
-                  fontSize: '1.05rem',
-                  fontWeight: 800,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '0.65rem',
-                  backgroundColor: '#0056b3',
-                  borderRadius: '10px',
-                  boxShadow: '0 4px 14px rgba(0, 86, 179, 0.25)',
-                }}
-                onClick={handlePayHerePayment}
-              >
-                <FiCreditCard size={20} />
-                Pay Rs. {formattedAmount} via PayHere Gateway
+            <div className="pay__actions">
+              <button type="button" className="btn-ds btn-ds--buy btn-ds--block" style={{ minHeight: 56, fontSize: 17 }} onClick={handlePayHerePayment}>
+                <FiCreditCard size={20} aria-hidden="true" />
+                <span>Pay Rs. {formattedAmount} via PayHere Gateway</span>
               </button>
-
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{
-                  height: '46px',
-                  fontSize: '0.92rem',
-                  fontWeight: 700,
-                  backgroundColor: '#f8fafc',
-                  color: '#334155',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: '10px',
-                }}
-                onClick={handleInstantConfirm}
-              >
+              <button type="button" className="btn-ds btn-ds--outline btn-ds--block" onClick={handleInstantConfirm}>
                 Instant Confirm (Demo / Teleshop Pay)
               </button>
             </div>

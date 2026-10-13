@@ -394,21 +394,54 @@ export default function NewConnectionWizard() {
       {/* Progress Stepper: 7-Step Tracker Bar */}
       <WizardStepper currentStep={active7Step} />
 
-      {selectedProduct && (
-        <div className="wz-order">
-          <div>
-            <span className="wz-order__label">Selected Package</span>
-            <h4>{selectedProduct.productName}</h4>
+      {/* Full summary while choosing the location; a one-line brief afterwards so the
+          task of each later step starts on the first screen. */}
+      {step === 'location' || step === 'loop' ? (
+      <div className="wz-info">
+        {selectedProduct && (
+          <div className="wz-order">
+            <div>
+              <span className="wz-order__label">Selected Package</span>
+              <h4>{selectedProduct.productName}</h4>
+            </div>
+            <div className="wz-order__meta">
+              <span>Monthly: <strong>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
+              <span>Installation: <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong></span>
+              {selectedProduct.quantity > 1 && <span>Qty: <strong>{selectedProduct.quantity}</strong></span>}
+            </div>
           </div>
-          <div className="wz-order__meta">
-            <span>Monthly: <strong>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
-            <span>Installation: <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong></span>
-            {selectedProduct.quantity > 1 && <span>Qty: <strong>{selectedProduct.quantity}</strong></span>}
-          </div>
+        )}
+
+        <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
+      </div>
+      ) : (
+        <div className="wz-brief" aria-label="Application summary">
+          {selectedProduct && (
+            <span>
+              <small>Package</small>
+              <strong>{selectedProduct.productName}</strong>
+            </span>
+          )}
+          {selectedProduct && (
+            <span>
+              <small>Monthly</small>
+              <strong>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong>
+            </span>
+          )}
+          {selectedProduct && (
+            <span>
+              <small>Installation</small>
+              <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong>
+            </span>
+          )}
+          {customerExists && selectedAccount && (
+            <span>
+              <small>Account</small>
+              <strong>{selectedAccount.fullName || selectedAccount.customerName || selectedAccount.telephone}</strong>
+            </span>
+          )}
         </div>
       )}
-
-      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form onSubmit={handleSubmit}>
         <div style={{ minHeight: '240px', marginBottom: '1.25rem' }}>

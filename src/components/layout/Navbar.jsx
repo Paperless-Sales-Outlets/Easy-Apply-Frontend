@@ -205,8 +205,15 @@ export default function Navbar() {
 
   const lang = (i18n.language || 'en').slice(0, 2);
   const displayName = verifiedName || formatPhone(verifiedPhone);
-  const hideSearch =
-    location.pathname.startsWith('/schedule-installation') || location.pathname.startsWith('/completion');
+  // Search leads away from the task, so it is hidden inside the application funnel.
+  const FUNNEL_PATHS = [
+    '/new-connection', '/reconnection', '/ownership-change', '/location-change', '/termination',
+    '/package-migration', '/service-vacation', '/refund-request', '/customer-request-acceptance',
+    '/internet-services', '/schedule-installation', '/completion',
+  ];
+  const hideSearch = FUNNEL_PATHS.some(
+    (p) => location.pathname === p || location.pathname.startsWith(`${p}/`)
+  ) && !location.pathname.startsWith('/new-connection/');
 
   return (
     <>

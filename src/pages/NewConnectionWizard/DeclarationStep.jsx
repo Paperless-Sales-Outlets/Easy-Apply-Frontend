@@ -1,8 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { motion } from 'framer-motion';
-import { FiCheckCircle, FiShield, FiFileText, FiEdit3 } from 'react-icons/fi';
+import { FiFileText, FiEdit3 } from 'react-icons/fi';
 import DigitalSignatureCanvas from '../../components/form/DigitalSignatureCanvas';
 import WizardStepHeader from '../../components/wizard/WizardStepHeader';
 
@@ -48,172 +47,70 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
     }
   };
 
+  const overview = [
+    ['Applicant Name', formData.nameFull || `${formData.title || ''} Applicant`],
+    ['NIC / Identification', formData.nic || 'Verified'],
+    ['Contact Mobile', `+94 ${formData.mobileNumber || 'Verified'}`],
+    ['Installation Address', formData.installAddress || formData.address || 'Colombo'],
+  ];
+
   return (
-    <div className="new-connection-declaration-step" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <WizardStepHeader 
-        stepNumber={4} 
-        totalSteps={7} 
-        title="Digital Signature & Declaration" 
-        description="Review your application details, accept terms & conditions, and sign digitally." 
+    <div className="wz-step wz-step--narrow">
+      <WizardStepHeader
+        stepNumber={4}
+        totalSteps={7}
+        title="Digital Signature & Declaration"
+        description="Review your application details, accept the terms and conditions, and sign digitally."
       />
-      {/* ── Applicant Overview Card ── */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, rgba(15, 87, 168, 0.06), rgba(0, 168, 255, 0.04))',
-          borderRadius: '16px',
-          border: '1px solid rgba(15, 87, 168, 0.15)',
-          padding: '1.25rem 1.5rem',
-          marginBottom: '2rem',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '1rem',
-        }}
-      >
-        <div>
-          <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Applicant Name
-          </span>
-          <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>
-            {formData.nameFull || `${formData.title || ''} Applicant`}
-          </strong>
-        </div>
-        <div>
-          <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            NIC / Identification
-          </span>
-          <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>
-            {formData.nic || 'Verified'}
-          </strong>
-        </div>
-        <div>
-          <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Contact Mobile
-          </span>
-          <strong style={{ fontSize: '0.95rem', color: '#0f172a' }}>
-            +94 {formData.mobileNumber || 'Verified'}
-          </strong>
-        </div>
-        <div>
-          <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Installation Address
-          </span>
-          <strong style={{ fontSize: '0.9rem', color: '#0f172a', wordBreak: 'break-word' }}>
-            {formData.installAddress || formData.address || 'Colombo'}
-          </strong>
-        </div>
-      </div>
 
-      {/* ── Terms & Conditions / Declaration Card ── */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
-          <FiFileText size={20} style={{ color: 'var(--slt-blue)' }} />
-          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', fontWeight: 800 }}>
-            Customer Agreement &amp; Declaration
-          </h3>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            border: '1px solid #e2e8f0',
-            padding: '1.5rem',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-          }}
-        >
-          <div
-            style={{
-              maxHeight: '160px',
-              overflowY: 'auto',
-              padding: '0.75rem 1rem',
-              backgroundColor: '#f8fafc',
-              borderRadius: '10px',
-              border: '1px solid #e2e8f0',
-              fontSize: '0.85rem',
-              lineHeight: 1.6,
-              color: '#475569',
-              marginBottom: '1.25rem',
-            }}
-          >
-            <p style={{ margin: '0 0 0.5rem 0', fontWeight: 600, color: '#0f172a' }}>
-              Declaration by Applicant:
-            </p>
-            <p style={{ margin: '0 0 0.5rem 0' }}>
-              1. I hereby confirm that all particulars furnished by me in this application are true and correct to the best of my knowledge.
-            </p>
-            <p style={{ margin: '0 0 0.5rem 0' }}>
-              2. I agree to abide by the standard Terms and Conditions governing the provision of telecommunication services by Sri Lanka Telecom PLC (SLTMobitel).
-            </p>
-            <p style={{ margin: '0 0 0.5rem 0' }}>
-              3. I acknowledge that the connection is subject to technical feasibility and network loop availability at the specified installation address.
-            </p>
-            <p style={{ margin: '0' }}>
-              4. I authorize SLTMobitel to verify the information provided against the official records and credit databases.
-            </p>
+      <dl className="wz-facts">
+        {overview.map(([label, value]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
           </div>
+        ))}
+      </dl>
 
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '0.85rem',
-              cursor: 'pointer',
-              userSelect: 'none',
-              padding: '0.6rem 0.5rem',
-              borderRadius: '8px',
-            }}
-          >
-            <input
-              type="checkbox"
-              name="declarationAccepted"
-              checked={isAgreed}
-              onChange={handleAgreeToggle}
-              style={{
-                width: '20px',
-                height: '20px',
-                marginTop: '2px',
-                cursor: 'pointer',
-                accentColor: 'var(--slt-blue)',
-              }}
-            />
-            <span style={{ fontSize: '0.92rem', color: isAgreed ? '#0f172a' : '#334155', fontWeight: isAgreed ? 700 : 500, lineHeight: 1.4 }}>
-              I have read, understood, and accept the Customer Declaration and SLTMobitel Terms &amp; Conditions. <span style={{ color: '#ef4444' }}>*</span>
-            </span>
-          </label>
-        </div>
-      </div>
+      <section className="wz-block" aria-labelledby="decl-h">
+        <h3 id="decl-h" className="wz-block__title">
+          <FiFileText size={20} aria-hidden="true" />
+          Customer Agreement &amp; Declaration
+        </h3>
 
-      {/* ── Digital Signature Canvas ── */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
-          <FiEdit3 size={20} style={{ color: 'var(--slt-blue)' }} />
-          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', fontWeight: 800 }}>
-            Digital Signature <span style={{ color: '#ef4444' }}>*</span>
-          </h3>
+        <div className="wz-terms" tabIndex={0} role="region" aria-label="Declaration text">
+          <p><strong>Declaration by Applicant:</strong></p>
+          <p>1. I hereby confirm that all particulars furnished by me in this application are true and correct to the best of my knowledge.</p>
+          <p>2. I agree to abide by the standard Terms and Conditions governing the provision of telecommunication services by Sri Lanka Telecom PLC (SLTMobitel).</p>
+          <p>3. I acknowledge that the connection is subject to technical feasibility and network loop availability at the specified installation address.</p>
+          <p>4. I authorize SLTMobitel to verify the information provided against the official records and credit databases.</p>
         </div>
 
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            border: signatureError ? '2px solid #ef4444' : '1px solid #e2e8f0',
-            padding: '1.5rem',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-          }}
-        >
-          <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: 0, marginBottom: '1rem' }}>
-            Please draw your signature in the box below using your mouse, trackpad, or finger on touch screens.
-          </p>
+        <label className={`wz-consent${isAgreed ? ' is-on' : ''}`}>
+          <input type="checkbox" name="declarationAccepted" checked={isAgreed} onChange={handleAgreeToggle} />
+          <span>
+            I have read, understood, and accept the Customer Declaration and SLTMobitel Terms &amp; Conditions.{' '}
+            <span className="req" aria-hidden="true">*</span>
+          </span>
+        </label>
+      </section>
 
-          <DigitalSignatureCanvas
-            label="Applicant Digital Signature"
-            required
-            value={signatureVal}
-            onChange={handleSignatureChange}
-            error={signatureError ? 'Signature is required' : ''}
-          />
-        </div>
-      </div>
+      <section className={`wz-block${signatureError ? ' has-error' : ''}`} aria-labelledby="sig-h">
+        <h3 id="sig-h" className="wz-block__title">
+          <FiEdit3 size={20} aria-hidden="true" />
+          Digital Signature <span className="req" aria-hidden="true">*</span>
+        </h3>
+        <p className="wz-block__hint">
+          Draw your signature in the box below with your mouse, trackpad, or finger on a touch screen.
+        </p>
+        <DigitalSignatureCanvas
+          label="Applicant Digital Signature"
+          required
+          value={signatureVal}
+          onChange={handleSignatureChange}
+          error={signatureError ? 'Signature is required' : ''}
+        />
+      </section>
     </div>
   );
 });

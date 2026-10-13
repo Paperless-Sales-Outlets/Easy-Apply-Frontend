@@ -59,53 +59,24 @@ export default function SessionGate({ children, requireExistingCustomer }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          style={{
-            maxWidth: '520px',
-            width: '100%',
-            backgroundColor: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: '16px',
-            boxShadow: '0 20px 50px rgba(0, 86, 179, 0.08)',
-            padding: '2.5rem 2rem',
-            textAlign: 'center',
-          }}
+          className="gate gate--center"
+          style={{ maxWidth: 520 }}
         >
-          <div
-            style={{
-              width: '62px',
-              height: '62px',
-              borderRadius: '16px',
-              backgroundColor: '#eff6ff',
-              color: '#0056b3',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.25rem auto',
-            }}
-          >
-            <FiPackage size={28} aria-hidden="true" />
-          </div>
+          <span className="gate__icon" aria-hidden="true">
+            <FiPackage size={28} />
+          </span>
 
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.5rem 0' }}>
-            This service is for existing SLT customers
-          </h2>
-          <p style={{ fontSize: '0.92rem', color: '#64748b', margin: '0 0 1.75rem 0', lineHeight: 1.6 }}>
-            We couldn't find an SLT product registered to{' '}
-            <strong style={{ color: '#0f172a' }}>+94 {session.mobileNumber}</strong>. Reconnection,
-            relocation, transfers, package changes and the other account services are only available
-            once you have an active SLT connection. You can apply for one now.
+          <h2 className="gate__title">This service is for existing SLT customers</h2>
+          <p className="gate__text">
+            We couldn't find an SLT product registered to <strong>+94 {session.mobileNumber}</strong>. Reconnection,
+            relocation, transfers, package changes and the other account services are only available once you have an
+            active SLT connection. You can apply for one now.
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => navigate('/')}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}
-            >
-              <FiShoppingCart size={16} aria-hidden="true" /> Browse Packages
-            </button>
-          </div>
+          <button type="button" className="btn-ds btn-ds--primary" onClick={() => navigate('/')}>
+            <FiShoppingCart size={18} aria-hidden="true" />
+            <span>Browse Packages</span>
+          </button>
         </motion.div>
       </main>
     );
@@ -119,49 +90,26 @@ export default function SessionGate({ children, requireExistingCustomer }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          style={{
-            maxWidth: '560px',
-            width: '100%',
-            backgroundColor: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: '16px',
-            boxShadow: '0 20px 50px rgba(0, 86, 179, 0.08)',
-            padding: '2.25rem 2rem',
-          }}
+          className="gate"
+          style={{ maxWidth: 560 }}
         >
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.4rem 0' }}>
-            Choose an account
-          </h2>
-          <p style={{ fontSize: '0.9rem', color: '#64748b', margin: '0 0 1.5rem 0' }}>
+          <h2 className="gate__title">Choose an account</h2>
+          <p className="gate__text">
             This mobile number has more than one SLT connection. Pick the one this request is for.
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="gate__list">
             {session.accountsList.map((account, idx) => (
               <button
                 key={account.accountNumber || account.telephone || idx}
                 type="button"
+                className="gate__account"
                 onClick={() => switchAccount(account)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.85rem',
-                  textAlign: 'left',
-                  padding: '1rem 1.15rem',
-                  borderRadius: '16px',
-                  border: '1.5px solid #e2e8f0',
-                  backgroundColor: '#f8fafc',
-                  cursor: 'pointer',
-                }}
               >
-                <FiUser size={20} color="#0056b3" aria-hidden="true" />
+                <FiUser size={22} aria-hidden="true" />
                 <span>
-                  <strong style={{ display: 'block', color: '#0f172a', fontSize: '0.95rem' }}>
-                    {account.fullName || account.customerName || 'SLT Account'}
-                  </strong>
-                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
-                    {account.telephone || account.accountNumber}
-                  </span>
+                  <strong>{account.fullName || account.customerName || 'SLT Account'}</strong>
+                  <span>{account.telephone || account.accountNumber}</span>
                 </span>
               </button>
             ))}

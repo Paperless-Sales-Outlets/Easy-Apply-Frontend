@@ -57,10 +57,10 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <h3 style={{ color: '#0f172a', marginBottom: '0.4rem', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-        Network Loop Coverage Verification
+        Checking coverage at your address
       </h3>
       <p style={{ color: '#64748b', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-        We are checking SLTMobitel distribution network loop availability at your installation location.
+        We are checking whether SLTMobitel can connect your installation address.
       </p>
 
       <div
@@ -110,10 +110,10 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
                 }}
               />
               <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>
-                Querying Network Loop...
+                Checking coverage at your address...
               </h4>
               <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
-                Verifying port and DP allocation with the SLTMobitel exchange database.
+                This takes a few seconds. Please keep this page open.
               </p>
             </motion.div>
           )}
@@ -137,28 +137,18 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
                 <FiCheckCircle size={32} />
               </div>
               <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
-                Service Loop Available!
+                Good news! Service is available at your address.
               </h4>
               <p style={{ margin: '0 auto 1.5rem auto', fontSize: '0.9rem', color: '#15803d', fontWeight: 700, maxWidth: '440px' }}>
-                A high-speed distribution port is free and ready for installation in your area ({coverageData?.area || city || 'Standard Area'}).
+                We can connect you at this address ({coverageData?.area || city || 'Standard Area'}).
               </p>
 
               <button
                 type="button"
                 onClick={onAvailable}
-                className="btn btn-primary"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.85rem 1.75rem',
-                  fontSize: '1rem',
-                  fontWeight: 800,
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 15px rgba(0, 86, 179, 0.25)',
-                }}
+                className="btn btn-primary btn-lg"
               >
-                <span>Continue to Agreement &amp; Signature</span>
+                <span>Continue to Identity Verification</span>
                 <FiArrowRight size={18} />
               </button>
             </motion.div>
@@ -183,7 +173,7 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
                 <FiAlertCircle size={32} />
               </div>
               <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.2rem', fontWeight: 800, color: '#991b1b' }}>
-                No Loop Available in This Area
+                Service is not available at this address yet
               </h4>
               <p
                 style={{
@@ -195,7 +185,7 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
                   lineHeight: 1.5,
                 }}
               >
-                We do not have a free service loop available at this address right now. Progression to payment has been stopped. Please contact your nearest SLTMobitel branch for assistance.
+                We can't connect this address right now, so your application has been paused before payment. Please contact your nearest SLTMobitel branch, or call 1212.
               </p>
 
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -289,11 +279,11 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
               </div>
 
               <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.3rem', fontWeight: 800, color: '#991b1b' }}>
-                No Loop Available
+                Not available at this address
               </h3>
 
               <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.92rem', color: '#475569', lineHeight: 1.5, fontWeight: 500 }}>
-                Unfortunately, all network loop distribution ports are currently occupied at:
+                Unfortunately we can't connect the following address right now:
                 <strong style={{ display: 'block', color: '#0f172a', marginTop: '0.25rem' }}>
                   {address || city || 'Specified Address'}
                 </strong>
@@ -313,7 +303,7 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
                   <FiPhoneCall size={14} /> Recommended Action:
                 </div>
                 <div style={{ fontSize: '0.82rem', color: '#7c2d12', lineHeight: 1.4 }}>
-                  Please visit your <strong>nearest SLTMobitel Regional Teleshop / Branch</strong> or call <strong>1212</strong> to request DP port expansion in your area.
+                  Please visit your <strong>nearest SLTMobitel Regional Teleshop / Branch</strong> or call <strong>1212</strong> to ask about extending the network to your area.
                 </div>
               </div>
 
