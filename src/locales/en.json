@@ -828,11 +828,11 @@
     },
     "sections": {
       "packagesAvailable": "{{count}} Packages Available",
-      "voiceTitle": "Voice Packages (Compulsory - Max 1)",
+      "voiceTitle": "Voice Packages",
       "voiceSubtitle": "1 Voice package is required for all connection bundles",
-      "broadbandTitle": "Broadband Packages (Fibre & LTE - Max 1)",
+      "broadbandTitle": "Broadband Packages",
       "broadbandSubtitle": "High-speed internet for home, gaming & business",
-      "peoTvTitle": "PEO TV Packages (Max 1)",
+      "peoTvTitle": "PEO TV Packages",
       "peoTvSubtitle": "Live HD channels, catch-up TV & 4K entertainment"
     }
   },

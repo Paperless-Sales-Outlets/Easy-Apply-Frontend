@@ -964,11 +964,11 @@
     },
     "sections": {
       "packagesAvailable": "පැකේජ {{count}}ක් ලබා ගත හැක",
-      "voiceTitle": "හඬ පැකේජ (අනිවාර්ය - උපරිම 1)",
+      "voiceTitle": "හඬ පැකේජ",
       "voiceSubtitle": "සියලුම සම්බන්ධතා බන්ඩල සඳහා හඬ පැකේජයක් අවශ්‍ය වේ",
-      "broadbandTitle": "බ්‍රෝඩ්බෑන්ඩ් පැකේජ (ෆයිබර් සහ LTE - උපරිම 1)",
+      "broadbandTitle": "බ්‍රෝඩ්බෑන්ඩ් පැකේජ",
       "broadbandSubtitle": "නිවස, ක්‍රීඩා සහ ව්‍යාපාර සඳහා අධිවේගී අන්තර්ජාලය",
-      "peoTvTitle": "PEO TV පැකේජ (උපරිම 1)",
+      "peoTvTitle": "PEO TV පැකේජ",
       "peoTvSubtitle": "සජීවී HD නාලිකා, කැච්-අප් TV සහ 4K විනෝදාස්වාදය"
     }
   },

@@ -621,7 +621,7 @@ export default function ProductCatalogPage() {
     if (voiceProds.length > 0 && (activeCategory === 'All Products' || activeCategory === 'Voice')) {
       sections.push({
         id: 'voice-section',
-        title: t('catalog.sections.voiceTitle', 'Voice Packages (Max 1)'),
+        title: t('catalog.sections.voiceTitle', 'Voice Packages'),
         subtitle: t('catalog.sections.voiceSubtitle', 'Voice packages for crystal clear home & office calls'),
         icon: <FiPhone />,
         products: voiceProds,
@@ -631,7 +631,7 @@ export default function ProductCatalogPage() {
     if (broadbandProds.length > 0 && (activeCategory === 'All Products' || activeCategory === 'Fibre Broadband' || activeCategory === 'LTE Home')) {
       sections.push({
         id: 'broadband-section',
-        title: t('catalog.sections.broadbandTitle', 'Broadband Packages (Fibre & LTE - Max 1)'),
+        title: t('catalog.sections.broadbandTitle', 'Broadband Packages'),
         subtitle: t('catalog.sections.broadbandSubtitle', 'High-speed internet for home, gaming & business'),
         icon: <FiGlobe />,
         products: broadbandProds,
@@ -641,7 +641,7 @@ export default function ProductCatalogPage() {
     if (peoTvProds.length > 0 && (activeCategory === 'All Products' || activeCategory === 'PEO TV')) {
       sections.push({
         id: 'peotv-section',
-        title: t('catalog.sections.peoTvTitle', 'PEO TV Packages (Max 1)'),
+        title: t('catalog.sections.peoTvTitle', 'PEO TV Packages'),
         subtitle: t('catalog.sections.peoTvSubtitle', 'Live HD channels, catch-up TV & 4K entertainment'),
         icon: <FiTv />,
         products: peoTvProds,
@@ -792,12 +792,6 @@ export default function ProductCatalogPage() {
                         <h3 id={`${section.id}-h`}>{section.title}</h3>
                         <p>{section.subtitle}</p>
                       </div>
-                      <span className="cat-section__count">
-                        {t('catalog.sections.packagesAvailable', {
-                          count: section.products.length,
-                          defaultValue: '{{count}} Packages Available',
-                        })}
-                      </span>
                     </div>
 
                     <div className={`pgrid${viewMode === 'list' ? ' pgrid--list' : ''}`}>
