@@ -1205,7 +1205,7 @@ html { scrollbar-gutter: stable; }
 
 /* Summary column: only what a new customer needs to recognise */
 .wz-aside .wz-order, .wz-aside .verified-box { padding: 20px 22px; }
-.wz-aside .verified-box__grid > div:nth-child(n + 3) { display: none; }
+.wz-aside [data-aside='hide'] { display: none; }
 .wz-aside .verified-box__grid { grid-template-columns: 1fr; gap: 14px; }
 .wz-aside .wz-order__meta { display: grid; gap: 4px; }
 

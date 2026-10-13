@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Icon from './Icon';
 import { useVerifiedContext } from './verification';
 
-export default function ExistingCustomerSummaryBox({ customerData, customerExists }) {
+export default function ExistingCustomerSummaryBox({ customerData, customerExists, extraFacts = [] }) {
   const { accountsList, switchAccount } = useVerifiedContext();
   const [showSwitchModal, setShowSwitchModal] = useState(false);
 
-  if (!customerExists || !customerData) return null;
+  const hasAccount = Boolean(customerExists && customerData);
+  const facts = extraFacts.filter((f) => f && f.value);
+  if (!hasAccount && facts.length === 0) return null;
 
   return (
     <>
@@ -21,7 +23,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
             </span>
             Customer Information Verified
           </span>
-          {accountsList && accountsList.length > 1 && (
+          {hasAccount && accountsList && accountsList.length > 1 && (
             <button onClick={() => setShowSwitchModal(true)} type="button" className="btn-ds btn-ds--text" style={{ minHeight: 40 }}>
               Switch Account
             </button>
@@ -29,22 +31,32 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
         </div>
 
         <dl className="verified-box__grid">
-          <div>
-            <dt>Customer Name</dt>
-            <dd>{customerData.fullName || customerData.customerName || '—'}</dd>
-          </div>
-          <div>
-            <dt>Registered Address</dt>
-            <dd>{customerData.address || '—'}</dd>
-          </div>
-          <div>
-            <dt>Telephone Number</dt>
-            <dd>{customerData.telephone || customerData.phoneNumber || '—'}</dd>
-          </div>
-          <div>
-            <dt>Current Package</dt>
-            <dd>{customerData.package || customerData.packageName || '—'}</dd>
-          </div>
+          {hasAccount && (
+            <>
+              <div>
+                <dt>Customer Name</dt>
+                <dd>{customerData.fullName || customerData.customerName || '—'}</dd>
+              </div>
+              <div>
+                <dt>Registered Address</dt>
+                <dd>{customerData.address || '—'}</dd>
+              </div>
+              <div data-aside="hide">
+                <dt>Telephone Number</dt>
+                <dd>{customerData.telephone || customerData.phoneNumber || '—'}</dd>
+              </div>
+              <div data-aside="hide">
+                <dt>Current Package</dt>
+                <dd>{customerData.package || customerData.packageName || '—'}</dd>
+              </div>
+            </>
+          )}
+          {facts.map((f) => (
+            <div key={f.label}>
+              <dt>{f.label}</dt>
+              <dd>{f.value}</dd>
+            </div>
+          ))}
         </dl>
       </section>
 

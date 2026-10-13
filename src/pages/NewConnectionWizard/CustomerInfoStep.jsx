@@ -173,7 +173,6 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
     }
   };
 
-  const contactMobile = knownProfile.mobileNumber && `+94 ${knownProfile.mobileNumber}`;
   const contactEmail = knownProfile.email || formData.email || '';
 
   return (
@@ -184,26 +183,6 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
         title="Where should we install?"
         description="Choose your registered address, or tell us a different place."
       />
-
-      {/* Contact details: plain facts, no card inside a card */}
-      <section className="wz-section" aria-labelledby="contact-h">
-        <div className="wz-section__head">
-          <h3 id="contact-h">Contact details</h3>
-          <span className="wz-pill wz-pill--ok">
-            <FiCheck size={14} aria-hidden="true" /> Verified by OTP
-          </span>
-        </div>
-        <dl className="wz-contact">
-          <div>
-            <dt>Mobile number</dt>
-            <dd>{contactMobile || '—'}</dd>
-          </div>
-          <div>
-            <dt>Email address</dt>
-            <dd>{contactEmail || '—'}</dd>
-          </div>
-        </dl>
-      </section>
 
       {/* Install location */}
       <fieldset className="wz-section wz-fieldset">

@@ -413,7 +413,14 @@ export default function NewConnectionWizard() {
               </div>
             )}
 
-            <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
+            <ExistingCustomerSummaryBox
+              customerData={selectedAccount}
+              customerExists={customerExists}
+              extraFacts={[
+                { label: 'Mobile Number', value: formData.mobileNumber ? `+94 ${formData.mobileNumber}` : '' },
+                { label: 'Email Address', value: formData.email },
+              ]}
+            />
           </div>
 
           {/* Phones and tablets: one compact line instead. */}
@@ -434,6 +441,18 @@ export default function NewConnectionWizard() {
               <span>
                 <small>Installation</small>
                 <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong>
+              </span>
+            )}
+            {formData.mobileNumber && (
+              <span>
+                <small>Mobile</small>
+                <strong>+94 {formData.mobileNumber}</strong>
+              </span>
+            )}
+            {formData.email && (
+              <span>
+                <small>Email</small>
+                <strong>{formData.email}</strong>
               </span>
             )}
           </div>
