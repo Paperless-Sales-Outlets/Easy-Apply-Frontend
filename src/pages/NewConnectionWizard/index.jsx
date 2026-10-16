@@ -11,6 +11,14 @@ import { useTranslation } from 'react-i18next';
 import api, { clearSessionCart } from '../../utils/api';
 import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
 import { getAuthUser } from '../../utils/authSession';
+import {
+  getDraft,
+  saveDraft,
+  saveDraftPhoto,
+  deleteDraft,
+  readLegacyDraft,
+  clearLegacyDrafts,
+} from '../../services/draftService';
 import WizardStepper from '../../components/WizardStepper';
 import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
@@ -66,6 +74,42 @@ const initialState = {
   district: '',
 };
 
+// Image fields. They are large, so each is saved on its own, only when it
+// changes, separately from the rest of the form.
+const PHOTO_FIELDS = ['nicFront', 'nicBack', 'facePhoto'];
+
+// Wait this long after the last change before saving progress. Moving to
+// another step saves immediately.
+const DRAFT_SAVE_DELAY_MS = 1500;
+
+// After a failed save, try again after these pauses, then wait for the next
+// change before trying again.
+const SAVE_RETRY_DELAYS_MS = [2000, 5000, 10000];
+
+// What the identity and signature steps require before Continue — used when
+// resuming, so a customer is never taken past a step that wasn't fully saved.
+const identityComplete = (data) => {
+  const nicOnFile = data.isExistingCustomer === true; // NIC copies already held for this customer
+  return Boolean(
+    data.facePhoto
+    && data.nic
+    && String(data.nameFull || '').trim()
+    && (nicOnFile || (data.nicFront && data.nicBack))
+  );
+};
+
+const signatureComplete = (data) =>
+  Boolean(data.declarationAccepted && String(data.signature || '').trim());
+
+// Fields filled in automatically rather than by the customer, ignored when
+// deciding whether an old browser-saved draft holds any real progress.
+const AUTO_FILLED_FIELDS = ['mobileNumber', 'otherBroadbandPackage'];
+
+const hasCustomerInput = (data) =>
+  Object.keys(data || {}).some(
+    (key) => !AUTO_FILLED_FIELDS.includes(key) && data[key] && data[key] !== initialState[key]
+  );
+
 const NEXT_LABEL = {
   location: 'Verify Loop Coverage →',
   identity: 'Continue to Signature →',
@@ -110,80 +154,402 @@ export default function NewConnectionWizard() {
   const step = STEPS[stepIndex];
   const stepperStep = stepIndex <= 1 ? 1 : stepIndex;
 
-  const getDraftKey = () => {
-    const phone = verifiedMobile || getAuthUser()?.phone || 'active_user';
-    return `slt_new_conn_draft_${phone}`;
+  // ── Saved progress (draft) ────────────────────────────────────────────────
+  // Progress is kept on the server against the customer's verified mobile
+  // number, so they can leave and continue later from any device. The form
+  // (small, quick) and the photos (large, slower) are saved separately, so a
+  // slow photo upload never holds back the step the customer has reached.
+  // Draft requests never block the form: if one fails the wizard carries on.
+
+  // Only start saving once the customer has actually changed something.
+  const userEdited = useRef(false);
+  // Set once the application is submitted or reset, so a late save can't
+  // bring the old draft back.
+  const draftClosed = useRef(false);
+  // Old browser-saved progress waiting to be removed once it reaches the server.
+  const legacyPending = useRef(false);
+  // Latest values for the save routines, which run outside React's render.
+  const latest = useRef({ formData, selectedProduct, stepIndex });
+  latest.current = { formData, selectedProduct, stepIndex };
+  const lastSavedStep = useRef(null);
+  // Something has been saved since the form opened (drives "All changes saved").
+  const hasSaved = useRef(false);
+
+  // Form saves (fields, package, step) — run one at a time, in order.
+  const formSaveInFlight = useRef(null);
+  const formSaveQueued = useRef(false);
+  const formTimer = useRef(null);
+  const formRetryTimer = useRef(null);
+  const formDirty = useRef(false);
+  const formFailures = useRef(0);
+  const formFailed = useRef(false);
+
+  // Photo saves — one photo at a time, always its latest version.
+  const savedPhotos = useRef({}); // what the server holds, per field
+  const photoGaveUp = useRef({}); // field -> value that failed every retry
+  const photoInFlight = useRef(null);
+  const wakeRetry = useRef(null);
+
+  // 'idle' | 'saving' | 'saved' | 'error', shown beside the buttons.
+  const [saveStatus, setSaveStatus] = useState('idle');
+
+  const photoValue = (field) => latest.current.formData[field] || '';
+
+  const photosPending = () =>
+    PHOTO_FIELDS.filter((field) => {
+      const value = photoValue(field);
+      const gaveUp = field in photoGaveUp.current && photoGaveUp.current[field] === value;
+      return value !== (savedPhotos.current[field] || '') && !gaveUp;
+    });
+
+  const photosFailed = () =>
+    PHOTO_FIELDS.some((field) => {
+      const value = photoValue(field);
+      return field in photoGaveUp.current && photoGaveUp.current[field] === value
+        && value !== (savedPhotos.current[field] || '');
+    });
+
+  const isSaveActive = () =>
+    Boolean(formTimer.current || formSaveInFlight.current || formRetryTimer.current || photoInFlight.current);
+
+  const hasUnsavedWork = () =>
+    !draftClosed.current && userEdited.current
+    && (isSaveActive() || formDirty.current || photosPending().length > 0 || photosFailed());
+
+  const refreshSaveStatus = () => {
+    if (draftClosed.current || !userEdited.current) setSaveStatus('idle');
+    else if (isSaveActive() || photosPending().length > 0) setSaveStatus('saving');
+    else if ((formDirty.current && formFailed.current) || photosFailed()) setSaveStatus('error');
+    else setSaveStatus(hasSaved.current ? 'saved' : 'idle');
   };
 
-  // 1. Initial State Restoration: Load saved draft from localStorage
-  useEffect(() => {
-    try {
-      const key = getDraftKey();
-      const savedRaw = localStorage.getItem(key);
-      if (savedRaw) {
-        const saved = JSON.parse(savedRaw);
-        if (saved && saved.formData) {
-          const restoredFormData = { ...saved.formData };
-          if (restoredFormData.nic && typeof restoredFormData.nic === 'string' && restoredFormData.nic.startsWith('NIC-')) {
-            restoredFormData.nic = '';
-          }
-          dispatch({ type: 'SET_FIELDS', payload: restoredFormData });
+  // Browser-saved progress is removed once both form and photos are on the server.
+  const finishLegacyMove = () => {
+    if (legacyPending.current && !formDirty.current && photosPending().length === 0) {
+      clearLegacyDrafts();
+      legacyPending.current = false;
+    }
+  };
 
-          // Restore stepIndex from URL query param if present, or from saved draft
-          const searchParams = new URLSearchParams(location.search);
-          const stepParam = searchParams.get('step');
-          if (stepParam && STEPS.includes(stepParam)) {
-            setStepIndex(STEPS.indexOf(stepParam));
-          } else if (typeof saved.stepIndex === 'number' && saved.stepIndex > 0 && saved.stepIndex < STEPS.length) {
-            const restoredIndex = STEPS[saved.stepIndex] === 'loop' ? 0 : saved.stepIndex;
-            setStepIndex(restoredIndex);
+  // A pause between retries that ends early when the draft is closed.
+  const waitBeforeRetry = (ms) =>
+    new Promise((resolve) => {
+      const timer = setTimeout(resolve, ms);
+      wakeRetry.current = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+    });
+
+  const persistDraft = () => {
+    formTimer.current = null;
+    if (draftClosed.current) return Promise.resolve();
+    if (formSaveInFlight.current) {
+      formSaveQueued.current = true;
+      return formSaveInFlight.current;
+    }
+    if (formRetryTimer.current) {
+      clearTimeout(formRetryTimer.current);
+      formRetryTimer.current = null;
+    }
+
+    formSaveInFlight.current = (async () => {
+      try {
+        do {
+          formSaveQueued.current = false;
+          if (draftClosed.current) break;
+
+          const { formData: data, selectedProduct: product, stepIndex: index } = latest.current;
+          const fields = { ...data };
+          PHOTO_FIELDS.forEach((field) => delete fields[field]);
+
+          formDirty.current = false;
+          await saveDraft({ formData: fields, selectedProduct: product, stepIndex: index });
+
+          hasSaved.current = true;
+          formFailures.current = 0;
+          formFailed.current = false;
+          finishLegacyMove();
+        } while (formSaveQueued.current);
+      } catch (err) {
+        formDirty.current = true;
+        formFailures.current += 1;
+        console.warn('Could not save application progress:', err?.response?.data?.message || err.message);
+        // Retry a few times, then wait for the customer's next change.
+        if (!draftClosed.current && formFailures.current <= SAVE_RETRY_DELAYS_MS.length) {
+          formRetryTimer.current = setTimeout(() => {
+            formRetryTimer.current = null;
+            persistDraft();
+          }, SAVE_RETRY_DELAYS_MS[formFailures.current - 1]);
+        } else {
+          formFailed.current = true;
+        }
+      } finally {
+        formSaveInFlight.current = null;
+        refreshSaveStatus();
+      }
+    })();
+
+    refreshSaveStatus();
+    return formSaveInFlight.current;
+  };
+
+  const uploadPhotos = () => {
+    if (draftClosed.current) return Promise.resolve();
+    if (photoInFlight.current) return photoInFlight.current;
+    if (photosPending().length === 0) return Promise.resolve();
+
+    photoInFlight.current = (async () => {
+      let attempt = 0;
+      try {
+        let pending = photosPending();
+        while (!draftClosed.current && pending.length > 0) {
+          const field = pending[0];
+          const value = photoValue(field);
+          try {
+            await saveDraftPhoto(field, value);
+            savedPhotos.current = { ...savedPhotos.current, [field]: value };
+            hasSaved.current = true;
+            attempt = 0;
+          } catch (err) {
+            console.warn(`Could not save ${field}:`, err?.response?.data?.message || err.message);
+            // A rejected image (too large / not an image) won't succeed on retry.
+            const rejected = err?.response?.status === 400;
+            if (rejected || attempt >= SAVE_RETRY_DELAYS_MS.length) {
+              photoGaveUp.current = { ...photoGaveUp.current, [field]: value };
+              attempt = 0;
+            } else {
+              refreshSaveStatus();
+              await waitBeforeRetry(SAVE_RETRY_DELAYS_MS[attempt]);
+              attempt += 1;
+            }
           }
+          refreshSaveStatus();
+          pending = photosPending();
+        }
+        finishLegacyMove();
+      } finally {
+        photoInFlight.current = null;
+        wakeRetry.current = null;
+        // A photo changed just as the last upload finished: pick it up.
+        if (!draftClosed.current && photosPending().length > 0) setTimeout(uploadPhotos, 0);
+        refreshSaveStatus();
+      }
+    })();
+
+    refreshSaveStatus();
+    return photoInFlight.current;
+  };
+
+  // 1. On open, load the customer's saved progress from the server. Progress
+  //    saved in this browser by the previous version is picked up if the
+  //    server has none, and moved to the server on the first save.
+  useEffect(() => {
+    let cancelled = false;
+
+    const restore = async () => {
+      let draft = null;
+      let fromLegacy = false;
+
+      try {
+        draft = await getDraft();
+      } catch (err) {
+        console.warn('Could not load saved application progress:', err?.response?.data?.message || err.message);
+      }
+
+      if (!draft) {
+        const legacy = readLegacyDraft(verifiedMobile || getAuthUser()?.phone);
+        if (legacy && hasCustomerInput(legacy.formData)) {
+          draft = legacy;
+          fromLegacy = true;
+        } else {
+          clearLegacyDrafts();
+        }
+      }
+
+      if (cancelled) return;
+
+      if (draft) {
+        const restoredFormData = { ...(draft.formData || {}) };
+        if (typeof restoredFormData.nic === 'string' && restoredFormData.nic.startsWith('NIC-')) {
+          restoredFormData.nic = '';
+        }
+
+        // Arriving from the cart with a package means that package is the one
+        // being bought; otherwise continue with the package saved in the draft.
+        const productFromCart = location.state?.selectedProduct;
+        if (productFromCart) {
+          delete restoredFormData.otherBroadbandPackage;
+        } else if (draft.selectedProduct) {
+          setSelectedProduct(draft.selectedProduct);
+        }
+
+        dispatch({ type: 'SET_FIELDS', payload: restoredFormData });
+
+        // Resume at the saved step. Coverage is re-checked rather than trusted.
+        const savedIdx = Math.min(Math.max(Number(draft.stepIndex) || 0, 0), STEPS.length - 1);
+        let resumeIdx = STEPS[savedIdx] === 'loop' ? 0 : savedIdx;
+
+        // Never resume past a step whose requirements aren't all saved (e.g. a
+        // photo that hadn't finished uploading): send the customer back to it,
+        // using the same rules the steps check when Continue is pressed.
+        const identityIdx = STEPS.indexOf('identity');
+        const signatureIdx = STEPS.indexOf('signature');
+        let backTo = '';
+        if (resumeIdx > identityIdx && !identityComplete(restoredFormData)) {
+          resumeIdx = identityIdx;
+          backTo = 'identity';
+        } else if (resumeIdx > signatureIdx && !signatureComplete(restoredFormData)) {
+          resumeIdx = signatureIdx;
+          backTo = 'signature';
+        }
+
+        // The address bar may point back to an earlier step, never past this one.
+        const urlIdx = STEPS.indexOf(new URLSearchParams(location.search).get('step'));
+        const targetIdx = urlIdx !== -1 && urlIdx <= resumeIdx ? urlIdx : resumeIdx;
+
+        setStepIndex(targetIdx);
+        lastSavedStep.current = targetIdx;
+        navigate(`/new-connection?step=${STEPS[targetIdx]}`, { replace: true, state: location.state });
+
+        // A draft already exists, so every change from here on is saved.
+        userEdited.current = true;
+        photoGaveUp.current = {};
+        if (fromLegacy) {
+          // Copy the browser-saved progress, photos included, to the server.
+          legacyPending.current = true;
+          formDirty.current = true;
+          savedPhotos.current = {};
+        } else {
+          savedPhotos.current = PHOTO_FIELDS.reduce(
+            (acc, field) => ({ ...acc, [field]: restoredFormData[field] || '' }),
+            {}
+          );
+          hasSaved.current = true;
+        }
+
+        if (backTo === 'identity') {
+          toast('Some of your identity photos weren’t saved. Please complete this step again to continue.', { id: 'draft-restored', duration: 6000, icon: 'ℹ️' });
+        } else if (backTo === 'signature') {
+          toast('Your signature wasn’t saved. Please sign again to continue.', { id: 'draft-restored', duration: 6000, icon: 'ℹ️' });
+        } else {
           toast.success('Resumed from your previously saved application progress.', { id: 'draft-restored', duration: 3500 });
         }
       } else {
-        // Sync with ?step query param if no local draft
-        const searchParams = new URLSearchParams(location.search);
-        const stepParam = searchParams.get('step');
-        if (stepParam && STEPS.includes(stepParam)) {
-          setStepIndex(STEPS.indexOf(stepParam));
+        // Nothing saved, so there is nothing to skip ahead to.
+        const stepParam = new URLSearchParams(location.search).get('step');
+        if (stepParam && stepParam !== STEPS[0]) {
+          navigate('/new-connection?step=location', { replace: true, state: location.state });
         }
       }
-    } catch (err) {
-      console.warn('Could not read draft from localStorage:', err);
-    } finally {
+
       setDraftRestored(true);
-    }
-  }, [verifiedMobile]);
+      refreshSaveStatus();
+    };
 
-  // 2. Auto-save draft to localStorage whenever formData or stepIndex updates
+    restore();
+    return () => { cancelled = true; };
+  }, []);
+
+  // 2. Save the form: moving to another step saves straight away, other
+  //    changes once the customer pauses.
   useEffect(() => {
-    if (!draftRestored) return;
-    try {
-      const key = getDraftKey();
-      const payload = {
-        formData,
-        stepIndex,
-        updatedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(key, JSON.stringify(payload));
-    } catch (err) {
-      console.warn('Could not auto-save draft to localStorage:', err);
-    }
-  }, [formData, stepIndex, draftRestored, verifiedMobile]);
+    if (!draftRestored || !userEdited.current || draftClosed.current) return undefined;
 
-  // 3. Clear draft when application is finalized
-  const clearSavedDraft = () => {
+    const stepChanged = lastSavedStep.current !== stepIndex;
+    lastSavedStep.current = stepIndex;
+    formDirty.current = true;
+    // A new change gets a fresh set of retries.
+    formFailures.current = 0;
+    formFailed.current = false;
+
+    if (stepChanged && Object.keys(photoGaveUp.current).length > 0) {
+      // Moving on is a good moment to try photos that failed earlier again.
+      photoGaveUp.current = {};
+      uploadPhotos();
+    }
+
+    const timer = setTimeout(persistDraft, stepChanged ? 0 : DRAFT_SAVE_DELAY_MS);
+    formTimer.current = timer;
+    refreshSaveStatus();
+    return () => {
+      clearTimeout(timer);
+      if (formTimer.current === timer) formTimer.current = null;
+    };
+  }, [formData, selectedProduct, stepIndex, draftRestored]);
+
+  // 3. Save photos as soon as they are taken or changed, separately from the form.
+  useEffect(() => {
+    if (!draftRestored || !userEdited.current || draftClosed.current) return;
+    uploadPhotos();
+  }, [formData.nicFront, formData.nicBack, formData.facePhoto, draftRestored]);
+
+  // Leaving the wizard (e.g. Back to Cart) saves anything still waiting.
+  useEffect(() => () => {
+    if (draftClosed.current) return;
+    if (formDirty.current) persistDraft();
+    uploadPhotos();
+  }, []);
+
+  // Closing or reloading the tab while something is still saving: let the
+  // browser ask "Leave site? Changes you made may not be saved."
+  useEffect(() => {
+    const warnIfSaving = (event) => {
+      if (!hasUnsavedWork()) return undefined;
+      if (formDirty.current) persistDraft();
+      event.preventDefault();
+      event.returnValue = '';
+      return '';
+    };
+    window.addEventListener('beforeunload', warnIfSaving);
+    return () => window.removeEventListener('beforeunload', warnIfSaving);
+  }, []);
+
+  // 4. Remove the saved progress once the application is submitted or reset.
+  //    Waits for any save still on its way so it can't recreate the draft.
+  const clearSavedDraft = async () => {
+    draftClosed.current = true;
+    userEdited.current = false;
+    if (formTimer.current) clearTimeout(formTimer.current);
+    if (formRetryTimer.current) clearTimeout(formRetryTimer.current);
+    formTimer.current = null;
+    formRetryTimer.current = null;
+    if (wakeRetry.current) wakeRetry.current();
+
+    await Promise.allSettled([formSaveInFlight.current, photoInFlight.current]);
+
     try {
-      localStorage.removeItem(getDraftKey());
-      localStorage.removeItem('slt_new_conn_draft_active_user');
-      localStorage.removeItem('slt_new_conn_draft_');
-    } catch (_) {}
+      await deleteDraft();
+    } catch (err) {
+      console.warn('Could not remove saved application progress:', err?.response?.data?.message || err.message);
+    }
+    clearLegacyDrafts();
+
+    formDirty.current = false;
+    formFailures.current = 0;
+    formFailed.current = false;
+    savedPhotos.current = {};
+    photoGaveUp.current = {};
+    hasSaved.current = false;
+    setSaveStatus('idle');
   };
 
-  const handleResetDraft = () => {
+  const handleResetDraft = async () => {
     if (window.confirm('Are you sure you want to clear your saved progress and start from the beginning?')) {
-      clearSavedDraft();
-      dispatch({ type: 'SET_FIELDS', payload: initialState });
+      await clearSavedDraft();
+      // The fresh form can be saved again as soon as the customer edits it.
+      draftClosed.current = false;
+      dispatch({
+        type: 'SET_FIELDS',
+        payload: {
+          ...initialState,
+          mobileNumber: verifiedMobile || '',
+          otherBroadbandPackage: selectedProduct?.productName
+            ? `${selectedProduct.productName} (Qty: ${selectedProduct.quantity || 1})`
+            : '',
+        },
+      });
+      lastSavedStep.current = 0;
       setStepIndex(0);
       navigate('/new-connection?step=location', { replace: true });
       toast.success('Application form reset.');
@@ -214,7 +580,13 @@ export default function NewConnectionWizard() {
     }
   }, [verifiedMobile]);
 
+  // Steps also use this to fill in profile details automatically when they
+  // open, so it does not by itself count as the customer editing. Typing and
+  // moving between steps do.
+  const setFields = (fields) => dispatch({ type: 'SET_FIELDS', payload: fields });
+
   const handleChange = (e) => {
+    userEdited.current = true;
     const { name, value, type, checked } = e.target;
     let finalValue = type === 'checkbox' ? checked : value;
 
@@ -233,6 +605,7 @@ export default function NewConnectionWizard() {
   };
 
   const nextStep = () => {
+    userEdited.current = true;
     const nextIdx = Math.min(stepIndex + 1, STEPS.length - 1);
     setStepIndex(nextIdx);
     navigate(`/new-connection?step=${STEPS[nextIdx]}`, { replace: false });
@@ -240,6 +613,7 @@ export default function NewConnectionWizard() {
   };
 
   const prevStep = () => {
+    userEdited.current = true;
     const prevIdx = Math.max(stepIndex - 1, 0);
     setStepIndex(prevIdx);
     navigate(`/new-connection?step=${STEPS[prevIdx]}`, { replace: false });
@@ -249,6 +623,7 @@ export default function NewConnectionWizard() {
   const goTo = (key) => {
     const targetIdx = STEPS.indexOf(key);
     if (targetIdx !== -1) {
+      userEdited.current = true;
       setStepIndex(targetIdx);
       navigate(`/new-connection?step=${STEPS[targetIdx]}`, { replace: false });
       window.scrollTo(0, 0);
@@ -309,7 +684,7 @@ export default function NewConnectionWizard() {
 
   // Final step of the journey: empty the basket, clear the draft, and land on the tracking page.
   const goToTracking = async (ref) => {
-    clearSavedDraft();
+    await clearSavedDraft();
     await clearSessionCart();
     navigate(`/check-status?ref=${encodeURIComponent(ref)}`, {
       replace: true,
@@ -431,7 +806,7 @@ export default function NewConnectionWizard() {
             <CustomerInfoStep
               formData={formData}
               handleChange={handleChange}
-              setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
+              setFields={setFields}
               selectedProduct={selectedProduct}
             />
           )}
@@ -444,7 +819,7 @@ export default function NewConnectionWizard() {
             <IdentityStep
               ref={identityRef}
               formData={formData}
-              setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
+              setFields={setFields}
             />
           )}
 
@@ -453,7 +828,7 @@ export default function NewConnectionWizard() {
               ref={declarationRef}
               formData={formData}
               handleChange={handleChange}
-              setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
+              setFields={setFields}
             />
           )}
 
@@ -522,6 +897,22 @@ export default function NewConnectionWizard() {
               >
                 Reset Form
               </button>
+            )}
+
+            {saveStatus !== 'idle' && (
+              <span
+                role="status"
+                aria-live="polite"
+                style={{
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  color: saveStatus === 'saved' ? '#15803d' : saveStatus === 'error' ? '#b45309' : '#64748b',
+                }}
+              >
+                {saveStatus === 'saving' && 'Saving…'}
+                {saveStatus === 'saved' && '✓ All changes saved'}
+                {saveStatus === 'error' && '⚠ Some changes aren’t saved yet'}
+              </span>
             )}
           </div>
 

@@ -16,6 +16,7 @@ import signupBgImage from '../assets/team_laptop.jpg';
 import sltlogoOnly from '../assets/sltlogoOnly.png';
 import api from '../utils/api';
 import { saveSession } from '../utils/authSession';
+import { storeDraftToken } from '../services/draftService';
 
 const RESEND_SECONDS = 30;
 const OTP_LENGTH = 6;
@@ -100,6 +101,9 @@ export default function LoginPage() {
   const phoneOtpRefs = useRef([]);
   const emailOtpRefs = useRef([]);
   const emailInputRef = useRef(null);
+  // Token from the mobile OTP check that lets this customer save and resume a
+  // New Connection application. Kept with the number it was issued for.
+  const draftTokenRef = useRef(null);
 
   // Phone OTP resend countdown
   useEffect(() => {
@@ -156,7 +160,8 @@ export default function LoginPage() {
     const digits = phone.replace(/\D/g, '');
 
     try {
-      await api.post('/otp/verify', { phone: digits, otp: code });
+      const res = await api.post('/otp/verify', { phone: digits, otp: code });
+      draftTokenRef.current = res.data?.draftToken ? { phone: digits, token: res.data.draftToken } : null;
       setPhoneVerified(true);
       setPhoneOtpSent(false);
     } catch (err) {
@@ -316,6 +321,10 @@ export default function LoginPage() {
         user: customerProfile,
         accountsList: accounts,
       });
+
+      // Only keep the token if it was issued for the number being signed in.
+      const issued = draftTokenRef.current;
+      storeDraftToken(issued && issued.phone === digits ? issued.token : null);
 
       localStorage.setItem('verifiedEmail', cleanEmail.toLowerCase());
       navigate(redirectTo, { replace: true });

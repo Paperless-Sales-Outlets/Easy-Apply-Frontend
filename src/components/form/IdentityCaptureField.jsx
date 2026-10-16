@@ -19,6 +19,37 @@ import {
 
 const ANALYSIS_INTERVAL = 350;
 
+// Uploaded images already this small are kept exactly as chosen.
+const KEEP_AS_IS_BYTES = 700 * 1024;
+
+/**
+ * Scale an uploaded image down to at most `maxWidth` pixels wide and re-encode
+ * it as JPEG, the same as a camera capture. Falls back to the original if the
+ * browser can't decode it.
+ */
+const resizeImage = (dataUrl, maxWidth) =>
+  new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      if (scale === 1 && dataUrl.length <= KEEP_AS_IS_BYTES) {
+        resolve(dataUrl);
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      // JPEG has no transparency; give transparent PNGs a white background.
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.9));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+
 export default function IdentityCaptureField({
   label,
   variant = 'document',
@@ -231,7 +262,11 @@ export default function IdentityCaptureField({
     if (file.size > 5 * 1024 * 1024) { setCameraError('Image is larger than 5MB. Please choose a smaller file.'); return; }
     setCameraError('');
     const reader = new FileReader();
-    reader.onload = () => onChange && onChange(reader.result);
+    // Shrink uploads to the same size as a camera capture, so a 5MB photo
+    // becomes a few hundred KB and saves/submits quickly.
+    reader.onload = () => {
+      resizeImage(reader.result, isFace ? 640 : 1280).then((image) => onChange && onChange(image));
+    };
     reader.onerror = () => setCameraError('Could not read that file. Please try again.');
     reader.readAsDataURL(file);
   };
