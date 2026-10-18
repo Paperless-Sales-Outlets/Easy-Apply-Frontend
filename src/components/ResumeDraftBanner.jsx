@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FiClock, FiArrowRight } from 'react-icons/fi';
-import { getDraftSummary, deleteDraft } from '../services/draftService';
+import {
+  getDraftSummary,
+  deleteDraft,
+  hasDraftAccess,
+  DRAFT_ACCESS_EVENT,
+} from '../services/draftService';
+import DraftSignInNotice from './DraftSignInNotice';
 
 // Matches the stepper shown inside the New Connection wizard. The wizard's
 // first two internal steps (location + coverage check) share step 1.
@@ -24,12 +30,21 @@ const lastSavedText = (updatedAt) => {
 /**
  * Tells a signed-in customer they have an unfinished New Connection
  * application and lets them carry on where they stopped. Renders nothing when
- * there is no saved progress or it can't be checked.
+ * there is no saved progress or it can't be checked. If this browser can't
+ * reach saved applications at all, asks the customer to sign in again rather
+ * than silently showing nothing.
  */
 export default function ResumeDraftBanner() {
   const navigate = useNavigate();
   const [draft, setDraft] = useState(null);
   const [discarding, setDiscarding] = useState(false);
+  const [access, setAccess] = useState(hasDraftAccess);
+
+  useEffect(() => {
+    const sync = () => setAccess(hasDraftAccess());
+    window.addEventListener(DRAFT_ACCESS_EVENT, sync);
+    return () => window.removeEventListener(DRAFT_ACCESS_EVENT, sync);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,6 +53,16 @@ export default function ResumeDraftBanner() {
       .catch(() => { /* no banner if progress can't be checked */ });
     return () => { cancelled = true; };
   }, []);
+
+  if (!access) {
+    return (
+      <div style={{ backgroundColor: 'var(--page-bg)' }}>
+        <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem 0 1.5rem' }}>
+          <DraftSignInNotice message="Please sign in again to see any unfinished New Connection application and keep your progress saved." />
+        </div>
+      </div>
+    );
+  }
 
   if (!draft) return null;
 

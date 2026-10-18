@@ -9,6 +9,13 @@ const DRAFT_URL = '/drafts/new-connection';
 // mobile number the drafts belong to. Cleared on logout (see authSession).
 export const DRAFT_TOKEN_KEY = 'draftToken';
 
+// Fired when the token is stored or dropped, so the banner and wizard can
+// show or hide the "sign in again" prompt.
+export const DRAFT_ACCESS_EVENT = 'easyapply:draft-access-changed';
+
+// Thrown by saves when there is no token, so nothing is reported as saved.
+export const NO_DRAFT_ACCESS = 'NO_DRAFT_ACCESS';
+
 export const storeDraftToken = (token) => {
   try {
     if (token) localStorage.setItem(DRAFT_TOKEN_KEY, token);
@@ -16,6 +23,7 @@ export const storeDraftToken = (token) => {
   } catch {
     /* storage unavailable — progress just won't be saved */
   }
+  try { window.dispatchEvent(new Event(DRAFT_ACCESS_EVENT)); } catch { /* ignore */ }
 };
 
 const draftToken = () => {
@@ -26,22 +34,40 @@ const draftToken = () => {
   }
 };
 
+/**
+ * Whether this browser can save and load the customer's application. False
+ * for a session that started before drafts existed, a sign-in completed while
+ * the server couldn't be reached, or a token the server has since rejected —
+ * in each case the customer needs to sign in again.
+ */
+export const hasDraftAccess = () => Boolean(draftToken());
+
 const withDraftToken = (config = {}) => ({
   ...config,
   headers: { ...(config.headers || {}), 'x-draft-token': draftToken() },
 });
 
+const noDraftAccess = () =>
+  Object.assign(new Error('Sign in again to save your application'), { code: NO_DRAFT_ACCESS });
+
+// The server no longer accepts the token (expired or invalid): forget it so
+// the customer is asked to sign in again instead of failing silently.
+const forgetRejectedToken = (err) => {
+  if (err?.response?.status === 401) storeDraftToken(null);
+  throw err;
+};
+
 /** Full draft, including photos, or null when there is none. */
 export const getDraft = async () => {
   if (!draftToken()) return null;
-  const res = await api.get(DRAFT_URL, withDraftToken());
+  const res = await api.get(DRAFT_URL, withDraftToken()).catch(forgetRejectedToken);
   return res.data?.draft || null;
 };
 
 /** Step, package and last-saved time only (no photos), or null. */
 export const getDraftSummary = async () => {
   if (!draftToken()) return null;
-  const res = await api.get(DRAFT_URL, withDraftToken({ params: { summary: true } }));
+  const res = await api.get(DRAFT_URL, withDraftToken({ params: { summary: true } })).catch(forgetRejectedToken);
   return res.data?.draft || null;
 };
 
@@ -50,8 +76,8 @@ export const getDraftSummary = async () => {
  * go through saveDraftPhoto instead.
  */
 export const saveDraft = async ({ formData, selectedProduct, stepIndex }) => {
-  if (!draftToken()) return null;
-  return api.put(DRAFT_URL, { formData, selectedProduct, stepIndex }, withDraftToken());
+  if (!draftToken()) throw noDraftAccess();
+  return api.put(DRAFT_URL, { formData, selectedProduct, stepIndex }, withDraftToken()).catch(forgetRejectedToken);
 };
 
 /**
@@ -59,14 +85,16 @@ export const saveDraft = async ({ formData, selectedProduct, stepIndex }) => {
  * form holds it; an empty string removes it.
  */
 export const saveDraftPhoto = async (field, image) => {
-  if (!draftToken()) return null;
-  if (!image) return api.delete(`${DRAFT_URL}/photos/${field}`, withDraftToken());
-  return api.put(`${DRAFT_URL}/photos/${field}`, { image }, withDraftToken());
+  if (!draftToken()) throw noDraftAccess();
+  const request = image
+    ? api.put(`${DRAFT_URL}/photos/${field}`, { image }, withDraftToken())
+    : api.delete(`${DRAFT_URL}/photos/${field}`, withDraftToken());
+  return request.catch(forgetRejectedToken);
 };
 
 export const deleteDraft = async () => {
   if (!draftToken()) return null;
-  return api.delete(DRAFT_URL, withDraftToken());
+  return api.delete(DRAFT_URL, withDraftToken()).catch(forgetRejectedToken);
 };
 
 // ── Browser-saved drafts from the previous version ──────────────────────────

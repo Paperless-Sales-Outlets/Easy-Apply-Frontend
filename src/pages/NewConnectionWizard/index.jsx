@@ -16,10 +16,14 @@ import {
   saveDraft,
   saveDraftPhoto,
   deleteDraft,
+  hasDraftAccess,
+  DRAFT_ACCESS_EVENT,
+  NO_DRAFT_ACCESS,
   readLegacyDraft,
   clearLegacyDrafts,
 } from '../../services/draftService';
 import WizardStepper from '../../components/WizardStepper';
+import DraftSignInNotice from '../../components/DraftSignInNotice';
 import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
 const formReducer = (state, action) => {
@@ -85,6 +89,10 @@ const DRAFT_SAVE_DELAY_MS = 1500;
 // After a failed save, try again after these pauses, then wait for the next
 // change before trying again.
 const SAVE_RETRY_DELAYS_MS = [2000, 5000, 10000];
+
+// The browser has no valid draft token (see draftService): retrying won't
+// help; the customer is asked to sign in again instead.
+const isAccessError = (err) => err?.code === NO_DRAFT_ACCESS || err?.response?.status === 401;
 
 // What the identity and signature steps require before Continue — used when
 // resuming, so a customer is never taken past a step that wasn't fully saved.
@@ -192,6 +200,17 @@ export default function NewConnectionWizard() {
 
   // 'idle' | 'saving' | 'saved' | 'error', shown beside the buttons.
   const [saveStatus, setSaveStatus] = useState('idle');
+  // Whether this browser can save at all; if not, a "sign in again" prompt shows.
+  const [draftAccess, setDraftAccess] = useState(hasDraftAccess);
+
+  useEffect(() => {
+    const sync = () => {
+      setDraftAccess(hasDraftAccess());
+      refreshSaveStatus();
+    };
+    window.addEventListener(DRAFT_ACCESS_EVENT, sync);
+    return () => window.removeEventListener(DRAFT_ACCESS_EVENT, sync);
+  }, []);
 
   const photoValue = (field) => latest.current.formData[field] || '';
 
@@ -213,11 +232,12 @@ export default function NewConnectionWizard() {
     Boolean(formTimer.current || formSaveInFlight.current || formRetryTimer.current || photoInFlight.current);
 
   const hasUnsavedWork = () =>
-    !draftClosed.current && userEdited.current
+    !draftClosed.current && userEdited.current && hasDraftAccess()
     && (isSaveActive() || formDirty.current || photosPending().length > 0 || photosFailed());
 
   const refreshSaveStatus = () => {
-    if (draftClosed.current || !userEdited.current) setSaveStatus('idle');
+    // Without access nothing is being saved, so never claim it is.
+    if (draftClosed.current || !userEdited.current || !hasDraftAccess()) setSaveStatus('idle');
     else if (isSaveActive() || photosPending().length > 0) setSaveStatus('saving');
     else if ((formDirty.current && formFailed.current) || photosFailed()) setSaveStatus('error');
     else setSaveStatus(hasSaved.current ? 'saved' : 'idle');
@@ -243,7 +263,7 @@ export default function NewConnectionWizard() {
 
   const persistDraft = () => {
     formTimer.current = null;
-    if (draftClosed.current) return Promise.resolve();
+    if (draftClosed.current || !hasDraftAccess()) return Promise.resolve();
     if (formSaveInFlight.current) {
       formSaveQueued.current = true;
       return formSaveInFlight.current;
@@ -275,8 +295,11 @@ export default function NewConnectionWizard() {
         formDirty.current = true;
         formFailures.current += 1;
         console.warn('Could not save application progress:', err?.response?.data?.message || err.message);
-        // Retry a few times, then wait for the customer's next change.
-        if (!draftClosed.current && formFailures.current <= SAVE_RETRY_DELAYS_MS.length) {
+        // Retry a few times, then wait for the customer's next change. A
+        // missing or rejected token isn't retried: the sign-in prompt shows.
+        if (isAccessError(err)) {
+          formFailed.current = true;
+        } else if (!draftClosed.current && formFailures.current <= SAVE_RETRY_DELAYS_MS.length) {
           formRetryTimer.current = setTimeout(() => {
             formRetryTimer.current = null;
             persistDraft();
@@ -295,7 +318,7 @@ export default function NewConnectionWizard() {
   };
 
   const uploadPhotos = () => {
-    if (draftClosed.current) return Promise.resolve();
+    if (draftClosed.current || !hasDraftAccess()) return Promise.resolve();
     if (photoInFlight.current) return photoInFlight.current;
     if (photosPending().length === 0) return Promise.resolve();
 
@@ -313,6 +336,8 @@ export default function NewConnectionWizard() {
             attempt = 0;
           } catch (err) {
             console.warn(`Could not save ${field}:`, err?.response?.data?.message || err.message);
+            // No valid token: stop; the sign-in prompt takes over.
+            if (isAccessError(err)) break;
             // A rejected image (too large / not an image) won't succeed on retry.
             const rejected = err?.response?.status === 400;
             if (rejected || attempt >= SAVE_RETRY_DELAYS_MS.length) {
@@ -768,6 +793,12 @@ export default function NewConnectionWizard() {
     <div className="card" style={{ padding: '2.5rem 2.75rem', width: '100%', margin: '0 auto', borderRadius: '24px', boxShadow: '0 12px 36px rgba(11, 45, 91, 0.08)' }}>
       {/* Progress Stepper: 7-Step Tracker Bar */}
       <WizardStepper currentStep={active7Step} />
+
+      {draftRestored && !draftAccess && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <DraftSignInNotice message="Your progress isn’t being saved. Sign in again to save it and continue later from any device." />
+        </div>
+      )}
 
       {selectedProduct && (
         <div
