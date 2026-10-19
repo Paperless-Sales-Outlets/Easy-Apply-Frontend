@@ -72,14 +72,14 @@ const NAV_ICONS = {
 };
 
 // Dashboard leads, User Management comes right after it, then every other
-// module in its usual order, with User Privileges last.
+// module in its usual order, with Audit Logs last. (User Privileges is no longer
+// in the sidebar — privileges are managed from User Management → Privileges.)
 const [DASHBOARD_MODULE, ...OTHER_MODULES] = MODULE_ACCESS;
 
 const NAV_ITEMS = [
   { ...DASHBOARD_MODULE, icon: NAV_ICONS[DASHBOARD_MODULE.key] },
   { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
   ...OTHER_MODULES.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
-  { key: 'privileges', label: 'User Privileges', icon: NAV_ICONS.privileges, roles: ['Admin'] },
   { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
 ];
 
