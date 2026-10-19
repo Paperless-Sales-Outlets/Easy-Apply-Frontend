@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAuditLogs } from '../services/adminService';
 
 const PAGE_SIZE = 15;
-const ACTIONS = ['LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'STATUS_UPDATE', 'DELETE', 'VIEW', 'ADD_COMMENT'];
+const ACTIONS = ['LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'STATUS_UPDATE', 'DELETE', 'VIEW', 'ADD_COMMENT', 'LOOP_CHECK'];
 
 const ACTION_BADGE_CLASS = {
   LOGIN: 'audit-action-login',
@@ -13,6 +13,11 @@ const ACTION_BADGE_CLASS = {
   DELETE: 'audit-action-delete',
   VIEW: 'audit-action-view',
   ADD_COMMENT: 'audit-action-comment',
+  LOOP_CHECK: 'audit-action-loop-check',
+};
+
+const ACTION_LABELS = {
+  LOOP_CHECK: 'Loop Check',
 };
 
 function getLogsFromResponse(response) {
@@ -35,6 +40,20 @@ function actorName(actor) {
   if (!actor) return 'System';
   if (typeof actor === 'string') return actor;
   return actor.name || actor.email || actor.employeeNumber || actor.username || actor._id || 'System';
+}
+
+function firstValue(...values) {
+  const value = values.find((candidate) => candidate != null && candidate !== '');
+  return readableDetailValue(value);
+}
+
+function customerDisplay(log, details) {
+  const customer = log.customer && typeof log.customer === 'object' ? log.customer : {};
+  const name = firstValue(log.customerName, customer.name, customer.fullName);
+  const id = firstValue(log.customerId, customer.id, customer._id, details.customerId);
+
+  if (name !== '—' && id !== '—') return `${name} / ${id}`;
+  return firstValue(name, id, typeof log.customer === 'string' ? log.customer : null, actorName(log.user || log.admin || log.actor || log.performedBy));
 }
 
 function formatDateTime(value) {
@@ -82,23 +101,73 @@ function formatDetails(details) {
   }
 }
 
+function formatLoopCheckDetails(details, result) {
+  if (!details || typeof details !== 'object') return formatDetails(details);
+
+  const area = firstValue(details.area, details.coverage?.area);
+  const availability = result !== '—'
+    ? result
+    : details.available == null ? '—' : (details.available ? 'AVAILABLE' : 'UNAVAILABLE');
+
+  return [
+    `Result: ${availability}`,
+    area !== '—' ? `Area: ${area}` : null,
+  ].filter(Boolean).join(' · ') || '—';
+}
+
+function getLoopCheckResult(...values) {
+  const value = values.find((candidate) => candidate != null && candidate !== '');
+  if (value && typeof value === 'object') {
+    return firstValue(value.loopStatus, value.status, value.available == null ? null : (value.available ? 'AVAILABLE' : 'UNAVAILABLE'));
+  }
+  return firstValue(value);
+}
+
 function normalizeLog(log, index) {
-  const action = String(log.action || log.event || 'VIEW').toUpperCase();
+  const action = String(log.action || log.actionType || log.event || 'VIEW').toUpperCase();
+  const details = log.details || log.metadata || {};
+  const loopCheckResult = getLoopCheckResult(
+    log.loopCheckResult,
+    log.loopCheckStatus,
+    log.loopCheck,
+    log.result,
+    details.loopCheckResult,
+    details.loopStatus,
+    details.result,
+    details.coverage?.loopStatus,
+    details.available == null ? null : (details.available ? 'AVAILABLE' : 'UNAVAILABLE'),
+  );
+  const normalizedDetails = action === 'LOOP_CHECK'
+    ? formatLoopCheckDetails(details, loopCheckResult)
+    : formatDetails(log.details || log.metadata || log.description || log.message);
+
   return {
     id: log.id || log._id || `${log.timestamp || log.createdAt || 'log'}-${index}`,
     timestamp: log.timestamp || log.createdAt || log.date || log.updatedAt,
-    actor: actorName(log.user || log.admin || log.actor || log.performedBy),
+    customer: customerDisplay(log, details),
     action,
-    module: log.module || log.resource || log.area || '—',
-    target: log.reference || log.referenceNumber || log.target || log.targetId || log.entityId || '—',
-    details: formatDetails(log.details || log.metadata || log.description || log.message),
+    module: log.module || log.resource || log.area || (action === 'LOOP_CHECK' ? 'New Connection' : '—'),
+    target: firstValue(
+      log.connectionReference,
+      log.connectionRef,
+      log.referenceNumber,
+      log.reference,
+      details.connectionReference,
+      details.connectionRef,
+      details.referenceNumber,
+      log.target,
+      log.targetId,
+      log.entityId,
+    ),
+    result: loopCheckResult,
+    details: normalizedDetails,
   };
 }
 
 export default function AuditLogsPage() {
   const [logs, setLogs] = useState([]);
   const [pagination, setPagination] = useState(null);
-  const [filters, setFilters] = useState({ search: '', action: '', module: '', date: '' });
+  const [filters, setFilters] = useState({ search: '', category: '', action: '', module: '', date: '' });
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -114,8 +183,10 @@ export default function AuditLogsPage() {
         sortOrder: 'desc',
       };
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params[key] = value;
+        if (value && key !== 'category') params[key] = value;
       });
+      if (filters.category === 'customer') params.actorType = 'customer';
+      if (filters.category === 'staff') params.actorType = 'staff';
       const response = await getAuditLogs(params);
       const responseLogs = getLogsFromResponse(response);
       setLogs(responseLogs.map(normalizeLog));
@@ -208,9 +279,14 @@ export default function AuditLogsPage() {
                 onChange={(event) => updateFilter('search', event.target.value)}
               />
             </label>
+            <select className="admin-select" value={filters.category} aria-label="Filter by activity category" onChange={(event) => updateFilter('category', event.target.value)}>
+              <option value="">All activities</option>
+              <option value="customer">Customer activities</option>
+              <option value="staff">Admin/staff activities</option>
+            </select>
             <select className="admin-select" value={filters.action} aria-label="Filter by action" onChange={(event) => updateFilter('action', event.target.value)}>
               <option value="">All actions</option>
-              {ACTIONS.map((action) => <option key={action} value={action}>{action}</option>)}
+              {ACTIONS.map((action) => <option key={action} value={action}>{ACTION_LABELS[action] || action}</option>)}
             </select>
             <select className="admin-select" value={filters.module} aria-label="Filter by module" onChange={(event) => updateFilter('module', event.target.value)}>
               <option value="">All modules</option>
@@ -225,25 +301,27 @@ export default function AuditLogsPage() {
             <thead>
               <tr>
                 <th>Date &amp; Time</th>
-                <th>User/Admin</th>
+                <th>Customer Name / ID</th>
                 <th>Action</th>
                 <th>Module</th>
-                <th>Reference/Target</th>
+                <th>Connection Reference</th>
+                <th>Loop Check Result</th>
                 <th>Details</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" className="audit-state">Loading audit logs...</td></tr>
+                <tr><td colSpan="7" className="audit-state">Loading audit logs...</td></tr>
               ) : logs.length === 0 ? (
-                <tr><td colSpan="6" className="audit-state">No audit logs match the selected filters.</td></tr>
+                <tr><td colSpan="7" className="audit-state">No audit logs match the selected filters.</td></tr>
               ) : logs.map((log) => (
                 <tr key={log.id}>
                   <td className="audit-date-cell">{formatDateTime(log.timestamp)}</td>
-                  <td><span className="audit-actor">{log.actor}</span></td>
+                  <td><span className="audit-actor">{log.customer}</span></td>
                   <td><span className={`audit-action-badge ${ACTION_BADGE_CLASS[log.action] || 'audit-action-default'}`}>{log.action}</span></td>
                   <td><span className="audit-module">{log.module}</span></td>
                   <td><span className="audit-target">{log.target}</span></td>
+                  <td><span className="audit-loop-result">{log.result}</span></td>
                   <td className="audit-details" title={log.details}>{log.details}</td>
                 </tr>
               ))}

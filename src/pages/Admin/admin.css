@@ -5267,11 +5267,12 @@ select.um-input.valid {
 .audit-search { flex: 1 1 220px; min-width: 190px; }
 .audit-filter-row .admin-select { min-width: 132px; }
 .audit-date-filter { min-width: 148px !important; }
-.audit-table { min-width: 980px; }
+.audit-table { min-width: 1120px; }
 .audit-table th:nth-child(1) { width: 156px; }
 .audit-table th:nth-child(3) { width: 150px; }
 .audit-table th:nth-child(4) { width: 150px; }
 .audit-table th:nth-child(5) { width: 170px; }
+.audit-table th:nth-child(6) { width: 150px; }
 .audit-date-cell { white-space: nowrap; color: var(--muted) !important; font-size: 0.8rem; }
 .audit-actor { font-weight: 650; color: var(--navy); }
 .audit-module, .audit-target {
@@ -5283,6 +5284,15 @@ select.um-input.valid {
   vertical-align: middle;
 }
 .audit-target { color: var(--blue); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.78rem; }
+.audit-loop-result {
+  display: inline-block;
+  max-width: 145px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--navy);
+  font-size: 0.8rem;
+}
 .audit-details {
   max-width: 300px;
   overflow: hidden;
@@ -5305,6 +5315,7 @@ select.um-input.valid {
 .audit-action-update, .audit-action-status { color: #965f00; background: #fff3d9; }
 .audit-action-view { color: #155b9e; background: #e5f0fb; }
 .audit-action-comment { color: #66419c; background: #f0eafa; }
+.audit-action-loop-check { color: #0f766e; background: #ccfbf1; }
 .audit-action-default { color: var(--muted); background: #eef2f7; }
 .audit-state { padding: 3rem 1rem !important; text-align: center; color: var(--muted) !important; }
 .audit-pagination { padding-bottom: 1.1rem; }
