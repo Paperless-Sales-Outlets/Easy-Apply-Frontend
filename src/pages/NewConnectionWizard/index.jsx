@@ -17,7 +17,11 @@ import {
   saveDraftPhoto,
   deleteDraft,
   hasDraftAccess,
+  isDraftExpiredError,
+  draftDaysLeft,
+  formatDraftDate,
   DRAFT_ACCESS_EVENT,
+  DRAFT_EXPIRY_WARNING_DAYS,
   NO_DRAFT_ACCESS,
   readLegacyDraft,
   clearLegacyDrafts,
@@ -113,6 +117,13 @@ const signatureComplete = (data) =>
 // deciding whether an old browser-saved draft holds any real progress.
 const AUTO_FILLED_FIELDS = ['mobileNumber', 'otherBroadbandPackage'];
 
+// Remembers which expired application the customer has already been told
+// about, so the "your previous application expired" notice shows only once.
+const EXPIRY_NOTICE_KEY = 'draftExpiryNoticeSeen';
+
+const expiredMessage = (expiredOn) =>
+  `Your saved application ${expiredOn ? `expired on ${formatDraftDate(expiredOn)}` : 'passed its 30-day limit'} and can no longer be continued. Please start a new application.`;
+
 const hasCustomerInput = (data) =>
   Object.keys(data || {}).some(
     (key) => !AUTO_FILLED_FIELDS.includes(key) && data[key] && data[key] !== initialState[key]
@@ -198,6 +209,33 @@ export default function NewConnectionWizard() {
   const photoInFlight = useRef(null);
   const wakeRetry = useRef(null);
 
+  // The saved draft being edited (none until the first save creates one) and
+  // the last moment it can be continued: 30 days from when it was started.
+  const draftIdRef = useRef(null);
+  const resumeUntilRef = useRef(null);
+  const [resumeUntil, setResumeUntil] = useState(null);
+  // Server clock minus this device's clock, so the limit is judged by server time.
+  const clockOffset = useRef(0);
+
+  const rememberDraft = (info, serverTime) => {
+    if (info?.id) draftIdRef.current = info.id;
+    if (info?.resumeUntil) {
+      resumeUntilRef.current = info.resumeUntil;
+      setResumeUntil(info.resumeUntil);
+    }
+    if (serverTime) clockOffset.current = new Date(serverTime).getTime() - Date.now();
+  };
+
+  const isPastResumeLimit = () =>
+    Boolean(resumeUntilRef.current)
+    && Date.now() + clockOffset.current >= new Date(resumeUntilRef.current).getTime();
+
+  const forgetDraft = () => {
+    draftIdRef.current = null;
+    resumeUntilRef.current = null;
+    setResumeUntil(null);
+  };
+
   // 'idle' | 'saving' | 'saved' | 'error', shown beside the buttons.
   const [saveStatus, setSaveStatus] = useState('idle');
   // Whether this browser can save at all; if not, a "sign in again" prompt shows.
@@ -278,13 +316,23 @@ export default function NewConnectionWizard() {
         do {
           formSaveQueued.current = false;
           if (draftClosed.current) break;
+          if (isPastResumeLimit()) {
+            handleDraftExpired(resumeUntilRef.current);
+            break;
+          }
 
           const { formData: data, selectedProduct: product, stepIndex: index } = latest.current;
           const fields = { ...data };
           PHOTO_FIELDS.forEach((field) => delete fields[field]);
 
           formDirty.current = false;
-          await saveDraft({ formData: fields, selectedProduct: product, stepIndex: index });
+          const res = await saveDraft({
+            formData: fields,
+            selectedProduct: product,
+            stepIndex: index,
+            draftId: draftIdRef.current,
+          });
+          rememberDraft(res?.data?.draft, res?.data?.serverTime);
 
           hasSaved.current = true;
           formFailures.current = 0;
@@ -292,6 +340,11 @@ export default function NewConnectionWizard() {
           finishLegacyMove();
         } while (formSaveQueued.current);
       } catch (err) {
+        // Past the 30-day limit: can't be continued; start a fresh application.
+        if (isDraftExpiredError(err)) {
+          handleDraftExpired(err.response?.data?.expiredOn);
+          return;
+        }
         formDirty.current = true;
         formFailures.current += 1;
         console.warn('Could not save application progress:', err?.response?.data?.message || err.message);
@@ -327,14 +380,24 @@ export default function NewConnectionWizard() {
       try {
         let pending = photosPending();
         while (!draftClosed.current && pending.length > 0) {
+          if (isPastResumeLimit()) {
+            handleDraftExpired(resumeUntilRef.current);
+            break;
+          }
           const field = pending[0];
           const value = photoValue(field);
           try {
-            await saveDraftPhoto(field, value);
+            const res = await saveDraftPhoto(field, value, draftIdRef.current);
+            rememberDraft(res?.data?.draft, res?.data?.serverTime);
             savedPhotos.current = { ...savedPhotos.current, [field]: value };
             hasSaved.current = true;
             attempt = 0;
           } catch (err) {
+            // Past the 30-day limit: stop; a fresh application is started.
+            if (isDraftExpiredError(err)) {
+              handleDraftExpired(err.response?.data?.expiredOn);
+              break;
+            }
             console.warn(`Could not save ${field}:`, err?.response?.data?.message || err.message);
             // No valid token: stop; the sign-in prompt takes over.
             if (isAccessError(err)) break;
@@ -375,9 +438,11 @@ export default function NewConnectionWizard() {
     const restore = async () => {
       let draft = null;
       let fromLegacy = false;
+      let expiredInfo = null;
+      let serverTime = null;
 
       try {
-        draft = await getDraft();
+        ({ draft, expired: expiredInfo, serverTime } = await getDraft());
       } catch (err) {
         console.warn('Could not load saved application progress:', err?.response?.data?.message || err.message);
       }
@@ -440,6 +505,7 @@ export default function NewConnectionWizard() {
         // A draft already exists, so every change from here on is saved.
         userEdited.current = true;
         photoGaveUp.current = {};
+        if (!fromLegacy) rememberDraft(draft, serverTime);
         if (fromLegacy) {
           // Copy the browser-saved progress, photos included, to the server.
           legacyPending.current = true;
@@ -465,6 +531,16 @@ export default function NewConnectionWizard() {
         const stepParam = new URLSearchParams(location.search).get('step');
         if (stepParam && stepParam !== STEPS[0]) {
           navigate('/new-connection?step=location', { replace: true, state: location.state });
+        }
+
+        // Their previous application passed its 30 days: say so, once.
+        if (expiredInfo?.id) {
+          let alreadyTold = false;
+          try { alreadyTold = localStorage.getItem(EXPIRY_NOTICE_KEY) === String(expiredInfo.id); } catch { /* ignore */ }
+          if (!alreadyTold) {
+            toast(expiredMessage(expiredInfo.expiredOn), { id: 'draft-expired', duration: 7000, icon: 'ℹ️' });
+            try { localStorage.setItem(EXPIRY_NOTICE_KEY, String(expiredInfo.id)); } catch { /* ignore */ }
+          }
         }
       }
 
@@ -556,7 +632,25 @@ export default function NewConnectionWizard() {
     savedPhotos.current = {};
     photoGaveUp.current = {};
     hasSaved.current = false;
+    forgetDraft();
     setSaveStatus('idle');
+  };
+
+  // Empty the form and go back to the first step.
+  const startFresh = () => {
+    dispatch({
+      type: 'SET_FIELDS',
+      payload: {
+        ...initialState,
+        mobileNumber: verifiedMobile || '',
+        otherBroadbandPackage: selectedProduct?.productName
+          ? `${selectedProduct.productName} (Qty: ${selectedProduct.quantity || 1})`
+          : '',
+      },
+    });
+    lastSavedStep.current = 0;
+    setStepIndex(0);
+    navigate('/new-connection?step=location', { replace: true });
   };
 
   const handleResetDraft = async () => {
@@ -564,21 +658,39 @@ export default function NewConnectionWizard() {
       await clearSavedDraft();
       // The fresh form can be saved again as soon as the customer edits it.
       draftClosed.current = false;
-      dispatch({
-        type: 'SET_FIELDS',
-        payload: {
-          ...initialState,
-          mobileNumber: verifiedMobile || '',
-          otherBroadbandPackage: selectedProduct?.productName
-            ? `${selectedProduct.productName} (Qty: ${selectedProduct.quantity || 1})`
-            : '',
-        },
-      });
-      lastSavedStep.current = 0;
-      setStepIndex(0);
-      navigate('/new-connection?step=location', { replace: true });
+      startFresh();
       toast.success('Application form reset.');
     }
+  };
+
+  // The application passed its 30-day limit while being worked on. It can no
+  // longer be continued (the server keeps it on record, marked expired), so
+  // start a fresh form; the next change the customer makes starts a new one.
+  const handleDraftExpired = (expiredOn) => {
+    if (draftClosed.current) return;
+    draftClosed.current = true;
+    if (formTimer.current) clearTimeout(formTimer.current);
+    if (formRetryTimer.current) clearTimeout(formRetryTimer.current);
+    formTimer.current = null;
+    formRetryTimer.current = null;
+    if (wakeRetry.current) wakeRetry.current();
+
+    userEdited.current = false;
+    formDirty.current = false;
+    formFailures.current = 0;
+    formFailed.current = false;
+    savedPhotos.current = {};
+    photoGaveUp.current = {};
+    hasSaved.current = false;
+    forgetDraft();
+    setSaveStatus('idle');
+    startFresh();
+    toast(expiredMessage(expiredOn), { id: 'draft-expired', duration: 7000, icon: 'ℹ️' });
+
+    // Saving resumes once any request still on its way has finished.
+    Promise.allSettled([formSaveInFlight.current, photoInFlight.current]).then(() => {
+      draftClosed.current = false;
+    });
   };
 
   useEffect(() => {
@@ -942,6 +1054,13 @@ export default function NewConnectionWizard() {
               >
                 {saveStatus === 'saving' && 'Saving…'}
                 {saveStatus === 'saved' && '✓ All changes saved'}
+                {saveStatus === 'saved' && resumeUntil && (() => {
+                  const daysLeft = draftDaysLeft(resumeUntil, new Date(Date.now() + clockOffset.current));
+                  if (daysLeft !== null && daysLeft <= DRAFT_EXPIRY_WARNING_DAYS) {
+                    return ` · Expires ${daysLeft <= 1 ? 'within 24 hours' : `in ${daysLeft} days`} (${formatDraftDate(resumeUntil)})`;
+                  }
+                  return ` · Saved until ${formatDraftDate(resumeUntil)}`;
+                })()}
                 {saveStatus === 'error' && '⚠ Some changes aren’t saved yet'}
               </span>
             )}
