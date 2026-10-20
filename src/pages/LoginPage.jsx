@@ -327,6 +327,10 @@ export default function LoginPage() {
       storeDraftToken(issued && issued.phone === digits ? issued.token : null);
 
       localStorage.setItem('verifiedEmail', cleanEmail.toLowerCase());
+      // The sign-in form is usually scrolled down to the Continue button; start
+      // the next page at the top so its first content (e.g. the unfinished
+      // application banner on Home) isn't hidden behind the fixed navbar.
+      window.scrollTo(0, 0);
       navigate(redirectTo, { replace: true });
     } catch (err) {
       console.error('Sign-in finalization error:', err);

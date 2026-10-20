@@ -56,13 +56,22 @@ export default function ResumeDraftBanner() {
     return () => window.removeEventListener(DRAFT_ACCESS_EVENT, sync);
   }, []);
 
+  // Re-checked whenever draft access changes, so a token stored just after
+  // this banner mounted (e.g. right after sign-in) still finds the draft.
   useEffect(() => {
+    if (!access) {
+      setDraft(null);
+      return undefined;
+    }
     let cancelled = false;
     getDraftSummary()
       .then((summary) => { if (!cancelled) setDraft(summary); })
-      .catch(() => { /* no banner if progress can't be checked */ });
+      .catch((err) => {
+        // No banner if progress can't be checked.
+        console.warn('Could not check for an unfinished application:', err?.message);
+      });
     return () => { cancelled = true; };
-  }, []);
+  }, [access]);
 
   if (!access) {
     return (
