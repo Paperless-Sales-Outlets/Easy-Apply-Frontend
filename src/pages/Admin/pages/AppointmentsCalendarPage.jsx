@@ -5,19 +5,7 @@ import {
   getTechnicians,
   assignTechnician,
 } from '../services/adminService';
-
-const SERVICE_LABELS = {
-  'new-connection': 'New Connection',
-  'reconnection': 'Reconnection',
-  'relocation': 'Relocation',
-  'termination': 'Termination',
-  'transfer': 'Transfer',
-  'package-migration': 'Package Migration',
-  'service-vacation': 'Service Vacation',
-  'refund-request': 'Refund Request',
-  'customer-request-acceptance': 'Customer Request',
-  'internet-services': 'Internet Services',
-};
+import { SERVICE_LABELS } from '../utils/applicationUtils';
 
 const STATUS_COLORS = {
   scheduled: 'var(--blue)',

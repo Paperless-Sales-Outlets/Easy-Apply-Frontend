@@ -392,7 +392,7 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           message: r?.message || 'Auto verification incomplete. Please enter details manually; your submission will undergo manual admin KYC review.',
         });
       }
-    } catch (err) {
+    } catch {
       if (seq.current !== mySeq) return;
       setStatus({ type: 'error', message: 'Could not auto-read your NIC. You can verify or enter the details manually.' });
     }

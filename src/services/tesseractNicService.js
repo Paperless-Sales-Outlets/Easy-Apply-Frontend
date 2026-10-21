@@ -1,7 +1,6 @@
 // src/services/tesseractNicService.js
 // 100% Client-Side & Private OCR (No external server or cloud exposure)
 import {
-  parseSriLankanNIC,
   extractNICFromText,
   extractFullNameFromOCR,
   extractAddressFromOCR,

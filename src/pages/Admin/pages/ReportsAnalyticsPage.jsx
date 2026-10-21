@@ -25,20 +25,6 @@ const STATUS_COLORS = {
   Flagged: '#0b2d5b',
 };
 
-const SERVICE_TYPES = [
-  'all',
-  'new-connection',
-  'reconnection',
-  'relocation',
-  'termination',
-  'transfer',
-  'package-migration',
-  'service-vacation',
-  'refund-request',
-  'customer-request-acceptance',
-  'internet-services',
-];
-
 const STATUSES = ['all', 'pending', 'pending payment', 'approved', 'confirmed', 'rejected', 'flagged'];
 
 const DATE_PRESETS = [
@@ -131,12 +117,6 @@ const formatRelative = (value) => {
   const months = Math.floor(days / 30);
   return `${months} month${months === 1 ? '' : 's'} ago`;
 };
-
-const serviceLabel = (id) =>
-  id
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
 
 const titleCase = (value) => value.charAt(0).toUpperCase() + value.slice(1);
 
@@ -424,7 +404,6 @@ export default function ReportsAnalyticsPage() {
   const [preset, setPreset] = useState('30d');
   const [customFrom, setCustomFrom] = useState(() => resolvePreset('30d').from);
   const [customTo, setCustomTo] = useState(() => resolvePreset('30d').to);
-  const [serviceType, setServiceType] = useState('all');
   const [status, setStatus] = useState('all');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -461,19 +440,19 @@ export default function ReportsAnalyticsPage() {
     const params = {
       from: range.from,
       to: range.to,
-      serviceType,
+      serviceType: 'new-connection',
       status,
     };
     if (search) params.search = search;
     return params;
-  }, [range, serviceType, status, search]);
+  }, [range, status, search]);
 
   // The per-user report has no role filter, so it gets its own params.
   const userReportParams = useMemo(() => {
-    const params = { from: range.from, to: range.to, serviceType, status };
+    const params = { from: range.from, to: range.to, serviceType: 'new-connection', status };
     if (search) params.search = search;
     return params;
-  }, [range, serviceType, status, search]);
+  }, [range, status, search]);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -503,7 +482,6 @@ export default function ReportsAnalyticsPage() {
     const next = resolvePreset('30d');
     setCustomFrom(next.from);
     setCustomTo(next.to);
-    setServiceType('all');
     setStatus('all');
     setSearchInput('');
     setSearch('');
@@ -514,7 +492,7 @@ export default function ReportsAnalyticsPage() {
   const appRows = appData?.rows || [];
   const appSummary = appData?.summary;
   const totalStatus = (analytics?.statusBreakdown || []).reduce((s, d) => s + d.count, 0);
-  const hasFilters = preset !== '30d' || serviceType !== 'all' || status !== 'all' || !!search;
+  const hasFilters = preset !== '30d' || status !== 'all' || !!search;
   const totalUsers = reportData?.summary?.totalUsers ?? reports.length;
   const totalTasks = reportData?.summary?.totalTasks ?? reports.reduce((sum, row) => sum + (row.total || 0), 0);
   const totalCollected = appSummary?.totalCollected ?? 0;
@@ -666,14 +644,6 @@ export default function ReportsAnalyticsPage() {
                 </label>
               </div>
             )}
-
-            <select className="admin-select" value={serviceType} onChange={e => setServiceType(e.target.value)} aria-label="Service type">
-              {SERVICE_TYPES.map(value => (
-                <option key={value} value={value}>
-                  {value === 'all' ? 'All service types' : serviceLabel(value)}
-                </option>
-              ))}
-            </select>
 
             <select className="admin-select" value={status} onChange={e => setStatus(e.target.value)} aria-label="Application status">
               {STATUSES.map(value => (

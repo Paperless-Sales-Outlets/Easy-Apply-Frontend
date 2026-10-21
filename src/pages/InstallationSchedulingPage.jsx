@@ -3,7 +3,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   FiCalendar,
-  FiClock,
   FiMapPin,
   FiCheckCircle,
   FiArrowRight,
@@ -13,7 +12,6 @@ import {
   FiCheck,
   FiInfo,
   FiUser,
-  FiPackage,
   FiShield,
   FiHeadphones,
   FiFileText,
@@ -143,8 +141,7 @@ export default function InstallationSchedulingPage() {
     localStorage.getItem('last_application_ref') ||
     'REQ-99459067';
 
-  const [referenceNumber, setReferenceNumber] = useState(initialRef);
-  const [loadingApp, setLoadingApp] = useState(false);
+  const [referenceNumber] = useState(initialRef);
   const [appDetails, setAppDetails] = useState(null);
   const [installCity, setInstallCity] = useState(location.state?.city || 'Colombo Central');
   const [packageName, setPackageName] = useState(
@@ -237,7 +234,6 @@ export default function InstallationSchedulingPage() {
 
   const fetchAppDetails = async (ref) => {
     try {
-      setLoadingApp(true);
       const res = await api.get(`/appointments/by-ref/${encodeURIComponent(ref)}`);
       if (res.data?.success) {
         if (res.data.exists && res.data.appointment) {
@@ -270,8 +266,6 @@ export default function InstallationSchedulingPage() {
       }
     } catch (err) {
       console.warn('Could not load existing appointment or application:', err);
-    } finally {
-      setLoadingApp(false);
     }
   };
 

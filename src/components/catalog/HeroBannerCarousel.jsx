@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { QUICK_SERVICES } from '../../data/quickServices';
 import {
   FiTag,
   FiTruck,
   FiShield,
   FiArrowRight,
-  FiChevronRight,
 } from 'react-icons/fi';
 
 /* ── 3D Quad-Antenna Wi-Fi 6 Router on Glowing Cyber Pedestal Platform ── */
@@ -97,7 +94,6 @@ function MegaCardPedestalRouterGraphic() {
 
 export default function HeroBannerCarousel({ onShopNow }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [activeDot, setActiveDot] = useState(0);
 
   useEffect(() => {
@@ -352,99 +348,6 @@ export default function HeroBannerCarousel({ onShopNow }) {
         </div>
       </div>
 
-      {/* ── Right Quick Action Cards (SINGLE COLUMN Layout — One by One Vertically) — COMMENTED OUT ──
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.45rem',
-          height: '100%',
-          justifyContent: 'space-between',
-        }}
-        className="quick-services-single-col"
-      >
-        {QUICK_SERVICES.map((srv) => {
-          const IconComp = srv.icon;
-          return (
-            <motion.div
-              key={srv.id}
-              onClick={() => navigate(srv.route)}
-              whileHover={{ backgroundColor: '#f8fafc', x: -2 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
-              role="button"
-              tabIndex={0}
-              aria-label={`${srv.title}: ${srv.desc}`}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigate(srv.route);
-                }
-              }}
-              style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '12px',
-                padding: '0.45rem 0.75rem',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-                flex: 1,
-              }}
-              className="quick-action-card-hover"
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', overflow: 'hidden' }}>
-                <div
-                  style={{
-                    backgroundColor: srv.bgColor,
-                    color: srv.iconColor,
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <IconComp size={15} />
-                </div>
-                <div style={{ overflow: 'hidden' }}>
-                  <div
-                    style={{
-                      fontSize: '0.78rem',
-                      fontWeight: 800,
-                      color: '#0f172a',
-                      lineHeight: 1.2,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {srv.title}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '0.66rem',
-                      color: '#64748b',
-                      lineHeight: 1.2,
-                      marginTop: '0.1rem',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {srv.desc}
-                  </div>
-                </div>
-              </div>
-              <FiChevronRight size={14} style={{ color: '#94a3b8', flexShrink: 0, marginLeft: '0.3rem' }} />
-            </motion.div>
-          );
-        })}
-      </div>
-      ── */}
     </div>
   );
 }

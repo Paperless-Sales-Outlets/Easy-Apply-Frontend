@@ -251,7 +251,6 @@ export const SRI_LANKA_POSTAL_CODES = {
   'ANGUNUKOLAPELESSA': '82220',
   'BELIATTA': '82240',
   'KAHATTEWEWA': '82046',
-  'KATARAGAMA': '91400',
   'LUNUGAMVEHERA': '82634',
   'NONAGAMA': '82100',
   'SOORIYAWEWA': '82010',
@@ -461,7 +460,6 @@ export const SRI_LANKA_POSTAL_CODES = {
   'NIWITIGALA': '70400',
   'OPANAYAKE': '70080',
   'PELMADULLA': '70050',
-  'PINNAWALA': '70130',
   'RAKWANA': '70300',
 
   // Kegalle District (71000 - 71720)
@@ -524,7 +522,7 @@ export function getPostalCodeByCity(city = '', district = '') {
 
   const cleanCity = (city || '')
     .toUpperCase()
-    .replace(/[\.,\-_#\(\)]/g, ' ')
+    .replace(/[.,\-_#()]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
