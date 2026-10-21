@@ -49,6 +49,7 @@ import SessionGate from './components/SessionGate';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import { isAuthenticated } from './utils/authSession';
+import SessionTimeoutHandler from './components/SessionTimeoutHandler';
 import AdminLoginPage from './pages/Admin/pages/AdminLoginPage';
 import { AdminAuthProvider } from './pages/Admin/context/AdminAuthContext';
 import { CartProvider } from './context/CartContext';
@@ -78,7 +79,18 @@ const PageWrapper = ({ children, fullBleed = false, form = false }) => {
 const RequireAuth = ({ children }) => {
   const location = useLocation();
   if (!isAuthenticated()) {
-    return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
+    const expiredMsg = sessionStorage.getItem('easyapply:session_expired_message');
+    return (
+      <Navigate
+        to="/login"
+        state={{
+          from: location.pathname + location.search,
+          sessionExpired: !!expiredMsg,
+          message: expiredMsg || undefined,
+        }}
+        replace
+      />
+    );
   }
   return children;
 };
@@ -490,6 +502,7 @@ function App() {
       <MotionConfig reducedMotion="user">
         <AdminAuthProvider>
           <CartProvider>
+            <SessionTimeoutHandler />
             <NavigationLayout>
               <AnimatedRoutes />
             </NavigationLayout>

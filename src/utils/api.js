@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { isSessionExpired, expireSessionDueToInactivity, getVerifiedPhone } from './authSession.js';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api';
+const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || 'http://localhost:5050/api';
 
 // Create an instance of Axios
 const api = axios.create({
@@ -77,6 +78,12 @@ export const clearSessionCart = async () => {
 // Request Interceptor: Attach in-memory admin accessToken & session ID
 api.interceptors.request.use(
   (config) => {
+    // 0. Prevent access to protected APIs using an expired customer session
+    if (getVerifiedPhone() && isSessionExpired()) {
+      expireSessionDueToInactivity();
+      return Promise.reject(new Error('Your session has expired due to inactivity. Please log in again.'));
+    }
+
     // 1. Attach in-memory admin accessToken or stored admin token if available
     const token =
       adminAccessToken ||

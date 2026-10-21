@@ -7,8 +7,10 @@ import Icon from '../../components/Icon';
 import SLTLoader from '../../components/SLTLoader';
 import api from '../../utils/api';
 import { loadPayHereSdk } from '../../utils/loadPayHereSdk';
+import { formatTimer, saveOtpTimers, getOtpTimers, clearOtpTimers } from '../../utils/otpSecurity';
 
-const RESEND_SECONDS = 30;
+const RESEND_SECONDS = 60;
+const OTP_EXPIRY_SECONDS = 300;
 
 export default function PaymentStep({
   isActive = true,
@@ -28,7 +30,11 @@ export default function PaymentStep({
   const [mobileNumber, setMobileNumber] = useState(verifiedPhone || '');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
+  const [expiresIn, setExpiresIn] = useState(OTP_EXPIRY_SECONDS);
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
+  const [lockoutIn, setLockoutIn] = useState(0);
+  const [isOtpExpired, setIsOtpExpired] = useState(false);
+  const [isLockedOut, setIsLockedOut] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef([]);
 
@@ -45,66 +51,153 @@ export default function PaymentStep({
     message: '',
   });
 
+  // 15-Minute Lockout Countdown
+  useEffect(() => {
+    if (!isLockedOut || lockoutIn <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutIn((prev) => {
+        if (prev <= 1) {
+          setIsLockedOut(false);
+          setError('');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isLockedOut, lockoutIn]);
+
+  // 5-Minute OTP Expiry Countdown
+  useEffect(() => {
+    if (phase !== 'otp' || isLockedOut || expiresIn <= 0) return;
+    const timer = setInterval(() => {
+      setExpiresIn((prev) => {
+        if (prev <= 1) {
+          setIsOtpExpired(true);
+          setError('Your OTP has expired. Please request a new OTP.');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phase, isLockedOut, expiresIn]);
+
+  // 60-Second Resend Cooldown Countdown
+  useEffect(() => {
+    if (phase !== 'otp' || resendIn <= 0) return;
+    const timer = setInterval(() => {
+      setResendIn((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phase, resendIn]);
+
+  // Focus first input on phase switch
   useEffect(() => {
     if (phase !== 'otp') return;
-    setResendIn(RESEND_SECONDS);
     const id = setTimeout(() => inputRefs.current[0]?.focus(), 40);
     return () => clearTimeout(id);
   }, [phase]);
 
-  useEffect(() => {
-    if (phase !== 'otp' || resendIn <= 0) return;
-    const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
-    return () => clearTimeout(id);
-  }, [phase, resendIn]);
-
   const handleMobileSubmit = async (e) => {
-    e.preventDefault();
-    let num = mobileNumber;
+    if (e && e.preventDefault) e.preventDefault();
+    let num = mobileNumber.replace(/\D/g, '');
     if (num.startsWith('0')) num = num.substring(1);
+    num = num.slice(-9);
 
-    if (num.length === 9 && num.startsWith('7')) {
+    if (num.length === 9) {
+      if (isLockedOut || lockoutIn > 0) {
+        setError(`Too many incorrect OTP attempts. OTP verification is locked for 15 minutes. Try again in ${formatTimer(lockoutIn)}`);
+        return;
+      }
+
       setError('');
       setIsLoading(true);
       try {
         const response = await api.post('/otp/send', { phone: num });
-        if (response.data.success) {
-          setMobileNumber(num);
-          setPhase('otp');
-        }
+        const data = response.data;
+        saveOtpTimers(num, {
+          expiresAt: data.expiresAt,
+          resendAvailableAt: data.resendAvailableAt,
+          lockedUntil: null,
+        });
+
+        setMobileNumber(num);
+        setExpiresIn(data.expiresIn || OTP_EXPIRY_SECONDS);
+        setResendIn(data.resendCooldown || RESEND_SECONDS);
+        setIsOtpExpired(false);
+        setIsLockedOut(false);
+        setLockoutIn(0);
+        setOtp(['', '', '', '', '', '']);
+        setPhase('otp');
       } catch (err) {
-        if (!err.response) {
-          setMobileNumber(num);
-          setPhase('otp');
+        const resData = err.response?.data || {};
+        if (err.response?.status === 429) {
+          if (resData.code === 'OTP_LOCKED' || resData.lockoutRemaining > 0) {
+            const rem = resData.lockoutRemaining || 900;
+            setIsLockedOut(true);
+            setLockoutIn(rem);
+            saveOtpTimers(num, { lockedUntil: resData.lockedUntil || new Date(Date.now() + rem * 1000).toISOString() });
+            setError(resData.message || 'Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
+          } else if (resData.code === 'RESEND_COOLDOWN' || resData.cooldownRemaining > 0) {
+            const rem = resData.cooldownRemaining || 60;
+            setResendIn(rem);
+            saveOtpTimers(num, { resendAvailableAt: resData.resendAvailableAt || new Date(Date.now() + rem * 1000).toISOString() });
+            setError(resData.message || `Please wait ${rem} seconds before requesting a new OTP.`);
+          } else {
+            setError(resData.message || 'Rate limit exceeded.');
+          }
         } else {
-          setError(err.response?.data?.message || t('otp.invalidMobile'));
+          setError(resData.message || t('otp.invalidMobile', 'Enter a valid mobile number.'));
         }
       } finally {
         setIsLoading(false);
       }
     } else {
-      setError(t('otp.invalidMobile', 'Enter a valid mobile number.'));
+      setError(t('otp.invalidMobile', 'Enter a valid 9-digit mobile number.'));
     }
   };
 
   const submitOtp = async (code) => {
-    setError('');
-    setIsLoading(true);
-
-    // Development bypass: Accept 000000 or 123456 as demo code
-    if (code === '000000' || code === '123456') {
-      setPhase('verified');
-      setIsLoading(false);
+    if (isLockedOut || lockoutIn > 0) {
+      setError('Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
+      return;
+    }
+    if (isOtpExpired || expiresIn <= 0) {
+      setError('Your OTP has expired. Please request a new OTP.');
       return;
     }
 
+    setError('');
+    setIsLoading(true);
+
     try {
       const response = await api.post('/otp/verify', { phone: mobileNumber, otp: code });
-      if (response.data.success) setPhase('verified');
+      if (response.data.success) {
+        clearOtpTimers(mobileNumber);
+        setPhase('verified');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || t('otp.invalidOtp'));
-      setOtp(['', '', '', '', '', '']);
-      setTimeout(() => inputRefs.current[0]?.focus(), 50);
+      const resData = err.response?.data || {};
+      const status = err.response?.status;
+
+      if (status === 429 && (resData.code === 'OTP_LOCKED' || resData.lockoutRemaining > 0)) {
+        const rem = resData.lockoutRemaining || 900;
+        setIsLockedOut(true);
+        setLockoutIn(rem);
+        saveOtpTimers(mobileNumber, { lockedUntil: resData.lockedUntil || new Date(Date.now() + rem * 1000).toISOString() });
+        setError(resData.message || 'Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
+        setOtp(['', '', '', '', '', '']);
+      } else if (resData.code === 'OTP_EXPIRED') {
+        setIsOtpExpired(true);
+        setExpiresIn(0);
+        setError(resData.message || 'Your OTP has expired. Please request a new OTP.');
+        setOtp(['', '', '', '', '', '']);
+      } else {
+        setError(resData.message || t('otp.invalidOtp', 'Invalid verification code. Please try again.'));
+        setOtp(['', '', '', '', '', '']);
+        setTimeout(() => inputRefs.current[0]?.focus(), 50);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -258,25 +351,104 @@ export default function PaymentStep({
               <FiShield size={32} />
             </div>
             <h3 style={{ color: 'var(--slt-blue)', marginBottom: '0.5rem' }}>Enter Verification Code</h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>We sent a 6-digit code to <strong>+94 {mobileNumber}</strong></p>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>We sent a 6-digit code to <strong>+94 {mobileNumber}</strong></p>
+
+            {/* 15-Minute Lockout Banner */}
+            {isLockedOut && (
+              <div
+                role="alert"
+                style={{
+                  backgroundColor: '#fff1f2',
+                  border: '1.5px solid #fecdd3',
+                  color: '#be123c',
+                  padding: '0.85rem 1rem',
+                  borderRadius: '12px',
+                  marginBottom: '1.25rem',
+                  textAlign: 'center',
+                  fontWeight: 600,
+                  fontSize: '0.88rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', marginBottom: '0.35rem' }}>
+                  <FiLock size={16} />
+                  <span>Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.</span>
+                </div>
+                <div style={{ color: '#9f1239', fontWeight: 800, fontSize: '0.95rem' }}>
+                  OTP verification locked. Try again in {formatTimer(lockoutIn)}
+                </div>
+              </div>
+            )}
+
+            {/* 5-Minute Expiry Countdown */}
+            {!isLockedOut && (
+              <div style={{ marginBottom: '1.25rem', fontSize: '0.88rem' }}>
+                {isOtpExpired ? (
+                  <span style={{ color: '#dc2626', fontWeight: 700 }}>
+                    Your OTP has expired. Please request a new OTP.
+                  </span>
+                ) : (
+                  <span style={{ color: '#0369a1', fontWeight: 700 }}>
+                    OTP expires in {formatTimer(expiresIn)}
+                  </span>
+                )}
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
               {otp.map((d, i) => (
-                <input key={i} ref={(el) => (inputRefs.current[i] = el)} type="tel" inputMode="numeric" maxLength={1} value={d} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleKeyDown(i, e)} 
-                style={{ 
-                  width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px', 
-                  border: '1.5px solid #cbd5e1', 
-                  background: '#ffffff',
-                  boxShadow: '0 4px 12px rgba(31, 38, 135, 0.05)'
-                }} disabled={isLoading} />
+                <input
+                  key={i}
+                  ref={(el) => (inputRefs.current[i] = el)}
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={d}
+                  onChange={(e) => handleOtpChange(i, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(i, e)} 
+                  style={{ 
+                    width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px', 
+                    border: '1.5px solid #cbd5e1', 
+                    background: '#ffffff',
+                    boxShadow: '0 4px 12px rgba(31, 38, 135, 0.05)'
+                  }}
+                  disabled={isLoading || isLockedOut || isOtpExpired}
+                />
               ))}
             </div>
             
-            {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1rem' }}>{error}</p>}
+            {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 700 }}>{error}</p>}
 
-            <button type="button" className="btn btn-secondary" style={{ border: 'none', background: 'transparent' }} onClick={() => { setPhase('mobile'); setOtp(['', '', '', '', '', '']); setError(''); }} disabled={isLoading}>
-              Change Number
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.25rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ border: 'none', background: 'transparent' }}
+                onClick={() => { setPhase('mobile'); setOtp(['', '', '', '', '', '']); setError(''); }}
+                disabled={isLoading}
+              >
+                Change Number
+              </button>
+
+              {!isLockedOut && (
+                <>
+                  {resendIn > 0 ? (
+                    <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>
+                      Resend OTP available in <strong>{formatTimer(resendIn)}</strong>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ border: 'none', background: 'transparent', color: '#0056b3', fontWeight: 700 }}
+                      onClick={handleMobileSubmit}
+                      disabled={isLoading || isLockedOut}
+                    >
+                      Resend OTP
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           </motion.div>
         )}
 
