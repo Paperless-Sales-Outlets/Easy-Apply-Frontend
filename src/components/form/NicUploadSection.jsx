@@ -81,6 +81,11 @@ export default function NicUploadSection({
           </div>
         </div>
       )}
+
+      <div style={{ marginTop: '0.85rem', padding: '0.75rem 0.95rem', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0284c7', flexShrink: 0 }} />
+        <span>Document clarity check: If any text or photo cannot be automatically read, your submission will be routed to an authorized SLT officer for manual verification.</span>
+      </div>
     </div>
   );
 }
