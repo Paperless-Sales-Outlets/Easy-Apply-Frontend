@@ -1,6 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
+// Done steps are green, the current step blue, upcoming steps white.
+const BLUE = '#0f57a8';
+const GREEN = '#3a9636'; // --green-deep: keeps the white tick at 3:1 contrast
+
 export const FULL_ONBOARDING_7_STEPS = [
   'Package Selection',
   'Service Location',
@@ -41,9 +45,8 @@ export default function WizardStepper({ currentStep = 1, steps = FULL_ONBOARDING
               top: 0, 
               left: 0, 
               height: '100%', 
-              backgroundColor: '#0f57a8', 
-              borderRadius: '4px',
-              boxShadow: '0 0 6px rgba(15, 87, 168, 0.4)'
+              backgroundColor: GREEN, 
+              borderRadius: '4px'
             }} 
           />
         </div>
@@ -70,8 +73,8 @@ export default function WizardStepper({ currentStep = 1, steps = FULL_ONBOARDING
                 <motion.div
                   initial={false}
                   animate={{
-                    backgroundColor: isActive ? '#0f57a8' : isCompleted ? '#0f57a8' : '#e2e8f0',
-                    borderColor: isActive ? '#0f57a8' : isCompleted ? '#0f57a8' : '#cbd5e1',
+                    backgroundColor: isActive ? BLUE : isCompleted ? GREEN : '#ffffff',
+                    borderColor: isActive ? BLUE : isCompleted ? GREEN : '#cbd5e1',
                     color: (isActive || isCompleted) ? '#ffffff' : '#64748b',
                     scale: isActive ? 1.12 : 1
                   }}
@@ -104,7 +107,7 @@ export default function WizardStepper({ currentStep = 1, steps = FULL_ONBOARDING
                     marginTop: '0.65rem',
                     fontSize: '0.72rem',
                     fontWeight: isActive ? 700 : 500,
-                    color: isActive ? '#0f57a8' : isCompleted ? '#1e293b' : '#94a3b8',
+                    color: isActive ? BLUE : isCompleted ? '#1e293b' : '#94a3b8',
                     textAlign: 'center',
                     lineHeight: '1.2',
                     maxWidth: '85px',
