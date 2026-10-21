@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  FiLock,
   FiSmartphone,
   FiMail,
   FiShield,
@@ -52,7 +51,7 @@ async function fetchSltAccounts(phone) {
     const res = await api.post('/customers/lookup', { phoneNumber: phone });
     const { customerExists, customers } = res.data || {};
     return customerExists && Array.isArray(customers) ? customers : [];
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -137,7 +136,7 @@ export default function LoginPage() {
 
     try {
       await api.post('/otp/send', { phone: digits });
-    } catch (err) {
+    } catch {
       // Demo / offline fallback allowed
     } finally {
       setPhoneSending(false);
@@ -216,7 +215,7 @@ export default function LoginPage() {
 
     try {
       await api.post('/otp/send-email', { email: trimmed });
-    } catch (err) {
+    } catch {
       // Demo / offline fallback allowed
     } finally {
       setEmailSending(false);

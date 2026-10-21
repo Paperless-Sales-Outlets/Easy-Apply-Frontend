@@ -23,34 +23,3 @@ export const MODULE_ACCESS = [
 // maintains them from User Management (see services/adminService.js
 // getStaffRoles/createStaffRole/updateStaffRole/deleteStaffRole), each one a
 // name plus a default set of MODULE_ACCESS keys.
-
-// ── Two-Week Form Submission Data ─────────────────────────────────────────────
-function generateDailyData() {
-  const days = [];
-  const start = new Date('2026-07-17');
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(start);
-    d.setDate(start.getDate() - i);
-    const dateStr = d.toISOString().slice(0, 10);
-    const day = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-    days.push({
-      date: dateStr,
-      day,
-      submitted: Math.floor(Math.random() * 6) + 1,
-      completed: Math.floor(Math.random() * 4),
-    });
-  }
-  return days;
-}
-
-export const DUMMY_FORM_WEEKLY = [
-  { id: 'new-connection', label: 'New Connection', daily: generateDailyData() },
-  { id: 'reconnection', label: 'Reconnection', daily: generateDailyData() },
-  { id: 'relocation', label: 'Relocation', daily: generateDailyData() },
-  { id: 'termination', label: 'Termination', daily: generateDailyData() },
-  { id: 'transfer', label: 'Transfer', daily: generateDailyData() },
-  { id: 'package-migration', label: 'Package Migration', daily: generateDailyData() },
-  { id: 'service-vacation', label: 'Service Vacation', daily: generateDailyData() },
-  { id: 'refund-request', label: 'Refund Request', daily: generateDailyData() },
-  { id: 'customer-request-acceptance', label: 'Customer Request Acceptance', daily: generateDailyData() },
-];

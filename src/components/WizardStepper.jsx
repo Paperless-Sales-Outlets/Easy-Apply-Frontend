@@ -11,8 +11,6 @@ export const FULL_ONBOARDING_7_STEPS = [
   'Tracking'
 ];
 
-export const FULL_ONBOARDING_9_STEPS = FULL_ONBOARDING_7_STEPS;
-
 export default function WizardStepper({ currentStep = 1, steps = FULL_ONBOARDING_7_STEPS, totalStepsOverride = null }) {
   const stepList = steps && steps.length > 0 ? steps : FULL_ONBOARDING_7_STEPS;
   const totalSteps = totalStepsOverride || stepList.length;

@@ -1,8 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { motion } from 'framer-motion';
-import { FiCheckCircle, FiShield, FiFileText, FiEdit3 } from 'react-icons/fi';
+import { FiFileText, FiEdit3 } from 'react-icons/fi';
 import DigitalSignatureCanvas from '../../components/form/DigitalSignatureCanvas';
 import WizardStepHeader from '../../components/wizard/WizardStepHeader';
 

@@ -421,7 +421,7 @@ export function cleanTownNoise(str) {
   let cleaned = str
     .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|pS|jie|jle|die|sie|fetc|etc|fec|setec|drp|a|e|h)\b.*$/i, '')
     .replace(/\b(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|pS|jie|jle|die|sie|fetc|etc|fec|setec|drp)\b/gi, '')
-    .replace(/[\.\,\-\/\\_]+$/, '')
+    .replace(/[.,\-/\\_]+$/, '')
     .trim();
 
   // If the string contains a known Sri Lankan town name, normalize to exact clean town format
@@ -449,7 +449,7 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
   let clean = (rawAddress || '')
     .replace(/[\r\n]+/g, ', ')
     .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|fetc|etc|fec|setec|drp)\b.*$/i, '')
-    .replace(/[£§©®™|\\_~@#^*=\[\]\{\}]/g, '')
+    .replace(/[£§©®™|\\_~@#^*=[\]{}]/g, '')
     .replace(/\.+$/, '')
     .trim();
 
@@ -490,7 +490,7 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
     addressLine1 = parts[0];
   } else if (parts.length === 2) {
     // If part 0 is just a house number (e.g. "153" or "No. 12"), both belong in addressLine1
-    if (/^(?:No\.?|#)?\s*\d+[\/\-A-Za-z0-9]*$/i.test(parts[0])) {
+    if (/^(?:No\.?|#)?\s*\d+[/\-A-Za-z0-9]*$/i.test(parts[0])) {
       addressLine1 = `${parts[0]}, ${parts[1]}`;
     } else {
       addressLine1 = parts[0];
@@ -517,7 +517,7 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
   if (addressLine1) {
     addressLine1 = addressLine1
       .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|pS|jie|jle|die|sie|fetc|etc|fec|setec|drp)\b.*$/i, '')
-      .replace(/[\.\,\-\/\\_]+$/, '')
+      .replace(/[.,\-/\\_]+$/, '')
       .trim();
   }
 
@@ -606,7 +606,7 @@ export function extractFullNameFromOCR(text) {
       .replace(/^(?:UCT|UTC|ICT|NIC|IC|E\s*IC|NO|ID|DOC|SRI\s*LANKAN|LANKAN)\s+/i, '')
       .replace(/^(?:DICKOYA|COLOMBO|KANDY|GALLE|MATARA|JAFFNA|KURUNEGALA|GAMPAHA|HATTON|NUWARA\s*ELIYA|BADULLA|RATNAPURA|KEGALLE|KALUTARA|AMPARA|BATTICALOA|TRINCOMALEE|ANURADHAPURA|POLONNARUWA|MATALE|PUTTALAM|VAVUNIYA|MANNAR|MULLAITIVU|KILINOCHCHI|HAMBANTOTA|MONARAGALA)[\s,]+(?:Jie|Jle|die|sie|peo|pro|geo|se|eb|sb|le)?\s*,?\s*/i, '')
       .replace(/\s+(?:UCT|UTC|ICT|NIC|IC|NO|ID|Jie|Jle|peo|se)$/i, '')
-      .replace(/^[,\s\.\-]+/, '')
+      .replace(/^[,\s.-]+/, '')
       .trim();
     return repairOcrName(cleaned);
   };
@@ -641,9 +641,9 @@ export function extractFullNameFromOCR(text) {
     }
 
     // 3. Check if line is preceded by "Name" or "Names" label
-    const nameMatch = rawLine.match(/(?:Name|Full\s*Name|Names)[\s\:\-\/]+([A-Za-z\s\.\-]{4,})/i);
+    const nameMatch = rawLine.match(/(?:Name|Full\s*Name|Names)[\s:\-/]+([A-Za-z\s.-]{4,})/i);
     if (nameMatch && nameMatch[1]) {
-      let candidate = cleanNameToken(nameMatch[1].replace(/[^A-Za-z\s\.\-]/g, '').trim().toUpperCase());
+      let candidate = cleanNameToken(nameMatch[1].replace(/[^A-Za-z\s.-]/g, '').trim().toUpperCase());
       const words = candidate.split(/\s+/).filter((w) => w.length > 1);
       const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
       if (!isIgnored && candidate.length > bestCandidate.length) {
@@ -702,18 +702,18 @@ export function extractAddressFromOCR(text) {
     if (isIgnored) continue;
 
     // Skip date-like footer lines (e.g. 1995/12/30 or 2018-05-10)
-    if (/^\d{4}[\/\.\-]\d{2}[\/\.\-]\d{2}/.test(rawLine.trim())) continue;
+    if (/^\d{4}[/.-]\d{2}[/.-]\d{2}/.test(rawLine.trim())) continue;
 
     // Check if line has address keywords or starts with number/house indicator
     const hasAddressKw = addressKeywords.some((kw) => upper.includes(kw) || rawLine.includes(kw));
-    const isHouseNumberLine = /^(?:No\.?|#)?\s*\d+[\/\-A-Za-z0-9]*,?\s+/i.test(rawLine);
+    const isHouseNumberLine = /^(?:No\.?|#)?\s*\d+[/\-A-Za-z0-9]*,?\s+/i.test(rawLine);
 
     if (hasAddressKw || isHouseNumberLine) {
       let clean = rawLine
         .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley)\b.*$/i, '')
         .replace(/^[^\dA-Za-z\u0D80-\u0DFF\u0B80-\u0BFF]+/, '')
         .replace(/\b(?=[A-Za-z0-9]*\d)(?=[A-Za-z0-9]*[A-Za-z])[A-Za-z0-9]{8,16}(?:-[A-Za-z0-9]+)?\b/g, '')
-        .replace(/[£§©®™|\\_~@#^*=\[\]\{\}]/g, '')
+        .replace(/[£§©®™|\\_~@#^*=[\]{}]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
 

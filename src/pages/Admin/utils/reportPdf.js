@@ -34,22 +34,12 @@ const META_PERIOD_LABEL = 'REPORT PERIOD';
 // so every accent in the document matches the SLT/Mobitel identity.
 const NAVY = [0.059, 0.090, 0.165]; // #0f172a - text / values
 const SLT_BLUE = [0.000, 0.329, 0.659]; // #0054a8 - SLT corporate blue
-const SLT_GREEN = [0.329, 0.706, 0.282]; // #54b448 - Mobitel green
 const SLATE = [0.278, 0.333, 0.412];
 const MUTED = [0.392, 0.455, 0.549];
 const LINE = [0.855, 0.890, 0.930];
 const BAND_BG = [0.960, 0.972, 0.988];
 const CARD_BG = [0.972, 0.980, 0.992];
 const ZEBRA_BG = [0.961, 0.973, 0.988];
-
-// Status colours: SLT green/blue for the happy path, semantic hues otherwise.
-const STATUS_COLORS = {
-  approved: SLT_GREEN,
-  confirmed: SLT_BLUE,
-  rejected: [0.827, 0.192, 0.243],
-  flagged: [0.760, 0.467, 0.024],
-  open: [0.278, 0.333, 0.412],
-};
 
 // Executive summary panel geometry - the layout pass and drawPage both read
 // these so page 1 pagination can never drift from what is actually drawn.
@@ -145,17 +135,6 @@ const boxedRect = (fill, border, strokeW, x, y, width, height) => [
   fillRect(fill[0], fill[1], fill[2], x, y, width, height),
   strokeRect(border[0], border[1], border[2], strokeW, x, y, width, height),
 ];
-
-// Filled circle (status dots) built from four cubic Bezier arcs.
-const fillCircle = (r, g, b, cx, cy, radius) => {
-  const k = 0.5523 * radius;
-  return `${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg ` +
-    `${(cx - radius).toFixed(2)} ${cy.toFixed(2)} m ` +
-    `${(cx - radius).toFixed(2)} ${(cy - k).toFixed(2)} ${(cx - k).toFixed(2)} ${(cy - radius).toFixed(2)} ${cx.toFixed(2)} ${(cy - radius).toFixed(2)} c ` +
-    `${(cx + k).toFixed(2)} ${(cy - radius).toFixed(2)} ${(cx + radius).toFixed(2)} ${(cy - k).toFixed(2)} ${(cx + radius).toFixed(2)} ${cy.toFixed(2)} c ` +
-    `${(cx + radius).toFixed(2)} ${(cy + k).toFixed(2)} ${(cx + k).toFixed(2)} ${(cy + radius).toFixed(2)} ${cx.toFixed(2)} ${(cy + radius).toFixed(2)} c ` +
-    `${(cx - k).toFixed(2)} ${(cy + radius).toFixed(2)} ${(cx - radius).toFixed(2)} ${(cy + k).toFixed(2)} ${(cx - radius).toFixed(2)} ${cy.toFixed(2)} c f`;
-};
 
 /**
  * Text wrapper that splits text into multiple lines to fit colWidth without any truncation.
@@ -479,7 +458,6 @@ export function buildReportPdf({
         executiveSummary.statusBreakdown.forEach((s) => {
           const name = String(s.status);
           const count = Number(s.count).toLocaleString('en-LK');
-          const color = STATUS_COLORS[name.toLowerCase()] || SLT_BLUE;
 
           ops.push(`BT /F1 8.5 Tf ${SLATE[0]} ${SLATE[1]} ${SLATE[2]} rg 1 0 0 1 ${itemX.toFixed(2)} ${(dotCY + 3.0).toFixed(2)} Tm (${escapeText(name)}) Tj ET`);
           const nameW = textWidth(name, 8.5, false);
@@ -689,13 +667,3 @@ export function buildReportPdf({
 
   return pdf;
 }
-
-export function buildTablePdf(title, columns, rows, meta = []) {
-  return buildReportPdf({
-    title,
-    meta,
-    sections: [{ title: '', note: '', columns, rows: rows || [] }],
-  });
-}
-
-export default buildReportPdf;

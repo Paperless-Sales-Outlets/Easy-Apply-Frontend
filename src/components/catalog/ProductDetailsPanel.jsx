@@ -3,14 +3,11 @@ import { motion } from 'framer-motion';
 import {
   FiHeart,
   FiShoppingCart,
-  FiZap,
   FiCheck,
   FiActivity,
   FiDatabase,
   FiShield,
   FiClock,
-  FiMinus,
-  FiPlus,
   FiTv,
   FiWifi,
   FiSmartphone,
@@ -39,10 +36,8 @@ export default function ProductDetailsPanel({
   isFavorite,
   onToggleFavorite,
   onAddToCart,
-  onBuyNow,
   onClose,
 }) {
-  const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('Overview');
 
   useEffect(() => {
@@ -61,7 +56,6 @@ export default function ProductDetailsPanel({
     id,
     name: rawName,
     productName,
-    speed = '300 Mbps',
     monthlyPrice: rawMonthlyPrice,
     price,
     installationFee = 1500,
@@ -81,14 +75,6 @@ export default function ProductDetailsPanel({
   const productId = _id || id;
   const catLower = (category || name || '').toLowerCase();
   const heroGradient = CATEGORY_HERO_GRADIENTS[category] || DEFAULT_HERO_GRADIENT;
-
-  const handleDecrease = () => {
-    if (quantity > 1) setQuantity(quantity - 1);
-  };
-
-  const handleIncrease = () => {
-    setQuantity(quantity + 1);
-  };
 
   return (
     <div
@@ -328,7 +314,7 @@ export default function ProductDetailsPanel({
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
               <button
                 onClick={() => {
-                  if (onAddToCart) onAddToCart(product, quantity);
+                  if (onAddToCart) onAddToCart(product, 1);
                   if (onClose) onClose();
                 }}
                 style={{
