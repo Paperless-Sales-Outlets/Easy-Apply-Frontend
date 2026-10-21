@@ -6417,6 +6417,97 @@ select.um-input.valid {
 .kycv-skel-line.short { width: 70%; }
 .kycv-skel-pill { height: 24px; border-radius: 100px; }
 
+/* ── Customer type (new / returning) ── */
+
+.kycv-ctype {
+  --ct: #0f57a8;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  width: fit-content;
+  margin-top: 0.3rem;
+  padding: 0.08rem 0.5rem 0.08rem 0.42rem;
+  border-radius: 100px;
+  border: 1px solid color-mix(in srgb, var(--ct) 25%, #fff);
+  background: color-mix(in srgb, var(--ct) 9%, #fff);
+  color: color-mix(in srgb, var(--ct) 85%, #000);
+  font-size: 0.66rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kycv-ctype.new { --ct: #3a9636; }
+.kycv-ctype.returning { --ct: #0f57a8; }
+.kycv-ctype.existing-new-nic { --ct: #8b5cf6; }
+.kycv-ctype.unknown { --ct: #8a98ad; }
+.kycv-table td .kycv-ctype { display: flex; }
+
+/* On the dark popup header */
+.kycv-modal-id .kycv-ctype {
+  margin: 0 0 0 0.6rem;
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  vertical-align: middle;
+}
+
+/* Where a photo came from */
+.kycv-src {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.5rem;
+  border-radius: 100px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.35);
+}
+
+.kycv-src.request { background: #3a9636; color: #fff; }
+.kycv-src.on-file { background: #0f57a8; color: #fff; }
+.kycv-doc-src { position: absolute; left: 0.55rem; top: 0.55rem; }
+
+/* Face match result */
+.kycv-face {
+  --fc: #b87a00;
+  margin-bottom: 0.9rem;
+  padding: 0.8rem 0.95rem 0.7rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--fc) 28%, #fff);
+  background: color-mix(in srgb, var(--fc) 7%, #fff);
+}
+
+.kycv-face.pass { --fc: #3a9636; }
+.kycv-face-head { display: flex; align-items: center; gap: 0.65rem; }
+
+.kycv-face-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--fc);
+  color: #fff;
+}
+
+.kycv-face-head strong { display: block; font-size: 0.86rem; color: color-mix(in srgb, var(--fc) 75%, #000); }
+.kycv-face-head small { display: block; font-size: 0.74rem; color: var(--muted); }
+
+.kycv-face-bar {
+  position: relative;
+  height: 8px;
+  margin: 0.7rem 0 0.3rem;
+  border-radius: 100px;
+  background: linear-gradient(90deg, rgba(58, 150, 54, 0.18), rgba(235, 168, 52, 0.2) 55%, rgba(196, 55, 44, 0.2));
+}
+
+.kycv-face-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: var(--fc); transition: width 0.6s ease; }
+.kycv-face-limit { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 2px; background: var(--navy); }
+.kycv-face-scale { display: flex; justify-content: space-between; font-size: 0.64rem; color: #8a98ad; }
+
 /* ── Who decided ── */
 
 .kycv-actor {
@@ -7115,6 +7206,7 @@ select.um-input.valid {
 .kycv-zoom-turn .kyc-doc-missing { min-width: 260px; border-radius: 10px; }
 
 .kycv-compare { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.kycv-compare.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .kycv-compare figure {
   display: flex;
@@ -7244,7 +7336,8 @@ select.um-input.valid {
   .kycv-view.active { background: #fff; box-shadow: 0 1px 2px rgba(11, 45, 91, 0.1), 0 4px 10px -4px rgba(11, 45, 91, 0.3); }
   .kycv-tl-head time { margin-left: 0; width: 100%; }
   .kycv-lightbox { padding: 0.9rem 0.9rem 0.8rem; }
-  .kycv-compare { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .kycv-compare, .kycv-compare.n3 { grid-template-columns: 1fr; grid-auto-rows: minmax(0, 1fr); }
+  .kycv-modal-id .kycv-ctype { margin-left: 0.4rem; }
   .kycv-lb-nav { width: 38px; height: 38px; }
   .kycv-lb-keys { display: none; }
 }
@@ -7257,6 +7350,8 @@ select.um-input.valid {
   .kycv-meta { grid-template-columns: 1fr; }
   .kycv-table tbody tr { grid-template-columns: 1fr; }
   .kycv-scorecard-verdict { flex-wrap: wrap; }
+  .kycv-card-head { flex-wrap: wrap; }
+  .kycv-card-head > div { flex: 1 1 160px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
