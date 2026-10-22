@@ -39,17 +39,30 @@ const SORTS = [
 const DEFAULT_FILTERS = { view: 'attention', status: 'all', type: 'all', customer: 'all', sort: 'smart', search: '' };
 
 // Which path through the customer flow a case took (decided by the backend):
-//   new        – uploaded NIC front + back and took a live selfie
-//   returning  – NIC photos already on file, took a new live selfie only
-//   existing-new-nic – registered earlier without NIC photos, uploaded them now
+//   new        – registering: NIC front + back, live selfie and signature;
+//                the selfie is compared with the NIC photo
+//   registered – an existing customer's request: live selfie and signature;
+//                details are checked, photos are not compared
 const CUSTOMER_TYPES = {
-  new: { label: 'New customer', short: 'New', hint: 'Uploaded NIC front, NIC back and a live selfie' },
-  returning: { label: 'Returning customer', short: 'Returning', hint: 'NIC photos on file — took a new live selfie' },
-  'existing-new-nic': { label: 'Existing · NIC added', short: 'NIC added', hint: 'Registered earlier without NIC photos and uploaded them now' },
-  unknown: { label: 'Not determined', short: 'Unknown', hint: 'Not enough photos to tell' },
+  new: { label: 'New customer', short: 'New', hint: 'New registration — needs NIC front, NIC back, a live selfie and a signature; the selfie is compared with the NIC photo' },
+  registered: { label: 'Registered customer', short: 'Registered', hint: 'Registered customer — needs a live selfie and a signature; details are checked, faces are not compared' },
+  unknown: { label: 'Not determined', short: 'Unknown', hint: 'Not enough information to tell whether this is a new or a registered customer' },
 };
-const CUSTOMER_ORDER = ['new', 'returning', 'existing-new-nic', 'unknown'];
-const customerTypeOf = (item) => (CUSTOMER_TYPES[item.customerType] ? item.customerType : 'unknown');
+const CUSTOMER_ORDER = ['new', 'registered', 'unknown'];
+// Older automated runs used 'returning' / 'existing-new-nic' — both are registered customers.
+const LEGACY_TYPES = { returning: 'registered', 'existing-new-nic': 'registered' };
+const customerTypeOf = (item) => {
+  const key = LEGACY_TYPES[item.customerType] || item.customerType;
+  return CUSTOMER_TYPES[key] ? key : 'unknown';
+};
+
+// The items each kind of customer must provide (a registration on its own has no signature step).
+function requiredSlots(item) {
+  const type = customerTypeOf(item);
+  if (type === 'registered') return new Set(['facePhoto', 'signature']);
+  if (item.kind === 'account') return new Set(['nicFront', 'nicBack', 'facePhoto']);
+  return new Set(['nicFront', 'nicBack', 'facePhoto', 'signature']);
+}
 
 const DECISIONS = [
   { status: 'approved', label: 'Approve', cls: 'success', icon: 'check' },
@@ -277,7 +290,7 @@ function CustomerTag({ item, short }) {
   const meta = CUSTOMER_TYPES[key];
   return (
     <span className={`kycv-ctype ${key}`} title={meta.hint}>
-      <Icon name={key === 'returning' ? 'history' : key === 'unknown' ? 'alert' : 'user'} size={11} stroke={2.4} />
+      <Icon name={key === 'registered' ? 'userCheck' : key === 'unknown' ? 'alert' : 'user'} size={11} stroke={2.4} />
       {short ? meta.short : meta.label}
     </span>
   );
@@ -397,17 +410,19 @@ function History({ history }) {
   );
 }
 
-function DocSlot({ spec, doc, note, onZoom }) {
+function DocSlot({ spec, doc, note, required = true, onZoom }) {
   if (!doc) {
     return (
-      <div className="kycv-doc empty">
+      <div className={`kycv-doc empty${required ? '' : ' optional'}`}>
         <div className="kycv-doc-label">
           <span><Icon name={spec.icon || 'file'} size={13} />{spec.label}</span>
-          {!note && <span className="kycv-doc-flag">Missing</span>}
+          {!note && (required
+            ? <span className="kycv-doc-flag">Missing</span>
+            : <span className="kycv-doc-flag optional">Not needed</span>)}
         </div>
         <div className="kycv-doc-empty">
           <Icon name="image" size={26} stroke={1.8} />
-          <strong>Not provided</strong>
+          <strong>{required ? 'Not provided' : 'Not needed for this customer'}</strong>
           {note ? <span>{note}</span> : null}
         </div>
       </div>
@@ -974,7 +989,7 @@ export default function KycReviewPage() {
                     <h3>Identity documents</h3>
                     <p>{CUSTOMER_TYPES[customerTypeOf(current)].hint}.</p>
                   </div>
-                  {compareDocs.length > 1 && faceDoc && (
+                  {customerTypeOf(current) !== 'registered' && compareDocs.length > 1 && faceDoc && (
                     <button type="button" className="kycv-compare-btn" onClick={openCompare}>
                       <Icon name="compare" size={14} />Compare faces
                     </button>
@@ -987,7 +1002,8 @@ export default function KycReviewPage() {
                       key={spec.slot}
                       spec={spec}
                       doc={pickDoc(current, spec.keys)}
-                      note={spec.slot === 'signature' && current.signatureMode === 'otp' ? 'Signed digitally by OTP — no drawn signature' : null}
+                      note={spec.slot === 'signature' && current.signatureMode === 'otp' ? 'Only confirmed by OTP — no signature was drawn' : null}
+                      required={requiredSlots(current).has(spec.slot)}
                       onZoom={openZoom}
                     />
                   ))}
@@ -1186,7 +1202,7 @@ export default function KycReviewPage() {
               >
                 <Icon name="rotate" size={16} />
               </button>
-              {!zoom.compare && compareDocs.length > 1 && faceDoc && (
+              {!zoom.compare && customerTypeOf(current) !== 'registered' && compareDocs.length > 1 && faceDoc && (
                 <button type="button" className="kycv-lb-btn wide" onClick={openCompare} title="NIC photo beside the selfie">
                   <Icon name="compare" size={15} />Compare
                 </button>

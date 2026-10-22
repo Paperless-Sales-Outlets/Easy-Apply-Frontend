@@ -5966,6 +5966,7 @@ select.um-input.valid {
 }
 
 .kycv-ctype.new { --ct: #3a9636; }
+.kycv-ctype.registered,
 .kycv-ctype.returning { --ct: #0f57a8; }
 .kycv-ctype.existing-new-nic { --ct: #8b5cf6; }
 .kycv-ctype.unknown { --ct: #8a98ad; }
@@ -6348,6 +6349,11 @@ select.um-input.valid {
   font-size: 0.6rem;
   letter-spacing: 0.05em;
 }
+
+/* A photo this kind of customer does not have to provide */
+.kycv-doc-flag.optional { background: #eef2f8; color: var(--muted); }
+.kycv-doc.empty.optional { border-color: #e3e9f2; background: #fbfcfe; }
+.kycv-doc.empty.optional .kycv-doc-empty { opacity: 0.75; }
 
 .kycv-doc-zoom { display: inline-flex; color: var(--blue); opacity: 0.7; }
 .kycv-doc:hover .kycv-doc-zoom { opacity: 1; }
