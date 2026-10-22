@@ -77,10 +77,15 @@ const NAV_ICONS = {
 // in the sidebar — privileges are managed from User Management → Privileges.)
 const [DASHBOARD_MODULE, ...OTHER_MODULES] = MODULE_ACCESS;
 
+// Modules not used in this portal any more — hidden from the sidebar only.
+const HIDDEN_NAV_KEYS = new Set(['appointments', 'technician']);
+
 const NAV_ITEMS = [
   { ...DASHBOARD_MODULE, icon: NAV_ICONS[DASHBOARD_MODULE.key] },
   { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
-  ...OTHER_MODULES.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
+  ...OTHER_MODULES
+    .filter(item => !HIDDEN_NAV_KEYS.has(item.key))
+    .map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
   { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
 ];
 
