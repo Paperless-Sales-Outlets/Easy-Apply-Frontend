@@ -37,6 +37,18 @@ export const runKycAutoReview = async () => {
   return response.data;
 };
 
+// POST /api/admin/kyc/recheck-all — re-check every open (pending / flagged) case in the background
+export const startKycRecheckAll = async () => {
+  const response = await api.post('/admin/kyc/recheck-all');
+  return response.data;
+};
+
+// GET /api/admin/kyc/recheck-all — progress of the latest re-check-all run
+export const getKycRecheckAllStatus = async () => {
+  const response = await api.get('/admin/kyc/recheck-all');
+  return response.data;
+};
+
 // POST /api/admin/kyc/:id/auto-review — run the automated check again for one case
 export const rerunKycAutoReview = async (id) => {
   const response = await api.post(`/admin/kyc/${id}/auto-review`);

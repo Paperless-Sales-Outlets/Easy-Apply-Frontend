@@ -5,6 +5,8 @@ import {
   reviewKycApplication,
   runKycAutoReview,
   rerunKycAutoReview,
+  startKycRecheckAll,
+  getKycRecheckAllStatus,
 } from '../services/adminService';
 import AuthImage from '../components/AuthImage';
 import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
@@ -16,6 +18,9 @@ const STATUS_ORDER = ['pending', 'pending payment', 'flagged', 'approved', 'reje
 const REFRESH_MS = 30000;
 const PAGE_SIZE = 25;
 const SYSTEM_NAME = 'Automated KYC';
+const RECHECK_POLL_MS = 2000;
+// What "Re-check all" covers: open cases whose decision no person has made.
+const RECHECK_STATUSES = ['pending', 'flagged'];
 
 const VIEWS = [
   { key: 'attention', label: 'Needs review', hint: 'Open cases and automated decisions nobody has confirmed yet' },
@@ -462,6 +467,9 @@ export default function KycReviewPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState('');
+  const [recheckJob, setRecheckJob] = useState(null);
+  const [confirmRecheck, setConfirmRecheck] = useState(false);
+  const recheckRunning = !!recheckJob?.running;
 
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [limit, setLimit] = useState(PAGE_SIZE);
@@ -499,6 +507,36 @@ export default function KycReviewPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // A re-check that is already running (started earlier, or by a colleague) keeps
+  // showing its progress after the page is opened or reloaded.
+  useEffect(() => {
+    getKycRecheckAllStatus().then((res) => { if (res.job?.running) setRecheckJob(res.job); }).catch(() => {});
+  }, []);
+
+  // Follow a running re-check, then refresh the list and report the result once.
+  useEffect(() => {
+    if (!recheckRunning) return undefined;
+    let polls = 0;
+    const t = setInterval(async () => {
+      polls += 1;
+      try {
+        const { job } = await getKycRecheckAllStatus();
+        if (!job) return;
+        setRecheckJob(job);
+        if (!job.running) {
+          load({ silent: true });
+          const parts = [`${job.approved} approved`, `${job.rejected} rejected`, `${job.flagged} flagged`, `${job.unchanged} unchanged`];
+          if (job.failed) parts.push(`${job.failed} could not be checked`);
+          pageNotice.info(`Re-check finished — ${job.done} case${job.done === 1 ? '' : 's'}: ${parts.join(', ')}.`
+            + (job.skippedByPerson ? ` ${job.skippedByPerson} case${job.skippedByPerson === 1 ? '' : 's'} decided by a person were left as they are.` : ''));
+        } else if (polls % 5 === 0) {
+          load({ silent: true }); // let decisions appear while it runs
+        }
+      } catch { /* a missed poll is fine — keep polling */ }
+    }, RECHECK_POLL_MS);
+    return () => clearInterval(t);
+  }, [recheckRunning, load]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Automated decisions arrive in the background, so keep the list fresh.
   useEffect(() => {
@@ -812,6 +850,23 @@ export default function KycReviewPage() {
       pageNotice.error(err.response?.data?.message || err.message || 'Automatic review failed.');
     } finally {
       setBusy('');
+    }
+  };
+
+  const recheckCount = items.filter((i) => RECHECK_STATUSES.includes(i.status) && !byPerson(i)).length;
+
+  const startRecheck = async () => {
+    setConfirmRecheck(false);
+    try {
+      const { job, started } = await startKycRecheckAll();
+      setRecheckJob(job);
+      if (!started) pageNotice.info('A re-check is already running — showing its progress.');
+      else if (!job.total) {
+        setRecheckJob(null);
+        pageNotice.info('There are no open cases to re-check.');
+      }
+    } catch (err) {
+      pageNotice.error(err.response?.data?.message || err.message || 'Could not start the re-check.');
     }
   };
 
@@ -1261,7 +1316,7 @@ export default function KycReviewPage() {
           </div>
 
           <div className="kycv-hero-actions">
-            <button type="button" className="kycv-run-btn" onClick={sweep} disabled={!!busy || loading}>
+            <button type="button" className="kycv-run-btn" onClick={sweep} disabled={!!busy || loading || recheckRunning}>
               <span className="kycv-run-icon"><Icon name="bolt" size={15} className={busy === 'sweep' ? 'dash-spin' : ''} /></span>
               {busy === 'sweep' ? 'Reviewing…' : 'Run automatic review'}
             </button>
@@ -1276,6 +1331,29 @@ export default function KycReviewPage() {
               <Icon name="refresh" size={16} className={refreshing ? 'dash-spin' : ''} />
             </button>
           </div>
+
+          {recheckRunning ? (
+            <div className="kycv-recheck progress" role="status" aria-live="polite">
+              <div className="kycv-recheck-row">
+                <Icon name="refresh" size={14} className="dash-spin" />
+                <span>Re-checking {Math.min(recheckJob.done + 1, recheckJob.total)} of {recheckJob.total}…</span>
+                <b>{recheckJob.total ? Math.round((recheckJob.done / recheckJob.total) * 100) : 0}%</b>
+              </div>
+              <div className="kycv-recheck-bar"><span style={{ width: `${recheckJob.total ? (recheckJob.done / recheckJob.total) * 100 : 0}%` }} /></div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="kycv-recheck-btn"
+              onClick={() => setConfirmRecheck(true)}
+              disabled={loading || !!busy || recheckCount === 0}
+              title="Run the current automated checks again on every open case"
+            >
+              <Icon name="history" size={14} />
+              Re-check all open cases
+              <span>{loading ? '–' : recheckCount}</span>
+            </button>
+          )}
         </aside>
       </section>
 
@@ -1534,6 +1612,39 @@ export default function KycReviewPage() {
       )}
 
       {popup}
+
+      {confirmRecheck && createPortal(
+        <div className="kycv-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) setConfirmRecheck(false); }}>
+          <div
+            className="kycv-confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="kycv-recheck-title"
+            aria-describedby="kycv-recheck-desc"
+            onKeyDown={(e) => { if (e.key === 'Escape') setConfirmRecheck(false); }}
+          >
+            <span className="kycv-confirm-dialog-icon"><Icon name="history" size={22} stroke={2.2} /></span>
+            <h2 id="kycv-recheck-title">Re-check all open cases?</h2>
+            <p id="kycv-recheck-desc">
+              The automated checks will run again on <b>{recheckCount}</b> open {recheckCount === 1 ? 'case' : 'cases'} (pending and flagged) using the current rules.
+            </p>
+            <ul>
+              <li>Statuses may change — every change is recorded in the case history and the audit log.</li>
+              <li>Cases a person decided are left exactly as they are.</li>
+              <li>It runs in the background; you can keep working while it does.</li>
+            </ul>
+            <div className="kycv-confirm-dialog-actions">
+              {/* Focus starts on Cancel so an accidental Enter never starts a re-check */}
+              {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
+              <button type="button" className="admin-btn ghost" onClick={() => setConfirmRecheck(false)} autoFocus>Cancel</button>
+              <button type="button" className="admin-btn primary" onClick={startRecheck}>
+                <Icon name="history" size={14} />Start re-check
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
