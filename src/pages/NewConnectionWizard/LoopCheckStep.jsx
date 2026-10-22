@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiCheckCircle, FiAlertCircle, FiMapPin, FiArrowRight, FiPhoneCall, FiX, FiRefreshCw, FiHome } from 'react-icons/fi';
+import { FiCheckCircle, FiAlertCircle, FiMapPin, FiArrowRight, FiPhoneCall } from 'react-icons/fi';
 import api from '../../utils/api';
 
 export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
   const navigate = useNavigate();
   const [phase, setPhase] = useState('checking'); // 'checking' | 'available' | 'unavailable'
   const [coverageData, setCoverageData] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
 
   const address = formData.installAddress || formData.address || '';
@@ -17,7 +16,6 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
   const performLoopCheck = async () => {
     setPhase('checking');
     setShowModal(false);
-    setErrorMessage('');
 
     try {
       const res = await api.post('/applications/check-loop', {

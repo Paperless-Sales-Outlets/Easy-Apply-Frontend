@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { MODULE_ACCESS, DUMMY_FORM_WEEKLY } from '../data/dummyData';
+import { MODULE_ACCESS } from '../data/dummyData';
+import { FORM_TYPES } from '../utils/applicationUtils';
 import sltLogo from '../../../assets/slt-logo.png';
 
 const NAV_ICONS = {
@@ -183,7 +184,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
               </button>
               {item.key === 'forms' && openForms && (
                 <div className="admin-nav-submenu">
-                  {DUMMY_FORM_WEEKLY.map(form => (
+                  {FORM_TYPES.map(form => (
                     <button
                       key={form.id}
                       className={`admin-nav-submenu-item${activeFormId === form.id ? ' active' : ''}`}

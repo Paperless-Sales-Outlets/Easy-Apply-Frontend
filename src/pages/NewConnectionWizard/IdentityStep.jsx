@@ -371,7 +371,7 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
       } else {
         setStatus({ type: 'error', message: r?.message || 'Could not auto-read your NIC. You can verify or enter the details manually.' });
       }
-    } catch (err) {
+    } catch {
       if (seq.current !== mySeq) return;
       setStatus({ type: 'error', message: 'Could not auto-read your NIC. You can verify or enter the details manually.' });
     }

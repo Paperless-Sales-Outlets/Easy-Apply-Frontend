@@ -1,11 +1,5 @@
 import api from '../../../utils/api';
 
-// GET /api/admin/dashboard-stats — summary, form stats, recent applications
-export const getDashboardStats = async () => {
-  const response = await api.get('/admin/dashboard-stats');
-  return response.data;
-};
-
 // GET /api/admin/applications — paginated, filterable application list
 export const getApplications = async (params = {}) => {
   const response = await api.get('/admin/applications', { params });
@@ -193,39 +187,4 @@ export const updatePrivilege = async (id, data) => {
 export const deletePrivilege = async (id) => {
   const response = await api.delete(`/admin/privileges/${id}`);
   return response.data;
-};
-
-export default {
-  getDashboardStats,
-  getApplications,
-  getAdminForms,
-  updateApplicationStatus,
-  getKycQueue,
-  reviewKycApplication,
-  runKycAutoReview,
-  rerunKycAutoReview,
-  getAnalytics,
-  getUserReports,
-  getApplicationReports,
-  updateOfficeFields,
-  getAppointments,
-  getTechnicians,
-  assignTechnician,
-  getMyJobs,
-  updateMyJobStatus,
-  createAppointment,
-  getUsers,
-  getAdminUsers,
-  createAdminUser,
-  updateAdminUser,
-  deleteAdminUser,
-  getStaffRoles,
-  createStaffRole,
-  updateStaffRole,
-  deleteStaffRole,
-  getPrivileges,
-  getAuditLogs,
-  createPrivilege,
-  updatePrivilege,
-  deletePrivilege,
 };

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { FiUser, FiMapPin, FiPhone, FiMail, FiCheckCircle, FiCheck, FiNavigation } from 'react-icons/fi';
+import { FiUser, FiMapPin, FiCheck, FiNavigation } from 'react-icons/fi';
 import AddressInputWithMap from '../../components/form/AddressInputWithMap';
 import { useVerifiedContext } from '../../components/verification';
 import { getAuthUser } from '../../utils/authSession';
@@ -70,9 +68,8 @@ const ReadOnlyDetail = ({ label, value }) => (
   </div>
 );
 
-export default function CustomerInfoStep({ formData, handleChange, setFields, selectedProduct }) {
-  const { t } = useTranslation();
-  const { mobileNumber, customerExists, selectedAccount } = useVerifiedContext();
+export default function CustomerInfoStep({ formData, handleChange, setFields }) {
+  const { mobileNumber, selectedAccount } = useVerifiedContext();
   const [authUser] = useState(getAuthUser);
 
   // Retrieve user identity from verified context or OCR registration
@@ -121,7 +118,6 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
 
   // Location choice: 'current' (registered address from OCR/profile) vs 'new'
   const [locationType, setLocationType] = useState(formData.locationType || (knownProfile.registeredAddress ? 'current' : 'new'));
-  const [selectedCityObj, setSelectedCityObj] = useState(null);
 
   // Sync profile fields to state
   useEffect(() => {
@@ -162,7 +158,6 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
   const handleCitySelect = (e) => {
     const cityName = e.target.value;
     const match = SRI_LANKA_CITY_POSTAL_DATA.find((c) => c.city === cityName);
-    setSelectedCityObj(match || null);
 
     if (setFields) {
       setFields({

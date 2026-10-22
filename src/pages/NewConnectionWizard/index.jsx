@@ -93,7 +93,7 @@ export default function NewConnectionWizard() {
       if (stored) {
         try {
           setSelectedProduct(JSON.parse(stored));
-        } catch (e) { }
+        } catch { }
       }
     }
   }, [location.state]);
@@ -106,9 +106,7 @@ export default function NewConnectionWizard() {
 
   // Flow: Package Selection (Step 1) -> Service Location (Step 2) -> Identity & KYC (Step 3) -> Digital Signature (Step 4) -> Payment (Step 5) -> Review & Submit (Step 6) -> Tracking (Step 7)
   const STEPS = ['location', 'loop', 'identity', 'signature', 'payment', 'review'];
-  const STEPPER = ['Service Location', 'Identity & KYC', 'Digital Signature', 'Payment', 'Review & Submit'];
   const step = STEPS[stepIndex];
-  const stepperStep = stepIndex <= 1 ? 1 : stepIndex;
 
   const getDraftKey = () => {
     const phone = verifiedMobile || getAuthUser()?.phone || 'active_user';
@@ -177,7 +175,7 @@ export default function NewConnectionWizard() {
       localStorage.removeItem(getDraftKey());
       localStorage.removeItem('slt_new_conn_draft_active_user');
       localStorage.removeItem('slt_new_conn_draft_');
-    } catch (_) {}
+    } catch {}
   };
 
   const handleResetDraft = () => {
@@ -432,7 +430,6 @@ export default function NewConnectionWizard() {
               formData={formData}
               handleChange={handleChange}
               setFields={(fields) => dispatch({ type: 'SET_FIELDS', payload: fields })}
-              selectedProduct={selectedProduct}
             />
           )}
 

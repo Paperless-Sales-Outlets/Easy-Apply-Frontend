@@ -397,7 +397,6 @@ export default function HelpSupportPage() {
           >
             {[
               { label: 'Check Application Status', desc: 'Track your service requests in real-time', path: '/check-status' },
-              { label: 'Browse All Services', desc: 'View all available online application forms', path: '/services' },
               { label: 'Browse Products', desc: 'Explore our broadband, voice and PEO TV packages', path: '/new-connection/products' },
             ].map((link) => (
               <div
