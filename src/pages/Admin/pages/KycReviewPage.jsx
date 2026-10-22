@@ -292,7 +292,7 @@ function FaceMeter({ face }) {
   if (!face || typeof face.distance !== 'number') return null;
   const SCALE = 1; // distances run 0 (identical) … ~1 (clearly different people)
   const pct = Math.min(100, (face.distance / SCALE) * 100);
-  const limit = Math.min(100, ((face.threshold || 0.45) / SCALE) * 100);
+  const limit = Math.min(100, ((face.threshold || 0.5) / SCALE) * 100);
   const passed = face.result === 'pass';
   return (
     <div className={`kycv-face ${passed ? 'pass' : 'unsure'}`}>
@@ -302,7 +302,7 @@ function FaceMeter({ face }) {
           <strong>{passed ? 'Strong face match' : 'Faces need a human check'}</strong>
           <small>
             Selfie vs {face.against === 'selfie' ? `verified selfie (${face.referenceNumber})` : 'NIC photo'} · difference {face.distance.toFixed(2)}
-            {' '}(pass at {(face.threshold || 0.45).toFixed(2)} or less)
+            {' '}(pass at {(face.threshold || 0.5).toFixed(2)} or less)
           </small>
         </div>
       </div>
