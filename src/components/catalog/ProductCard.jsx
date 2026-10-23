@@ -1,9 +1,193 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
-import { FiCheck, FiHeart, FiShoppingCart } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiCheck, FiHeart, FiShoppingCart, FiPackage } from 'react-icons/fi';
 import { FaHeart } from 'react-icons/fa';
 import ProductDeviceGraphic from './ProductDeviceGraphic';
+
+/**
+ * Animated Add to Cart Button
+ * Features a tactile bounce, a package dropping into the shopping cart,
+ * and a smooth gradient color change from SLT Blue to SLT Green with checkmark.
+ */
+function AnimatedAddToCartButton({
+  product,
+  isInCart,
+  disabled,
+  disabledReason,
+  onAddToCart,
+  onRemoveFromCart,
+  t,
+  style = {},
+  fullWidth = false,
+}) {
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (disabled) return;
+
+    if (isInCart) {
+      if (onRemoveFromCart) onRemoveFromCart(product);
+    } else {
+      setIsAdding(true);
+      if (onAddToCart) onAddToCart(product);
+      setTimeout(() => {
+        setIsAdding(false);
+      }, 750);
+    }
+  };
+
+  const isSuccessState = isInCart || isAdding;
+
+  return (
+    <motion.button
+      type="button"
+      onClick={handleClick}
+      disabled={disabled}
+      title={isInCart ? t('catalog.card.removeFromCart', 'Remove from cart') : undefined}
+      whileTap={{ scale: disabled ? 1 : 0.94 }}
+      whileHover={{ scale: disabled ? 1 : 1.02 }}
+      animate={{
+        backgroundColor: isSuccessState ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
+        color: isSuccessState ? '#ffffff' : disabled ? '#475569' : '#ffffff',
+        boxShadow: disabled
+          ? 'none'
+          : isSuccessState
+            ? '0 4px 14px rgba(22, 163, 74, 0.35)'
+            : '0 4px 14px rgba(0, 86, 179, 0.25)',
+      }}
+      transition={{ duration: 0.3 }}
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        width: fullWidth ? '100%' : 'auto',
+        border: disabled ? '1px solid #cbd5e1' : 'none',
+        borderRadius: '8px',
+        padding: '0.55rem 0.95rem',
+        fontWeight: 800,
+        fontSize: '0.82rem',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.45rem',
+        whiteSpace: 'nowrap',
+        ...style,
+      }}
+    >
+      {/* ── Cart / Check Icon with Falling Item Animation ── */}
+      <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18 }}>
+        <AnimatePresence mode="wait">
+          {isInCart && !isAdding ? (
+            <motion.span
+              key="check"
+              initial={{ scale: 0, rotate: -45 }}
+              animate={{ scale: 1, rotate: 0 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 450, damping: 22 }}
+              style={{ display: 'inline-flex' }}
+            >
+              <FiCheck size={16} />
+            </motion.span>
+          ) : isAdding ? (
+            <motion.span key="animating" style={{ position: 'relative', display: 'inline-flex' }}>
+              {/* Dropping Package/Item */}
+              <motion.span
+                initial={{ y: -16, x: -3, scale: 0.5, opacity: 0 }}
+                animate={{
+                  y: [-16, -3, 2],
+                  x: [-3, 0, 1],
+                  scale: [0.6, 0.9, 0.4],
+                  opacity: [0, 1, 0.9, 0],
+                }}
+                transition={{ duration: 0.45, ease: 'easeIn' }}
+                style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  left: '3px',
+                  color: '#fef08a',
+                  zIndex: 2,
+                }}
+              >
+                <FiPackage size={11} />
+              </motion.span>
+
+              {/* Cart bounces upon catching the item */}
+              <motion.span
+                animate={{
+                  rotate: [0, -14, 10, -5, 0],
+                  scale: [1, 1.25, 0.9, 1.1, 1],
+                }}
+                transition={{ duration: 0.55, delay: 0.12 }}
+                style={{ display: 'inline-flex' }}
+              >
+                <FiShoppingCart size={15} />
+              </motion.span>
+            </motion.span>
+          ) : (
+            <motion.span
+              key="cart"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{ display: 'inline-flex' }}
+            >
+              <FiShoppingCart size={15} />
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </span>
+
+      {/* ── Animated Text ── */}
+      <span style={{ position: 'relative', display: 'inline-block', overflow: 'hidden' }}>
+        <AnimatePresence mode="wait">
+          {disabled ? (
+            <motion.span
+              key="disabled"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {disabledReason}
+            </motion.span>
+          ) : isAdding ? (
+            <motion.span
+              key="adding"
+              initial={{ y: 8, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -8, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              {t('catalog.card.added', 'Added! ✓')}
+            </motion.span>
+          ) : isInCart ? (
+            <motion.span
+              key="incart"
+              initial={{ y: 8, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -8, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              {t('catalog.card.inCart', 'In Cart')}
+            </motion.span>
+          ) : (
+            <motion.span
+              key="add"
+              initial={{ y: -8, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 8, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              {t('catalog.card.addToCart', 'Add to Cart')}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </span>
+    </motion.button>
+  );
+}
 
 // Cards are tinted by product family, using four depths of the SLT navy →
 // green identity rather than a different hue per product. Category still reads
@@ -193,33 +377,16 @@ export default function ProductCard({
             {t('catalog.card.details', 'Details')}
           </button>
 
-          <button
-            onClick={() => {
-              if (disabled) return;
-              if (isInCart) onRemoveFromCart(product);
-              else onAddToCart(product);
-            }}
+          <AnimatedAddToCartButton
+            product={product}
+            isInCart={isInCart}
             disabled={disabled}
-            title={isInCart ? t('catalog.card.removeFromCart', 'Remove from cart') : undefined}
-            style={{
-              backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
-              color: isInCart ? '#ffffff' : disabled ? '#475569' : '#ffffff',
-              border: disabled ? '1px solid #cbd5e1' : 'none',
-              borderRadius: '8px',
-              padding: '0.5rem 0.9rem',
-              fontWeight: 800,
-              fontSize: '0.8rem',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.4rem',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {isInCart ? <FiCheck size={15} /> : <FiShoppingCart size={14} />}
-            <span>{isInCart ? t('catalog.card.inCart', 'In Cart') : disabled ? disabledReason : t('catalog.card.addToCart', 'Add to Cart')}</span>
-          </button>
+            disabledReason={disabledReason}
+            onAddToCart={onAddToCart}
+            onRemoveFromCart={onRemoveFromCart}
+            t={t}
+            style={{ padding: '0.5rem 0.9rem', fontSize: '0.8rem' }}
+          />
         </div>
       </motion.div>
     );
@@ -443,35 +610,17 @@ export default function ProductCard({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-            <button
-              onClick={() => {
-                if (disabled) return;
-                if (isInCart) onRemoveFromCart(product);
-                else onAddToCart(product);
-              }}
+            <AnimatedAddToCartButton
+              product={product}
+              isInCart={isInCart}
               disabled={disabled}
-              title={isInCart ? t('catalog.card.removeFromCart', 'Remove from cart') : undefined}
-              style={{
-                width: '100%',
-                backgroundColor: isInCart ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
-                color: isInCart ? '#ffffff' : disabled ? '#475569' : '#ffffff',
-                border: disabled ? '1px solid #cbd5e1' : 'none',
-                borderRadius: '8px',
-                padding: '0.55rem 0.75rem',
-                fontWeight: 800,
-                fontSize: '0.82rem',
-                cursor: disabled ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.45rem',
-                boxShadow: disabled ? 'none' : '0 3px 10px rgba(0,86,179,0.25)',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              {isInCart ? <FiCheck size={16} /> : <FiShoppingCart size={15} />}
-              <span>{isInCart ? t('catalog.card.inCart', 'In Cart') : disabled ? disabledReason : t('catalog.card.addToCart', 'Add to Cart')}</span>
-            </button>
+              disabledReason={disabledReason}
+              onAddToCart={onAddToCart}
+              onRemoveFromCart={onRemoveFromCart}
+              t={t}
+              fullWidth={true}
+              style={{ padding: '0.55rem 0.75rem', fontSize: '0.82rem' }}
+            />
 
             <button
               onClick={() => onSelect(product)}
