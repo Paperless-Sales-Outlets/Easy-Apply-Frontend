@@ -780,17 +780,11 @@ export default function LoginPage() {
 
                     <div className="login-inline-otp-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
                       <span className="login-inline-otp-title" style={{ fontWeight: 700 }}>Enter 6-digit SMS verification code</span>
-                      {!phoneLockedOut && (
+                      {!phoneLockedOut && !phoneOtpExpired && (
                         <div style={{ fontSize: '0.82rem' }}>
-                          {phoneOtpExpired ? (
-                            <span style={{ color: '#dc2626', fontWeight: 700 }}>
-                              Your OTP has expired. Please request a new OTP.
-                            </span>
-                          ) : (
-                            <span style={{ color: '#0369a1', fontWeight: 700 }}>
-                              OTP expires in {formatTimer(phoneExpiresIn)}
-                            </span>
-                          )}
+                          <span style={{ color: '#0369a1', fontWeight: 700 }}>
+                            OTP expires in {formatTimer(phoneExpiresIn)}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -918,17 +912,11 @@ export default function LoginPage() {
 
                     <div className="login-inline-otp-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
                       <span className="login-inline-otp-title" style={{ fontWeight: 700 }}>Enter 6-digit email verification code</span>
-                      {!emailLockedOut && (
+                      {!emailLockedOut && !emailOtpExpired && (
                         <div style={{ fontSize: '0.82rem' }}>
-                          {emailOtpExpired ? (
-                            <span style={{ color: '#dc2626', fontWeight: 700 }}>
-                              Your OTP has expired. Please request a new OTP.
-                            </span>
-                          ) : (
-                            <span style={{ color: '#0369a1', fontWeight: 700 }}>
-                              OTP expires in {formatTimer(emailExpiresIn)}
-                            </span>
-                          )}
+                          <span style={{ color: '#0369a1', fontWeight: 700 }}>
+                            OTP expires in {formatTimer(emailExpiresIn)}
+                          </span>
                         </div>
                       )}
                     </div>

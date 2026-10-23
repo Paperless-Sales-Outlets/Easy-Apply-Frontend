@@ -241,7 +241,7 @@ export default function PaymentStep({
     const next = [...otp];
     next[index] = value.slice(-1) || '';
     setOtp(next);
-    
+
     if (value && index < 5) inputRefs.current[index + 1]?.focus();
 
     const joined = next.join('');
@@ -361,7 +361,7 @@ export default function PaymentStep({
             </div>
             <h3 style={{ color: 'var(--slt-blue)', marginBottom: '0.5rem' }}>Authorization</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Please enter your mobile number to authorize this request.</p>
-            
+
             <div className="form-group" style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
               <label className="form-label">Mobile Number</label>
               <div style={{ position: 'relative' }}>
@@ -369,7 +369,7 @@ export default function PaymentStep({
                 <input type="tel" className="form-control" style={{ paddingLeft: '3.5rem', fontSize: '1.1rem', letterSpacing: '2px' }} placeholder="7X XXX XXXX" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleMobileSubmit(e)} maxLength="10" />
               </div>
               {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '0.5rem' }}>{error}</p>}
-              
+
               <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem', height: '48px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={handleMobileSubmit} disabled={isLoading}>
                 {isLoading ? <SLTLoader size={24} /> : 'Send OTP'}
               </button>
@@ -412,17 +412,11 @@ export default function PaymentStep({
             )}
 
             {/* 5-Minute Expiry Countdown */}
-            {!isLockedOut && (
+            {!isLockedOut && !isOtpExpired && (
               <div style={{ marginBottom: '1.25rem', fontSize: '0.88rem' }}>
-                {isOtpExpired ? (
-                  <span style={{ color: '#dc2626', fontWeight: 700 }}>
-                    Your OTP has expired. Please request a new OTP.
-                  </span>
-                ) : (
-                  <span style={{ color: '#0369a1', fontWeight: 700 }}>
-                    OTP expires in {formatTimer(expiresIn)}
-                  </span>
-                )}
+                <span style={{ color: '#0369a1', fontWeight: 700 }}>
+                  OTP expires in {formatTimer(expiresIn)}
+                </span>
               </div>
             )}
 
@@ -436,10 +430,10 @@ export default function PaymentStep({
                   maxLength={1}
                   value={d}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(i, e)} 
-                  style={{ 
-                    width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px', 
-                    border: '1.5px solid #cbd5e1', 
+                  onKeyDown={(e) => handleKeyDown(i, e)}
+                  style={{
+                    width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px',
+                    border: '1.5px solid #cbd5e1',
                     background: '#ffffff',
                     boxShadow: '0 4px 12px rgba(31, 38, 135, 0.05)'
                   }}
@@ -447,7 +441,7 @@ export default function PaymentStep({
                 />
               ))}
             </div>
-            
+
             {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 700 }}>{error}</p>}
 
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.25rem', marginTop: '0.5rem' }}>
@@ -537,8 +531,8 @@ export default function PaymentStep({
             </div>
 
             {/* Digital Receipt Breakdown */}
-            <div 
-              style={{ 
+            <div
+              style={{
                 padding: '1.75rem 1.5rem', borderRadius: '14px', textAlign: 'left', marginBottom: '1.75rem',
                 backgroundColor: '#ffffff',
                 boxShadow: '0 4px 20px rgba(0, 86, 179, 0.06)',
@@ -547,26 +541,26 @@ export default function PaymentStep({
               }}
             >
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: '#0056b3', borderRadius: '14px 14px 0 0' }} />
-              
+
               <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', display: 'grid', placeItems: 'center', margin: '0 auto 0.4rem', color: 'var(--slt-blue)' }}>
                   <FiFileText size={18} />
                 </div>
                 <h4 style={{ margin: 0, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '1.5px', fontSize: '0.85rem', fontWeight: 800 }}>Digital Order Receipt</h4>
               </div>
-              
+
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: parsedFee > 0 ? 'none' : '1px dashed #cbd5e1', marginBottom: parsedFee > 0 ? '0.4rem' : '0.75rem' }}>
                 <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.92rem' }}>{amountLabel}</span>
                 <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>Rs. {formattedPending}</span>
               </div>
-              
+
               {parsedFee > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: '1px dashed #cbd5e1', marginBottom: '0.75rem' }}>
                   <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.92rem' }}>{feeLabel || 'Fee'}</span>
                   <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>Rs. {formattedFee}</span>
                 </div>
               )}
-              
+
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.85rem', borderBottom: '1px solid #f1f5f9', marginBottom: '0.85rem' }}>
                 <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.05rem' }}>Total Amount Due</span>
                 <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0056b3' }}>Rs. {formattedAmount}</span>
