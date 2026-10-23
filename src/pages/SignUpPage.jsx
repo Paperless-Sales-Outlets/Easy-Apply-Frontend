@@ -1611,15 +1611,7 @@ export default function SignUpPage() {
               {/* 5-Minute Expiry Countdown Display */}
               {!isLockedOut && (
                 <div style={{ marginBottom: '1rem', fontSize: '0.85rem' }}>
-                  {isOtpExpired ? (
-                    <span style={{ color: '#dc2626', fontWeight: 700 }}>
-                      Your OTP has expired. Please request a new OTP.
-                    </span>
-                  ) : (
-                    <span style={{ color: '#0369a1', fontWeight: 700 }}>
-                      OTP expires in {formatTimer(otpExpiresIn)}
-                    </span>
-                  )}
+                  <span style={{ color: '#0369a1', fontWeight: 700 }}>OTP expires in {formatTimer(otpExpiresIn)}</span>
                 </div>
               )}
 
