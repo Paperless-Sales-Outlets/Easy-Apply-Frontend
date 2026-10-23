@@ -19,7 +19,6 @@ import api from '../utils/api';
 import { saveSession, SESSION_EXPIRED_KEY } from '../utils/authSession';
 import { formatTimer, saveOtpTimers, getOtpTimers, clearOtpTimers } from '../utils/otpSecurity';
 
-const RESEND_SECONDS = 60;
 const OTP_EXPIRY_SECONDS = 300;
 const OTP_LENGTH = 6;
 
@@ -94,7 +93,6 @@ export default function LoginPage() {
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
   const [phoneOtp, setPhoneOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [phoneExpiresIn, setPhoneExpiresIn] = useState(OTP_EXPIRY_SECONDS);
-  const [phoneResendIn, setPhoneResendIn] = useState(RESEND_SECONDS);
   const [phoneLockoutIn, setPhoneLockoutIn] = useState(0);
   const [phoneOtpExpired, setPhoneOtpExpired] = useState(false);
   const [phoneLockedOut, setPhoneLockedOut] = useState(false);
@@ -105,7 +103,10 @@ export default function LoginPage() {
   // Email OTP state
   const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [emailOtp, setEmailOtp] = useState(Array(OTP_LENGTH).fill(''));
-  const [emailResendIn, setEmailResendIn] = useState(RESEND_SECONDS);
+  const [emailExpiresIn, setEmailExpiresIn] = useState(OTP_EXPIRY_SECONDS);
+  const [emailLockoutIn, setEmailLockoutIn] = useState(0);
+  const [emailOtpExpired, setEmailOtpExpired] = useState(false);
+  const [emailLockedOut, setEmailLockedOut] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [emailVerifying, setEmailVerifying] = useState(false);
   const [emailError, setEmailError] = useState('');
@@ -141,12 +142,7 @@ export default function LoginPage() {
         setPhoneOtpSent(true);
         setPhoneExpiresIn(0);
         setPhoneOtpExpired(true);
-      }
-
-      if (timers.resendIn > 0) {
-        setPhoneResendIn(timers.resendIn);
-      } else {
-        setPhoneResendIn(0);
+        setPhoneError('Your OTP has expired. Please request a new OTP.');
       }
     }
   }, [phone]);
@@ -167,7 +163,7 @@ export default function LoginPage() {
     return () => clearInterval(timer);
   }, [phoneLockedOut, phoneLockoutIn]);
 
-  // 5-Minute OTP Expiry Countdown: continuous visible timer from 05:00 to 00:00
+  // 5-Minute OTP Expiry Countdown for Mobile: continuous visible timer from 05:00 to 00:00
   useEffect(() => {
     if (!phoneOtpSent || phoneVerified || phoneLockedOut || phoneExpiresIn <= 0) return;
     const timer = setInterval(() => {
@@ -175,6 +171,7 @@ export default function LoginPage() {
         if (prev <= 1) {
           setPhoneOtpExpired(true);
           setPhoneError('Your OTP has expired. Please request a new OTP.');
+          setPhoneOtp(Array(OTP_LENGTH).fill(''));
           return 0;
         }
         return prev - 1;
@@ -183,21 +180,65 @@ export default function LoginPage() {
     return () => clearInterval(timer);
   }, [phoneOtpSent, phoneVerified, phoneLockedOut, phoneExpiresIn]);
 
-  // 60-Second Resend Cooldown Countdown: disables resend button until 0
+  // Restore active OTP timers and lockout state from localStorage on email change or refresh
   useEffect(() => {
-    if (!phoneOtpSent || phoneVerified || phoneResendIn <= 0) return;
+    const trimmed = email.trim().toLowerCase();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      const timers = getOtpTimers(trimmed);
+      if (timers.lockoutIn > 0) {
+        setEmailLockedOut(true);
+        setEmailLockoutIn(timers.lockoutIn);
+        setEmailError('Too many incorrect OTP attempts. Email verification is locked for 15 minutes.');
+      } else {
+        setEmailLockedOut(false);
+        setEmailLockoutIn(0);
+      }
+
+      if (timers.expiresIn > 0) {
+        setEmailOtpSent(true);
+        setEmailExpiresIn(timers.expiresIn);
+        setEmailOtpExpired(false);
+      } else if (timers.isExpired) {
+        setEmailOtpSent(true);
+        setEmailExpiresIn(0);
+        setEmailOtpExpired(true);
+        setEmailError('Your OTP has expired. Please request a new OTP.');
+      }
+    }
+  }, [email]);
+
+  // 15-Minute Lockout Countdown for Email: runs every second during lockout
+  useEffect(() => {
+    if (!emailLockedOut || emailLockoutIn <= 0) return;
     const timer = setInterval(() => {
-      setPhoneResendIn((prev) => (prev <= 1 ? 0 : prev - 1));
+      setEmailLockoutIn((prev) => {
+        if (prev <= 1) {
+          setEmailLockedOut(false);
+          setEmailError('');
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => clearInterval(timer);
-  }, [phoneOtpSent, phoneVerified, phoneResendIn]);
+  }, [emailLockedOut, emailLockoutIn]);
 
-  // Email OTP resend countdown
+  // 5-Minute OTP Expiry Countdown for Email: continuous visible timer from 05:00 to 00:00
   useEffect(() => {
-    if (!emailOtpSent || emailVerified || emailResendIn <= 0) return;
-    const t = setTimeout(() => setEmailResendIn((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [emailOtpSent, emailVerified, emailResendIn]);
+    if (!emailOtpSent || emailVerified || emailLockedOut || emailExpiresIn <= 0) return;
+    const timer = setInterval(() => {
+      setEmailExpiresIn((prev) => {
+        if (prev <= 1) {
+          setEmailOtpExpired(true);
+          setEmailError('Your OTP has expired. Please request a new OTP.');
+          setEmailOtp(Array(OTP_LENGTH).fill(''));
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [emailOtpSent, emailVerified, emailLockedOut, emailExpiresIn]);
 
   // When phone is verified, smoothly focus the email input
   useEffect(() => {
@@ -215,13 +256,15 @@ export default function LoginPage() {
       return;
     }
 
+    if (phoneSending || phoneVerifying) return;
+
     if (phoneLockedOut || phoneLockoutIn > 0) {
       setPhoneError(`Too many incorrect OTP attempts. OTP verification is locked for 15 minutes. Try again in ${formatTimer(phoneLockoutIn)}`);
       return;
     }
 
-    if (phoneResendIn > 0 && phoneOtpSent) {
-      setPhoneError(`Please wait ${phoneResendIn}s before requesting a new OTP.`);
+    if (phoneOtpSent && !phoneOtpExpired && phoneExpiresIn > 0) {
+      setPhoneError('A valid OTP has already been sent. Please wait for it to expire before requesting a new one.');
       return;
     }
 
@@ -244,7 +287,6 @@ export default function LoginPage() {
       setPhoneLockedOut(false);
       setPhoneLockoutIn(0);
       setPhoneExpiresIn(data.expiresIn || OTP_EXPIRY_SECONDS);
-      setPhoneResendIn(data.resendCooldown || RESEND_SECONDS);
       setTimeout(() => phoneOtpRefs.current[0]?.focus(), 80);
     } catch (err) {
       const resData = err.response?.data || {};
@@ -255,11 +297,12 @@ export default function LoginPage() {
           setPhoneLockoutIn(rem);
           saveOtpTimers(digits, { lockedUntil: resData.lockedUntil || new Date(Date.now() + rem * 1000).toISOString() });
           setPhoneError(resData.message || 'Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
-        } else if (resData.code === 'RESEND_COOLDOWN' || resData.cooldownRemaining > 0) {
-          const rem = resData.cooldownRemaining || 60;
-          setPhoneResendIn(rem);
-          saveOtpTimers(digits, { resendAvailableAt: resData.resendAvailableAt || new Date(Date.now() + rem * 1000).toISOString() });
-          setPhoneError(resData.message || `Please wait ${rem} seconds before requesting a new OTP.`);
+        } else if (resData.code === 'OTP_STILL_VALID') {
+          const rem = resData.otpRemaining;
+          if (rem > 0) setPhoneExpiresIn(rem);
+          setPhoneOtpExpired(false);
+          if (resData.expiresAt) saveOtpTimers(digits, { expiresAt: resData.expiresAt });
+          setPhoneError('A verification code is already active. Please use the code already sent or wait for it to expire.');
         } else {
           setPhoneError(resData.message || 'Too many requests. Please wait.');
         }
@@ -356,46 +399,108 @@ export default function LoginPage() {
       return;
     }
 
+    if (emailSending || emailVerifying) return;
+
+    if (emailLockedOut || emailLockoutIn > 0) {
+      setEmailError(`Too many incorrect OTP attempts. Email verification is locked for 15 minutes. Try again in ${formatTimer(emailLockoutIn)}`);
+      return;
+    }
+
+    if (emailOtpSent && !emailOtpExpired && emailExpiresIn > 0) {
+      setEmailError('A valid OTP has already been sent. Please wait for it to expire before requesting a new one.');
+      return;
+    }
+
     setEmailError('');
     setGeneralError('');
     setEmailSending(true);
 
     try {
-      await api.post('/otp/send-email', { email: trimmed });
+      const res = await api.post('/otp/send-email', { email: trimmed });
+      const data = res.data;
+      saveOtpTimers(trimmed, {
+        expiresAt: data.expiresAt,
+        resendAvailableAt: data.resendAvailableAt,
+        lockedUntil: null,
+      });
+
+      setEmailOtp(Array(OTP_LENGTH).fill(''));
+      setEmailOtpSent(true);
+      setEmailOtpExpired(false);
+      setEmailLockedOut(false);
+      setEmailLockoutIn(0);
+      setEmailExpiresIn(data.expiresIn || OTP_EXPIRY_SECONDS);
+      setTimeout(() => emailOtpRefs.current[0]?.focus(), 80);
     } catch (err) {
-      // Demo / offline fallback allowed
+      const resData = err.response?.data || {};
+      if (err.response?.status === 429) {
+        if (resData.code === 'OTP_LOCKED' || resData.lockoutRemaining > 0) {
+          const rem = resData.lockoutRemaining || 900;
+          setEmailLockedOut(true);
+          setEmailLockoutIn(rem);
+          saveOtpTimers(trimmed, { lockedUntil: resData.lockedUntil || new Date(Date.now() + rem * 1000).toISOString() });
+          setEmailError(resData.message || 'Too many incorrect OTP attempts. Email verification is locked for 15 minutes.');
+        } else if (resData.code === 'OTP_STILL_VALID') {
+          const rem = resData.otpRemaining;
+          if (rem > 0) setEmailExpiresIn(rem);
+          setEmailOtpExpired(false);
+          if (resData.expiresAt) saveOtpTimers(trimmed, { expiresAt: resData.expiresAt });
+          setEmailError('A verification code is already active. Please use the code already sent or wait for it to expire.');
+        } else {
+          setEmailError(resData.message || 'Too many requests. Please wait.');
+        }
+      } else {
+        setEmailError(resData.message || 'Could not send verification code. Please check your email address.');
+      }
     } finally {
       setEmailSending(false);
     }
-
-    setEmailOtp(Array(OTP_LENGTH).fill(''));
-    setEmailOtpSent(true);
-    setEmailResendIn(RESEND_SECONDS);
-    setTimeout(() => emailOtpRefs.current[0]?.focus(), 80);
   };
 
   // Submit Email OTP
   const submitEmailOtp = async (code) => {
+    if (emailLockedOut || emailLockoutIn > 0) {
+      setEmailError(`Too many incorrect OTP attempts. Email verification is locked for 15 minutes.`);
+      return;
+    }
+
+    if (emailOtpExpired || emailExpiresIn <= 0) {
+      setEmailError('Your OTP has expired. Please request a new OTP.');
+      return;
+    }
+
     setEmailVerifying(true);
     setEmailError('');
     const cleanEmail = email.trim().toLowerCase();
 
-    const demoOk = code === '000000' || code === '123456';
-    if (demoOk) {
-      setEmailVerified(true);
-      setEmailOtpSent(false);
-      setEmailVerifying(false);
-      return;
-    }
-
     try {
       await api.post('/otp/verify-email', { email: cleanEmail, otp: code });
+      clearOtpTimers(cleanEmail);
       setEmailVerified(true);
       setEmailOtpSent(false);
+      setEmailLockedOut(false);
+      setEmailLockoutIn(0);
     } catch (err) {
-      setEmailError(err.response?.data?.message || 'Invalid or expired verification code.');
-      setEmailOtp(Array(OTP_LENGTH).fill(''));
-      setTimeout(() => emailOtpRefs.current[0]?.focus(), 50);
+      const resData = err.response?.data || {};
+      const status = err.response?.status;
+
+      if (status === 429 && (resData.code === 'OTP_LOCKED' || resData.lockoutRemaining > 0)) {
+        const rem = resData.lockoutRemaining || 900;
+        setEmailLockedOut(true);
+        setEmailLockoutIn(rem);
+        saveOtpTimers(cleanEmail, { lockedUntil: resData.lockedUntil || new Date(Date.now() + rem * 1000).toISOString() });
+        setEmailError(resData.message || 'Too many incorrect OTP attempts. Email verification is locked for 15 minutes.');
+        setEmailOtp(Array(OTP_LENGTH).fill(''));
+      } else if (resData.code === 'OTP_EXPIRED') {
+        setEmailOtpExpired(true);
+        setEmailExpiresIn(0);
+        setEmailError(resData.message || 'Your OTP has expired. Please request a new OTP.');
+        setEmailOtp(Array(OTP_LENGTH).fill(''));
+      } else {
+        setEmailError(resData.message || 'Invalid or expired verification code.');
+        setEmailOtp(Array(OTP_LENGTH).fill(''));
+        setTimeout(() => emailOtpRefs.current[0]?.focus(), 50);
+      }
     } finally {
       setEmailVerifying(false);
     }
@@ -629,7 +734,7 @@ export default function LoginPage() {
                       <span className="login-infield-badge verified" id="phone-verified-badge">
                         <FiCheck size={14} aria-hidden="true" /> Verified
                       </span>
-                    ) : (
+                    ) : phoneOtpSent ? null : (
                       <button
                         type="button"
                         className="login-inline-action-btn"
@@ -637,7 +742,7 @@ export default function LoginPage() {
                         disabled={phone.length !== 9 || phoneSending || phoneLockedOut}
                         id="btn-get-code-phone"
                       >
-                        {phoneSending ? 'Sending…' : (phoneOtpSent ? 'Resend' : 'Get Code')}
+                        {phoneSending ? 'Sending…' : 'Get Code'}
                       </button>
                     )}
                   </div>
@@ -708,29 +813,21 @@ export default function LoginPage() {
                       ))}
                     </div>
 
-                    {/* Resend OTP Bar */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      {!phoneLockedOut && (
-                        <div>
-                          {phoneResendIn > 0 ? (
-                            <span className="login-inline-otp-timer" style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>
-                              Resend OTP available in <strong>{formatTimer(phoneResendIn)}</strong>
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="login-resend-btn"
-                              onClick={handleSendPhoneOtp}
-                              disabled={phoneSending || phoneVerifying || phoneLockedOut}
-                              id="btn-resend-phone-otp"
-                            >
-                              <FiRefreshCw size={12} aria-hidden="true" />
-                              <span>Resend OTP</span>
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    {/* Resend OTP Bar — strictly hidden while OTP is valid, shown immediately AFTER expiration */}
+                    {phoneOtpExpired && !phoneLockedOut && (
+                      <div style={{ marginTop: '0.85rem' }}>
+                        <button
+                          type="button"
+                          className="login-resend-btn"
+                          onClick={handleSendPhoneOtp}
+                          disabled={phoneSending || phoneVerifying}
+                          id="btn-resend-phone-otp"
+                        >
+                          <FiRefreshCw size={12} aria-hidden="true" />
+                          <span>{phoneSending ? 'Sending…' : 'Resend OTP'}</span>
+                        </button>
+                      </div>
+                    )}
 
                     {import.meta.env.DEV && (
                       <p className="auth-dev-hint" style={{ margin: '0.65rem 0 0 0', padding: '0.35rem 0.65rem' }}>
@@ -776,15 +873,15 @@ export default function LoginPage() {
                     <span className="login-infield-badge verified" id="email-verified-badge">
                       <FiCheck size={14} aria-hidden="true" /> Verified
                     </span>
-                  ) : (
+                  ) : emailOtpSent ? null : (
                     <button
                       type="button"
                       className="login-inline-action-btn"
                       onClick={handleSendEmailOtp}
-                      disabled={!phoneVerified || !isValidEmail || emailSending}
+                      disabled={!phoneVerified || !isValidEmail || emailSending || emailLockedOut}
                       id="btn-get-code-email"
                     >
-                      {emailSending ? 'Sending…' : (emailOtpSent ? 'Resend' : 'Get Code')}
+                      {emailSending ? 'Sending…' : 'Get Code'}
                     </button>
                   )}
                 </div>
@@ -793,22 +890,46 @@ export default function LoginPage() {
                 {/* Inline Expandable OTP Panel for Email */}
                 {emailOtpSent && !emailVerified && (
                   <div className="login-inline-otp-panel">
-                    <div className="login-inline-otp-header">
-                      <span className="login-inline-otp-title">Enter 6-digit email verification code</span>
-                      {emailResendIn > 0 ? (
-                        <span className="login-inline-otp-timer">
-                          Resend in <strong>{emailResendIn}s</strong>
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          className="login-resend-btn"
-                          onClick={handleSendEmailOtp}
-                          disabled={emailSending || emailVerifying}
-                        >
-                          <FiRefreshCw size={12} aria-hidden="true" />
-                          <span>Resend Code</span>
-                        </button>
+                    {/* 15-Minute Lockout Display */}
+                    {emailLockedOut && (
+                      <div
+                        role="alert"
+                        style={{
+                          backgroundColor: '#fff1f2',
+                          border: '1.5px solid #fecdd3',
+                          color: '#be123c',
+                          padding: '0.85rem 1rem',
+                          borderRadius: '10px',
+                          marginBottom: '1rem',
+                          textAlign: 'center',
+                          fontWeight: 600,
+                          fontSize: '0.88rem',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', marginBottom: '0.35rem' }}>
+                          <FiLock size={16} />
+                          <span>Too many incorrect OTP attempts. Email verification is locked for 15 minutes.</span>
+                        </div>
+                        <div style={{ color: '#9f1239', fontWeight: 800, fontSize: '0.95rem' }}>
+                          Email verification locked. Try again in {formatTimer(emailLockoutIn)}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="login-inline-otp-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.75rem' }}>
+                      <span className="login-inline-otp-title" style={{ fontWeight: 700 }}>Enter 6-digit email verification code</span>
+                      {!emailLockedOut && (
+                        <div style={{ fontSize: '0.82rem' }}>
+                          {emailOtpExpired ? (
+                            <span style={{ color: '#dc2626', fontWeight: 700 }}>
+                              Your OTP has expired. Please request a new OTP.
+                            </span>
+                          ) : (
+                            <span style={{ color: '#0369a1', fontWeight: 700 }}>
+                              OTP expires in {formatTimer(emailExpiresIn)}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -821,7 +942,7 @@ export default function LoginPage() {
                           inputMode="numeric"
                           maxLength={1}
                           value={digit}
-                          disabled={emailVerifying}
+                          disabled={emailVerifying || emailLockedOut || emailOtpExpired}
                           aria-label={`Digit ${idx + 1}`}
                           className={`login-otp-box ${digit ? 'is-filled' : ''} ${emailError ? 'is-error' : ''}`}
                           onChange={(e) => handleEmailOtpChange(idx, e.target.value)}
@@ -830,9 +951,25 @@ export default function LoginPage() {
                       ))}
                     </div>
 
+                    {/* Resend OTP Bar — strictly hidden while OTP is valid, shown immediately AFTER expiration */}
+                    {emailOtpExpired && !emailLockedOut && (
+                      <div style={{ marginTop: '0.85rem' }}>
+                        <button
+                          type="button"
+                          className="login-resend-btn"
+                          onClick={handleSendEmailOtp}
+                          disabled={emailSending || emailVerifying}
+                          id="btn-resend-email-otp"
+                        >
+                          <FiRefreshCw size={12} aria-hidden="true" />
+                          <span>{emailSending ? 'Sending…' : 'Resend OTP'}</span>
+                        </button>
+                      </div>
+                    )}
+
                     {import.meta.env.DEV && (
-                      <p className="auth-dev-hint" style={{ margin: 0, padding: '0.35rem 0.65rem' }}>
-                        Development mode: demo code <strong>000000</strong> is accepted.
+                      <p className="auth-dev-hint" style={{ margin: '0.65rem 0 0 0', padding: '0.35rem 0.65rem' }}>
+                        Development mode: demo code <strong>000000</strong> is accepted when OTP is valid and active.
                       </p>
                     )}
                   </div>

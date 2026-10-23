@@ -79,7 +79,7 @@ export const clearSessionCart = async () => {
 api.interceptors.request.use(
   (config) => {
     // 0. Prevent access to protected APIs using an expired customer session
-    if (getVerifiedPhone() && isSessionExpired()) {
+    if ((getVerifiedPhone() || localStorage.getItem('verifiedEmail')) && isSessionExpired()) {
       expireSessionDueToInactivity();
       return Promise.reject(new Error('Your session has expired due to inactivity. Please log in again.'));
     }

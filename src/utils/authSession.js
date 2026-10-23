@@ -14,6 +14,7 @@ export const SESSION_EXPIRED_KEY = 'easyapply:session_expired_message';
 const SESSION_KEYS = [
   // Identity / session
   'verifiedPhone',
+  'verifiedEmail',
   'customerExists',
   'accountsList',
   'selectedAccount',
@@ -36,6 +37,10 @@ const SESSION_STORAGE_KEYS = ['selectedProduct'];
 
 export function getVerifiedPhone() {
   return localStorage.getItem('verifiedPhone') || '';
+}
+
+export function getVerifiedEmail() {
+  return localStorage.getItem('verifiedEmail') || '';
 }
 
 export const readJson = (key) => {
@@ -80,14 +85,14 @@ export function getLastSessionActivity() {
 }
 
 export function getSessionInactivityRemainingMs() {
-  if (!getVerifiedPhone()) return null;
+  if (!getVerifiedPhone() && !getVerifiedEmail()) return null;
   const last = getLastSessionActivity();
   if (!last) return SESSION_INACTIVITY_TIMEOUT_MS;
   return Math.max(0, SESSION_INACTIVITY_TIMEOUT_MS - (Date.now() - last));
 }
 
 export function isSessionExpired() {
-  if (!getVerifiedPhone()) return false;
+  if (!getVerifiedPhone() && !getVerifiedEmail()) return false;
   const last = getLastSessionActivity();
   if (!last) return false;
   return (Date.now() - last) >= SESSION_INACTIVITY_TIMEOUT_MS;
@@ -110,10 +115,11 @@ export function expireSessionDueToInactivity() {
   } catch (_) {}
 }
 
-/** A customer counts as signed in once we hold a verified phone and the session has not expired. */
+/** A customer counts as signed in once we hold a verified phone/email and the session has not expired. */
 export function isAuthenticated() {
   const phone = getVerifiedPhone();
-  if (!phone) return false;
+  const email = getVerifiedEmail();
+  if (!phone && !email) return false;
 
   if (isSessionExpired()) {
     expireSessionDueToInactivity();

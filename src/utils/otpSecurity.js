@@ -13,14 +13,37 @@ export function formatTimer(seconds) {
 }
 
 /**
+ * Normalizes an OTP target: lowercase trimmed string for email, 9 digits for phone
+ */
+export function normalizeOtpTarget(target) {
+  const str = String(target || '').trim();
+  if (str.includes('@')) {
+    return str.toLowerCase();
+  }
+  return str.replace(/\D/g, '').slice(-9);
+}
+
+const getStorage = () => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) return window.localStorage;
+    if (typeof globalThis !== 'undefined' && globalThis.localStorage) return globalThis.localStorage;
+    if (typeof localStorage !== 'undefined') return localStorage;
+  } catch (_) {}
+  return null;
+};
+
+/**
  * Saves OTP timer timestamps from backend response to localStorage for cross-refresh/tab persistence
  */
-export function saveOtpTimers(phone, { expiresAt, resendAvailableAt, lockedUntil } = {}) {
-  const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-9);
-  if (!cleanPhone) return;
+export function saveOtpTimers(target, { expiresAt, resendAvailableAt, lockedUntil } = {}) {
+  const cleanTarget = normalizeOtpTarget(target);
+  if (!cleanTarget) return;
 
   try {
-    const existingRaw = localStorage.getItem(`${OTP_STORAGE_PREFIX}${cleanPhone}`);
+    const storage = getStorage();
+    if (!storage) return;
+
+    const existingRaw = storage.getItem(`${OTP_STORAGE_PREFIX}${cleanTarget}`);
     const existing = existingRaw ? JSON.parse(existingRaw) : {};
 
     const updated = {
@@ -31,22 +54,23 @@ export function saveOtpTimers(phone, { expiresAt, resendAvailableAt, lockedUntil
       updatedAt: Date.now(),
     };
 
-    localStorage.setItem(`${OTP_STORAGE_PREFIX}${cleanPhone}`, JSON.stringify(updated));
+    storage.setItem(`${OTP_STORAGE_PREFIX}${cleanTarget}`, JSON.stringify(updated));
   } catch (_) {}
 }
 
 /**
- * Retrieves remaining seconds and timestamps for a phone number from localStorage
+ * Retrieves remaining seconds and timestamps for a phone number or email from localStorage
  */
-export function getOtpTimers(phone) {
-  const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-9);
-  if (!cleanPhone) {
+export function getOtpTimers(target) {
+  const cleanTarget = normalizeOtpTarget(target);
+  if (!cleanTarget) {
     return {
       expiresIn: 0,
       resendIn: 0,
       lockoutIn: 0,
       isExpired: true,
       isLocked: false,
+      canResend: true,
       expiresAt: null,
       resendAvailableAt: null,
       lockedUntil: null,
@@ -54,7 +78,22 @@ export function getOtpTimers(phone) {
   }
 
   try {
-    const raw = localStorage.getItem(`${OTP_STORAGE_PREFIX}${cleanPhone}`);
+    const storage = getStorage();
+    if (!storage) {
+      return {
+        expiresIn: 0,
+        resendIn: 0,
+        lockoutIn: 0,
+        isExpired: false,
+        isLocked: false,
+        canResend: true,
+        expiresAt: null,
+        resendAvailableAt: null,
+        lockedUntil: null,
+      };
+    }
+
+    const raw = storage.getItem(`${OTP_STORAGE_PREFIX}${cleanTarget}`);
     if (!raw) {
       return {
         expiresIn: 0,
@@ -62,6 +101,7 @@ export function getOtpTimers(phone) {
         lockoutIn: 0,
         isExpired: false,
         isLocked: false,
+        canResend: true,
         expiresAt: null,
         resendAvailableAt: null,
         lockedUntil: null,
@@ -72,27 +112,35 @@ export function getOtpTimers(phone) {
     const now = Date.now();
 
     const expiresAtMs = data.expiresAt ? new Date(data.expiresAt).getTime() : 0;
-    const resendAtMs = data.resendAvailableAt ? new Date(data.resendAvailableAt).getTime() : 0;
     const lockedUntilMs = data.lockedUntil ? new Date(data.lockedUntil).getTime() : 0;
 
     const expiresIn = expiresAtMs > now ? Math.ceil((expiresAtMs - now) / 1000) : 0;
-    const resendIn = resendAtMs > now ? Math.ceil((resendAtMs - now) / 1000) : 0;
+    const isExpired = expiresAtMs > 0 && now >= expiresAtMs;
     const lockoutIn = lockedUntilMs > now ? Math.ceil((lockedUntilMs - now) / 1000) : 0;
+    const isLocked = lockoutIn > 0;
+
+    // Resend rules:
+    // - While OTP is valid (expiresIn > 0): Resend is blocked.
+    // - Immediately after expiration (now >= expiresAtMs): Resend is enabled immediately (no 60s cooldown).
+    // - Target must not be locked out.
+    const canResend = !isLocked && (isExpired || expiresAtMs === 0);
 
     return {
       expiresIn,
-      resendIn,
+      resendIn: 0, // Obsolete 60s cooldown eliminated completely
+      canResend,
       lockoutIn,
-      isExpired: expiresAtMs > 0 && now >= expiresAtMs,
-      isLocked: lockoutIn > 0,
+      isExpired,
+      isLocked,
       expiresAt: data.expiresAt || null,
-      resendAvailableAt: data.resendAvailableAt || null,
+      resendAvailableAt: data.expiresAt || null,
       lockedUntil: data.lockedUntil || null,
     };
   } catch (_) {
     return {
       expiresIn: 0,
       resendIn: 0,
+      canResend: true,
       lockoutIn: 0,
       isExpired: false,
       isLocked: false,
@@ -106,26 +154,31 @@ export function getOtpTimers(phone) {
 /**
  * Clears stored OTP timestamps upon successful verification
  */
-export function clearOtpTimers(phone) {
-  const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-9);
-  if (!cleanPhone) return;
+export function clearOtpTimers(target) {
+  const cleanTarget = normalizeOtpTarget(target);
+  if (!cleanTarget) return;
   try {
-    localStorage.removeItem(`${OTP_STORAGE_PREFIX}${cleanPhone}`);
+    const storage = getStorage();
+    if (storage) storage.removeItem(`${OTP_STORAGE_PREFIX}${cleanTarget}`);
   } catch (_) {}
 }
 
 /**
- * Calls backend to fetch authoritative OTP and lockout status
+ * Calls backend to fetch authoritative OTP and lockout status (phone or email)
  */
-export async function syncOtpStatus(phone) {
-  const cleanPhone = String(phone || '').replace(/\D/g, '').slice(-9);
-  if (!cleanPhone) return null;
+export async function syncOtpStatus(target) {
+  const cleanTarget = normalizeOtpTarget(target);
+  if (!cleanTarget) return null;
 
   try {
-    const res = await api.get(`/otp/status?phone=${cleanPhone}`);
+    const isMail = cleanTarget.includes('@');
+    const endpoint = isMail
+      ? `/otp/status-email?email=${encodeURIComponent(cleanTarget)}`
+      : `/otp/status?phone=${encodeURIComponent(cleanTarget)}`;
+    const res = await api.get(endpoint);
     const data = res.data;
     if (data && data.success) {
-      saveOtpTimers(cleanPhone, {
+      saveOtpTimers(cleanTarget, {
         expiresAt: data.expiresAt,
         resendAvailableAt: data.resendAvailableAt,
         lockedUntil: data.lockedUntil,

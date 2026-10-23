@@ -51,6 +51,38 @@ export default function PaymentStep({
     message: '',
   });
 
+  // Restore active OTP timers and lockout state from localStorage on phone change or refresh
+  useEffect(() => {
+    const num = mobileNumber.replace(/\D/g, '').slice(-9);
+    if (num.length === 9) {
+      const timers = getOtpTimers(num);
+      if (timers.lockoutIn > 0) {
+        setIsLockedOut(true);
+        setLockoutIn(timers.lockoutIn);
+        setError('Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
+      } else {
+        setIsLockedOut(false);
+        setLockoutIn(0);
+      }
+
+      if (timers.expiresIn > 0) {
+        setExpiresIn(timers.expiresIn);
+        setIsOtpExpired(false);
+        if (phase === 'mobile') setPhase('otp');
+      } else if (timers.isExpired) {
+        setExpiresIn(0);
+        setIsOtpExpired(true);
+        if (phase === 'mobile') setPhase('otp');
+      }
+
+      if (timers.resendIn > 0) {
+        setResendIn(timers.resendIn);
+      } else {
+        setResendIn(0);
+      }
+    }
+  }, [mobileNumber]);
+
   // 15-Minute Lockout Countdown
   useEffect(() => {
     if (!isLockedOut || lockoutIn <= 0) return;
@@ -75,6 +107,7 @@ export default function PaymentStep({
         if (prev <= 1) {
           setIsOtpExpired(true);
           setError('Your OTP has expired. Please request a new OTP.');
+          setOtp(['', '', '', '', '', '']);
           return 0;
         }
         return prev - 1;
@@ -82,15 +115,6 @@ export default function PaymentStep({
     }, 1000);
     return () => clearInterval(timer);
   }, [phase, isLockedOut, expiresIn]);
-
-  // 60-Second Resend Cooldown Countdown
-  useEffect(() => {
-    if (phase !== 'otp' || resendIn <= 0) return;
-    const timer = setInterval(() => {
-      setResendIn((prev) => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [phase, resendIn]);
 
   // Focus first input on phase switch
   useEffect(() => {
@@ -139,6 +163,14 @@ export default function PaymentStep({
             setLockoutIn(rem);
             saveOtpTimers(num, { lockedUntil: resData.lockedUntil || new Date(Date.now() + rem * 1000).toISOString() });
             setError(resData.message || 'Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
+          } else if (resData.code === 'OTP_STILL_VALID') {
+            // OTP still valid — do not show resend, update expiry display
+            const rem = resData.otpRemaining;
+            if (rem > 0) setExpiresIn(rem);
+            setIsOtpExpired(false);
+            if (resData.expiresAt) saveOtpTimers(num, { expiresAt: resData.expiresAt });
+            setError('A verification code is already active. Please use the code already sent or wait for it to expire.');
+            setPhase('otp');
           } else if (resData.code === 'RESEND_COOLDOWN' || resData.cooldownRemaining > 0) {
             const rem = resData.cooldownRemaining || 60;
             setResendIn(rem);
@@ -429,24 +461,26 @@ export default function PaymentStep({
                 Change Number
               </button>
 
-              {!isLockedOut && (
-                <>
-                  {resendIn > 0 ? (
-                    <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>
-                      Resend OTP available in <strong>{formatTimer(resendIn)}</strong>
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      style={{ border: 'none', background: 'transparent', color: '#0056b3', fontWeight: 700 }}
-                      onClick={handleMobileSubmit}
-                      disabled={isLoading || isLockedOut}
-                    >
-                      Resend OTP
-                    </button>
-                  )}
-                </>
+              {/* Resend section: visible immediately AFTER OTP has expired */}
+              {isOtpExpired && !isLockedOut && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#0056b3',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                    onClick={handleMobileSubmit}
+                    disabled={isLoading}
+                    id="btn-resend-payment-otp"
+                  >
+                    {isLoading ? 'Sending…' : 'Resend OTP'}
+                  </button>
+                </div>
               )}
             </div>
           </motion.div>

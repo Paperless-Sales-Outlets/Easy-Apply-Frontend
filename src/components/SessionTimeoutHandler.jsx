@@ -7,6 +7,7 @@ import {
   recordSessionActivity,
   expireSessionDueToInactivity,
   getVerifiedPhone,
+  getVerifiedEmail,
   LAST_ACTIVITY_KEY,
   SESSION_EXPIRED_KEY,
 } from '../utils/authSession';
@@ -23,7 +24,7 @@ export default function SessionTimeoutHandler() {
 
   useEffect(() => {
     // Record activity on mount if authenticated
-    if (getVerifiedPhone()) {
+    if (getVerifiedPhone() || getVerifiedEmail()) {
       recordSessionActivity();
     }
 
@@ -32,7 +33,7 @@ export default function SessionTimeoutHandler() {
       const now = Date.now();
       if (now - lastRecordedRef.current > THROTTLE_MS) {
         lastRecordedRef.current = now;
-        if (getVerifiedPhone()) {
+        if (getVerifiedPhone() || getVerifiedEmail()) {
           recordSessionActivity();
         }
       }
@@ -49,7 +50,7 @@ export default function SessionTimeoutHandler() {
         lastRecordedRef.current = Number(e.newValue);
       }
       // If another tab cleared the session (e.g. timed out)
-      if (e.key === 'verifiedPhone' && !e.newValue) {
+      if ((e.key === 'verifiedPhone' || e.key === 'verifiedEmail') && !e.newValue) {
         const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
         const isAdminPage = location.pathname.startsWith('/admin');
         if (!isAuthPage && !isAdminPage && !isNavigatingRef.current) {
@@ -75,7 +76,7 @@ export default function SessionTimeoutHandler() {
       const isAdminPage = location.pathname.startsWith('/admin');
       if (isAuthPage || isAdminPage) return;
 
-      if (getVerifiedPhone() && isSessionExpired()) {
+      if ((getVerifiedPhone() || getVerifiedEmail()) && isSessionExpired()) {
         if (!isNavigatingRef.current) {
           isNavigatingRef.current = true;
           const msg = 'Your session has expired due to inactivity. Please log in again.';

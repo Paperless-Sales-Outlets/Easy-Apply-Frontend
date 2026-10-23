@@ -535,6 +535,7 @@ export default function SignUpPage() {
         if (prev <= 1) {
           setIsOtpExpired(true);
           setOtpError('Your OTP has expired. Please request a new OTP.');
+          setOtp(['', '', '', '', '', '']);
           return 0;
         }
         return prev - 1;
@@ -542,15 +543,6 @@ export default function SignUpPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [otpModalOpen, phoneVerified, isLockedOut, otpExpiresIn]);
-
-  // 60-Second Resend Cooldown Countdown: disables resend button
-  useEffect(() => {
-    if (!otpModalOpen || phoneVerified || resendIn <= 0) return;
-    const timer = setInterval(() => {
-      setResendIn((prev) => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [otpModalOpen, phoneVerified, resendIn]);
 
   const normalisedPhone = () => {
     let digits = (form.phone || '').replace(/\D/g, '');
@@ -609,6 +601,13 @@ export default function SignUpPage() {
           setLockoutIn(rem);
           saveOtpTimers(digits, { lockedUntil: resData.lockedUntil || new Date(Date.now() + rem * 1000).toISOString() });
           setOtpError(resData.message || 'Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
+        } else if (resData.code === 'OTP_STILL_VALID') {
+          // OTP still valid — keep resend section hidden, update expiry
+          const rem = resData.otpRemaining;
+          if (rem > 0) setOtpExpiresIn(rem);
+          setIsOtpExpired(false);
+          if (resData.expiresAt) saveOtpTimers(digits, { expiresAt: resData.expiresAt });
+          setOtpError('A verification code is already active. Please use the code already sent or wait for it to expire.');
         } else if (resData.code === 'RESEND_COOLDOWN' || resData.cooldownRemaining > 0) {
           const rem = resData.cooldownRemaining || 60;
           setResendIn(rem);
@@ -1659,25 +1658,20 @@ export default function SignUpPage() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                {!isLockedOut && (
-                  <>
-                    {resendIn > 0 ? (
-                      <span style={{ fontSize: '0.82rem', color: '#5b6472', fontWeight: 600 }} aria-live="polite">
-                        Resend OTP available in <strong style={{ color: '#0f172a' }}>{formatTimer(resendIn)}</strong>
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        className="auth-link-btn"
-                        onClick={handleResendOtp}
-                        disabled={verifyingOtp || sendingOtp || isLockedOut}
-                        id="btn-resend-signup-otp"
-                      >
-                        <FiRefreshCw size={13} aria-hidden="true" />
-                        <span>Resend OTP</span>
-                      </button>
-                    )}
-                  </>
+                {/* Resend section: hidden while OTP is valid, appears immediately after expiry */}
+                {isOtpExpired && !isLockedOut && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.45rem' }}>
+                    <button
+                      type="button"
+                      className="auth-link-btn"
+                      onClick={handleResendOtp}
+                      disabled={verifyingOtp || sendingOtp}
+                      id="btn-resend-signup-otp"
+                    >
+                      <FiRefreshCw size={13} aria-hidden="true" />
+                      <span>{sendingOtp ? 'Sending…' : 'Resend OTP'}</span>
+                    </button>
+                  </div>
                 )}
 
                 {import.meta.env.DEV && (
