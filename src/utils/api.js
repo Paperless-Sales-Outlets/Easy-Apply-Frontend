@@ -65,14 +65,14 @@ export const clearSessionCart = async () => {
     localStorage.removeItem('easy_apply_cart');   // ← the actual key used by productService
     localStorage.removeItem('slt_session_id');    // ← backend session ID (starts a fresh cart session)
     sessionStorage.removeItem('selectedProduct'); // ← product carried into the checkout form
-  } catch (_) {
+  } catch {
     // ignore storage errors in sandboxed environments
   }
 
   // 3. Tell all listeners (navbar badge, FloatingCartButton, etc.) the cart is now empty
   try {
     window.dispatchEvent(new Event('easyapply:cart-updated'));
-  } catch (_) {}
+  } catch {}
 };
 
 // Request Interceptor: Attach in-memory admin accessToken & session ID

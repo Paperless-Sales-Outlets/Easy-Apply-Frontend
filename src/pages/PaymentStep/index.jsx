@@ -1,9 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { FiCreditCard, FiLock, FiShield, FiCheckCircle, FiSmartphone, FiFileText } from 'react-icons/fi';
-import Icon from '../../components/Icon';
 import SLTLoader from '../../components/SLTLoader';
 import api from '../../utils/api';
 import { loadPayHereSdk } from '../../utils/loadPayHereSdk';
@@ -13,16 +11,13 @@ const RESEND_SECONDS = 60;
 const OTP_EXPIRY_SECONDS = 300;
 
 export default function PaymentStep({
-  isActive = true,
   amount = 1000,
   amountLabel = 'Pending Dues Balance',
-  hasPaymentReceipt = false,
   verifiedPhone,
   onSuccess,
   feeAmount = 0,
   feeLabel = '',
 }) {
-  const navigate = useNavigate();
   const { t } = useTranslation();
 
   // OTP State

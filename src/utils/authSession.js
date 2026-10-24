@@ -47,7 +47,7 @@ export const readJson = (key) => {
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : null;
-  } catch (err) {
+  } catch {
     return null;
   }
 };
@@ -211,7 +211,7 @@ export function logoutVerifiedSession() {
   // with it explicitly. Going through the axios instance would re-create the
   // id, because its request interceptor mints a new one whenever it's absent.
   let sessionId = null;
-  try { sessionId = localStorage.getItem('slt_session_id'); } catch (err) { /* private mode */ }
+  try { sessionId = localStorage.getItem('slt_session_id'); } catch { /* private mode */ }
 
   let refreshToken = null;
   try { refreshToken = localStorage.getItem('refreshToken'); } catch (_) {}
@@ -240,14 +240,14 @@ export function logoutVerifiedSession() {
   }
 
   SESSION_KEYS.forEach((key) => {
-    try { localStorage.removeItem(key); } catch (err) { /* private mode */ }
+    try { localStorage.removeItem(key); } catch { /* private mode */ }
   });
   SESSION_STORAGE_KEYS.forEach((key) => {
-    try { sessionStorage.removeItem(key); } catch (err) { /* private mode */ }
+    try { sessionStorage.removeItem(key); } catch { /* private mode */ }
   });
 
   // Tell the cart badge and catalogue the basket is now empty.
-  try { window.dispatchEvent(new Event('easyapply:cart-updated')); } catch (err) { /* ignore */ }
+  try { window.dispatchEvent(new Event('easyapply:cart-updated')); } catch { /* ignore */ }
 
   notifyAuthUpdated();
 }

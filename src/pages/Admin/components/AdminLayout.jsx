@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { MODULE_ACCESS, DUMMY_FORM_WEEKLY } from '../data/dummyData';
+import { MODULE_ACCESS } from '../data/dummyData';
+import { FORM_TYPES } from '../utils/applicationUtils';
 import sltLogo from '../../../assets/slt-logo.png';
 
 const NAV_ICONS = {
@@ -72,14 +73,14 @@ const NAV_ICONS = {
 };
 
 // Dashboard leads, User Management comes right after it, then every other
-// module in its usual order, with User Privileges last.
+// module in its usual order, with Audit Logs last. (User Privileges is no longer
+// in the sidebar — privileges are managed from User Management → Privileges.)
 const [DASHBOARD_MODULE, ...OTHER_MODULES] = MODULE_ACCESS;
 
 const NAV_ITEMS = [
   { ...DASHBOARD_MODULE, icon: NAV_ICONS[DASHBOARD_MODULE.key] },
   { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
   ...OTHER_MODULES.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
-  { key: 'privileges', label: 'User Privileges', icon: NAV_ICONS.privileges, roles: ['Admin'] },
   { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
 ];
 
@@ -183,7 +184,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
               </button>
               {item.key === 'forms' && openForms && (
                 <div className="admin-nav-submenu">
-                  {DUMMY_FORM_WEEKLY.map(form => (
+                  {FORM_TYPES.map(form => (
                     <button
                       key={form.id}
                       className={`admin-nav-submenu-item${activeFormId === form.id ? ' active' : ''}`}

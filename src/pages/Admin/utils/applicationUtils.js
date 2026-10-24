@@ -1,16 +1,8 @@
 import api from '../../../utils/api';
 
-// The 9 service form types tracked in the operations dashboard.
+// EasyApply only takes New Connection applications.
 export const FORM_TYPES = [
   { id: 'new-connection', label: 'New Connection' },
-  { id: 'reconnection', label: 'Reconnection' },
-  { id: 'relocation', label: 'Relocation' },
-  { id: 'termination', label: 'Termination' },
-  { id: 'transfer', label: 'Transfer' },
-  { id: 'package-migration', label: 'Package Migration' },
-  { id: 'service-vacation', label: 'Service Vacation' },
-  { id: 'refund-request', label: 'Refund Request' },
-  { id: 'customer-request-acceptance', label: 'Customer Request Acceptance' },
 ];
 
 export const SERVICE_LABELS = Object.fromEntries(

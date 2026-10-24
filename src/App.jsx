@@ -4,7 +4,6 @@ import {
   Routes,
   Route,
   useLocation,
-  useNavigate,
   Navigate,
 } from 'react-router-dom';
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
@@ -12,15 +11,6 @@ import { Toaster } from 'react-hot-toast';
 
 import Dashboard from './pages/Dashboard';
 import NewConnectionWizard from './pages/NewConnectionWizard';
-import ReconnectionWizard from './pages/ReconnectionWizard';
-import OwnershipChangeWizard from './pages/OwnershipChangeWizard';
-import LocationChangeWizard from './pages/LocationChangeWizard';
-import TerminationWizard from './pages/TerminationWizard';
-import PackageMigrationWizard from './pages/PackageMigrationWizard';
-import ServiceVacationWizard from './pages/ServiceVacationWizard';
-import RefundRequestWizard from './pages/RefundRequestWizard';
-import CustomerRequestAcceptanceWizard from './pages/CustomerRequestAcceptanceWizard';
-import InternetServicesWizard from './pages/InternetServicesWizard';
 
 import CheckStatusPage from './pages/CheckStatusPage';
 import CompletionPage from './pages/CompletionPage';
@@ -29,8 +19,6 @@ import ThankYouPage from './pages/ThankYouPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentCancelPage from './pages/PaymentCancelPage';
 import AdminDashboard from './pages/Admin';
-import AddToCartPage from './pages/AddToCartPage';
-import ServicesPage from './pages/ServicesPage';
 
 import ProductCatalogPage from './pages/ProductCatalogPage';
 import ProductDetailPage from './pages/ProductDetailPage';
@@ -52,7 +40,6 @@ import { isAuthenticated } from './utils/authSession';
 import SessionTimeoutHandler from './components/SessionTimeoutHandler';
 import AdminLoginPage from './pages/Admin/pages/AdminLoginPage';
 import { AdminAuthProvider } from './pages/Admin/context/AdminAuthContext';
-import { CartProvider } from './context/CartContext';
 
 const PageWrapper = ({ children, fullBleed = false, form = false }) => {
   return (
@@ -138,18 +125,6 @@ const AnimatedRoutes = () => {
           }
         />
 
-        {/* Services Page */}
-        <Route
-          path="/services"
-          element={
-            <RequireAuth>
-              <PageWrapper fullBleed>
-                <ServicesPage />
-              </PageWrapper>
-            </RequireAuth>
-          }
-        />
-
         <Route
           path="/new-connection/product/:id"
           element={
@@ -182,116 +157,26 @@ const AnimatedRoutes = () => {
         {/* Legacy phone-verification entry point — sign-in lives on /login now */}
         <Route path="/verify-phone" element={<Navigate to="/login" replace />} />
 
-        {/* Customer Request Wizards */}
+        {/* New Connection Wizard */}
         <Route
           path="/new-connection"
           element={
             <PageWrapper form>
-              <SessionGate requireExistingCustomer={false}>
+              <SessionGate>
                 <NewConnectionWizard />
               </SessionGate>
             </PageWrapper>
           }
         />
 
-        <Route
-          path="/reconnection"
-          element={
-            <PageWrapper form>
-              <SessionGate>
-                <ReconnectionWizard />
-              </SessionGate>
-            </PageWrapper>
-          }
-        />
 
-        <Route
-          path="/ownership-change"
-          element={
-            <PageWrapper form>
-              <SessionGate>
-                <OwnershipChangeWizard />
-              </SessionGate>
-            </PageWrapper>
-          }
-        />
 
-        <Route
-          path="/location-change"
-          element={
-            <PageWrapper form>
-              <SessionGate>
-                <LocationChangeWizard />
-              </SessionGate>
-            </PageWrapper>
-          }
-        />
 
-        <Route
-          path="/termination"
-          element={
-            <PageWrapper form>
-              <SessionGate>
-                <TerminationWizard />
-              </SessionGate>
-            </PageWrapper>
-          }
-        />
 
-        <Route
-          path="/package-migration"
-          element={
-            <PageWrapper form>
-              <SessionGate>
-                <PackageMigrationWizard />
-              </SessionGate>
-            </PageWrapper>
-          }
-        />
 
-        <Route
-          path="/service-vacation"
-          element={
-            <PageWrapper form>
-              <SessionGate>
-                <ServiceVacationWizard />
-              </SessionGate>
-            </PageWrapper>
-          }
-        />
 
-        <Route
-          path="/refund-request"
-          element={
-            <PageWrapper form>
-              <SessionGate>
-                <RefundRequestWizard />
-              </SessionGate>
-            </PageWrapper>
-          }
-        />
 
-        <Route
-          path="/customer-request-acceptance"
-          element={
-            <PageWrapper form>
-              <SessionGate>
-                <CustomerRequestAcceptanceWizard />
-              </SessionGate>
-            </PageWrapper>
-          }
-        />
 
-        <Route
-          path="/internet-services"
-          element={
-            <PageWrapper form>
-              <SessionGate>
-                <InternetServicesWizard />
-              </SessionGate>
-            </PageWrapper>
-          }
-        />
 
         {/* Auth — rendered without the site header/footer */}
         <Route path="/login" element={<LoginPage />} />
@@ -309,7 +194,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/profile"
           element={
-            <SessionGate requireExistingCustomer={false}>
+            <SessionGate>
               <PageWrapper>
                 <MyProfilePage />
               </PageWrapper>
@@ -379,18 +264,6 @@ const AnimatedRoutes = () => {
             <PageWrapper>
               <PaymentCancelPage />
             </PageWrapper>
-          }
-        />
-
-        {/* Payment Gateway Cart */}
-        <Route
-          path="/add-to-cart"
-          element={
-            <RequireAuth>
-              <PageWrapper fullBleed>
-                <AddToCartPage />
-              </PageWrapper>
-            </RequireAuth>
           }
         />
 
@@ -501,12 +374,10 @@ function App() {
 
       <MotionConfig reducedMotion="user">
         <AdminAuthProvider>
-          <CartProvider>
-            <SessionTimeoutHandler />
-            <NavigationLayout>
-              <AnimatedRoutes />
-            </NavigationLayout>
-          </CartProvider>
+          <SessionTimeoutHandler />
+          <NavigationLayout>
+            <AnimatedRoutes />
+          </NavigationLayout>
         </AdminAuthProvider>
       </MotionConfig>
     </BrowserRouter>

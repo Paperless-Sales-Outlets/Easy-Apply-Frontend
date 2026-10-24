@@ -10,7 +10,9 @@ import {
   FiInfo,
   FiSearch,
   FiX,
-  FiUploadCloud
+  FiUploadCloud,
+  FiClock,
+  FiEye
 } from 'react-icons/fi';
 import IdentityCaptureField from '../../components/form/IdentityCaptureField';
 import WizardStepHeader from '../../components/wizard/WizardStepHeader';
@@ -327,8 +329,16 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           district: parsedAddress.district || '',
           postalCode: parsedAddress.postalCode || '',
         };
-        const validFields = Object.fromEntries(Object.entries(found).filter(([, v]) => v));
-        setFields(validFields);
+        // Persist extraction metadata to formData so backend KYC review knows if partial data was fetched
+        const ocrMetadata = {
+          extractionStatus: r.extractionStatus || 'COMPLETE',
+          isPartial: r.isPartial || false,
+          missingFields: r.missingFields || [],
+          exceptionFlags: r.exceptionFlags || [],
+          engine: r.engine || 'TESSERACT_CLIENT_PRIVATE',
+        };
+        setFields({ ...validFields, ocrExtraction: ocrMetadata });
+
         if (extractedNic) {
           setNicInput(extractedNic);
         }
@@ -351,6 +361,7 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
             nicFront: front.current || formData.nicFront,
             nicBack: back.current || formData.nicBack,
             facePhoto: formData.facePhoto,
+            ocrExtraction: ocrMetadata,
           }).then((res) => {
             if (res.data?.customer) {
               localStorage.setItem('authCustomer', JSON.stringify(res.data.customer));
@@ -362,16 +373,26 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           });
         }
 
-        setStatus({
-          type: 'success',
-          message: r.warnings?.[0]
-            ? `Details extracted. ${r.warnings[0]}`
-            : 'Details extracted successfully! Please review them below.',
-        });
+        if (r.isPartial) {
+          setStatus({
+            type: 'error',
+            message: `Auto KYC Incomplete: Partial data detected (missing: ${r.missingFields.join(', ')}). Please verify your details below. Your application will be queued for manual verification.`,
+          });
+        } else {
+          setStatus({
+            type: 'success',
+            message: r.warnings?.[0]
+              ? `Details extracted. ${r.warnings[0]}`
+              : 'Details extracted successfully! Please review them below.',
+          });
+        }
       } else {
-        setStatus({ type: 'error', message: r?.message || 'Could not auto-read your NIC. You can verify or enter the details manually.' });
+        setStatus({
+          type: 'error',
+          message: r?.message || 'Auto verification incomplete. Please enter details manually; your submission will undergo manual admin KYC review.',
+        });
       }
-    } catch (err) {
+    } catch {
       if (seq.current !== mySeq) return;
       setStatus({ type: 'error', message: 'Could not auto-read your NIC. You can verify or enter the details manually.' });
     }
@@ -727,6 +748,33 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           'Ensure good lighting and avoid hats or sunglasses',
         ]}
       />
+
+      {/* Inline notification: Live Selfie Queued for Manual Admin Review */}
+      {formData.facePhoto && (
+        <div
+          style={{
+            marginTop: '-0.75rem',
+            marginBottom: '1.5rem',
+            padding: '0.85rem 1.1rem',
+            borderRadius: '10px',
+            backgroundColor: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.65rem',
+          }}
+        >
+          <FiClock size={18} color="#2563eb" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+          <div>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e40af', marginBottom: '0.15rem' }}>
+              Live Photo Captured — Queued for Manual Review
+            </div>
+            <div style={{ fontSize: '0.78rem', color: '#3b82f6', lineHeight: 1.45 }}>
+              Your selfie has been recorded. To safeguard your identity, an authorized SLT officer will manually cross-verify your live photo with your NIC image prior to service activation.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Details from your NIC ───────────────────────────────── */}
       <h4 style={{ margin: '1.5rem 0 0.75rem 0', fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>

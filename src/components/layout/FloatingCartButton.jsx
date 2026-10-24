@@ -6,7 +6,7 @@ import { getLocalCart } from '../../services/productService';
 const countCartItems = () => {
   try {
     return getLocalCart().reduce((acc, item) => acc + (item.quantity || 1), 0);
-  } catch (e) {
+  } catch {
     return 0;
   }
 };

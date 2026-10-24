@@ -1,7 +1,6 @@
 // src/services/tesseractNicService.js
 // 100% Client-Side & Private OCR (No external server or cloud exposure)
 import {
-  parseSriLankanNIC,
   extractNICFromText,
   extractFullNameFromOCR,
   extractAddressFromOCR,
@@ -167,6 +166,23 @@ export async function scanNICTesseract({ nicFront, nicBack, onStatusChange }) {
       });
     }
 
+    const missingFields = [];
+    if (!mathNIC.nic) missingFields.push('nicNumber');
+    if (!fullName) missingFields.push('fullName');
+    if (!address) missingFields.push('address');
+
+    const extractionStatus = (!mathNIC.nic)
+      ? 'FAILED'
+      : (missingFields.length > 0 ? 'PARTIAL' : 'COMPLETE');
+    const isPartial = extractionStatus === 'PARTIAL';
+
+    const exceptionFlags = [];
+    if (isPartial) {
+      exceptionFlags.push('PARTIAL_DATA_FETCHED');
+      if (!fullName) exceptionFlags.push('NAME_MISSING_IN_OCR');
+      if (!address) exceptionFlags.push('ADDRESS_MISSING_IN_OCR');
+    }
+
     return {
       success: true,
       engine: 'TESSERACT_CLIENT_PRIVATE',
@@ -179,6 +195,12 @@ export async function scanNICTesseract({ nicFront, nicBack, onStatusChange }) {
       gender: mathNIC.gender,
       suggestedTitle: mathNIC.suggestedTitle,
       warnings: mathNIC.warnings || [],
+      extractionStatus,
+      isPartial,
+      missingFields,
+      exceptionFlags,
+      manualReviewRequired: isPartial,
+      reviewReason: isPartial ? 'Auto KYC Incomplete: Partial data fetched from document' : null,
     };
   } catch (err) {
     if (worker) {
