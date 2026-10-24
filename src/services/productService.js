@@ -1,8 +1,4 @@
-import axios from 'axios';
 import api from '../utils/api';
-import { mapHubTemplateToProductCard } from '../utils/productHubAdapter';
-
-const TEMPLATES_API_URL = import.meta.env.VITE_PRODUCT_HUB_API_URL || 'https://dpdlab1.slt.lk:703/api/templates';
 
 // Generate or retrieve session ID for anonymous cart tracking
 const getSessionId = () => {
@@ -164,7 +160,7 @@ export const getProductById = async (id) => {
   try {
     const response = await api.get(`/products/${id}`);
     return response.data;
-  } catch (err) {
+  } catch {
     console.warn('Backend /products/:id unavailable, using mock data.');
     const found = MOCK_PRODUCTS.find(p => p._id === id || p.id === id || p.productId === id);
     return { success: true, data: found || null };
@@ -236,50 +232,12 @@ export const getProductDetails = async (productId) => {
   };
 };
 
-/**
- * Filter products by category or options
- */
-export const filterProducts = async (category) => {
-  if (!category || category === 'All Products') {
-    return getProducts();
-  }
-  try {
-    const formattedCategory = encodeURIComponent(category);
-    const response = await api.get(`/products/category/${formattedCategory}`);
-    return response.data;
-  } catch (err) {
-    console.warn('Backend /products/category unavailable, filtering mock data.');
-    const filtered = MOCK_PRODUCTS.filter(p => p.category === category);
-    return { success: true, data: filtered };
-  }
-};
-
-/**
- * Search products by keyword, category, speed, price
- */
-export const searchProducts = async (searchParams = {}) => {
-  try {
-    const response = await api.get('/products/search', { params: searchParams });
-    return response.data;
-  } catch (err) {
-    console.warn('Backend /products/search unavailable, searching mock data.');
-    const q = (searchParams.q || '').toLowerCase();
-    const filtered = q
-      ? MOCK_PRODUCTS.filter(p =>
-          p.productName.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q)
-        )
-      : MOCK_PRODUCTS;
-    return { success: true, data: filtered };
-  }
-};
-
 // Helper to get local cart array
 export const getLocalCart = () => {
   try {
     const raw = localStorage.getItem('easy_apply_cart');
     return raw ? JSON.parse(raw) : [];
-  } catch (e) {
+  } catch {
     return [];
   }
 };
@@ -288,7 +246,7 @@ export const getLocalCart = () => {
 export const saveLocalCart = (items) => {
   try {
     localStorage.setItem('easy_apply_cart', JSON.stringify(items));
-  } catch (e) {}
+  } catch {}
   // 'storage' only fires in OTHER tabs, so broadcast a same-tab event too
   // (the navbar cart badge and any other listeners rely on this to update live).
   window.dispatchEvent(new Event('easyapply:cart-updated'));
@@ -401,21 +359,8 @@ export const removeFromCart = async (productId) => {
   try {
     const response = await api.delete(`/cart/${productId}`, getCartConfig());
     return response.data;
-  } catch (err) {
+  } catch {
     return { success: true, data: { items: localItems } };
-  }
-};
-
-/**
- * Clear the shopping cart
- */
-export const clearCart = async () => {
-  saveLocalCart([]);
-  try {
-    const response = await api.delete('/cart/clear', getCartConfig());
-    return response.data;
-  } catch (err) {
-    return { success: true, data: { items: [] } };
   }
 };
 
@@ -443,20 +388,4 @@ export const getProductCartItem = async (productId) => {
     console.warn(`Failed to fetch cart product ${productId}:`, err);
     return null;
   }
-};
-
-export default {
-  getProducts,
-  getProductById,
-  getProductDetails,
-  getProductHierarchy,
-  getProductCartItem,
-  filterProducts,
-  searchProducts,
-  addToCart,
-  getCart,
-  removeFromCart,
-  clearCart,
-  getLocalCart,
-  saveLocalCart,
 };

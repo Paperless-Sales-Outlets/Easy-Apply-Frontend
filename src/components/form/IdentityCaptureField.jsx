@@ -144,7 +144,7 @@ export default function IdentityCaptureField({
         if (Math.abs(cx - 0.5) > 0.13 || Math.abs(cy - 0.5) > 0.15) { setGuidance('Centre your face in the oval'); setReady(false); return; }
         if (fh < 0.35) { setGuidance('Move a little closer'); setReady(false); return; }
         if (fh > 0.85) { setGuidance('Move back slightly'); setReady(false); return; }
-      } catch (err) { /* detector hiccup — don't block */ }
+      } catch { /* detector hiccup — don't block */ }
     }
 
     setGuidance(isFace ? 'Looking good — hold still and capture' : 'Fill the frame with your NIC, then capture');
@@ -199,7 +199,7 @@ export default function IdentityCaptureField({
       if (isFace && !detectorRef.current && typeof window !== 'undefined' && 'FaceDetector' in window) {
         try {
           detectorRef.current = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 3 });
-        } catch (err) { detectorRef.current = null; }
+        } catch { detectorRef.current = null; }
       }
 
       setFacingMode(mode);

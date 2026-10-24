@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  FiLock,
   FiSmartphone,
   FiMail,
   FiShield,
@@ -53,7 +52,7 @@ async function fetchSltAccounts(phone) {
     const res = await api.post('/customers/lookup', { phoneNumber: phone });
     const { customerExists, customers } = res.data || {};
     return customerExists && Array.isArray(customers) ? customers : [];
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -95,6 +94,7 @@ export default function LoginPage() {
 
   // Submission state
   const [submittingFinal, setSubmittingFinal] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [generalError, setGeneralError] = useState('');
 
   // Input & OTP refs
@@ -141,7 +141,7 @@ export default function LoginPage() {
 
     try {
       await api.post('/otp/send', { phone: digits });
-    } catch (err) {
+    } catch {
       // Demo / offline fallback allowed
     } finally {
       setPhoneSending(false);
@@ -220,8 +220,10 @@ export default function LoginPage() {
     setEmailSending(true);
 
     try {
-      await api.post('/otp/send-email', { email: trimmed });
+      const res = await api.post('/otp/send-email', { email: trimmed });
+      console.log('📧 [Email OTP] Send Response:', res.data);
     } catch (err) {
+      console.warn('⚠️ [Email OTP] Send notice:', err.response?.data || err.message);
       // Demo / offline fallback allowed
     } finally {
       setEmailSending(false);
@@ -331,10 +333,13 @@ export default function LoginPage() {
       // the next page at the top so its first content (e.g. the unfinished
       // application banner on Home) isn't hidden behind the fixed navbar.
       window.scrollTo(0, 0);
+      setSubmitSuccess(true);
+      await new Promise((resolve) => setTimeout(resolve, 450));
       navigate(redirectTo, { replace: true });
     } catch (err) {
       console.error('Sign-in finalization error:', err);
       setGeneralError('Failed to initialize session. Please try again.');
+      setSubmitSuccess(false);
       setSubmittingFinal(false);
     }
   };
@@ -637,22 +642,35 @@ export default function LoginPage() {
               {/* PRIMARY ACTION CTA: Continue to Application */}
               <button
                 type="button"
-                className={`login-submit-btn ${canContinue ? 'is-ready' : 'is-disabled'}`}
+                className={`login-submit-btn ${canContinue ? 'is-ready' : 'is-disabled'} ${submittingFinal ? 'is-submitting' : ''} ${submitSuccess ? 'is-success' : ''}`}
                 disabled={!canContinue || submittingFinal}
                 onClick={handleContinue}
                 id="btn-continue-application"
               >
-                {submittingFinal ? (
-                  <>
-                    <span className="signup-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} aria-hidden="true" />
-                    <span>Initializing session…</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Continue to Application</span>
-                    <FiArrowRight size={18} aria-hidden="true" />
-                  </>
-                )}
+                {/* Green Progress Fill Bar (Left to Right) */}
+                {submittingFinal && <span className="login-btn-progress-fill" aria-hidden="true" />}
+
+                {/* Button Content */}
+                <span className="login-btn-content">
+                  {submitSuccess ? (
+                    <>
+                      <FiCheck size={18} className="login-btn-check-icon" aria-hidden="true" />
+                      <span>Ready! Redirecting…</span>
+                    </>
+                  ) : submittingFinal ? (
+                    <>
+                      <span className="login-btn-slt-badge" aria-hidden="true">
+                        <img src={sltlogoOnly} alt="" className="login-btn-slt-img" />
+                      </span>
+                      <span>Initializing session…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Continue to Application</span>
+                      <FiArrowRight size={18} aria-hidden="true" />
+                    </>
+                  )}
+                </span>
               </button>
 
               <p className="login-submit-hint">

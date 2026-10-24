@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
+import { useAdminAuth } from './context/AdminAuthContext';
 import AdminLayout from './components/AdminLayout';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';

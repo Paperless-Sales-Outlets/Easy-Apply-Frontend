@@ -1,19 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { getMyJobs, updateMyJobStatus } from '../services/adminService';
-
-const SERVICE_LABELS = {
-  'new-connection': 'New Connection',
-  'reconnection': 'Reconnection',
-  'relocation': 'Relocation',
-  'termination': 'Termination',
-  'transfer': 'Transfer',
-  'package-migration': 'Package Migration',
-  'service-vacation': 'Service Vacation',
-  'refund-request': 'Refund Request',
-  'customer-request-acceptance': 'Customer Request',
-  'internet-services': 'Internet Services',
-};
+import { SERVICE_LABELS } from '../utils/applicationUtils';
 
 export default function FieldTechnicianPage() {
   const [jobs, setJobs] = useState([]);

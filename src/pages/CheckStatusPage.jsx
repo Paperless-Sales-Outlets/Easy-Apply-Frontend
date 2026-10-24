@@ -9,15 +9,11 @@ import {
   FiClock,
   FiAlertCircle,
   FiCopy,
-  FiDownload,
   FiPhoneCall,
   FiX,
   FiRefreshCw,
-  FiFileText,
   FiArrowRight,
-  FiShield,
   FiStar,
-  FiZap,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
@@ -37,30 +33,10 @@ export default function CheckStatusPage() {
   const [copied, setCopied] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
 
-  const getServiceTypeLabel = (type) => {
-    switch (type) {
-      case 'new-connection':
-        return t('wizards.newConnection.title', 'New Connection');
-      case 'reconnection':
-        return t('wizards.reconnection.title', 'Reconnection Request');
-      case 'relocation':
-      case 'location-change':
-        return t('wizards.locationChange.title', 'Location Change (Relocation)');
-      case 'termination':
-        return t('wizards.termination.title', 'Line Termination');
-      case 'transfer':
-      case 'ownership-change':
-        return t('wizards.ownershipChange.title', 'Ownership Transfer');
-      case 'package-migration':
-        return t('wizards.packageMigration.title', 'Package Migration');
-      case 'service-vacation':
-        return t('wizards.serviceVacation.title', 'Service Vacation');
-      case 'refund-request':
-        return t('wizards.refundRequest.title', 'Refund Request');
-      default:
-        return type || 'SLT Service Application';
-    }
-  };
+  const getServiceTypeLabel = (type) =>
+    type === 'new-connection'
+      ? t('wizards.newConnection.title', 'New Connection')
+      : type || 'SLT Service Application';
 
 
   const fetchStatus = useCallback(async (refToSearch) => {

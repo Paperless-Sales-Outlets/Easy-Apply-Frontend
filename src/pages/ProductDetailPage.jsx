@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { getProductById, addToCart } from '../services/productService';
 import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
 import Toast from '../components/common/Toast';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,15 +36,9 @@ export default function ProductDetailPage() {
     try {
       await addToCart(prod._id || prod.id, qty);
       showToast(`${prod.name} added to cart!`, 'success');
-    } catch (err) {
+    } catch {
       showToast('Added to cart!', 'success');
     }
-  };
-
-  const handleBuyNow = async (prod, qty) => {
-    await handleAddToCart(prod, qty);
-    // The customer is already signed in by this point — straight to the form.
-    navigate('/new-connection');
   };
 
   return (
@@ -74,7 +67,6 @@ export default function ProductDetailPage() {
             isFavorite={isFavorite}
             onToggleFavorite={() => setIsFavorite(!isFavorite)}
             onAddToCart={handleAddToCart}
-            onBuyNow={handleBuyNow}
           />
         )}
       </div>

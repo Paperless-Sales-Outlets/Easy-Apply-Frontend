@@ -1,28 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Tv,
   ShieldCheck,
   FileText,
-  CheckCircle2,
-  AlertCircle,
   Search,
-  Sparkles,
-  Layers,
   Info,
-  Calendar,
-  DollarSign,
   ArrowRight,
-  LayoutGrid,
-  List,
-  Check,
-  Radio,
-  Clock,
-  RotateCcw,
-  Lock,
-  Film,
-  Globe,
-  SlidersHorizontal,
 } from 'lucide-react';
 import { getProductDetails } from '../services/productService';
 import { normalizeProductDetail } from '../utils/productHubAdapter';

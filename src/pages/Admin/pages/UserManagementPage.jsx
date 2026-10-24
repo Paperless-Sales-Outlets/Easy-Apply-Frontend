@@ -55,22 +55,12 @@ const EMPTY_ROLE_FORM = { name: '', permissions: [] };
 const EMPTY_PRIVILEGE_FORM = { name: '', description: '' };
 const PRIVILEGE_DESCRIPTION_MAX = 300;
 
-// Employee Number is the account's permanent unique id: a leading '0'
-// followed by 5 digits (e.g. 000001..099999), auto-assigned — never typed.
-const EMPLOYEE_NUMBER_LENGTH = 5;
+// Employee Number is typed in by the admin (the company's own staff number)
+// and must be unique across staff accounts.
+const EMPLOYEE_NUMBER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9/-]*$/;
+const EMPLOYEE_NUMBER_MAX = 20;
 const EMAIL_DOMAIN = 'slt.com.lk';
 const EMAIL_PATTERN = new RegExp(`^[a-zA-Z0-9._%+-]+@${EMAIL_DOMAIN.replace(/\./g, '\\.')}$`, 'i');
-
-// Next free employee number, derived from whatever's already assigned so it
-// keeps incrementing even if the list is filtered/out of order.
-function nextEmployeeNumber(users) {
-  const highest = users.reduce((max, u) => {
-    const match = /^0(\d{5})$/.exec(u.employeeNumber || '');
-    if (!match) return max;
-    return Math.max(max, parseInt(match[1], 10));
-  }, 0);
-  return '0' + String(highest + 1).padStart(EMPLOYEE_NUMBER_LENGTH, '0');
-}
 
 function generatePassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
@@ -100,7 +90,7 @@ const ROLE_NAME_PATTERN = /^[\p{L}\p{N}][\p{L}\p{N}\s&-]*$/u;
 const RESERVED_ROLE_NAMES = ['admin', 'administrator', 'customer'];
 const PRIVILEGE_DESCRIPTION_MIN = 10;
 
-const USER_FIELDS = ['name', 'email', 'role', 'password', 'confirmPassword'];
+const USER_FIELDS = ['employeeNumber', 'name', 'email', 'role', 'password', 'confirmPassword'];
 const ROLE_FIELDS = ['name'];
 const PRIVILEGE_FIELDS = ['name', 'description'];
 
@@ -112,6 +102,18 @@ function validateUserForm(form, { editingUser, users }) {
   const errors = {};
   const name = form.name.trim();
   const email = form.email.trim();
+  const employeeNumber = form.employeeNumber.trim();
+
+  // Required for every new account; an older account that never had one may stay blank.
+  if (!employeeNumber) {
+    if (!editingUser || editingUser.employeeNumber) errors.employeeNumber = 'Employee number is required.';
+  } else if (employeeNumber.length > EMPLOYEE_NUMBER_MAX) {
+    errors.employeeNumber = `Employee number must be ${EMPLOYEE_NUMBER_MAX} characters or fewer.`;
+  } else if (!EMPLOYEE_NUMBER_PATTERN.test(employeeNumber)) {
+    errors.employeeNumber = 'Use letters, numbers, hyphens or slashes only — no spaces.';
+  } else if (users.some((u) => u.id !== editingUser?.id && sameText(u.employeeNumber, employeeNumber))) {
+    errors.employeeNumber = 'Another account already uses this employee number.';
+  }
 
   if (!name) errors.name = 'Full name is required.';
   else if (name.length < 2) errors.name = 'Full name must be at least 2 characters.';
@@ -417,7 +419,6 @@ export default function UserManagementPage() {
     const defaultRole = roles[0];
     setForm({
       ...EMPTY_USER_FORM,
-      employeeNumber: nextEmployeeNumber(users),
       role: defaultRole?.name || '',
       permissions: defaultRole?.permissions || [],
     });
@@ -485,10 +486,11 @@ export default function UserManagementPage() {
         const payload = {
           name: form.name.trim(),
           email: form.email.trim(),
-          employeeNumber: form.employeeNumber.trim(),
           role: form.role,
           permissions: form.permissions,
         };
+        // Older accounts may have no number — only send one that was entered.
+        if (form.employeeNumber.trim()) payload.employeeNumber = form.employeeNumber.trim();
         if (form.password) payload.password = form.password;
         const res = await updateAdminUser(editingUser.id, payload);
         setUsers((prev) => prev.map((u) => (u.id === editingUser.id ? res.user : u)));
@@ -1184,7 +1186,7 @@ export default function UserManagementPage() {
 
                 <div className="um-form-grid um-form-vertical">
                   <label className="um-field">
-                    <span>Employee Number</span>
+                    <span>Employee Number{!editingUser || editingUser.employeeNumber ? ' *' : ''}</span>
                     <div className="um-input-icon-wrap">
                       <span className="um-input-icon-glyph">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1193,13 +1195,16 @@ export default function UserManagementPage() {
                       </span>
                       <input
                         type="text"
-                        className="um-input um-input-icon"
+                        className={`um-input um-input-icon${uf.employeeNumber.cls}`}
+                        {...uf.employeeNumber.props}
                         value={form.employeeNumber}
-                        disabled
-                        readOnly
+                        maxLength={EMPLOYEE_NUMBER_MAX}
+                        autoComplete="off"
+                        onChange={(e) => setForm((f) => ({ ...f, employeeNumber: e.target.value }))}
+                        placeholder="e.g. 012345"
                       />
                     </div>
-                    <span className="um-field-hint">Auto-generated — this is the account's permanent unique ID.</span>
+                    <FieldError id={uf.employeeNumber.errorId} message={uf.employeeNumber.error} />
                   </label>
 
                   <label className="um-field">

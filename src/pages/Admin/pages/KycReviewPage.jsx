@@ -31,7 +31,20 @@ const SORTS = [
   { key: 'name', label: 'Name A–Z' },
 ];
 
-const DEFAULT_FILTERS = { view: 'attention', status: 'all', type: 'all', sort: 'smart', search: '' };
+const DEFAULT_FILTERS = { view: 'attention', status: 'all', type: 'all', customer: 'all', sort: 'smart', search: '' };
+
+// Which path through the customer flow a case took (decided by the backend):
+//   new        – uploaded NIC front + back and took a live selfie
+//   returning  – NIC photos already on file, took a new live selfie only
+//   existing-new-nic – registered earlier without NIC photos, uploaded them now
+const CUSTOMER_TYPES = {
+  new: { label: 'New customer', short: 'New', hint: 'Uploaded NIC front, NIC back and a live selfie' },
+  returning: { label: 'Returning customer', short: 'Returning', hint: 'NIC photos on file — took a new live selfie' },
+  'existing-new-nic': { label: 'Existing · NIC added', short: 'NIC added', hint: 'Registered earlier without NIC photos and uploaded them now' },
+  unknown: { label: 'Not determined', short: 'Unknown', hint: 'Not enough photos to tell' },
+};
+const CUSTOMER_ORDER = ['new', 'returning', 'existing-new-nic', 'unknown'];
+const customerTypeOf = (item) => (CUSTOMER_TYPES[item.customerType] ? item.customerType : 'unknown');
 
 const DECISIONS = [
   { status: 'approved', label: 'Approve', cls: 'success', icon: 'check' },
@@ -44,7 +57,7 @@ const DOC_SLOTS = [
   { slot: 'nicFront', label: 'NIC front', keys: ['nicFront'], fit: 'contain', icon: 'idCard' },
   { slot: 'nicBack', label: 'NIC back', keys: ['nicBack'], fit: 'contain', icon: 'idCard' },
   { slot: 'signature', label: 'Signature', keys: ['signature', 'signatureDoc', 'customerSignature'], fit: 'contain', icon: 'pen' },
-  { slot: 'facePhoto', label: 'Live picture', keys: ['facePhoto'], fit: 'cover', icon: 'camera' },
+  { slot: 'facePhoto', label: 'Live selfie', keys: ['facePhoto'], fit: 'cover', icon: 'camera' },
 ];
 const SLOT_KEYS = new Set(DOC_SLOTS.flatMap((d) => d.keys));
 
@@ -160,6 +173,7 @@ function filterItems(items, f, tokens, haystacks, skip) {
     if (skip !== 'view' && !matchesView(i, f.view)) return false;
     if (skip !== 'status' && f.status !== 'all' && i.status !== f.status) return false;
     if (skip !== 'type' && f.type !== 'all' && typeKeyOf(i) !== f.type) return false;
+    if (skip !== 'customer' && f.customer !== 'all' && customerTypeOf(i) !== f.customer) return false;
     if (tokens.length) {
       const text = haystacks.get(i.id) || '';
       if (!tokens.every((t) => text.includes(t))) return false;
@@ -251,6 +265,54 @@ function Actor({ item, compact }) {
 
 function StatusBadge({ status }) {
   return <span className={`admin-badge ${statusBadgeClass(status)}`}>{statusLabel(status)}</span>;
+}
+
+function CustomerTag({ item, short }) {
+  const key = customerTypeOf(item);
+  const meta = CUSTOMER_TYPES[key];
+  return (
+    <span className={`kycv-ctype ${key}`} title={meta.hint}>
+      <Icon name={key === 'returning' ? 'history' : key === 'unknown' ? 'alert' : 'user'} size={11} stroke={2.4} />
+      {short ? meta.short : meta.label}
+    </span>
+  );
+}
+
+// Where an identity photo came from: taken for this request, or already on file.
+function SourceTag({ doc }) {
+  if (!doc?.source) return null;
+  return doc.source === 'request'
+    ? <span className="kycv-src request" title={doc.capturedAt ? `Captured ${formatDate(doc.capturedAt)}` : undefined}>This request</span>
+    : <span className="kycv-src on-file" title={doc.capturedAt ? `Captured ${formatDate(doc.capturedAt)}` : undefined}>On file · {formatDate(doc.capturedAt).split(',')[0]}</span>;
+}
+
+// How alike the selfie and the reference face are. Shorter bar = more alike;
+// the marker is the most the system accepts for an automatic pass.
+function FaceMeter({ face }) {
+  if (!face || typeof face.distance !== 'number') return null;
+  const SCALE = 1; // distances run 0 (identical) … ~1 (clearly different people)
+  const pct = Math.min(100, (face.distance / SCALE) * 100);
+  const limit = Math.min(100, ((face.threshold || 0.45) / SCALE) * 100);
+  const passed = face.result === 'pass';
+  return (
+    <div className={`kycv-face ${passed ? 'pass' : 'unsure'}`}>
+      <div className="kycv-face-head">
+        <span className="kycv-face-icon"><Icon name={passed ? 'check' : 'eye'} size={14} stroke={2.6} /></span>
+        <div>
+          <strong>{passed ? 'Strong face match' : 'Faces need a human check'}</strong>
+          <small>
+            Selfie vs {face.against === 'selfie' ? `verified selfie (${face.referenceNumber})` : 'NIC photo'} · difference {face.distance.toFixed(2)}
+            {' '}(pass at {(face.threshold || 0.45).toFixed(2)} or less)
+          </small>
+        </div>
+      </div>
+      <div className="kycv-face-bar" aria-hidden="true">
+        <span className="kycv-face-fill" style={{ width: `${pct}%` }} />
+        <span className="kycv-face-limit" style={{ left: `${limit}%` }} />
+      </div>
+      <div className="kycv-face-scale" aria-hidden="true"><span>Same person</span><span>Different people</span></div>
+    </div>
+  );
 }
 
 function CheckList({ checks }) {
@@ -355,6 +417,7 @@ function DocSlot({ spec, doc, note, onZoom }) {
       <div className={`kycv-doc-media ${spec.fit}`}>
         <AuthImage url={doc.url} alt={spec.label} style={{ width: '100%', height: '100%', objectFit: spec.fit, minHeight: 0 }} />
         <span className="kycv-doc-hover" aria-hidden="true"><Icon name="zoomIn" size={15} />Enlarge</span>
+        {doc.source && <span className="kycv-doc-src"><SourceTag doc={doc} /></span>}
       </div>
     </button>
   );
@@ -474,6 +537,7 @@ export default function KycReviewPage() {
   const haystacks = useMemo(() => new Map(items.map((i) => [i.id, [
     i.name, i.nic, i.phone, i.referenceNumber, statusLabel(i.status), typeLabelOf(typeKeyOf(i)), i.decidedByName,
     bySystem(i) ? 'automated auto system' : byPerson(i) ? 'manual person' : '',
+    CUSTOMER_TYPES[customerTypeOf(i)].label,
   ].join(' ').toLowerCase()])), [items]);
 
   const tokens = useMemo(() => deferredSearch.trim().toLowerCase().split(/\s+/).filter(Boolean), [deferredSearch]);
@@ -527,6 +591,15 @@ export default function KycReviewPage() {
     return [...keys].sort((a, b) => typeLabelOf(a).localeCompare(typeLabelOf(b))).map((k) => ({ key: k, label: typeLabelOf(k), count: map[k] || 0 }));
   }, [items, f, tokens, haystacks]);
 
+  const customerOptions = useMemo(() => {
+    const pool = filterItems(items, f, tokens, haystacks, 'customer');
+    const map = {};
+    pool.forEach((i) => { const k = customerTypeOf(i); map[k] = (map[k] || 0) + 1; });
+    return CUSTOMER_ORDER
+      .filter((k) => map[k] || items.some((i) => customerTypeOf(i) === k))
+      .map((k) => ({ key: k, label: CUSTOMER_TYPES[k].label, count: map[k] || 0 }));
+  }, [items, f, tokens, haystacks]);
+
   const results = useMemo(
     () => filterItems(items, f, tokens, haystacks, null).sort(SORT_FNS[filters.sort] || smartSort),
     [items, f, tokens, haystacks, filters.sort]
@@ -535,7 +608,7 @@ export default function KycReviewPage() {
 
   const statusChips = STATUS_ORDER.filter((s) => statusCounts.map[s] || filters.status === s);
   const dirty = JSON.stringify({ ...filters, search: filters.search.trim() }) !== JSON.stringify(DEFAULT_FILTERS);
-  const refinedBeyondView = filters.status !== 'all' || filters.type !== 'all' || filters.search.trim() !== '';
+  const refinedBeyondView = filters.status !== 'all' || filters.type !== 'all' || filters.customer !== 'all' || filters.search.trim() !== '';
   const viewIndex = Math.max(0, VIEWS.findIndex((v) => v.key === filters.view));
 
   // ── detail popup ──
@@ -555,11 +628,16 @@ export default function KycReviewPage() {
     const extras = (current.documents || [])
       .filter((d) => !SLOT_KEYS.has(d.key))
       .map((d) => ({ ...d, icon: 'file' }));
-    return [...slotDocs, ...extras];
+    const reference = current.referenceSelfie
+      ? [{ key: 'referenceSelfie', label: `Verified selfie · ${current.referenceSelfie.referenceNumber}`, url: current.referenceSelfie.url, icon: 'shieldCheck', capturedAt: current.referenceSelfie.capturedAt }]
+      : [];
+    return [...slotDocs, ...reference, ...extras];
   }, [current]);
 
   const nicFrontDoc = gallery.find((d) => d.key === 'nicFront') || null;
   const faceDoc = gallery.find((d) => d.key === 'facePhoto') || null;
+  const referenceDoc = gallery.find((d) => d.key === 'referenceSelfie') || null;
+  const compareDocs = [nicFrontDoc, referenceDoc, faceDoc].filter(Boolean);
   const zoomItem = zoom && !zoom.compare ? gallery[zoom.index] || null : null;
 
   const resetZoomView = () => { setZoomTurn(0); setZoomScale(1); setZoomOrigin('50% 50%'); };
@@ -780,7 +858,7 @@ export default function KycReviewPage() {
           <span className={`kycv-case-avatar t${toneOf(current.name)}`}>{initials(current.name)}</span>
           <div className="kycv-modal-id">
             <h2 id="kycv-modal-title">{current.name}</h2>
-            <p><code>{current.nic}</code><span className="kycv-sep" />{current.phone || '—'}</p>
+            <p><code>{current.nic}</code><span className="kycv-sep" />{current.phone || '—'}<CustomerTag item={current} /></p>
           </div>
           <StatusBadge status={current.status} />
           <div className="kycv-modal-nav">
@@ -837,13 +915,17 @@ export default function KycReviewPage() {
               <section className="kycv-card">
                 <div className="kycv-card-head">
                   <span className="kycv-card-icon blue"><Icon name="idCard" size={17} /></span>
-                  <div><h3>Identity documents</h3><p>Compare the live picture with the NIC photo yourself — the system does not.</p></div>
-                  {nicFrontDoc && faceDoc && (
+                  <div>
+                    <h3>Identity documents</h3>
+                    <p>{CUSTOMER_TYPES[customerTypeOf(current)].hint}.</p>
+                  </div>
+                  {compareDocs.length > 1 && faceDoc && (
                     <button type="button" className="kycv-compare-btn" onClick={openCompare}>
                       <Icon name="compare" size={14} />Compare faces
                     </button>
                   )}
                 </div>
+                <FaceMeter face={current.caseInfo?.face} />
                 <div className="kycv-docs">
                   {DOC_SLOTS.map((spec) => (
                     <DocSlot
@@ -1010,14 +1092,14 @@ export default function KycReviewPage() {
         </div>
       </div>
 
-      {zoom && (zoom.compare ? nicFrontDoc && faceDoc : zoomItem) && (
+      {zoom && (zoom.compare ? compareDocs.length > 1 : zoomItem) && (
         <div
           className="kycv-lightbox"
           ref={lightboxRef}
           tabIndex={-1}
           role="dialog"
           aria-modal="true"
-          aria-label={zoom.compare ? 'Compare NIC photo and live picture' : zoomItem.label}
+          aria-label={zoom.compare ? 'Compare the selfie with the NIC photo' : zoomItem.label}
           onMouseDown={(e) => { if (e.target === e.currentTarget) setZoom(null); }}
         >
           <div className="kycv-lightbox-bar">
@@ -1049,8 +1131,8 @@ export default function KycReviewPage() {
               >
                 <Icon name="rotate" size={16} />
               </button>
-              {!zoom.compare && nicFrontDoc && faceDoc && (
-                <button type="button" className="kycv-lb-btn wide" onClick={openCompare} title="NIC front beside the live picture">
+              {!zoom.compare && compareDocs.length > 1 && faceDoc && (
+                <button type="button" className="kycv-lb-btn wide" onClick={openCompare} title="NIC photo beside the selfie">
                   <Icon name="compare" size={15} />Compare
                 </button>
               )}
@@ -1061,8 +1143,8 @@ export default function KycReviewPage() {
           </div>
 
           {zoom.compare ? (
-            <div className="kycv-compare">
-              {[nicFrontDoc, faceDoc].map((d) => (
+            <div className={`kycv-compare n${compareDocs.length}`}>
+              {compareDocs.map((d) => (
                 <figure key={d.key}>
                   <figcaption><Icon name={d.icon} size={14} />{d.label}</figcaption>
                   <div className="kycv-compare-img">
@@ -1328,6 +1410,15 @@ export default function KycReviewPage() {
                   </select>
                 </label>
                 <label className="kycv-select">
+                  <span>Customer</span>
+                  <select value={filters.customer} onChange={(e) => setFilter({ customer: e.target.value })}>
+                    <option value="all">All customers</option>
+                    {customerOptions.map((c) => (
+                      <option key={c.key} value={c.key}>{c.label} ({c.count})</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="kycv-select">
                   <span>Sort</span>
                   <select value={filters.sort} onChange={(e) => setFilter({ sort: e.target.value })}>
                     {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
@@ -1401,6 +1492,7 @@ export default function KycReviewPage() {
                         </td>
                         <td data-label="Request">
                           <span className="kycv-req">{typeLabelOf(typeKeyOf(item))}</span>
+                          <CustomerTag item={item} short />
                           {item.kind !== 'account' && item.referenceNumber
                             ? <small className="kycv-ref"><Highlight text={item.referenceNumber} tokens={tokens} /></small>
                             : null}

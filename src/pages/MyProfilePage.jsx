@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiUser,
@@ -16,10 +16,8 @@ import {
   FiEye,
   FiMessageSquare,
   FiDownload,
-  FiZap,
   FiBox,
   FiStar,
-  FiCalendar,
 } from 'react-icons/fi';
 import { useVerifiedContext } from '../components/verification';
 import { getAuthUser, notifyAuthUpdated } from '../utils/authSession';
@@ -30,17 +28,6 @@ import InstallationReviewModal from '../components/InstallationReviewModal';
 
 const SERVICE_TYPE_LABELS = {
   'new-connection': 'New Connection',
-  'reconnection': 'Reconnection',
-  'relocation': 'Relocation',
-  'location-change': 'Relocation',
-  'termination': 'Termination',
-  'transfer': 'Ownership Transfer',
-  'ownership-change': 'Ownership Transfer',
-  'package-migration': 'Package Migration',
-  'service-vacation': 'Service Vacation',
-  'refund-request': 'Refund Request',
-  'customer-request-acceptance': 'Customer Request',
-  'internet-services': 'Internet Services',
 };
 
 /**
@@ -359,7 +346,7 @@ export default function MyProfilePage() {
         localStorage.setItem('authUser', JSON.stringify(fallback));
         setAuthUser(fallback);
         notifyAuthUpdated();
-      } catch (e) {
+      } catch {
         setSaveError('Could not save your changes in this browser.');
         return;
       }
@@ -784,30 +771,6 @@ export default function MyProfilePage() {
               >
                 <FiBox size={16} /> View Packages
               </button>
-              {customerExists && (
-                <button
-                  onClick={() => navigate('/package-migration')}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.4rem',
-                    padding: '0.85rem 1rem',
-                    borderRadius: '12px',
-                    border: 'none',
-                    background: 'var(--brand-gradient-soft)',
-                    color: '#fff',
-                    fontWeight: 800,
-                    fontSize: '0.85rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    boxShadow: '0 4px 12px rgba(0, 86, 179, 0.25)',
-                  }}
-                >
-                  <FiZap size={16} /> Upgrade Package
-                </button>
-              )}
             </div>
           </motion.div>
         </div>
@@ -1170,7 +1133,7 @@ export default function MyProfilePage() {
                     <h4 style={{ color: '#0056b3', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Application Data</h4>
                     <div style={{ background: '#f8fafc', padding: '1rem 1.5rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                       {Object.entries(selectedAppForView.formData || selectedAppForView)
-                        .filter(([k, v]) => {
+                        .filter(([k]) => {
                           const excludeKeys = ['_id', '__v', 'createdAt', 'updatedAt', 'adminComments', 'referenceNumber', 'status', 'serviceType', 'formData', 'documents', 'signature', 'declarationAccepted'];
                           if (excludeKeys.includes(k)) return false;
                           if (k.toLowerCase().includes('vas_')) return false;
@@ -1314,4 +1277,4 @@ export default function MyProfilePage() {
       />
     </div>
   );
-}
+}
