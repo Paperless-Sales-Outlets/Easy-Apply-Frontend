@@ -19,6 +19,8 @@ const SESSION_KEYS = [
   'authUser',
   'accessToken',
   'refreshToken',
+  // Unlocks this customer's saved New Connection application
+  'draftToken',
   // Cart — 'slt_session_id' ties this browser to a cart document in MongoDB,
   // so leaving it behind would hand the next customer the previous basket.
   'easy_apply_cart',
