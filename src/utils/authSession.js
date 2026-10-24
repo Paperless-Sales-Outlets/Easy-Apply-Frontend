@@ -3,6 +3,9 @@
 // after that reads the session from here instead of asking for a phone number
 // and OTP again.
 export const AUTH_UPDATED_EVENT = 'easyapply:auth-updated';
+export const SESSION_INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes of inactivity
+export const LAST_ACTIVITY_KEY = 'easyapply:last_activity';
+export const SESSION_EXPIRED_KEY = 'easyapply:session_expired_message';
 
 // Everything a signed-in customer leaves behind in this browser. On a shared
 // teleshop terminal the next customer must not inherit any of it — that
@@ -11,6 +14,7 @@ export const AUTH_UPDATED_EVENT = 'easyapply:auth-updated';
 const SESSION_KEYS = [
   // Identity / session
   'verifiedPhone',
+  'verifiedEmail',
   'customerExists',
   'accountsList',
   'selectedAccount',
@@ -19,6 +23,7 @@ const SESSION_KEYS = [
   'authUser',
   'accessToken',
   'refreshToken',
+  LAST_ACTIVITY_KEY,
   // Cart — 'slt_session_id' ties this browser to a cart document in MongoDB,
   // so leaving it behind would hand the next customer the previous basket.
   'easy_apply_cart',
@@ -34,7 +39,11 @@ export function getVerifiedPhone() {
   return localStorage.getItem('verifiedPhone') || '';
 }
 
-const readJson = (key) => {
+export function getVerifiedEmail() {
+  return localStorage.getItem('verifiedEmail') || '';
+}
+
+export const readJson = (key) => {
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : null;
@@ -60,9 +69,64 @@ export function getVerifiedName() {
   return getAuthCustomer()?.name || '';
 }
 
-/** A customer counts as signed in once we hold a verified phone for them. */
+export function recordSessionActivity() {
+  try {
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+  } catch (_) {}
+}
+
+export function getLastSessionActivity() {
+  try {
+    const raw = localStorage.getItem(LAST_ACTIVITY_KEY);
+    return raw ? Number(raw) : 0;
+  } catch (_) {
+    return 0;
+  }
+}
+
+export function getSessionInactivityRemainingMs() {
+  if (!getVerifiedPhone() && !getVerifiedEmail()) return null;
+  const last = getLastSessionActivity();
+  if (!last) return SESSION_INACTIVITY_TIMEOUT_MS;
+  return Math.max(0, SESSION_INACTIVITY_TIMEOUT_MS - (Date.now() - last));
+}
+
+export function isSessionExpired() {
+  if (!getVerifiedPhone() && !getVerifiedEmail()) return false;
+  const last = getLastSessionActivity();
+  if (!last) return false;
+  return (Date.now() - last) >= SESSION_INACTIVITY_TIMEOUT_MS;
+}
+
+export function expireSessionDueToInactivity() {
+  logoutVerifiedSession();
+  try {
+    sessionStorage.setItem(
+      SESSION_EXPIRED_KEY,
+      'Your session has expired due to inactivity. Please log in again.'
+    );
+  } catch (_) {}
+  try {
+    window.dispatchEvent(
+      new CustomEvent('easyapply:session-expired', {
+        detail: { message: 'Your session has expired due to inactivity. Please log in again.' },
+      })
+    );
+  } catch (_) {}
+}
+
+/** A customer counts as signed in once we hold a verified phone/email and the session has not expired. */
 export function isAuthenticated() {
-  return !!getVerifiedPhone();
+  const phone = getVerifiedPhone();
+  const email = getVerifiedEmail();
+  if (!phone && !email) return false;
+
+  if (isSessionExpired()) {
+    expireSessionDueToInactivity();
+    return false;
+  }
+
+  return true;
 }
 
 /** Everything the app knows about the current session, in one object. */
@@ -120,6 +184,7 @@ export function saveSession({ phone, customer = null, user = null, accountsList 
     localStorage.removeItem('customerData');
   }
 
+  recordSessionActivity();
   notifyAuthUpdated();
 }
 
@@ -148,8 +213,22 @@ export function logoutVerifiedSession() {
   let sessionId = null;
   try { sessionId = localStorage.getItem('slt_session_id'); } catch { /* private mode */ }
 
+  let refreshToken = null;
+  try { refreshToken = localStorage.getItem('refreshToken'); } catch (_) {}
+
+  const base = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || 'http://localhost:5050/api';
+
+  if (refreshToken) {
+    fetch(`${base}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+      keepalive: true,
+    }).catch(() => {});
+  }
+
   if (sessionId) {
-    const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050/api';
     // Best-effort and deliberately not awaited — the local wipe below is what
     // actually protects the next customer on a shared terminal.
     fetch(`${base}/cart/clear`, {
