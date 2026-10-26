@@ -100,7 +100,51 @@ export async function queryOSSFeasibility({
 
   // Offline / resilient simulation fallback
   const searchStr = `${address || ''} ${city || ''} ${district || ''}`.toLowerCase();
+  
+  // Demo Mode: Only Colombo areas have Fibre loop coverage available.
+  // Other areas outside Colombo are unavailable for loops.
+  const COLOMBO_KEYWORDS = [
+    'colombo',
+    'dehiwala',
+    'mount lavinia',
+    'nugegoda',
+    'maharagama',
+    'kottawa',
+    'battaramulla',
+    'kotte',
+    'malabe',
+    'rajagiriya',
+    'moratuwa',
+    'piliyandala',
+    'homagama',
+    'padukka',
+    'hanwella',
+    'hokandara',
+    'thalawathugoda',
+    'pannipitiya',
+    'havelock',
+    'wellawatte',
+    'bambalapitiya',
+    'kollupitiya',
+    'fort',
+    'borella',
+    'maradana',
+    'pettah',
+    'cinnamon gardens',
+    'kotahena',
+    'grandpass',
+    'modara',
+    'dematagoda',
+    'hulftsdorp',
+    'slave island',
+  ];
+
+  const isColomboArea =
+    (district && district.toLowerCase().includes('colombo')) ||
+    COLOMBO_KEYWORDS.some((kw) => searchStr.includes(kw));
+
   const isNoFibre =
+    !isColomboArea ||
     searchStr.includes('no fibre') ||
     searchStr.includes('no-fibre') ||
     searchStr.includes('ports full') ||
@@ -110,7 +154,7 @@ export async function queryOSSFeasibility({
     searchStr.includes('no loop') ||
     searchStr.includes('no-loop') ||
     searchStr.includes('unavailable') ||
-    searchStr.includes('unserviced') ||
+    searchStr.includes('remote zone') ||
     searchStr.includes('dead zone');
 
   const lat = Number(latitude) || 6.9271;
@@ -119,15 +163,21 @@ export async function queryOSSFeasibility({
   const exchangeName = /kandy/i.test(city || address) ? 'Kandy Central Exchange' : /galle/i.test(city || address) ? 'Galle Fort Exchange' : 'Colombo Central Exchange';
 
   const fdpId = `FDP-${exchangePrefix}-${Math.floor(1000 + Math.abs(Math.sin(lat + lng) * 8000))}`;
-  const fdpDistance = isNoCoverage ? 850 : isNoFibre ? 180 : Math.floor(55 + (Math.abs(Math.sin(lat) * 200)));
-  const fdpPorts = isNoCoverage || isNoFibre ? 0 : 3;
+  const fdpDistance = !isColomboArea ? 1250 : (isNoCoverage ? 850 : isNoFibre ? 180 : Math.floor(55 + (Math.abs(Math.sin(lat) * 200))));
+  const fdpPorts = !isColomboArea ? 0 : (isNoCoverage || isNoFibre ? 0 : 3);
 
-  const fibreAvailable = !isNoCoverage && !isNoFibre && fdpDistance <= 350 && fdpPorts > 0;
+  const fibreAvailable = isColomboArea && !isNoCoverage && !isNoFibre && fdpDistance <= 350 && fdpPorts > 0;
   const lteAvailable = !isNoCoverage;
 
   const prodCat = (requestedProduct?.category || '').toLowerCase();
   const prodName = (requestedProduct?.productName || requestedProduct?.name || '').toLowerCase();
-  const isFibreReq = prodCat.includes('fibre') || prodName.includes('fibre');
+  const isFibreReq =
+    prodCat.includes('fibre') ||
+    prodCat.includes('fiber') ||
+    prodCat.includes('ftth') ||
+    prodName.includes('fibre') ||
+    prodName.includes('fiber') ||
+    prodName.includes('ftth');
   const isLteReq = prodCat.includes('lte') || prodName.includes('lte');
 
   let reqFeasible = true;
@@ -164,19 +214,21 @@ export async function queryOSSFeasibility({
     },
     fibre: {
       available: fibreAvailable,
-      status: fibreAvailable ? 'FEASIBLE' : (isNoFibre ? 'PORTS_EXHAUSTED' : 'UNSERVICED'),
+      status: fibreAvailable ? 'FEASIBLE' : (!isColomboArea ? 'NO_LOOP' : (isNoFibre ? 'PORTS_EXHAUSTED' : 'UNSERVICED')),
       fdpId,
       distanceMeters: fdpDistance,
       maxDistanceMeters: 350,
       availablePorts: fdpPorts,
       totalPorts: 8,
       splitterType: '1:8 PLC Optical Splitter',
-      opticalPowerDbm: -19.4,
+      opticalPowerDbm: !isColomboArea ? -32.5 : -19.4,
       maxSpeed: 'Up to 1 Gbps Gigabit FTTH',
       provisionDays: 3,
       reason: fibreAvailable
-        ? `Direct optical drop cable path verified to ${fdpId} (${fdpDistance}m away, ${fdpPorts} of 8 ports free).`
-        : `Optical distribution ports on nearest terminal (${fdpId}) are currently fully allocated or out of reach.`,
+        ? `Direct optical drop cable path verified to ${fdpId} (${fdpDistance}m away, ${fdpPorts} of 8 ports free) in Colombo service area.`
+        : (!isColomboArea
+          ? `In this demo version, Fibre loop coverage is available only for Colombo areas. No active Fibre loop exists for ${city || district || 'this location'}.`
+          : `Optical distribution ports on nearest terminal (${fdpId}) are currently fully allocated or out of reach.`),
     },
     lte: {
       available: lteAvailable,
@@ -197,7 +249,9 @@ export async function queryOSSFeasibility({
     requestedServiceFeasible: reqFeasible,
     requestedServiceMessage: reqFeasible
       ? 'Selected service is 100% compatible with your installation location.'
-      : `The selected package (${requestedProduct?.productName || 'Fibre Broadband'}) is currently unavailable at this exact address.`,
+      : (!isColomboArea
+        ? `In this demo version, Fibre loop coverage is available only for Colombo areas. For ${city || district || 'this location'}, you can choose our 4G LTE Home Broadband network instead.`
+        : `The selected package (${requestedProduct?.productName || 'Fibre Broadband'}) is currently unavailable at this exact address.`),
     alternativeServices: alternatives,
   };
 }

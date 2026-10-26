@@ -4,6 +4,11 @@ import { getProductById, addToCart } from '../services/productService';
 import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
 import Toast from '../components/common/Toast';
 
+const isLteOrFtthProduct = (prod = {}) => {
+  const productText = `${prod.category || ''} ${prod.name || ''} ${prod.productName || ''}`.toLowerCase();
+  return /\blte\b|\b4g\b|\bftth\b|\bfibre\b|\bfiber\b/.test(productText);
+};
+
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -18,7 +23,12 @@ export default function ProductDetailPage() {
       setLoading(true);
       try {
         const res = await getProductById(id);
-        setProduct(res.data || res.product || res);
+      const loadedProduct = res.data || res.product || res;
+      if (isLteOrFtthProduct(loadedProduct)) {
+        window.location.replace(import.meta.env.VITE_PACKAGE_SELECTION_PORTAL_URL || 'https://dpdlab1.slt.lk:703');
+        return;
+      }
+      setProduct(loadedProduct);
       } catch (err) {
         console.error('Error fetching product:', err);
       } finally {
@@ -42,10 +52,23 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleBuyNow = async (prod, qty) => {
+  const handleBuyNow = async (prod, qty = 1) => {
     await handleAddToCart(prod, qty);
-    // The customer is already signed in by this point — straight to the form.
-    navigate('/new-connection');
+    const itemRawName = prod.productName || prod.name || '';
+    const isFibre = /fibre|fiber|ftth/i.test(itemRawName) || /fibre|fiber|ftth/i.test(prod.category || '');
+    const selectedProductData = {
+      productId: prod.productId || prod._id || prod.id,
+      productName: itemRawName,
+      name: itemRawName,
+      category: prod.category || (isFibre ? 'Fibre Broadband' : 'Broadband'),
+      monthlyPrice: prod.monthlyPrice || prod.price,
+      installationFee: prod.installationFee !== undefined ? prod.installationFee : 2500,
+      quantity: qty || 1,
+      speed: prod.speed,
+      features: prod.features,
+    };
+    localStorage.setItem('selectedProduct', JSON.stringify(selectedProductData));
+    navigate('/new-connection', { state: { selectedProduct: selectedProductData } });
   };
 
   return (

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiCheckCircle,
@@ -12,17 +11,350 @@ import {
   FiWifi,
   FiRadio,
   FiCpu,
-  FiLayers,
   FiCheck,
-  FiInfo,
   FiZap,
   FiClock,
   FiCompass,
-  FiCheckSquare,
-  FiSliders,
+  FiXCircle,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { queryOSSFeasibility } from '../../services/ossService';
+import { queryOSSFeasibility, ALTERNATIVE_PACKAGES } from '../../services/ossService';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Area Unavailable Modal — shown when Fiber is selected but not available
+// ─────────────────────────────────────────────────────────────────────────────
+function AreaUnavailableModal({
+  isOpen,
+  selectedProduct,
+  areaName = '',
+  alternatives = [],
+  fibreAvailable = false,
+  lteAvailable = false,
+  onChooseLTE,
+  onGoBack,
+  onDiscontinue,
+}) {
+  const lteAlternatives = alternatives.filter((product) =>
+    /lte|4g/i.test(`${product.category || ''} ${product.productName || product.name || ''}`)
+  );
+  const availableLteList = lteAvailable
+    ? lteAlternatives.length > 0 ? lteAlternatives : ALTERNATIVE_PACKAGES.LTE
+    : [];
+  const [selectedLteId, setSelectedLteId] = useState(null);
+  useEffect(() => {
+    if (isOpen) setSelectedLteId(null);
+  }, [isOpen, selectedProduct]);
+
+  if (!isOpen) return null;
+
+  const productName = selectedProduct?.productName || selectedProduct?.name || 'Fibre Broadband';
+  const displayArea = areaName || 'your selected location';
+  const currentLte = availableLteList.find((p) => (p._id || p.id) === selectedLteId) || null;
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.72)',
+            backdropFilter: 'blur(14px)',
+            WebkitBackdropFilter: 'blur(14px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem',
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '24px',
+              padding: '0',
+              maxWidth: '580px',
+              width: '100%',
+              boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.4)',
+              border: '1.5px solid #fed7aa',
+              overflow: 'hidden',
+              maxHeight: '92vh',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
+                padding: '1.75rem 2rem 1.5rem',
+                position: 'relative',
+                color: '#ffffff',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '16px',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <FiAlertTriangle size={28} color="#ffffff" />
+                </div>
+                <div>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      backgroundColor: 'rgba(255,255,255,0.25)',
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '9999px',
+                      fontSize: '0.74rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.4px',
+                      textTransform: 'uppercase',
+                      marginBottom: '0.25rem',
+                    }}
+                  >
+                    Coverage Notice
+                  </span>
+                  <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, lineHeight: 1.25 }}>
+                    Fibre Loop Not Available
+                  </h2>
+                </div>
+              </div>
+
+              <p style={{ margin: 0, fontSize: '0.88rem', color: 'rgba(255,255,255,0.92)', lineHeight: 1.45, fontWeight: 500 }}>
+                The selected Fibre service <strong style={{ color: '#ffffff' }}>{productName}</strong> is not available in {displayArea}. Review the services available at this location and select an alternative to continue.
+              </p>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '1.5rem 1.75rem', overflowY: 'auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.65rem', marginBottom: '1.25rem' }}>
+                {[
+                  { label: 'FTTH / Fibre loop', available: fibreAvailable },
+                  { label: 'Mobitel 4G / LTE', available: lteAvailable },
+                ].map((service) => (
+                  <div
+                    key={service.label}
+                    style={{
+                      border: `1.5px solid ${service.available ? '#86efac' : '#fecaca'}`,
+                      backgroundColor: service.available ? '#f0fdf4' : '#fef2f2',
+                      borderRadius: '10px',
+                      padding: '0.75rem',
+                      color: service.available ? '#166534' : '#991b1b',
+                      fontSize: '0.82rem',
+                      fontWeight: 800,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                      {service.available ? <FiCheckCircle size={15} /> : <FiXCircle size={15} />}
+                      {service.label}
+                    </div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                      {service.available ? 'Available here' : 'Not available here'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Highlight Box: Choose LTE instead */}
+              {lteAvailable && <div
+                style={{
+                  backgroundColor: '#fff7ed',
+                  border: '1.5px solid #fed7aa',
+                  borderRadius: '14px',
+                  padding: '1rem 1.15rem',
+                  marginBottom: '1.25rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
+                  <div
+                    style={{
+                      backgroundColor: '#ea580c',
+                      color: '#ffffff',
+                      borderRadius: '8px',
+                      width: '26px',
+                      height: '26px',
+                      display: 'grid',
+                      placeItems: 'center',
+                      flexShrink: 0,
+                      marginTop: '0.1rem',
+                    }}
+                  >
+                    <FiWifi size={15} />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.94rem', fontWeight: 800, color: '#9a3412' }}>
+                      LTE service is available at your location
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '0.84rem', color: '#7c2d12', lineHeight: 1.45 }}>
+                      Continue to the package selection portal to view and select an LTE service.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Key Benefits of LTE */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                    gap: '0.6rem',
+                    marginTop: '0.85rem',
+                    paddingTop: '0.75rem',
+                    borderTop: '1px solid #ffedd5',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: '#9a3412', fontWeight: 700 }}>
+                    <FiCheckCircle size={14} color="#ea580c" />
+                    <span>Instant Plug &amp; Play</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: '#9a3412', fontWeight: 700 }}>
+                    <FiCheckCircle size={14} color="#ea580c" />
+                    <span>No Cable Drilling</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: '#9a3412', fontWeight: 700 }}>
+                    <FiCheckCircle size={14} color="#ea580c" />
+                    <span>Free Doorstep Delivery</span>
+                  </div>
+                </div>
+              </div>}
+
+              {/* Package selection is handled in the external portal. */}
+              {false && lteAvailable && <div style={{ marginBottom: '1.35rem' }}>
+          <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.55rem' }}>
+            Select One LTE Package to Continue:
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  {availableLteList.map((alt) => {
+                    const isSelected = (alt._id || alt.id) === (currentLte?._id || currentLte?.id);
+                    return (
+                      <div
+                        key={alt._id || alt.id}
+                        onClick={() => setSelectedLteId(alt._id || alt.id)}
+                        style={{
+                          border: `2px solid ${isSelected ? '#ea580c' : '#e2e8f0'}`,
+                          backgroundColor: isSelected ? '#fff7ed' : '#ffffff',
+                          borderRadius: '12px',
+                          padding: '0.9rem 1.1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: isSelected ? '0 4px 12px rgba(234, 88, 12, 0.12)' : 'none',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <input
+                            type="radio"
+                            name="selectedLtePackage"
+                            checked={isSelected}
+                            onChange={() => setSelectedLteId(alt._id || alt.id)}
+                            style={{ accentColor: '#ea580c', width: '18px', height: '18px' }}
+                          />
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                              <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                                {alt.name || alt.productName}
+                              </span>
+                              <span style={{ backgroundColor: '#fed7aa', color: '#9a3412', fontSize: '0.68rem', fontWeight: 800, padding: '0.1rem 0.45rem', borderRadius: '5px' }}>
+                                {alt.quota || alt.speed || 'LTE'}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.15rem' }}>
+                              {alt.features?.slice(0, 2).join(' • ')}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#ea580c' }}>
+                            Rs. {(alt.monthlyPrice || alt.price || 3999).toLocaleString()}
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>/month</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>}
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                <button
+                  type="button"
+                  onClick={() => window.open(import.meta.env.VITE_PACKAGE_SELECTION_PORTAL_URL || 'https://dpdlab1.slt.lk:703', '_blank', 'noopener,noreferrer')}
+                  disabled={!lteAvailable}
+                  style={{
+                    backgroundColor: lteAvailable ? '#ea580c' : '#cbd5e1',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '0.95rem 1.4rem',
+                    fontSize: '0.98rem',
+                    fontWeight: 800,
+                    cursor: lteAvailable ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.55rem',
+                    boxShadow: lteAvailable ? '0 6px 20px rgba(234, 88, 12, 0.35)' : 'none',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <FiWifi size={20} />
+                  <span>{lteAvailable ? 'Go to package selection portal' : 'No alternative service is available here'}</span>
+                  <FiArrowRight size={18} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onDiscontinue}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    color: '#991b1b',
+                    border: '1.5px solid #fecaca',
+                    borderRadius: '12px',
+                    padding: '0.8rem 1.25rem',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                  }}
+                >
+                  <FiXCircle size={16} />
+                  Discontinue Fibre-only registration
+                </button>
+              </div>
+
+              {/* Support Hotline */}
+              <p style={{ margin: '1rem 0 0', fontSize: '0.78rem', color: '#94a3b8', textAlign: 'center', fontWeight: 500 }}>
+                Need technical assistance? Call SLTMobitel Support at <a href="tel:1212" style={{ color: '#0f57a8', fontWeight: 700, textDecoration: 'none' }}>1212</a>
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 export default function LoopCheckStep({
   formData = {},
@@ -30,12 +362,12 @@ export default function LoopCheckStep({
   onSelectAlternativeProduct,
   onAvailable,
   onGoBack,
+  onDiscontinue,
 }) {
-  const navigate = useNavigate();
   const [phase, setPhase] = useState('checking'); // 'checking' | 'completed'
   const [scanStep, setScanStep] = useState(1);
   const [ossData, setOssData] = useState(null);
-  const [activeSimulation, setActiveSimulation] = useState('normal'); // 'normal' | 'no-fibre' | 'no-coverage'
+  const [checkError, setCheckError] = useState('');
   const [waitlistRegistered, setWaitlistRegistered] = useState(false);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
 
@@ -46,25 +378,19 @@ export default function LoopCheckStep({
   const longitude = formData.longitude || null;
 
   // Run OSS Feasibility Query
-  const executeOSSCheck = async (simulationMode = activeSimulation) => {
+  const executeOSSCheck = async () => {
     setPhase('checking');
     setScanStep(1);
+    setCheckError('');
 
     // Multi-step scanning animation
     const t1 = setTimeout(() => setScanStep(2), 600);
     const t2 = setTimeout(() => setScanStep(3), 1200);
     const t3 = setTimeout(() => setScanStep(4), 1800);
 
-    let queryAddress = address;
-    if (simulationMode === 'no-fibre') {
-      queryAddress = `${address} (no fibre ports full test)`;
-    } else if (simulationMode === 'no-coverage') {
-      queryAddress = `${address} (unserviced remote zone test)`;
-    }
-
     try {
       const data = await queryOSSFeasibility({
-        address: queryAddress,
+        address,
         city,
         district,
         latitude,
@@ -72,40 +398,47 @@ export default function LoopCheckStep({
         requestedProduct: selectedProduct,
       });
 
+      if (!data || typeof data !== 'object') {
+        throw new Error('The coverage check returned no result.');
+      }
+
       setTimeout(() => {
         setOssData(data);
         setPhase('completed');
       }, 2100);
     } catch (err) {
       console.error('OSS check failed:', err);
-      setTimeout(() => {
-        setPhase('completed');
-      }, 2100);
-    }
-
-    return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
-    };
+      setCheckError('We couldn’t complete the coverage check. Please try again.');
+      setPhase('error');
+    }
   };
 
   useEffect(() => {
-    executeOSSCheck(activeSimulation);
-  }, [address, city, latitude, longitude, activeSimulation]);
-
-  const handleSimulateChange = (mode) => {
-    setActiveSimulation(mode);
-    setWaitlistRegistered(false);
-  };
+    executeOSSCheck();
+  }, [address, city, latitude, longitude]);
 
   const handleSwitchAlternative = (altProduct) => {
-    if (onSelectAlternativeProduct) {
-      onSelectAlternativeProduct(altProduct);
+    if (!altProduct || !onSelectAlternativeProduct) {
+      return;
     }
-    toast.success(`Switched to ${altProduct.name}! Service is available at your location.`);
-    // Re-run check with normal mode and updated product to verify compatibility
-    setActiveSimulation('normal');
+    onSelectAlternativeProduct(altProduct);
+    toast.success(`Selected ${altProduct.name || altProduct.productName}.`, {
+      icon: '📶',
+    });
+    onAvailable();
+  };
+
+  // Handler: customer chooses LTE from the area-unavailable modal
+  const handleChooseLTE = (lteProduct) => {
+    handleSwitchAlternative(lteProduct);
+  };
+
+  // Handler: customer closes the coverage notice and returns to the previous step
+  const handleGoBackFromModal = () => {
+    onGoBack();
   };
 
   const handleRegisterWaitlist = () => {
@@ -116,9 +449,17 @@ export default function LoopCheckStep({
   // Derived states
   const fibre = ossData?.fibre || {};
   const lte = ossData?.lte || {};
-  const isReqFeasible = ossData?.requestedServiceFeasible ?? true;
+  const productDescription = `${selectedProduct?.category || ''} ${selectedProduct?.productName || selectedProduct?.name || ''}`;
+  const isFibreSelected = /fibre|fiber|ftth/i.test(productDescription);
+  const isLteSelected = /lte|4g/i.test(productDescription);
+  const selectedNetworkAvailable = isFibreSelected
+    ? fibre.available === true
+    : isLteSelected
+      ? lte.available === true
+      : fibre.available === true || lte.available === true;
+  const isReqFeasible = ossData?.requestedServiceFeasible === true && selectedNetworkAvailable;
   const alternatives = ossData?.alternativeServices || [];
-  const overallStatus = ossData?.overallStatus || 'FEASIBLE';
+  const overallStatus = ossData?.overallStatus || 'UNAVAILABLE';
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -127,36 +468,13 @@ export default function LoopCheckStep({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
             <h3 style={{ color: '#0f172a', margin: '0 0 0.35rem 0', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FiCpu color="#0f57a8" /> OSS Service Feasibility &amp; Coverage Check
+              <FiCpu color="#0f57a8" /> Fibre Loop Availability Check
             </h3>
             <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>
-              Real-time engineering verification with SLTMobitel Operations Support System (OSS) database.
+              We check FTTH loop availability first. If there is no loop, available services such as LTE will be offered before you continue.
             </p>
           </div>
 
-          {/* Quick Simulation Controls for Review / Testing */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#f1f5f9', padding: '0.35rem 0.65rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            <FiSliders size={13} color="#64748b" />
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>Simulate OSS:</span>
-            <select
-              value={activeSimulation}
-              onChange={(e) => handleSimulateChange(e.target.value)}
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                padding: '0.2rem 0.4rem',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                backgroundColor: '#ffffff',
-                color: '#0f172a',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="normal">Standard (Fibre &amp; LTE Available)</option>
-              <option value="no-fibre">Fibre Ports Saturated (LTE Alternative)</option>
-              <option value="no-coverage">Unserviced Zone (No Coverage)</option>
-            </select>
-          </div>
         </div>
       </div>
 
@@ -324,6 +642,37 @@ export default function LoopCheckStep({
                 <span>Compiling Comprehensive Feasibility Qualification Report</span>
               </div>
             </div>
+          </motion.div>
+        )}
+
+        {phase === 'error' && (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              backgroundColor: '#fff7ed',
+              border: '1.5px solid #fed7aa',
+              borderRadius: '16px',
+              padding: '2rem',
+              textAlign: 'center',
+            }}
+          >
+            <FiAlertCircle size={32} color="#c2410c" />
+            <h4 style={{ margin: '0.75rem 0 0.4rem', color: '#9a3412' }}>Coverage Check Could Not Be Completed</h4>
+            <p style={{ margin: '0 0 1.25rem', color: '#7c2d12', fontSize: '0.9rem' }}>{checkError}</p>
+            <button
+              type="button"
+              onClick={() => executeOSSCheck()}
+              className="btn btn-primary"
+              style={{ marginRight: '0.5rem' }}
+            >
+              Try Again
+            </button>
+            <button type="button" onClick={onGoBack} className="btn btn-secondary">
+              Change Location
+            </button>
           </motion.div>
         )}
 
@@ -765,24 +1114,12 @@ export default function LoopCheckStep({
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
                   <div>
                     <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      Recommended Alternative Solutions
+                      Alternative Packages
                     </span>
                     <h4 style={{ margin: '0.2rem 0 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>
-                      High-Speed Services Available at Your Location Right Now
+                      Choose another package if you want to continue
                     </h4>
                   </div>
-                  <span
-                    style={{
-                      backgroundColor: '#e0f2fe',
-                      color: '#0369a1',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '9999px',
-                      fontSize: '0.75rem',
-                      fontWeight: 800,
-                    }}
-                  >
-                    100% Signal Guaranteed
-                  </span>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
@@ -841,7 +1178,7 @@ export default function LoopCheckStep({
                           boxShadow: '0 4px 12px rgba(15, 87, 168, 0.2)',
                         }}
                       >
-                        <span>Select &amp; Proceed with this Package</span>
+                        <span>Choose this package &amp; continue</span>
                         <FiArrowRight size={15} />
                       </button>
                     </div>
@@ -900,7 +1237,7 @@ export default function LoopCheckStep({
                       backgroundColor: '#16a34a',
                       color: '#ffffff',
                       border: 'none',
-                      padding: '0.75rem 1.75rem',
+                      padding: '0.85rem 1.85rem',
                       borderRadius: '12px',
                       fontWeight: 800,
                       fontSize: '0.95rem',
@@ -911,7 +1248,7 @@ export default function LoopCheckStep({
                       boxShadow: '0 4px 15px rgba(22, 163, 74, 0.25)',
                     }}
                   >
-                    <span>Proceed to Customer Identification</span>
+                    <span>Proceed to Identity Verification</span>
                     <FiArrowRight size={17} />
                   </button>
                 ) : (
@@ -938,6 +1275,19 @@ export default function LoopCheckStep({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Area Unavailable Modal (Fiber not available → suggest LTE) ── */}
+      <AreaUnavailableModal
+        isOpen={phase === 'completed' && fibre.available !== true}
+        selectedProduct={selectedProduct}
+        areaName={city || district || address || 'your area'}
+        alternatives={ossData?.alternativeServices || []}
+        fibreAvailable={fibre.available === true}
+        lteAvailable={lte.available === true}
+        onChooseLTE={handleChooseLTE}
+        onGoBack={handleGoBackFromModal}
+        onDiscontinue={onDiscontinue}
+      />
 
       {/* ── Engineering Survey Modal (When Unserviced) ── */}
       <AnimatePresence>

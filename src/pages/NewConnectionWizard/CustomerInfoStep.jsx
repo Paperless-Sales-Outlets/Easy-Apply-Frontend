@@ -49,55 +49,58 @@ export function autoDetectAreaCode(addressStr) {
   return null;
 }
 
-const SRI_LANKA_CITY_POSTAL_DATA = [
-  { label: 'Colombo 01 (Fort) - 00100', city: 'Colombo 01', district: 'Colombo', postalCode: '00100', areaCode: '011' },
-  { label: 'Colombo 02 (Slave Island) - 00200', city: 'Colombo 02', district: 'Colombo', postalCode: '00200', areaCode: '011' },
-  { label: 'Colombo 03 (Kollupitiya) - 00300', city: 'Colombo 03', district: 'Colombo', postalCode: '00300', areaCode: '011' },
-  { label: 'Colombo 04 (Bambalapitiya) - 00400', city: 'Colombo 04', district: 'Colombo', postalCode: '00400', areaCode: '011' },
-  { label: 'Colombo 05 (Havelock Town) - 00500', city: 'Colombo 05', district: 'Colombo', postalCode: '00500', areaCode: '011' },
-  { label: 'Colombo 06 (Wellawatte) - 00600', city: 'Colombo 06', district: 'Colombo', postalCode: '00600', areaCode: '011' },
-  { label: 'Colombo 07 (Cinnamon Gardens) - 00700', city: 'Colombo 07', district: 'Colombo', postalCode: '00700', areaCode: '011' },
-  { label: 'Colombo 08 (Borella) - 00800', city: 'Colombo 08', district: 'Colombo', postalCode: '00800', areaCode: '011' },
-  { label: 'Colombo 09 (Dematagoda) - 00900', city: 'Colombo 09', district: 'Colombo', postalCode: '00900', areaCode: '011' },
-  { label: 'Colombo 10 (Maradana) - 01000', city: 'Colombo 10', district: 'Colombo', postalCode: '01000', areaCode: '011' },
-  { label: 'Colombo 11 (Pettah) - 01100', city: 'Colombo 11', district: 'Colombo', postalCode: '01100', areaCode: '011' },
-  { label: 'Colombo 12 (Hulftsdorp) - 01200', city: 'Colombo 12', district: 'Colombo', postalCode: '01200', areaCode: '011' },
-  { label: 'Colombo 13 (Kotahena) - 01300', city: 'Colombo 13', district: 'Colombo', postalCode: '01300', areaCode: '011' },
-  { label: 'Colombo 14 (Grandpass) - 01400', city: 'Colombo 14', district: 'Colombo', postalCode: '01400', areaCode: '011' },
-  { label: 'Colombo 15 (Modara) - 01500', city: 'Colombo 15', district: 'Colombo', postalCode: '01500', areaCode: '011' },
-  { label: 'Dehiwala - 10350', city: 'Dehiwala', district: 'Colombo', postalCode: '10350', areaCode: '011' },
-  { label: 'Mount Lavinia - 10370', city: 'Mount Lavinia', district: 'Colombo', postalCode: '10370', areaCode: '011' },
-  { label: 'Nugegoda - 10250', city: 'Nugegoda', district: 'Colombo', postalCode: '10250', areaCode: '011' },
-  { label: 'Maharagama - 10280', city: 'Maharagama', district: 'Colombo', postalCode: '10280', areaCode: '011' },
-  { label: 'Kottawa - 10230', city: 'Kottawa', district: 'Colombo', postalCode: '10230', areaCode: '011' },
-  { label: 'Battaramulla - 10120', city: 'Battaramulla', district: 'Colombo', postalCode: '10120', areaCode: '011' },
-  { label: 'Sri Jayawardenepura Kotte - 10100', city: 'Sri Jayawardenepura Kotte', district: 'Colombo', postalCode: '10100', areaCode: '011' },
-  { label: 'Malabe - 10115', city: 'Malabe', district: 'Colombo', postalCode: '10115', areaCode: '011' },
-  { label: 'Rajagiriya - 10107', city: 'Rajagiriya', district: 'Colombo', postalCode: '10107', areaCode: '011' },
-  { label: 'Moratuwa - 10400', city: 'Moratuwa', district: 'Colombo', postalCode: '10400', areaCode: '011' },
-  { label: 'Piliyandala - 10300', city: 'Piliyandala', district: 'Colombo', postalCode: '10300', areaCode: '011' },
-  { label: 'Gampaha - 11000', city: 'Gampaha', district: 'Gampaha', postalCode: '11000', areaCode: '033' },
-  { label: 'Negombo - 11500', city: 'Negombo', district: 'Gampaha', postalCode: '11500', areaCode: '031' },
-  { label: 'Ja-Ela - 11350', city: 'Ja-Ela', district: 'Gampaha', postalCode: '11350', areaCode: '031' },
-  { label: 'Kelaniya - 11600', city: 'Kelaniya', district: 'Gampaha', postalCode: '11600', areaCode: '033' },
-  { label: 'Wattala - 11300', city: 'Wattala', district: 'Gampaha', postalCode: '11300', areaCode: '033' },
-  { label: 'Kandy - 20000', city: 'Kandy', district: 'Kandy', postalCode: '20000', areaCode: '081' },
-  { label: 'Peradeniya - 20400', city: 'Peradeniya', district: 'Kandy', postalCode: '20400', areaCode: '081' },
-  { label: 'Gampola - 20500', city: 'Gampola', district: 'Kandy', postalCode: '20500', areaCode: '081' },
-  { label: 'Dickoya - 22050', city: 'Dickoya', district: 'Nuwara Eliya', postalCode: '22050', areaCode: '052' },
-  { label: 'Hatton - 22000', city: 'Hatton', district: 'Nuwara Eliya', postalCode: '22000', areaCode: '052' },
-  { label: 'Nuwara Eliya - 22200', city: 'Nuwara Eliya', district: 'Nuwara Eliya', postalCode: '22200', areaCode: '052' },
-  { label: 'Galle - 80000', city: 'Galle', district: 'Galle', postalCode: '80000', areaCode: '091' },
-  { label: 'Hikkaduwa - 80240', city: 'Hikkaduwa', district: 'Galle', postalCode: '80240', areaCode: '091' },
-  { label: 'Matara - 81000', city: 'Matara', district: 'Matara', postalCode: '81000', areaCode: '041' },
-  { label: 'Jaffna - 40000', city: 'Jaffna', district: 'Jaffna', postalCode: '40000', areaCode: '021' },
-  { label: 'Kurunegala - 60000', city: 'Kurunegala', district: 'Kurunegala', postalCode: '60000', areaCode: '037' },
-  { label: 'Anuradhapura - 50000', city: 'Anuradhapura', district: 'Anuradhapura', postalCode: '50000', areaCode: '025' },
-  { label: 'Badulla - 90000', city: 'Badulla', district: 'Badulla', postalCode: '90000', areaCode: '055' },
-  { label: 'Ratnapura - 70000', city: 'Ratnapura', district: 'Ratnapura', postalCode: '70000', areaCode: '045' },
-  { label: 'Trincomalee - 31000', city: 'Trincomalee', district: 'Trincomalee', postalCode: '31000', areaCode: '026' },
-  { label: 'Batticaloa - 30000', city: 'Batticaloa', district: 'Batticaloa', postalCode: '30000', areaCode: '065' },
-  { label: 'Vavuniya - 43000', city: 'Vavuniya', district: 'Vavuniya', postalCode: '43000', areaCode: '024' },
+export const SRI_LANKA_CITY_POSTAL_DATA = [
+  // ── Colombo Service Areas (Available for Fibre Loop in Demo) ──
+  { label: 'Colombo 01 (Fort) - 00100', city: 'Colombo 01', district: 'Colombo', postalCode: '00100', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 02 (Slave Island) - 00200', city: 'Colombo 02', district: 'Colombo', postalCode: '00200', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 03 (Kollupitiya) - 00300', city: 'Colombo 03', district: 'Colombo', postalCode: '00300', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 04 (Bambalapitiya) - 00400', city: 'Colombo 04', district: 'Colombo', postalCode: '00400', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 05 (Havelock Town) - 00500', city: 'Colombo 05', district: 'Colombo', postalCode: '00500', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 06 (Wellawatte) - 00600', city: 'Colombo 06', district: 'Colombo', postalCode: '00600', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 07 (Cinnamon Gardens) - 00700', city: 'Colombo 07', district: 'Colombo', postalCode: '00700', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 08 (Borella) - 00800', city: 'Colombo 08', district: 'Colombo', postalCode: '00800', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 09 (Dematagoda) - 00900', city: 'Colombo 09', district: 'Colombo', postalCode: '00900', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 10 (Maradana) - 01000', city: 'Colombo 10', district: 'Colombo', postalCode: '01000', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 11 (Pettah) - 01100', city: 'Colombo 11', district: 'Colombo', postalCode: '01100', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 12 (Hulftsdorp) - 01200', city: 'Colombo 12', district: 'Colombo', postalCode: '01200', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 13 (Kotahena) - 01300', city: 'Colombo 13', district: 'Colombo', postalCode: '01300', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 14 (Grandpass) - 01400', city: 'Colombo 14', district: 'Colombo', postalCode: '01400', areaCode: '011', fibreAvailable: true },
+  { label: 'Colombo 15 (Modara) - 01500', city: 'Colombo 15', district: 'Colombo', postalCode: '01500', areaCode: '011', fibreAvailable: true },
+  { label: 'Dehiwala - 10350', city: 'Dehiwala', district: 'Colombo', postalCode: '10350', areaCode: '011', fibreAvailable: true },
+  { label: 'Mount Lavinia - 10370', city: 'Mount Lavinia', district: 'Colombo', postalCode: '10370', areaCode: '011', fibreAvailable: true },
+  { label: 'Nugegoda - 10250', city: 'Nugegoda', district: 'Colombo', postalCode: '10250', areaCode: '011', fibreAvailable: true },
+  { label: 'Maharagama - 10280', city: 'Maharagama', district: 'Colombo', postalCode: '10280', areaCode: '011', fibreAvailable: true },
+  { label: 'Kottawa - 10230', city: 'Kottawa', district: 'Colombo', postalCode: '10230', areaCode: '011', fibreAvailable: true },
+  { label: 'Battaramulla - 10120', city: 'Battaramulla', district: 'Colombo', postalCode: '10120', areaCode: '011', fibreAvailable: true },
+  { label: 'Sri Jayawardenepura Kotte - 10100', city: 'Sri Jayawardenepura Kotte', district: 'Colombo', postalCode: '10100', areaCode: '011', fibreAvailable: true },
+  { label: 'Malabe - 10115', city: 'Malabe', district: 'Colombo', postalCode: '10115', areaCode: '011', fibreAvailable: true },
+  { label: 'Rajagiriya - 10107', city: 'Rajagiriya', district: 'Colombo', postalCode: '10107', areaCode: '011', fibreAvailable: true },
+  { label: 'Moratuwa - 10400', city: 'Moratuwa', district: 'Colombo', postalCode: '10400', areaCode: '011', fibreAvailable: true },
+  { label: 'Piliyandala - 10300', city: 'Piliyandala', district: 'Colombo', postalCode: '10300', areaCode: '011', fibreAvailable: true },
+
+  // ── Other Regions ──
+  { label: 'Gampaha - 11000', city: 'Gampaha', district: 'Gampaha', postalCode: '11000', areaCode: '033', fibreAvailable: false },
+  { label: 'Negombo - 11500', city: 'Negombo', district: 'Gampaha', postalCode: '11500', areaCode: '031', fibreAvailable: false },
+  { label: 'Ja-Ela - 11350', city: 'Ja-Ela', district: 'Gampaha', postalCode: '11350', areaCode: '031', fibreAvailable: false },
+  { label: 'Kelaniya - 11600', city: 'Kelaniya', district: 'Gampaha', postalCode: '11600', areaCode: '033', fibreAvailable: false },
+  { label: 'Wattala - 11300', city: 'Wattala', district: 'Gampaha', postalCode: '11300', areaCode: '033', fibreAvailable: false },
+  { label: 'Kandy - 20000', city: 'Kandy', district: 'Kandy', postalCode: '20000', areaCode: '081', fibreAvailable: false },
+  { label: 'Peradeniya - 20400', city: 'Peradeniya', district: 'Kandy', postalCode: '20400', areaCode: '081', fibreAvailable: false },
+  { label: 'Gampola - 20500', city: 'Gampola', district: 'Kandy', postalCode: '20500', areaCode: '081', fibreAvailable: false },
+  { label: 'Dickoya - 22050', city: 'Dickoya', district: 'Nuwara Eliya', postalCode: '22050', areaCode: '052', fibreAvailable: false },
+  { label: 'Hatton - 22000', city: 'Hatton', district: 'Nuwara Eliya', postalCode: '22000', areaCode: '052', fibreAvailable: false },
+  { label: 'Nuwara Eliya (Rural) - 22200', city: 'Nuwara Eliya (Rural)', district: 'Nuwara Eliya', postalCode: '22200', areaCode: '052', fibreAvailable: false },
+  { label: 'Galle - 80000', city: 'Galle', district: 'Galle', postalCode: '80000', areaCode: '091', fibreAvailable: false },
+  { label: 'Hikkaduwa - 80240', city: 'Hikkaduwa', district: 'Galle', postalCode: '80240', areaCode: '091', fibreAvailable: false },
+  { label: 'Matara - 81000', city: 'Matara', district: 'Matara', postalCode: '81000', areaCode: '041', fibreAvailable: false },
+  { label: 'Jaffna - 40000', city: 'Jaffna', district: 'Jaffna', postalCode: '40000', areaCode: '021', fibreAvailable: false },
+  { label: 'Kurunegala - 60000', city: 'Kurunegala', district: 'Kurunegala', postalCode: '60000', areaCode: '037', fibreAvailable: false },
+  { label: 'Anuradhapura - 50000', city: 'Anuradhapura', district: 'Anuradhapura', postalCode: '50000', areaCode: '025', fibreAvailable: false },
+  { label: 'Badulla - 90000', city: 'Badulla', district: 'Badulla', postalCode: '90000', areaCode: '055', fibreAvailable: false },
+  { label: 'Ratnapura - 70000', city: 'Ratnapura', district: 'Ratnapura', postalCode: '70000', areaCode: '045', fibreAvailable: false },
+  { label: 'Trincomalee - 31000', city: 'Trincomalee', district: 'Trincomalee', postalCode: '31000', areaCode: '026', fibreAvailable: false },
+  { label: 'Batticaloa - 30000', city: 'Batticaloa', district: 'Batticaloa', postalCode: '30000', areaCode: '065', fibreAvailable: false },
+  { label: 'Vavuniya (Outskirts) - 43000', city: 'Vavuniya (Outskirts)', district: 'Vavuniya', postalCode: '43000', areaCode: '024', fibreAvailable: false },
 ];
 
 const ReadOnlyDetail = ({ label, value }) => (
@@ -280,13 +283,19 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
     const match = SRI_LANKA_CITY_POSTAL_DATA.find((c) => c.city === cityName);
 
     if (setFields) {
-      setFields({
+      const updates = {
         city: cityName,
         district: match?.district || '',
         postalCode: match?.postalCode || '',
         areaCode: match?.areaCode || formData.areaCode || '011',
-      });
+      };
+      if (!formData.installAddress || formData.installAddress === formData.city || formData.installAddress.trim() === '') {
+        updates.installAddress = match ? `${match.city}, ${match.district}` : cityName;
+        updates.address = updates.installAddress;
+      }
+      setFields(updates);
     }
+
   };
 
   const handleAreaCodeSelect = (e) => {
@@ -467,6 +476,27 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
                   </option>
                 ))}
               </select>
+
+              {formData.city && (() => {
+                const selectedCityData = SRI_LANKA_CITY_POSTAL_DATA.find((item) => item.city === formData.city);
+                const isFibreReq = /fibre|fiber|ftth/i.test(selectedProduct?.productName || selectedProduct?.name || selectedProduct?.category || '');
+                if (selectedCityData?.fibreAvailable === false && isFibreReq) {
+                  return (
+                    <div style={{ marginTop: '0.55rem', padding: '0.55rem 0.85rem', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', fontSize: '0.82rem', color: '#c2410c', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <FiZap size={15} color="#ea580c" style={{ flexShrink: 0 }} />
+                      <span>Fibre loop is not available in <strong>{selectedCityData.city}</strong> (Colombo areas only in demo). You can choose our 4G LTE Home Broadband network instead.</span>
+                    </div>
+                  );
+                } else if (selectedCityData?.fibreAvailable && isFibreReq) {
+                  return (
+                    <div style={{ marginTop: '0.55rem', padding: '0.55rem 0.85rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', fontSize: '0.82rem', color: '#15803d', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <FiCheck size={15} color="#16a34a" style={{ flexShrink: 0 }} />
+                      <span>Fibre loop coverage confirmed in <strong>{selectedCityData.city}</strong> (Colombo Demo Area).</span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </div>
 
@@ -664,7 +694,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
         onSelectAddress={handleLocationSelect}
         initialAddress={formData.installAddress || formData.address}
       />
+
     </motion.div>
   );
 }
-

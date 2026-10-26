@@ -200,6 +200,15 @@ const getProductGroup = (text = '') => {
   return null;
 };
 
+const isLteOrFtthProduct = (product = {}) => {
+  const productText = `${product.category || ''} ${product.name || ''} ${product.productName || ''}`.toLowerCase();
+  return /\blte\b|\b4g\b|\bftth\b|\bfibre\b|\bfiber\b/.test(productText);
+};
+
+const openPackageSelectionPortal = (url) => {
+  window.open(url || import.meta.env.VITE_PACKAGE_SELECTION_PORTAL_URL || 'https://dpdlab1.slt.lk:703', '_blank', 'noopener,noreferrer');
+};
+
 // Category chip names that the category filter below understands
 const CHIP_CATEGORIES = ['Voice', 'Fibre Broadband', 'PEO TV'];
 
@@ -215,6 +224,7 @@ const collectTreeMatchers = (node, ids = new Set(), names = new Set()) => {
 export default function ProductCatalogPage() {
   const { t, i18n } = useTranslation();
   const [products, setProducts] = useState([]);
+  const [packageSelectionUrl, setPackageSelectionUrl] = useState(import.meta.env.VITE_PACKAGE_SELECTION_PORTAL_URL || 'https://dpdlab1.slt.lk:703');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -253,6 +263,7 @@ export default function ProductCatalogPage() {
       setError(null);
       try {
         const res = await getProducts({ limit: 100 });
+        setPackageSelectionUrl(res.packageSelectionUrl || import.meta.env.VITE_PACKAGE_SELECTION_PORTAL_URL || 'https://dpdlab1.slt.lk:703');
         const list = res.data || res.products || res || [];
         if (Array.isArray(list) && list.length > 0) {
           // Normalize and use live products directly
@@ -980,7 +991,14 @@ export default function ProductCatalogPage() {
                               isSelected={isSelected}
                               isFavorite={favorites.includes(prodId)}
                               isInCart={isInCart}
-                              onSelect={(p) => setSelectedProduct(p)}
+                              onSelect={(p) => {
+                                if (isLteOrFtthProduct(p)) {
+                                  const shouldContinue = window.confirm('LTE and FTTH package selection is available in our package selection portal. Would you like to continue there?');
+                                  if (shouldContinue) openPackageSelectionPortal(packageSelectionUrl);
+                                  return;
+                                }
+                                setSelectedProduct(p);
+                              }}
                               onToggleFavorite={handleToggleFavorite}
                               onAddToCart={(p) => handleAddToCart(p, 1)}
                               onRemoveFromCart={handleRemoveFromCart}

@@ -13,6 +13,9 @@ import { useVerifiedMobile, useVerifiedContext } from '../../components/verifica
 import { getAuthUser } from '../../utils/authSession';
 import WizardStepper from '../../components/WizardStepper';
 import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiAlertTriangle, FiX, FiWifi, FiArrowRight, FiMapPin } from 'react-icons/fi';
+import { ALTERNATIVE_PACKAGES } from '../../services/ossService';
 
 const formReducer = (state, action) => {
   switch (action.type) {
@@ -97,6 +100,19 @@ export default function NewConnectionWizard() {
         try {
           setSelectedProduct(JSON.parse(stored));
         } catch (e) { }
+      } else {
+        // Fallback default: 300 Mbps Fibre Broadband to test Fiber connection flow
+        const defaultFibre = {
+          _id: 'prod-2',
+          productId: 'prod-2',
+          name: '300 Mbps Fibre Broadband',
+          productName: '300 Mbps Fibre Broadband',
+          category: 'Fibre Broadband',
+          monthlyPrice: 5499,
+          installationFee: 0,
+          speed: '300 Mbps',
+        };
+        setSelectedProduct(defaultFibre);
       }
     }
   }, [location.state]);
@@ -104,6 +120,8 @@ export default function NewConnectionWizard() {
   const [stepIndex, setStepIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [showAreaModal, setShowAreaModal] = useState(false);
+  const [unavailableCity] = useState(null);
   const [formData, dispatch] = useReducer(formReducer, initialState);
   // Flow: location → loop check → NIC & selfie → signature → review → PayHere.
   // The loop check runs automatically, so it shares the "Location" stepper slot.
@@ -172,16 +190,48 @@ export default function NewConnectionWizard() {
     setSubmitError('');
 
     if (step === 'location') {
-      const activeAddress = formData.installAddress || formData.address;
+      let activeAddress = formData.installAddress || formData.address;
+      if ((!activeAddress || activeAddress.trim().length === 0) && formData.city) {
+        activeAddress = `${formData.city}, ${formData.district || 'Sri Lanka'}`;
+        dispatch({
+          type: 'SET_FIELDS',
+          payload: { installAddress: activeAddress, address: activeAddress },
+        });
+      }
       if (!activeAddress || activeAddress.trim().length === 0) {
-        toast.error('Please specify an installation address.');
+        toast.error('Please specify an installation address or choose your city.');
         return;
       }
+
     }
     if (step === 'identity' && !identityRef.current?.validate()) return;
     if (step === 'signature' && !declarationRef.current?.validate()) return;
 
     nextStep();
+  };
+
+  const handleModalSwitchLTE = () => {
+    const ltePackage = ALTERNATIVE_PACKAGES?.LTE?.[0] || {
+      _id: 'prod-4', productId: 'prod-4', name: 'LTE Home 150 GB',
+      productName: 'LTE Home 150 GB', category: 'LTE Home',
+      speed: 'Up to 100 Mbps', monthlyPrice: 3999, installationFee: 2500,
+    };
+    setSelectedProduct(ltePackage);
+    try { localStorage.setItem('selectedProduct', JSON.stringify(ltePackage)); } catch (e) {}
+    dispatch({ type: 'UPDATE_FIELD', payload: { name: 'otherBroadbandPackage', value: `${ltePackage.productName} (Qty: 1)` } });
+    setShowAreaModal(false);
+    toast.success('Switched to 4G LTE Home Broadband — continuing your application.', { icon: '📶' });
+    nextStep();
+  };
+
+  const handleModalGoBack = () => {
+    setShowAreaModal(false);
+  };
+
+  const discontinueFibreRegistration = () => {
+    localStorage.removeItem('selectedProduct');
+    sessionStorage.removeItem('selectedProduct');
+    navigate('/new-connection/products', { replace: true });
   };
 
   // Final step of the journey: empty the basket and land on the tracking page.
@@ -330,6 +380,7 @@ export default function NewConnectionWizard() {
               }}
               onAvailable={nextStep}
               onGoBack={prevStep}
+              onDiscontinue={discontinueFibreRegistration}
             />
           )}
 
@@ -387,6 +438,175 @@ export default function NewConnectionWizard() {
           )}
         </div>
       </form>
+
+      {/* ── Area Not Available Modal — fires when Next is clicked with non-Colombo + Fibre ── */}
+      <AnimatePresence>
+        {showAreaModal && (
+          <div
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: 'rgba(15, 23, 42, 0.72)',
+              backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+              zIndex: 99999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '1.25rem',
+            }}
+            onClick={handleModalGoBack}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.88, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.88, y: 24 }}
+              transition={{ duration: 0.28, ease: 'easeOut' }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '24px',
+                maxWidth: '540px',
+                width: '100%',
+                boxShadow: '0 30px 60px -10px rgba(0,0,0,0.45)',
+                border: '1.5px solid #fed7aa',
+                overflow: 'hidden',
+                display: 'flex', flexDirection: 'column',
+              }}
+            >
+              {/* Header */}
+              <div style={{
+                background: 'linear-gradient(135deg, #ea580c 0%, #b91c1c 100%)',
+                padding: '1.75rem 2rem 1.5rem',
+                color: '#ffffff', position: 'relative',
+              }}>
+                <button
+                  type="button" onClick={handleModalGoBack}
+                  style={{
+                    position: 'absolute', top: '1rem', right: '1rem',
+                    background: 'rgba(255,255,255,0.18)', border: 'none',
+                    borderRadius: '50%', width: '34px', height: '34px',
+                    display: 'grid', placeItems: 'center',
+                    cursor: 'pointer', color: '#fff',
+                  }}
+                >
+                  <FiX size={18} />
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '0.65rem' }}>
+                  <div style={{
+                    width: '50px', height: '50px', borderRadius: '14px',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    display: 'grid', placeItems: 'center', flexShrink: 0,
+                  }}>
+                    <FiAlertTriangle size={26} color="#fff" />
+                  </div>
+                  <div>
+                    <span style={{
+                      display: 'inline-block',
+                      backgroundColor: 'rgba(255,255,255,0.25)',
+                      padding: '0.18rem 0.6rem', borderRadius: '9999px',
+                      fontSize: '0.7rem', fontWeight: 800,
+                      letterSpacing: '0.5px', textTransform: 'uppercase',
+                      marginBottom: '0.25rem',
+                    }}>Demo Feasibility Notice</span>
+                    <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 900, lineHeight: 1.25 }}>
+                      Fibre Loop Not Available in {unavailableCity?.city || formData.city}
+                    </h2>
+                  </div>
+                </div>
+
+                <p style={{ margin: 0, fontSize: '0.87rem', color: 'rgba(255,255,255,0.9)', lineHeight: 1.5, fontWeight: 500 }}>
+                  In this demo version, active Fibre loops are only provisioned across{' '}
+                  <strong style={{ color: '#fff' }}>Colombo areas</strong>. Fibre loop service is
+                  not available for <strong style={{ color: '#fff' }}>{unavailableCity?.city || formData.city}</strong>.
+                </p>
+              </div>
+
+              {/* Body */}
+              <div style={{ padding: '1.5rem 1.75rem' }}>
+                {/* LTE offer card */}
+                <div style={{
+                  backgroundColor: '#fff7ed', border: '1.5px solid #fed7aa',
+                  borderRadius: '16px', padding: '1.1rem', marginBottom: '1.25rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                    <div style={{
+                      backgroundColor: '#ea580c', color: '#fff',
+                      borderRadius: '10px', width: '34px', height: '34px',
+                      display: 'grid', placeItems: 'center', flexShrink: 0,
+                    }}>
+                      <FiWifi size={18} />
+                    </div>
+                    <div>
+                      <h4 style={{ margin: '0 0 0.25rem', fontSize: '0.95rem', fontWeight: 800, color: '#9a3412' }}>
+                        Would you like to switch to 4G LTE Home Broadband instead?
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '0.83rem', color: '#7c2d12', lineHeight: 1.5 }}>
+                        High-speed <strong>4G LTE Home Broadband</strong> is available at your
+                        location — instant plug-and-play, no cable drilling required.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Package snippet */}
+                  <div style={{
+                    marginTop: '0.85rem', padding: '0.7rem 0.95rem',
+                    backgroundColor: '#fff', borderRadius: '12px',
+                    border: '1px solid #fed7aa',
+                    display: 'flex', alignItems: 'center',
+                    justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem',
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>LTE Home 150 GB</div>
+                      <div style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>Up to 100 Mbps · Plug &amp; Play Router</div>
+                    </div>
+                    <div style={{ fontSize: '1rem', fontWeight: 900, color: '#ea580c' }}>
+                      Rs. 3,999<span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>/mo</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                  <button
+                    type="button"
+                    onClick={handleModalSwitchLTE}
+                    style={{
+                      backgroundColor: '#ea580c', color: '#fff', border: 'none',
+                      borderRadius: '14px', padding: '0.95rem 1.25rem',
+                      fontSize: '0.97rem', fontWeight: 800, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      gap: '0.55rem',
+                      boxShadow: '0 6px 20px rgba(234,88,12,0.35)',
+                    }}
+                  >
+                    <FiWifi size={18} />
+                    <span>Yes, Switch to 4G LTE &amp; Continue</span>
+                    <FiArrowRight size={17} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleModalGoBack}
+                    style={{
+                      backgroundColor: '#f8fafc', color: '#334155',
+                      border: '1.5px solid #cbd5e1',
+                      borderRadius: '14px', padding: '0.85rem 1.25rem',
+                      fontSize: '0.91rem', fontWeight: 700, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <FiMapPin size={16} color="#0f57a8" />
+                    <span>No, Go Back &amp; Choose a Colombo Area</span>
+                  </button>
+                </div>
+
+                <p style={{ margin: '0.9rem 0 0', fontSize: '0.76rem', color: '#94a3b8', textAlign: 'center', fontWeight: 500 }}>
+                  Demo only: Fibre loop provisioning is active across all Colombo district areas.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
