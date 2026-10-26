@@ -626,13 +626,7 @@ export default function ProductCatalogPage() {
       {/* Main Container */}
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem' }}>
         {/* ── Top Hero Banner & Quick Actions Section ── */}
-        <HeroBannerCarousel
-          onShopNow={() => {
-            document
-              .getElementById('products-section')
-              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }}
-        />
+        <HeroBannerCarousel />
 
         {/* ── Voice Compulsory & Bundle Rules Status Bar (Commented out: single package selection allowed) ──
         <div
