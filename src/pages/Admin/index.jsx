@@ -14,11 +14,12 @@ import UserManagementPage from './pages/UserManagementPage';
 import AuditLogsPage from './pages/AuditLogsPage';
 import SalesOfficerManagementPage from './pages/SalesOfficerManagementPage';
 import SalesOfficerDashboardPage from './pages/SalesOfficerDashboardPage';
+import LeadManagementPage from './pages/LeadManagementPage';
 import './admin.css';
 
 function getPageFromPath(pathname) {
   const segment = pathname.replace(/\/$/, '').split('/').pop();
-  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard'];
+  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'];
   if (known.includes(segment)) {
     return segment === 'applications' ? 'forms' : segment;
   }
@@ -86,6 +87,8 @@ function AdminDashboardContent() {
         return <SalesOfficerManagementPage />;
       case 'so-dashboard':
         return <SalesOfficerDashboardPage />;
+      case 'leads':
+        return <LeadManagementPage />;
       default:
         return <AdminDashboardPage />;
     }

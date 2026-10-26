@@ -52,6 +52,11 @@ const NAV_ICONS = {
       <path d="M8 18h5" />
     </svg>
   ),
+  leads: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12h4l3 8 4-16 3 8h4" />
+    </svg>
+  ),
   privileges: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -241,7 +246,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Main Content ── */}
       <div className="admin-main">
         <div className="admin-topbar" />
-        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard'].includes(activePage) ? ' admin-page-wide' : ''}`}>
+        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'].includes(activePage) ? ' admin-page-wide' : ''}`}>
           {children}
         </div>
       </div>
