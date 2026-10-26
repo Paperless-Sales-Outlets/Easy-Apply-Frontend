@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   LEAD_RESOLUTION_META,
   LEAD_RESOLUTION_OPTIONS,
@@ -61,6 +61,7 @@ export default function LeadDetailModal({
   const [resolutionNote, setResolutionNote] = useState(lead?.resolutionNote || '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const resolveRef = useRef(null);
 
   if (!lead) return null;
 
@@ -82,31 +83,44 @@ export default function LeadDetailModal({
     setSaving(true);
     try {
       await onResolve({ resolution, note: resolutionNote });
+      setSaving(false);
+      setResolving(false);
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to save the decision.');
       setSaving(false);
     }
   };
 
+  const pctCleared = checks.length ? Math.round((cleared / checks.length) * 100) : 0;
+
+  const openResolve = () => {
+    setResolving(true);
+    setTimeout(() => resolveRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 30);
+  };
+
   return (
     <div className="admin-modal-overlay" onClick={saving ? undefined : onClose}>
-      <div className="admin-modal um-modal lm-modal lm-detail-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="admin-modal-header um-modal-header">
-          <div className="um-modal-header-identity">
-            <div className="um-modal-avatar">
+      <div className="admin-modal ax-modal lm-modal lm-detail-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="lm-detail-title">
+        <div className="ax-modal-head">
+          <span className="ax-modal-head-deco" aria-hidden="true" />
+          <div className="ax-modal-identity">
+            <span className="ax-modal-avatar">
               {lead.customerName?.split(' ').filter(Boolean).map((n) => n[0]).slice(0, 2).join('').toUpperCase() || 'L'}
-            </div>
+            </span>
             <div>
-              <h3>{lead.customerName}</h3>
-              <div className="admin-modal-subtitle">
-                {lead.referenceNumber} · {lead.packageName || 'No package'} · {sourceLabel(lead.source)}
+              <span className="ax-modal-eyebrow">New connection lead</span>
+              <h3 id="lm-detail-title">{lead.customerName}</h3>
+              <div className="ax-modal-sub">
+                <span className="ax-mono-chip">{lead.referenceNumber}</span>
+                <span>{lead.packageName || 'No package'}</span>
+                <span>· {sourceLabel(lead.source)}</span>
               </div>
             </div>
           </div>
-          <button type="button" className="admin-modal-close" onClick={onClose} aria-label="Close" disabled={saving}>×</button>
+          <button type="button" className="ax-modal-close" onClick={onClose} aria-label="Close" disabled={saving}>×</button>
         </div>
 
-        <div className="admin-modal-body">
+        <div className="ax-modal-body">
           {/* ── Blocking banner ── */}
           {blocking.length > 0 && (
             <div className="lm-banner lm-banner--bad" role="alert">
@@ -131,13 +145,29 @@ export default function LeadDetailModal({
             </div>
           )}
 
-          {/* ── Status strip ── */}
-          <div className="lm-status-strip">
-            <span className={`lm-pill lm-pill--${leadStatusTone(lead.status)}`}>{leadStatusLabel(lead.status)}</span>
-            <span className={`lm-pill lm-pill--${leadRiskTone(lead.riskLevel)}`}>{leadRiskLabel(lead.riskLevel)}</span>
-            <span className="lm-pill lm-pill--neutral">{cleared} of {checks.length} checks cleared</span>
-            {lead.surveyDate && <span className="lm-pill lm-pill--info">Survey {formatDate(lead.surveyDate)}</span>}
-            {lead.assignedToName && <span className="lm-pill lm-pill--neutral">{lead.assignedToName}</span>}
+          {/* ── Summary ── */}
+          <div className="lmx-summary">
+            <div className="lmx-summary-item">
+              <span>Status</span>
+              <span className={`lm-pill lm-pill--${leadStatusTone(lead.status)}`}>{leadStatusLabel(lead.status)}</span>
+            </div>
+            <div className="lmx-summary-item">
+              <span>Risk</span>
+              <span className={`lm-pill lm-pill--${leadRiskTone(lead.riskLevel)}`}>{leadRiskLabel(lead.riskLevel)}</span>
+            </div>
+            <div className="lmx-summary-item lmx-summary-checks">
+              <span>Checks cleared</span>
+              <strong>{cleared} / {checks.length}</strong>
+              <span className="lmx-summary-track" aria-hidden="true"><span style={{ width: `${pctCleared}%` }} /></span>
+            </div>
+            <div className="lmx-summary-item">
+              <span>Survey</span>
+              <strong>{lead.surveyDate ? formatDate(lead.surveyDate) : 'Not booked'}</strong>
+            </div>
+            <div className="lmx-summary-item">
+              <span>Assigned to</span>
+              <strong>{lead.assignedToName || 'Unassigned'}</strong>
+            </div>
           </div>
 
           {/* ── Customer & site ── */}
@@ -192,7 +222,7 @@ export default function LeadDetailModal({
             <h4 className="lm-section-title">Serviceability checks</h4>
             <div className="lm-check-table">
               {checks.map((check) => (
-                <div className="lm-check-line" key={check.key}>
+                <div className={`lm-check-line lmx-check--${checkStatusTone(check.status)}`} key={check.key}>
                   <div className="lm-check-line-main">
                     <span className="lm-check-line-label">{check.label}</span>
                     {check.critical && <span className="lm-critical-chip">Critical</span>}
@@ -234,9 +264,9 @@ export default function LeadDetailModal({
           )}
 
           {/* ── Resolve ── */}
-          <section className="lm-section">
-            <h4 className="lm-section-title">Handle this lead</h4>
-            {resolving ? (
+          {resolving && (
+            <section className="lm-section lmx-resolve" ref={resolveRef}>
+              <h4 className="lm-section-title">Resolve this lead</h4>
               <form onSubmit={handleResolve} className="lm-resolve-form">
                 {error && <div className="admin-error-banner" role="alert">{error}</div>}
                 <label className="um-field">
@@ -272,29 +302,35 @@ export default function LeadDetailModal({
                   </button>
                 </div>
               </form>
-            ) : (
-              <div className="lm-handle-actions">
-                <button type="button" className="admin-btn primary" onClick={onRecordSurvey}>
-                  {ICON_SIGNAL} Record Survey Result
-                </button>
-                <button type="button" className="admin-btn" onClick={() => setResolving(true)}>
-                  Resolve Lead
-                </button>
-                <button type="button" className="admin-btn ghost" onClick={onEdit}>Edit Details</button>
-                <select
-                  className="admin-select lm-status-select"
-                  value={lead.status}
-                  onChange={(e) => onStatusChange(e.target.value)}
-                  aria-label="Change lead status"
-                >
-                  {LEAD_STATUS_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-                <button type="button" className="admin-btn danger" onClick={onDelete}>Delete</button>
-              </div>
-            )}
-          </section>
+            </section>
+          )}
+        </div>
+
+        <div className="ax-modal-foot ax-modal-foot--split lmx-foot">
+          <div className="ax-modal-foot-group">
+            <button type="button" className="admin-btn ghost ax-btn-danger-ghost" onClick={onDelete} disabled={saving}>Delete</button>
+            <label className="lmx-status-field">
+              <span>Status</span>
+              <select
+                className="admin-select lm-status-select"
+                value={lead.status}
+                onChange={(e) => onStatusChange(e.target.value)}
+                aria-label="Change lead status"
+                disabled={saving}
+              >
+                {LEAD_STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="ax-modal-foot-group">
+            <button type="button" className="admin-btn ghost" onClick={onEdit} disabled={saving}>Edit Details</button>
+            <button type="button" className="admin-btn ghost" onClick={openResolve} disabled={saving || resolving}>Resolve Lead</button>
+            <button type="button" className="admin-btn primary ax-btn-brand" onClick={onRecordSurvey} disabled={saving}>
+              {ICON_SIGNAL} Record Survey
+            </button>
+          </div>
         </div>
       </div>
     </div>

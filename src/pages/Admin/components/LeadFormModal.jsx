@@ -114,28 +114,30 @@ export default function LeadFormModal({ lead, staff, onClose, onSave }) {
 
   return (
     <div className="admin-modal-overlay" onClick={saving ? undefined : onClose}>
-      <div className="admin-modal um-modal um-user-modal lm-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="admin-modal-header um-modal-header">
-          <div className="um-modal-header-identity">
-            <div className="um-modal-avatar">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <div className="admin-modal ax-modal um-user-modal lm-modal lm-form-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="lm-form-title">
+        <div className="ax-modal-head">
+          <span className="ax-modal-head-deco" aria-hidden="true" />
+          <div className="ax-modal-identity">
+            <span className="ax-modal-avatar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" />
               </svg>
-            </div>
+            </span>
             <div>
-              <h3>{editing ? 'Edit Lead' : 'Capture New Lead'}</h3>
-              <div className="admin-modal-subtitle">
+              <span className="ax-modal-eyebrow">{editing ? lead.referenceNumber : 'Lead Management'}</span>
+              <h3 id="lm-form-title">{editing ? 'Edit Lead' : 'Capture New Lead'}</h3>
+              <div className="ax-modal-sub">
                 {editing
                   ? 'Update the customer, site or product details'
                   : 'Log a new connection enquiry and open its serviceability checklist'}
               </div>
             </div>
           </div>
-          <button type="button" className="admin-modal-close" onClick={onClose} aria-label="Close" disabled={saving}>×</button>
+          <button type="button" className="ax-modal-close" onClick={onClose} aria-label="Close" disabled={saving}>×</button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="admin-modal-body">
+        <form onSubmit={handleSubmit} noValidate className="ax-modal-form">
+          <div className="ax-modal-body">
             {submitted && Object.keys(errors).length > 0 && (
               <div className="admin-error-banner" role="alert" style={{ marginBottom: '1rem' }}>
                 Please fix the highlighted fields before continuing.
@@ -346,9 +348,9 @@ export default function LeadFormModal({ lead, staff, onClose, onSave }) {
             </div>
           </div>
 
-          <div className="admin-modal-footer um-modal-footer">
+          <div className="ax-modal-foot">
             <button type="button" className="admin-btn ghost" onClick={onClose} disabled={saving}>Cancel</button>
-            <button type="submit" className="admin-btn primary" disabled={saving}>
+            <button type="submit" className="admin-btn primary ax-btn-brand" disabled={saving}>
               {saving ? 'Saving…' : editing ? 'Save Changes' : 'Capture Lead'}
             </button>
           </div>

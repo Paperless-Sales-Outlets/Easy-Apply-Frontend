@@ -9,9 +9,262 @@ import {
 import QrCodeModal from '../components/QrCodeModal';
 import AddSalesOfficerModal from '../components/AddSalesOfficerModal';
 import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
-import { statusBadgeClass, statusLabel, formatDate } from '../utils/applicationUtils';
+import { AnimatedNumber, timeAgo } from '../components/AdminVisuals';
+import { statusBadgeClass, statusLabel, formatDate, formatDateOnly } from '../utils/applicationUtils';
 
-export default function SalesOfficerManagementPage({ onNavigateToOfficerDashboard }) {
+const ICON_QR = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" />
+  </svg>
+);
+
+const ICON_USERS = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+const ICON_ACTIVE = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+  </svg>
+);
+
+const ICON_SCAN = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10" />
+  </svg>
+);
+
+const ICON_SEARCH = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+const ICON_REFRESH = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" />
+  </svg>
+);
+
+const ICON_DOWNLOAD = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" />
+  </svg>
+);
+
+const ICON_CHART = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 3v18h18" /><path d="M7 16v-5M12 16V8M17 16v-3" />
+  </svg>
+);
+
+const ICON_PLUS = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
+const QR_VIEWS = [
+  { key: 'all', label: 'All' },
+  { key: 'generated', label: 'With QR' },
+  { key: 'not_generated', label: 'No QR' },
+];
+
+// The same brand gradients User Management uses, picked from the officer's
+// employee number so a person keeps one colour everywhere.
+const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg, #0f57a8, #0b2d5b)',
+  'linear-gradient(135deg, #50b748, #2f7f2a)',
+  'linear-gradient(135deg, #2b7de9, #0a3f7e)',
+  'linear-gradient(135deg, #0f7a4d, #004d38)',
+  'linear-gradient(135deg, #3d6fb6, #1b3f75)',
+];
+
+function avatarGradient(key) {
+  const text = String(key || '');
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  return AVATAR_GRADIENTS[hash % AVATAR_GRADIENTS.length];
+}
+
+const initials = (name) => (name || '').split(' ').filter(Boolean).map((n) => n[0]).slice(0, 2).join('').toUpperCase() || '?';
+
+const officerKey = (officer) => officer.employeeNumber || officer.employeeId || officer.id;
+
+// A small donut for the conversion rate in the statistics popup.
+function Ring({ value, size = 112, stroke = 11 }) {
+  const pct = Math.max(0, Math.min(100, Number(value) || 0));
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg className="qrm-ring" width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`${pct}% conversion`}>
+      <defs>
+        <linearGradient id="qrm-ring-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#7fdc76" />
+          <stop offset="100%" stopColor="#0f57a8" />
+        </linearGradient>
+      </defs>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e7eef8" strokeWidth={stroke} />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="url(#qrm-ring-grad)"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeDasharray={`${(pct / 100) * c} ${c}`}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+      />
+      <text x="50%" y="48%" textAnchor="middle" dominantBaseline="middle" className="qrm-ring-value">{pct}%</text>
+      <text x="50%" y="66%" textAnchor="middle" dominantBaseline="middle" className="qrm-ring-label">converted</text>
+    </svg>
+  );
+}
+
+function OfficerStatsModal({ officer, stats, applications, loading, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const total = stats?.totalApplications || 0;
+  const inProgress = stats?.inProgress
+    || (stats?.byStatus?.pending || 0) + (stats?.byStatus?.['pending payment'] || 0);
+  const approved = stats?.approved
+    || (stats?.byStatus?.approved || 0) + (stats?.byStatus?.confirmed || 0);
+  const rejected = stats?.rejected
+    || (stats?.byStatus?.rejected || 0) + (stats?.byStatus?.flagged || 0);
+  const completed = stats?.totalCompletedSales || 0;
+  const share = (n) => (total ? Math.round((n / total) * 100) : 0);
+
+  const kpis = [
+    { key: 'total', label: 'Applications', value: total, tone: 'navy', foot: 'Through this QR code' },
+    { key: 'progress', label: 'In progress', value: inProgress, tone: 'blue', foot: `${share(inProgress)}% of applications` },
+    { key: 'approved', label: 'Approved', value: approved, tone: 'green', foot: `${share(approved)}% of applications` },
+    { key: 'rejected', label: 'Rejected / flagged', value: rejected, tone: 'red', foot: `${share(rejected)}% of applications` },
+  ];
+
+  return (
+    <div className="admin-modal-overlay" onClick={onClose}>
+      <div className="admin-modal ax-modal qrm-stats-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="qrm-stats-title">
+        <div className="ax-modal-head">
+          <span className="ax-modal-head-deco" aria-hidden="true" />
+          <div className="ax-modal-identity">
+            <span className="ax-modal-avatar" style={{ background: avatarGradient(officerKey(officer)) }}>{initials(officer.name)}</span>
+            <div>
+              <span className="ax-modal-eyebrow">Officer performance</span>
+              <h3 id="qrm-stats-title">{officer.name}</h3>
+              <div className="ax-modal-sub">
+                <span className="ax-mono-chip">{officer.employeeNumber || '—'}</span>
+                {officer.email && <span>{officer.email}</span>}
+              </div>
+            </div>
+          </div>
+          <button type="button" className="ax-modal-close" onClick={onClose} aria-label="Close">×</button>
+        </div>
+
+        <div className="ax-modal-body">
+          {loading ? (
+            <div className="qrm-stats-loading">
+              <div className="qrm-stats-skel-row">
+                {Array.from({ length: 4 }).map((_, i) => <span className="dash-skeleton qrm-stats-skel" key={i} />)}
+              </div>
+              <span className="dash-skeleton qrm-stats-skel-wide" />
+            </div>
+          ) : (
+            <>
+              <div className="qrm-stats-top">
+                <div className="qrm-conversion">
+                  <Ring value={stats?.completionRate ?? 0} />
+                  <div className="qrm-conversion-text">
+                    <span className="qrm-conversion-label">Completed sales</span>
+                    <strong><AnimatedNumber value={completed} /></strong>
+                    <small>of {total} application{total === 1 ? '' : 's'}</small>
+                  </div>
+                </div>
+                <div className="qrm-kpis">
+                  {kpis.map((kpi) => (
+                    <div className={`qrm-kpi qrm-kpi--${kpi.tone}`} key={kpi.key}>
+                      <span className="qrm-kpi-label">{kpi.label}</span>
+                      <strong className="qrm-kpi-value"><AnimatedNumber value={kpi.value} /></strong>
+                      <span className="qrm-kpi-foot">{kpi.foot}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {total > 0 && (
+                <div className="qrm-funnel" aria-label="Application outcome split">
+                  <span className="qrm-funnel-seg green" style={{ flexGrow: approved }} title={`Approved: ${approved}`} />
+                  <span className="qrm-funnel-seg blue" style={{ flexGrow: inProgress }} title={`In progress: ${inProgress}`} />
+                  <span className="qrm-funnel-seg red" style={{ flexGrow: rejected }} title={`Rejected / flagged: ${rejected}`} />
+                </div>
+              )}
+
+              <div className="qrm-apps-head">
+                <h4>Attributed applications</h4>
+                <span className="ax-count">{applications.length}</span>
+              </div>
+
+              {applications.length === 0 ? (
+                <div className="um-empty-state qrm-apps-empty">
+                  <span className="um-empty-icon">{ICON_QR}</span>
+                  <h3>No applications yet</h3>
+                  <p>Applications started from this officer&apos;s QR code will appear here.</p>
+                </div>
+              ) : (
+                <div className="qrm-apps-wrap">
+                  <table className="admin-table qrm-apps-table">
+                    <thead>
+                      <tr>
+                        <th>Reference</th>
+                        <th>Customer</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Sale</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {applications.map((app) => (
+                        <tr key={app.id || app.referenceNumber}>
+                          <td><span className="qrm-ref">{app.referenceNumber}</span></td>
+                          <td>
+                            <div className="qrm-app-customer">
+                              <strong>{app.customerName || 'Customer'}</strong>
+                              <small>{app.packageName || 'New Connection'}</small>
+                            </div>
+                          </td>
+                          <td className="qrm-app-date">{formatDate(app.createdAt) || '—'}</td>
+                          <td><span className={`admin-badge ${statusBadgeClass(app.status)}`}>{statusLabel(app.status)}</span></td>
+                          <td>
+                            {app.isCompletedSale
+                              ? <span className="ax-chip ax-chip--good">Completed sale</span>
+                              : <span className="ax-chip ax-chip--neutral">In progress</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="ax-modal-foot">
+          <button type="button" className="admin-btn ghost" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SalesOfficerManagementPage() {
   const [officers, setOfficers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,13 +303,13 @@ export default function SalesOfficerManagementPage({ onNavigateToOfficerDashboar
     loadOfficers();
   }, []);
 
-  // Filter officers based on search query, account status, and QR status
-  const filteredOfficers = useMemo(() => {
+  // Filter officers based on search query and account status (the QR view is applied after, so its counts stay honest)
+  const searchedOfficers = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
     return officers.filter((officer) => {
       const empId = String(officer.employeeNumber || officer.employeeId || '').toLowerCase();
       const name = String(officer.name || '').toLowerCase();
       const email = String(officer.email || '').toLowerCase();
-      const query = searchQuery.trim().toLowerCase();
 
       const matchesSearch =
         !query || empId.includes(query) || name.includes(query) || email.includes(query);
@@ -66,15 +319,19 @@ export default function SalesOfficerManagementPage({ onNavigateToOfficerDashboar
         (statusFilter === 'active' && officer.isActive !== false) ||
         (statusFilter === 'inactive' && officer.isActive === false);
 
-      const hasQr = officer.qr?.hasQr === true;
-      const matchesQr =
-        qrFilter === 'all' ||
-        (qrFilter === 'generated' && hasQr) ||
-        (qrFilter === 'not_generated' && !hasQr);
-
-      return matchesSearch && matchesStatus && matchesQr;
+      return matchesSearch && matchesStatus;
     });
-  }, [officers, searchQuery, statusFilter, qrFilter]);
+  }, [officers, searchQuery, statusFilter]);
+
+  const qrCounts = useMemo(() => {
+    const generated = searchedOfficers.filter((o) => o.qr?.hasQr === true).length;
+    return { all: searchedOfficers.length, generated, not_generated: searchedOfficers.length - generated };
+  }, [searchedOfficers]);
+
+  const filteredOfficers = useMemo(() => searchedOfficers.filter((officer) => {
+    const hasQr = officer.qr?.hasQr === true;
+    return qrFilter === 'all' || (qrFilter === 'generated' && hasQr) || (qrFilter === 'not_generated' && !hasQr);
+  }), [searchedOfficers, qrFilter]);
 
   // Summary Metrics
   const metrics = useMemo(() => {
@@ -82,8 +339,25 @@ export default function SalesOfficerManagementPage({ onNavigateToOfficerDashboar
     const active = officers.filter((o) => o.isActive !== false).length;
     const withQr = officers.filter((o) => o.qr?.hasQr).length;
     const totalScans = officers.reduce((sum, o) => sum + (o.qr?.scansCount || 0), 0);
-    return { total, active, withQr, totalScans };
+    const maxScans = officers.reduce((max, o) => Math.max(max, o.qr?.scansCount || 0), 0);
+    return { total, active, withQr, totalScans, maxScans };
   }, [officers]);
+
+  const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
+
+  const heroTiles = [
+    { key: 'total', cls: 'total', icon: ICON_USERS, label: 'Sales officers', value: metrics.total, foot: `${metrics.total - metrics.active} inactive` },
+    { key: 'active', cls: 'active', icon: ICON_ACTIVE, label: 'Active accounts', value: metrics.active, meter: pct(metrics.active, metrics.total), foot: 'Ready for attribution' },
+    { key: 'qr', cls: 'roles', icon: ICON_QR, label: 'QR codes generated', value: metrics.withQr, suffix: ` / ${metrics.total}`, meter: pct(metrics.withQr, metrics.total), foot: `${pct(metrics.withQr, metrics.total)}% coverage` },
+    { key: 'scans', cls: 'scans', icon: ICON_SCAN, label: 'Total QR scans', value: metrics.totalScans, foot: 'Across every officer code' },
+  ];
+
+  const hasFilters = Boolean(searchQuery || statusFilter !== 'all' || qrFilter !== 'all');
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setQrFilter('all');
+  };
 
   // Open QR modal
   const handleViewQr = (officer) => {
@@ -93,11 +367,11 @@ export default function SalesOfficerManagementPage({ onNavigateToOfficerDashboar
 
   // Generate / Regenerate QR directly
   const handleGenerateQr = async (officer) => {
-    const empId = officer.employeeNumber || officer.employeeId || officer.id;
+    const empId = officerKey(officer);
     setGeneratingForId(empId);
     try {
       const res = await createOrGetOfficerQr(empId, { regenerate: false });
-      notice.success(`QR code ready for ${empId}!`);
+      notice.success(`QR code ready for ${empId}.`);
       // Update local state
       setOfficers((prev) =>
         prev.map((o) =>
@@ -129,7 +403,7 @@ export default function SalesOfficerManagementPage({ onNavigateToOfficerDashboar
         employeeNumber: officer.employeeNumber,
         officerName: officer.name,
       });
-      notice.success(`Downloaded QR code for ${officer.employeeNumber}!`);
+      notice.success(`Downloaded the QR code for ${officer.employeeNumber}.`);
     } catch (err) {
       console.error('Download error:', err);
       notice.error('Failed to download QR code');
@@ -145,10 +419,10 @@ export default function SalesOfficerManagementPage({ onNavigateToOfficerDashboar
     try {
       const empId = officer.employeeNumber || officer.id;
       const [statsRes, appsRes] = await Promise.all([
-        getOfficerStatistics(empId).catch((e) => ({
+        getOfficerStatistics(empId).catch(() => ({
           statistics: { totalApplications: 0, totalCompletedSales: 0, completionRate: 0 },
         })),
-        getOfficerApplications(empId, { limit: 20 }).catch((e) => ({
+        getOfficerApplications(empId, { limit: 20 }).catch(() => ({
           applications: [],
         })),
       ]);
@@ -189,613 +463,251 @@ export default function SalesOfficerManagementPage({ onNavigateToOfficerDashboar
   };
 
   return (
-    <div className="admin-page-content" style={{ padding: '0 0 3rem 0' }}>
+    <div className="um-page qrm-page">
+      {/* ── Hero ── */}
+      <section className="um-hero qrm-hero">
+        <div className="um-hero-deco" aria-hidden="true">
+          <span className="um-hero-orb" />
+          <span className="um-hero-slash" />
+          <span className="um-hero-grid" />
+        </div>
+
+        <div className="um-hero-top">
+          <div className="um-hero-text">
+            <span className="um-hero-eyebrow">{ICON_QR} QR referral tracking</span>
+            <h1>QR Management</h1>
+            <p>Give every sales officer a personal QR code, then follow the applications and completed sales it brings in.</p>
+          </div>
+          <div className="qrm-hero-actions">
+            <button
+              type="button"
+              className={`qrm-refresh${loading ? ' is-spinning' : ''}`}
+              onClick={loadOfficers}
+              disabled={loading}
+              aria-label="Refresh the officer list"
+              title="Refresh"
+            >
+              {ICON_REFRESH}
+            </button>
+            <button type="button" className="um-hero-action" onClick={() => setAddOpen(true)}>
+              <span className="um-hero-action-icon">{ICON_PLUS}</span>
+              Add Sales Officer
+            </button>
+          </div>
+        </div>
+
+        <div className="um-hero-tiles">
+          {heroTiles.map((tile, idx) => (
+            <div className={`um-hero-tile ${tile.cls}`} key={tile.key} style={{ '--i': idx }}>
+              <div className="um-hero-tile-head">
+                <span className="um-hero-tile-icon">{tile.icon}</span>
+                {tile.label}
+              </div>
+              <div className="um-hero-tile-value">
+                {loading ? <span className="dash-skeleton um-hero-skeleton" /> : (
+                  <>
+                    <AnimatedNumber value={tile.value} />
+                    {tile.suffix && <span className="qrm-tile-suffix">{tile.suffix}</span>}
+                  </>
+                )}
+              </div>
+              {tile.meter != null && (
+                <div className="um-hero-meter" aria-hidden="true">
+                  <span style={{ width: `${loading ? 0 : tile.meter}%` }} />
+                </div>
+              )}
+              <div className="um-hero-tile-foot">{loading ? ' ' : tile.foot}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <AdminNotice notice={notice.notice} onDismiss={notice.dismiss} />
-      {/* ── Page Header ── */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '1rem',
-          marginBottom: '2rem',
-        }}
-      >
-        <div>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 12px',
-              borderRadius: '999px',
-              background: '#eff6ff',
-              color: '#1d4ed8',
-              fontSize: '0.8rem',
-              fontWeight: 700,
-              marginBottom: '8px',
-            }}
-          >
-            <span>🎯</span> QR Referral Tracking System
-          </div>
-          <h1
-            style={{
-              fontSize: '1.9rem',
-              fontWeight: 800,
-              color: '#0f172a',
-              letterSpacing: '-0.025em',
-              margin: '0 0 6px 0',
-            }}
-          >
-            Sales Officer Management
-          </h1>
-          <p style={{ margin: 0, color: '#64748b', fontSize: '0.95rem' }}>
-            Monitor sales officers, generate unique QR tracking codes, and track customer
-            applications and completed sales.
-          </p>
-        </div>
 
-        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          onClick={() => setAddOpen(true)}
-          style={{
-            background: 'linear-gradient(135deg, #0b4a91, #003b73)',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '10px 18px',
-            fontWeight: 700,
-            color: '#ffffff',
-            fontSize: '0.875rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            cursor: 'pointer',
-            boxShadow: '0 8px 18px -10px rgba(0, 59, 115, 0.8)',
-          }}
-        >
-          <span aria-hidden="true">＋</span> Add Sales Officer
-        </button>
-        <button
-          type="button"
-          onClick={loadOfficers}
-          style={{
-            background: '#ffffff',
-            border: '1.5px solid #cbd5e1',
-            borderRadius: '12px',
-            padding: '10px 18px',
-            fontWeight: 600,
-            color: '#334155',
-            fontSize: '0.875rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-          }}
-        >
-          <span>🔄</span> Refresh
-        </button>
-        </div>
-      </div>
-
-      {/* ── KPI Metric Cards ── */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '1rem',
-          marginBottom: '2rem',
-        }}
-      >
-        <div
-          style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            padding: '1.25rem 1.5rem',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 4px 12px rgba(11, 45, 91, 0.04)',
-          }}
-        >
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>
-            Total Sales Officers
+      {/* ── Officers ── */}
+      <section className="um-panel qrm-panel">
+        <div className="um-panel-head">
+          <div className="um-panel-title">
+            <h2>Sales officers</h2>
+            <p>
+              {loading
+                ? 'Loading…'
+                : `Showing ${filteredOfficers.length} of ${officers.length} officer${officers.length === 1 ? '' : 's'}`}
+            </p>
           </div>
-          <div
-            style={{
-              fontSize: '1.85rem',
-              fontWeight: 800,
-              color: '#0b4a91',
-              marginTop: '4px',
-            }}
-          >
-            {metrics.total}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
-            Registered in system
-          </div>
-        </div>
-
-        <div
-          style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            padding: '1.25rem 1.5rem',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 4px 12px rgba(11, 45, 91, 0.04)',
-          }}
-        >
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>
-            Active Accounts
-          </div>
-          <div
-            style={{
-              fontSize: '1.85rem',
-              fontWeight: 800,
-              color: '#15803d',
-              marginTop: '4px',
-            }}
-          >
-            {metrics.active}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
-            Ready for attribution
-          </div>
-        </div>
-
-        <div
-          style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            padding: '1.25rem 1.5rem',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 4px 12px rgba(11, 45, 91, 0.04)',
-          }}
-        >
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>
-            QR Codes Generated
-          </div>
-          <div
-            style={{
-              fontSize: '1.85rem',
-              fontWeight: 800,
-              color: '#0284c7',
-              marginTop: '4px',
-            }}
-          >
-            {metrics.withQr} / {metrics.total}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-            {metrics.total > 0
-              ? `${Math.round((metrics.withQr / metrics.total) * 100)}% coverage`
-              : '0% coverage'}
-          </div>
-        </div>
-
-        <div
-          style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            padding: '1.25rem 1.5rem',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 4px 12px rgba(11, 45, 91, 0.04)',
-          }}
-        >
-          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>
-            Total QR Scans
-          </div>
-          <div
-            style={{
-              fontSize: '1.85rem',
-              fontWeight: 800,
-              color: '#7c3aed',
-              marginTop: '4px',
-            }}
-          >
-            {metrics.totalScans}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
-            Customer portal impressions
-          </div>
-        </div>
-      </div>
-
-      {/* ── Search & Filter Controls ── */}
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '18px',
-          padding: '1.25rem 1.5rem',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 4px 12px rgba(11, 45, 91, 0.04)',
-          marginBottom: '1.5rem',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ flex: '1 1 300px', maxWidth: '460px', position: 'relative' }}>
-          <span
-            style={{
-              position: 'absolute',
-              left: '14px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#94a3b8',
-              fontSize: '1rem',
-            }}
-          >
-            🔍
-          </span>
-          <input
-            type="text"
-            placeholder="Search by Employee ID (e.g. 095756), name, or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '10px 14px 10px 40px',
-              borderRadius: '12px',
-              border: '1.5px solid #cbd5e1',
-              fontSize: '0.9rem',
-              color: '#1e293b',
-              outline: 'none',
-              background: '#f8fafc',
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
-          {/* Account Status Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>Status:</span>
+          <div className="um-toolbar">
+            <div className="admin-search um-search">
+              <span className="admin-search-icon">{ICON_SEARCH}</span>
+              <input
+                type="text"
+                placeholder="Search employee no, name or email"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search sales officers"
+              />
+            </div>
+            <div className="ax-seg" role="group" aria-label="QR code status">
+              {QR_VIEWS.map((view) => (
+                <button
+                  key={view.key}
+                  type="button"
+                  className={`ax-seg-btn${qrFilter === view.key ? ' active' : ''}`}
+                  aria-pressed={qrFilter === view.key}
+                  onClick={() => setQrFilter(view.key)}
+                >
+                  {view.label}
+                  <span className="ax-seg-count">{qrCounts[view.key]}</span>
+                </button>
+              ))}
+            </div>
             <select
+              className="admin-select"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '10px',
-                border: '1.5px solid #cbd5e1',
-                fontSize: '0.85rem',
-                color: '#334155',
-                background: '#ffffff',
-                cursor: 'pointer',
-              }}
+              aria-label="Account status"
             >
-              <option value="all">All Accounts</option>
-              <option value="active">Active Only</option>
-              <option value="inactive">Inactive</option>
+              <option value="all">All accounts</option>
+              <option value="active">Active only</option>
+              <option value="inactive">Inactive only</option>
             </select>
-          </div>
-
-          {/* QR Status Filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>QR Status:</span>
-            <select
-              value={qrFilter}
-              onChange={(e) => setQrFilter(e.target.value)}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '10px',
-                border: '1.5px solid #cbd5e1',
-                fontSize: '0.85rem',
-                color: '#334155',
-                background: '#ffffff',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="all">All QR Codes</option>
-              <option value="generated">QR Generated</option>
-              <option value="not_generated">No QR Code</option>
-            </select>
+            {hasFilters && (
+              <button type="button" className="admin-btn ghost ax-clear" onClick={clearFilters}>Clear</button>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* ── Sales Officers Table ── */}
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '18px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 4px 16px rgba(11, 45, 91, 0.05)',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ overflowX: 'auto' }}>
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              textAlign: 'left',
-              fontSize: '0.9rem',
-            }}
-          >
-            <thead>
-              <tr
-                style={{
-                  background: '#f8fafc',
-                  borderBottom: '1px solid #e2e8f0',
-                  color: '#475569',
-                  fontSize: '0.78rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  fontWeight: 700,
-                }}
-              >
-                <th style={{ padding: '14px 20px' }}>Employee ID</th>
-                <th style={{ padding: '14px 20px' }}>Officer Name</th>
-                <th style={{ padding: '14px 20px' }}>Email</th>
-                <th style={{ padding: '14px 20px' }}>Account Status</th>
-                <th style={{ padding: '14px 20px' }}>QR Code Status</th>
-                <th style={{ padding: '14px 20px', textAlign: 'center' }}>Scans</th>
-                <th style={{ padding: '14px 20px', textAlign: 'right' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+        {loading ? (
+          <div className="dash-table-skeleton">
+            {Array.from({ length: 4 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
+          </div>
+        ) : filteredOfficers.length === 0 ? (
+          <div className="um-empty-state">
+            <span className="um-empty-icon">{ICON_USERS}</span>
+            <h3>{officers.length === 0 ? 'No sales officers yet' : 'No matches'}</h3>
+            <p>
+              {officers.length === 0
+                ? 'Use “Add Sales Officer” to create the first profile.'
+                : searchQuery
+                  ? `No officer matches “${searchQuery}”. Try a different keyword or filter.`
+                  : 'No officer matches the selected filters.'}
+            </p>
+          </div>
+        ) : (
+          <div className="admin-table-wrap um-table-wrap">
+            <table className="admin-table um-table qrm-table">
+              <thead>
                 <tr>
-                  <td colSpan={7} style={{ padding: '3.5rem', textAlign: 'center', color: '#64748b' }}>
-                    <div style={{ display: 'inline-block', marginBottom: '8px' }}>
-                      <div className="admin-spinner" />
-                    </div>
-                    <div>Loading registered sales officers...</div>
-                  </td>
+                  <th>Officer</th>
+                  <th>Employee no.</th>
+                  <th>Account</th>
+                  <th>QR code</th>
+                  <th>Scans</th>
+                  <th className="qrm-actions-head">Actions</th>
                 </tr>
-              ) : filteredOfficers.length === 0 ? (
-                <tr>
-                  <td colSpan={7} style={{ padding: '3.5rem', textAlign: 'center', color: '#64748b' }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>👤</div>
-                    <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>
-                      No Sales Officers Found
-                    </div>
-                    <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '4px' }}>
-                      {searchQuery
-                        ? `No officer matches "${searchQuery}". Try a different keyword.`
-                        : 'No sales officer accounts are registered under this filter.'}
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredOfficers.map((officer) => {
+              </thead>
+              <tbody>
+                {filteredOfficers.map((officer) => {
                   const empId = officer.employeeNumber || officer.employeeId || 'N/A';
                   const hasQr = officer.qr?.hasQr === true;
                   const scans = officer.qr?.scansCount || 0;
-                  const isBusy = generatingForId === empId;
+                  const isBusy = generatingForId === officerKey(officer);
+                  const active = officer.isActive !== false;
 
                   return (
-                    <tr
-                      key={officer.id || officer._id || empId}
-                      style={{
-                        borderBottom: '1px solid #f1f5f9',
-                        transition: 'background 0.15s',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      {/* Employee ID */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <span
-                          style={{
-                            background: '#eff6ff',
-                            color: '#1d4ed8',
-                            fontFamily: 'monospace',
-                            fontWeight: 800,
-                            padding: '4px 10px',
-                            borderRadius: '8px',
-                            border: '1px solid #bfdbfe',
-                            fontSize: '0.88rem',
-                          }}
-                        >
-                          {empId}
+                    <tr key={officer.id || officer._id || empId} className={active ? '' : 'is-inactive'}>
+                      <td>
+                        <div className="um-user-cell">
+                          <div className="um-avatar" style={{ background: avatarGradient(officerKey(officer)) }}>
+                            {initials(officer.name)}
+                            <span className={`um-presence ${active ? 'on' : 'off'}`} aria-hidden="true" />
+                          </div>
+                          <div className="qrm-officer-text">
+                            <span className="um-user-name">{officer.name}</span>
+                            <span className="qrm-officer-email">{officer.email || 'No email on file'}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span className="um-employee-no">{empId}</span></td>
+                      <td>
+                        <span className={`ax-chip ${active ? 'ax-chip--good' : 'ax-chip--bad'}`}>
+                          {active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-
-                      {/* Officer Name */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <div style={{ fontWeight: 700, color: '#0f172a' }}>{officer.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{officer.role}</div>
-                      </td>
-
-                      {/* Email */}
-                      <td style={{ padding: '16px 20px', color: '#475569' }}>
-                        {officer.email || '—'}
-                      </td>
-
-                      {/* Account Status */}
-                      <td style={{ padding: '16px 20px' }}>
-                        {officer.isActive !== false ? (
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              background: '#ecfdf5',
-                              color: '#065f46',
-                              padding: '3px 10px',
-                              borderRadius: '999px',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                            }}
-                          >
-                            <span
-                              style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                background: '#10b981',
-                              }}
-                            />
-                            Active
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              background: '#fef2f2',
-                              color: '#991b1b',
-                              padding: '3px 10px',
-                              borderRadius: '999px',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                            }}
-                          >
-                            <span
-                              style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                background: '#ef4444',
-                              }}
-                            />
-                            Inactive
-                          </span>
-                        )}
-                      </td>
-
-                      {/* QR Status */}
-                      <td style={{ padding: '16px 20px' }}>
+                      <td>
                         {hasQr ? (
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              background: '#eff6ff',
-                              color: '#1e40af',
-                              padding: '3px 10px',
-                              borderRadius: '999px',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                            }}
-                          >
-                            <span>✓</span> Generated
-                          </span>
+                          <div className="qrm-qr-cell">
+                            <span className="ax-chip ax-chip--info">{ICON_QR} Generated</span>
+                            {officer.qr?.createdAt && (
+                              <small>
+                                {officer.qr.regeneratedAt ? 'Renewed' : 'Since'} {formatDateOnly(officer.qr.regeneratedAt || officer.qr.createdAt)}
+                              </small>
+                            )}
+                          </div>
                         ) : (
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              background: '#fffbeb',
-                              color: '#92400e',
-                              padding: '3px 10px',
-                              borderRadius: '999px',
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                            }}
-                          >
-                            <span>•</span> Not Generated
-                          </span>
+                          <span className="ax-chip ax-chip--warn">Not generated</span>
                         )}
                       </td>
-
-                      {/* Scans Count */}
-                      <td style={{ padding: '16px 20px', textAlign: 'center' }}>
-                        <span style={{ fontWeight: 700, color: scans > 0 ? '#0b4a91' : '#94a3b8' }}>
-                          {scans}
-                        </span>
+                      <td>
+                        <div className="qrm-scans" title={officer.qr?.lastScannedAt ? `Last scanned ${timeAgo(officer.qr.lastScannedAt)}` : 'Never scanned'}>
+                          <span className={`qrm-scans-value${scans ? '' : ' is-zero'}`}>{scans}</span>
+                          <span className="qrm-scans-track" aria-hidden="true">
+                            <span style={{ width: `${metrics.maxScans ? Math.max(scans ? 6 : 0, (scans / metrics.maxScans) * 100) : 0}%` }} />
+                          </span>
+                        </div>
                       </td>
-
-                      {/* Actions */}
-                      <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                        <div
-                          style={{
-                            display: 'inline-flex',
-                            gap: '6px',
-                            alignItems: 'center',
-                          }}
-                        >
-                          {/* View QR Code */}
+                      <td>
+                        <div className="um-row-actions qrm-row-actions">
                           {hasQr ? (
                             <>
                               <button
                                 type="button"
+                                className="um-action-btn edit"
                                 onClick={() => handleViewQr(officer)}
-                                title="Preview QR code and copy link"
-                                style={{
-                                  background: '#eff6ff',
-                                  border: '1px solid #bfdbfe',
-                                  color: '#1d4ed8',
-                                  borderRadius: '8px',
-                                  padding: '6px 12px',
-                                  fontSize: '0.8rem',
-                                  fontWeight: 600,
-                                  cursor: 'pointer',
-                                }}
+                                aria-label={`View the QR code for ${officer.name}`}
                               >
-                                View QR
+                                {ICON_QR}
+                                <span className="um-action-label">View QR</span>
                               </button>
                               <button
                                 type="button"
+                                className="um-action-btn ax-action--green"
                                 onClick={() => handleQuickDownload(officer)}
-                                title="Download PNG"
-                                style={{
-                                  background: '#f8fafc',
-                                  border: '1px solid #cbd5e1',
-                                  color: '#334155',
-                                  borderRadius: '8px',
-                                  padding: '6px 10px',
-                                  fontSize: '0.8rem',
-                                  fontWeight: 600,
-                                  cursor: 'pointer',
-                                }}
+                                aria-label={`Download the QR code for ${officer.name}`}
                               >
-                                📥 PNG
+                                {ICON_DOWNLOAD}
+                                <span className="um-action-label">PNG</span>
                               </button>
                             </>
                           ) : (
                             <button
                               type="button"
+                              className="um-action-btn ax-action--green is-labelled"
                               onClick={() => handleGenerateQr(officer)}
                               disabled={isBusy}
-                              style={{
-                                background: 'linear-gradient(135deg, #0b4a91, #00543c)',
-                                border: 'none',
-                                color: '#ffffff',
-                                borderRadius: '8px',
-                                padding: '6px 12px',
-                                fontSize: '0.8rem',
-                                fontWeight: 700,
-                                cursor: isBusy ? 'not-allowed' : 'pointer',
-                              }}
                             >
-                              {isBusy ? 'Generating...' : '+ Generate QR'}
+                              {ICON_PLUS}
+                              <span className="um-action-label">{isBusy ? 'Generating…' : 'Generate QR'}</span>
                             </button>
                           )}
-
-                          {/* View Performance Statistics */}
                           <button
                             type="button"
+                            className="um-action-btn ax-action--navy"
                             onClick={() => handleViewStats(officer)}
-                            title="View officer application & sales statistics"
-                            style={{
-                              background: '#f8fafc',
-                              border: '1px solid #cbd5e1',
-                              color: '#0f172a',
-                              borderRadius: '8px',
-                              padding: '6px 12px',
-                              fontSize: '0.8rem',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                            }}
+                            aria-label={`View statistics for ${officer.name}`}
                           >
-                            📊 Statistics
+                            {ICON_CHART}
+                            <span className="um-action-label">Statistics</span>
                           </button>
                         </div>
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       {/* ── QR Code Preview Modal ── */}
       <QrCodeModal
@@ -814,406 +726,15 @@ export default function SalesOfficerManagementPage({ onNavigateToOfficerDashboar
         />
       )}
 
-      {/* ── Officer Statistics & Attributed Applications Modal ── */}
+      {/* ── Officer Statistics & Attributed Applications ── */}
       {selectedOfficerForStats && (
-        <div
-          className="admin-modal-overlay"
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(11, 45, 91, 0.55)',
-            backdropFilter: 'blur(5px)',
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1.25rem',
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setSelectedOfficerForStats(null);
-          }}
-        >
-          <div
-            style={{
-              background: '#ffffff',
-              borderRadius: '24px',
-              width: '100%',
-              maxWidth: '820px',
-              boxShadow: '0 25px 60px -15px rgba(11, 45, 91, 0.35)',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              maxHeight: '90vh',
-            }}
-          >
-            {/* Modal Header */}
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #0b4a91 0%, #00543c 100%)',
-                padding: '1.5rem 1.75rem',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontSize: '0.75rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    color: '#86efac',
-                    fontWeight: 700,
-                    marginBottom: '4px',
-                  }}
-                >
-                  Officer Performance Dashboard
-                </div>
-                <h2
-                  style={{
-                    margin: 0,
-                    fontSize: '1.35rem',
-                    fontWeight: 700,
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  {selectedOfficerForStats.name} (ID: {selectedOfficerForStats.employeeNumber})
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedOfficerForStats(null)}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: '36px',
-                  height: '36px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontSize: '1.2rem',
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div style={{ padding: '1.75rem', overflowY: 'auto' }}>
-              {statsLoading ? (
-                <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-                  <div className="admin-spinner" style={{ marginBottom: '12px' }} />
-                  <div>Loading live statistics from backend...</div>
-                </div>
-              ) : (
-                <>
-                  {/* Stats Cards */}
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: '0.75rem',
-                      marginBottom: '1.5rem',
-                    }}
-                  >
-                    <div
-                      style={{
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '12px',
-                        padding: '1rem',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
-                        Total Applications
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '1.6rem',
-                          fontWeight: 800,
-                          color: '#0b4a91',
-                          marginTop: '4px',
-                        }}
-                      >
-                        {statsData?.totalApplications || 0}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        background: '#eff6ff',
-                        border: '1px solid #bfdbfe',
-                        borderRadius: '12px',
-                        padding: '1rem',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <div style={{ fontSize: '0.75rem', color: '#1d4ed8', fontWeight: 600 }}>
-                        In Progress
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '1.6rem',
-                          fontWeight: 800,
-                          color: '#1e40af',
-                          marginTop: '4px',
-                        }}
-                      >
-                        {statsData?.inProgress ||
-                          (statsData?.byStatus?.pending || 0) +
-                            (statsData?.byStatus?.['pending payment'] || 0)}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        background: '#f0fdf4',
-                        border: '1px solid #bbf7d0',
-                        borderRadius: '12px',
-                        padding: '1rem',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <div style={{ fontSize: '0.75rem', color: '#166534', fontWeight: 600 }}>
-                        Approved
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '1.6rem',
-                          fontWeight: 800,
-                          color: '#15803d',
-                          marginTop: '4px',
-                        }}
-                      >
-                        {statsData?.approved ||
-                          (statsData?.byStatus?.approved || 0) +
-                            (statsData?.byStatus?.confirmed || 0)}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        background: '#fef2f2',
-                        border: '1px solid #fecaca',
-                        borderRadius: '12px',
-                        padding: '1rem',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <div style={{ fontSize: '0.75rem', color: '#991b1b', fontWeight: 600 }}>
-                        Rejected / Flagged
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '1.6rem',
-                          fontWeight: 800,
-                          color: '#dc2626',
-                          marginTop: '4px',
-                        }}
-                      >
-                        {statsData?.rejected ||
-                          (statsData?.byStatus?.rejected || 0) +
-                            (statsData?.byStatus?.flagged || 0)}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
-                        color: '#ffffff',
-                        borderRadius: '12px',
-                        padding: '1rem',
-                        textAlign: 'center',
-                        boxShadow: '0 4px 12px rgba(4, 120, 87, 0.2)',
-                      }}
-                    >
-                      <div style={{ fontSize: '0.75rem', opacity: 0.9, fontWeight: 600 }}>
-                        Completed Sales
-                      </div>
-                      <div style={{ fontSize: '1.6rem', fontWeight: 800, marginTop: '4px' }}>
-                        {statsData?.totalCompletedSales || 0}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        background: '#faf5ff',
-                        border: '1px solid #e9d5ff',
-                        borderRadius: '12px',
-                        padding: '1rem',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <div style={{ fontSize: '0.75rem', color: '#7e22ce', fontWeight: 600 }}>
-                        Conversion Rate
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '1.6rem',
-                          fontWeight: 800,
-                          color: '#6b21a8',
-                          marginTop: '4px',
-                        }}
-                      >
-                        {statsData?.completionRate ?? 0}%
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Attributed Applications Table */}
-                  <h3
-                    style={{
-                      fontSize: '1.05rem',
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      marginBottom: '10px',
-                    }}
-                  >
-                    Attributed Applications ({officerApps.length})
-                  </h3>
-
-                  {officerApps.length === 0 ? (
-                    <div
-                      style={{
-                        background: '#f8fafc',
-                        border: '1px dashed #cbd5e1',
-                        borderRadius: '12px',
-                        padding: '2rem',
-                        textAlign: 'center',
-                        color: '#64748b',
-                        fontSize: '0.9rem',
-                      }}
-                    >
-                      No customer applications have been generated through this officer's QR code yet.
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <table
-                        style={{
-                          width: '100%',
-                          borderCollapse: 'collapse',
-                          fontSize: '0.82rem',
-                          textAlign: 'left',
-                        }}
-                      >
-                        <thead>
-                          <tr
-                            style={{
-                              background: '#f1f5f9',
-                              color: '#475569',
-                              fontWeight: 700,
-                              borderBottom: '1px solid #e2e8f0',
-                            }}
-                          >
-                            <th style={{ padding: '10px 12px' }}>Ref Number</th>
-                            <th style={{ padding: '10px 12px' }}>Customer / Product</th>
-                            <th style={{ padding: '10px 12px' }}>Submitted</th>
-                            <th style={{ padding: '10px 12px' }}>Status</th>
-                            <th style={{ padding: '10px 12px' }}>Sale Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {officerApps.map((app) => (
-                            <tr
-                              key={app.id || app.referenceNumber}
-                              style={{ borderBottom: '1px solid #f1f5f9' }}
-                            >
-                              <td
-                                style={{
-                                  padding: '10px 12px',
-                                  fontFamily: 'monospace',
-                                  fontWeight: 700,
-                                  color: '#0b4a91',
-                                }}
-                              >
-                                {app.referenceNumber}
-                              </td>
-                              <td style={{ padding: '10px 12px' }}>
-                                <div style={{ fontWeight: 600, color: '#1e293b' }}>
-                                  {app.customerName || 'Customer'}
-                                </div>
-                                <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                                  {app.packageName || 'New Connection'}
-                                </div>
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#64748b' }}>
-                                {formatDate(app.createdAt)}
-                              </td>
-                              <td style={{ padding: '10px 12px' }}>
-                                <span className={statusBadgeClass(app.status)}>
-                                  {statusLabel(app.status)}
-                                </span>
-                              </td>
-                              <td style={{ padding: '10px 12px' }}>
-                                {app.isCompletedSale ? (
-                                  <span
-                                    style={{
-                                      background: '#ecfdf5',
-                                      color: '#065f46',
-                                      padding: '2px 8px',
-                                      borderRadius: '6px',
-                                      fontWeight: 700,
-                                      fontSize: '0.75rem',
-                                    }}
-                                  >
-                                    ✓ Completed Sale
-                                  </span>
-                                ) : (
-                                  <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
-                                    In Progress
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div
-              style={{
-                padding: '1rem 1.75rem',
-                background: '#f8fafc',
-                borderTop: '1px solid #e2e8f0',
-                display: 'flex',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedOfficerForStats(null)}
-                style={{
-                  background: '#ffffff',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: '10px',
-                  padding: '8px 20px',
-                  color: '#334155',
-                  fontWeight: 600,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <OfficerStatsModal
+          officer={selectedOfficerForStats}
+          stats={statsData}
+          applications={officerApps}
+          loading={statsLoading}
+          onClose={() => setSelectedOfficerForStats(null)}
+        />
       )}
     </div>
   );

@@ -1,10 +1,29 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FiActivity, FiCheckCircle, FiCreditCard, FiEye, FiFileText, FiPhone, FiSearch } from 'react-icons/fi';
 import { getApplications, getDashboardStats } from '../services/adminService';
-import { FORM_TYPES, formatDateOnly, normalizeApplication, statusBadgeClass, statusLabel } from '../utils/applicationUtils';
+import { FORM_TYPES, STATUS_LABELS, formatDateOnly, normalizeApplication, statusBadgeClass, statusLabel } from '../utils/applicationUtils';
+import { AnimatedNumber, Pager, timeAgo } from '../components/AdminVisuals';
 import ApplicationDetailModal from '../components/ApplicationDetailModal';
 
 const HISTORY_PAGE_SIZE = 10;
+
+const STATUS_VIEWS = [{ key: '', label: 'All' }, ...Object.entries(STATUS_LABELS).map(([key, label]) => ({ key, label }))];
+
+const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg, #0f57a8, #0b2d5b)',
+  'linear-gradient(135deg, #50b748, #2f7f2a)',
+  'linear-gradient(135deg, #2b7de9, #0a3f7e)',
+  'linear-gradient(135deg, #0f7a4d, #004d38)',
+  'linear-gradient(135deg, #3d6fb6, #1b3f75)',
+];
+
+// A stable colour per applicant, so the same person reads the same everywhere.
+function avatarGradient(key) {
+  const text = String(key || '');
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  return AVATAR_GRADIENTS[hash % AVATAR_GRADIENTS.length];
+}
 
 // Two-letter monogram for the applicant avatar in the history table.
 function getInitials(name) {
@@ -22,6 +41,7 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
   const [detailApp, setDetailApp] = useState(null);
   const [expandedComments, setExpandedComments] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [status, setStatus] = useState('');
 
   const fetchPage = useCallback(async (pageNum) => {
     setLoading(true);
@@ -35,6 +55,7 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
       };
       if (fromDate) params.startDate = fromDate;
       if (toDate) params.endDate = toDate;
+      if (status) params.status = status;
 
       const res = await getApplications(params);
       setHistory((res.applications || []).map(normalizeApplication));
@@ -45,7 +66,7 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
     } finally {
       setLoading(false);
     }
-  }, [formId, fromDate, toDate]);
+  }, [formId, fromDate, toDate, status]);
 
   useEffect(() => {
     setPage(1);
@@ -64,10 +85,8 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
   };
 
   const filteredHistory = history.filter(app => matchesSearch(app, searchQuery));
-
-  const rangeLabel = (fromDate || toDate)
-    ? `${fromDate ? formatDateOnly(fromDate) : 'Earliest'} – ${toDate ? formatDateOnly(toDate) : 'Today'}`
-    : 'All time';
+  const totalCount = pagination?.totalCount ?? history.length;
+  const hasFilters = Boolean(fromDate || toDate || status || searchQuery);
 
   const handleToggleCommentExpand = (id) => {
     setExpandedComments(prev => ({ ...prev, [id]: !prev[id] }));
@@ -84,198 +103,199 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
     fetchPage(pageNum);
   };
 
+  const clearFilters = () => {
+    onFromDateChange('');
+    onToDateChange('');
+    setStatus('');
+    setSearchQuery('');
+  };
+
   return (
-    <div className="um-panel form-weekly-card form-history-card">
-      <div className="form-section-heading">
-        <div>
-          <span className="form-section-kicker">APPLICATION QUEUE</span>
-          <h2>Recent History</h2>
-        </div>
-        <span className="form-history-count">{pagination?.totalCount ?? history.length} total</span>
-      </div>
-      <div className="form-history-toolbar">
-        <p>
-          Latest submissions for this form type — {pagination?.totalCount ?? history.length} total
-        </p>
-        <div className="form-history-tools">
-          <label className="fh-date-field">
-            <span>From</span>
-            <input
-              type="date"
-              value={fromDate}
-              max={toDate || undefined}
-              onChange={(e) => onFromDateChange(e.target.value)}
-              aria-label="Filter submissions from date"
-            />
-          </label>
-          <label className="fh-date-field">
-            <span>To</span>
-            <input
-              type="date"
-              value={toDate}
-              min={fromDate || undefined}
-              onChange={(e) => onToDateChange(e.target.value)}
-              aria-label="Filter submissions to date"
-            />
-          </label>
-          {(fromDate || toDate) && (
-            <button
-              type="button"
-              className="fh-date-clear"
-              onClick={() => { onFromDateChange(''); onToDateChange(''); }}
-            >
-              Clear
-            </button>
-          )}
-          <span className="fh-date-range">{rangeLabel}</span>
-          <div className="form-history-search">
-            <FiSearch size={15} className="form-history-search-icon" aria-hidden="true" />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search reference, NIC, phone or name"
-              aria-label="Search application history"
-            />
+    <>
+      <section className="um-panel frm-panel">
+        <div className="um-panel-head frm-head">
+          <div className="um-panel-title">
+            <h2>Submissions</h2>
+            <p>
+              {loading
+                ? 'Loading…'
+                : searchQuery
+                  ? `${filteredHistory.length} match${filteredHistory.length === 1 ? '' : 'es'} on this page · ${totalCount} in total`
+                  : `${totalCount} submission${totalCount === 1 ? '' : 's'}${fromDate || toDate ? ' in the selected range' : ''}`}
+            </p>
+          </div>
+          <div className="um-toolbar">
+            <div className="admin-search um-search">
+              <span className="admin-search-icon"><FiSearch size={15} aria-hidden="true" /></span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search reference, NIC, phone or name"
+                aria-label="Search application history"
+              />
+            </div>
+            <div className="ax-range" role="group" aria-label="Submission dates">
+              <input
+                type="date"
+                value={fromDate}
+                max={toDate || undefined}
+                onChange={(e) => onFromDateChange(e.target.value)}
+                aria-label="Filter submissions from date"
+              />
+              <span aria-hidden="true">to</span>
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate || undefined}
+                onChange={(e) => onToDateChange(e.target.value)}
+                aria-label="Filter submissions to date"
+              />
+            </div>
+            {hasFilters && (
+              <button type="button" className="admin-btn ghost ax-clear" onClick={clearFilters}>Clear</button>
+            )}
           </div>
         </div>
-      </div>
 
-      {loading ? (
-        <div className="admin-loading">Loading history…</div>
-      ) : filteredHistory.length === 0 ? (
-        <div className="admin-empty">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-          </svg>
-          <p>No submissions found for this form type yet.</p>
+        <div className="frm-status-bar">
+          <div className="ax-seg ax-seg--scroll" role="group" aria-label="Application status">
+            {STATUS_VIEWS.map((view) => (
+              <button
+                key={view.key || 'all'}
+                type="button"
+                className={`ax-seg-btn${status === view.key ? ' active' : ''}`}
+                aria-pressed={status === view.key}
+                onClick={() => setStatus(view.key)}
+              >
+                {view.key && <span className={`frm-dot ${statusBadgeClass(view.key)}`} aria-hidden="true" />}
+                {view.label}
+              </button>
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className="admin-table-wrap um-table-wrap form-history-wrap">
-          <table className="admin-table um-table admin-table-striped form-history-table">
-            <thead>
-              <tr>
-                <th>Applicant</th>
-                <th>Reference</th>
-                <th>Contact</th>
-                <th>Installation address</th>
-                <th>Status</th>
-                <th>Comment</th>
-                <th className="fh-actions-head">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredHistory.map(app => {
-                const comment = app.notes || '';
-                const isExpanded = expandedComments[app.id];
-                const visibleText = comment.length > 90 && !isExpanded ? `${comment.slice(0, 90)}...` : comment;
-                const actioner = app.actionedBy || null;
-                const actionerName = actioner
-                  ? (actioner.name || actioner.email || actioner._id || '')
-                  : '';
 
-                return (
-                  <React.Fragment key={app.id}>
-                    <tr>
+        {loading ? (
+          <div className="dash-table-skeleton">
+            {Array.from({ length: 5 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
+          </div>
+        ) : filteredHistory.length === 0 ? (
+          <div className="um-empty-state">
+            <span className="um-empty-icon"><FiFileText size={24} /></span>
+            <h3>{hasFilters ? 'No matching submissions' : 'No submissions yet'}</h3>
+            <p>{hasFilters ? 'Try a different search, status or date range.' : 'Applications for this form will appear here as customers submit them.'}</p>
+          </div>
+        ) : (
+          <div className="admin-table-wrap um-table-wrap">
+            <table className="admin-table um-table frm-table">
+              <thead>
+                <tr>
+                  <th>Applicant</th>
+                  <th>Reference</th>
+                  <th>Contact</th>
+                  <th>Address</th>
+                  <th>Status</th>
+                  <th>Comment</th>
+                  <th className="frm-actions-head">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredHistory.map(app => {
+                  const comment = app.notes || '';
+                  const isExpanded = expandedComments[app.id];
+                  const visibleText = comment.length > 90 && !isExpanded ? `${comment.slice(0, 90)}...` : comment;
+                  const actioner = app.actionedBy || null;
+                  const actionerName = actioner
+                    ? (actioner.name || actioner.email || actioner._id || '')
+                    : '';
+
+                  return (
+                    <tr key={app.id}>
                       <td>
-                        <div className="fh-applicant">
-                          <span className="fh-avatar" aria-hidden="true">{getInitials(app.name)}</span>
-                          <div className="fh-applicant-text">
-                            <span className="fh-name">{app.name || 'Unknown applicant'}</span>
-                            <span className="fh-email">{app.email || 'No email on file'}</span>
+                        <div className="um-user-cell">
+                          <span className="um-avatar" style={{ background: avatarGradient(app.nic || app.name) }} aria-hidden="true">{getInitials(app.name)}</span>
+                          <div className="frm-applicant-text">
+                            <span className="um-user-name">{app.name || 'Unknown applicant'}</span>
+                            <span className="frm-sub">{app.email || 'No email on file'}</span>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <div className="fh-ref">
-                          <span className="fh-ref-number">{app.referenceNumber}</span>
-                          <span className="fh-ref-date">{formatDateOnly(app.submittedAt)}</span>
+                        <div className="frm-ref">
+                          <span className="frm-ref-number">{app.referenceNumber}</span>
+                          <span className="frm-sub" title={formatDateOnly(app.submittedAt)}>{timeAgo(app.submittedAt) || formatDateOnly(app.submittedAt)}</span>
                         </div>
                       </td>
                       <td>
-                        <div className="fh-contact">
-                          <span className="fh-contact-line"><FiCreditCard size={13} /> {app.nic || '—'}</span>
-                          <span className="fh-contact-line"><FiPhone size={13} /> {app.phone || '—'}</span>
+                        <div className="frm-contact">
+                          <span><FiCreditCard size={13} aria-hidden="true" /> {app.nic || '—'}</span>
+                          <span><FiPhone size={13} aria-hidden="true" /> {app.phone || '—'}</span>
                         </div>
                       </td>
-                      <td className="fh-address">{app.address || '—'}</td>
+                      <td><span className="frm-address" title={app.address || ''}>{app.address || '—'}</span></td>
                       <td>
                         <span className={`admin-badge ${statusBadgeClass(app.status)}`}>
                           {statusLabel(app.status)}
                         </span>
                       </td>
-                      <td className={`fh-comment${isExpanded ? ' is-expanded' : ''}`}>
+                      <td className={`frm-comment${isExpanded ? ' is-expanded' : ''}`}>
                         {comment ? (
                           <>
-                            <span className="fh-comment-text">{visibleText}</span>
+                            <span className="frm-comment-text">{visibleText}</span>
                             {comment.length > 90 && (
                               <button
                                 type="button"
-                                className="fh-comment-toggle"
+                                className="frm-comment-toggle"
                                 onClick={() => handleToggleCommentExpand(app.id)}
                               >
                                 {isExpanded ? 'Show less' : 'Show more'}
                               </button>
                             )}
+                            {actionerName && <span className="frm-comment-author">— {actionerName}</span>}
                           </>
                         ) : (
-                          <span className="fh-comment-empty">No comment</span>
-                        )}
-                        {actionerName && (
-                          <div className="fh-comment-author">
-                            by {actionerName}
-                          </div>
+                          <span className="frm-comment-empty">No comment</span>
                         )}
                       </td>
-                      <td className="fh-actions-cell">
-                        <button
-                          type="button"
-                          className="fh-view-btn"
-                          onClick={() => setDetailApp(app)}
-                          title="View full customer details"
-                        >
-                          <FiEye size={15} /> View
-                        </button>
+                      <td>
+                        <div className="um-row-actions frm-row-actions">
+                          <button
+                            type="button"
+                            className="um-action-btn edit"
+                            onClick={() => setDetailApp(app)}
+                            aria-label={`Open application ${app.referenceNumber}`}
+                          >
+                            <FiEye size={15} />
+                            <span className="um-action-label">Open</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      {pagination && pagination.totalPages > 1 && (
-        <div className="admin-pagination">
-          <button
-            type="button"
-            className="admin-page-btn"
-            disabled={!pagination.hasPrevPage || loading}
-            onClick={() => goToPage(page - 1)}
-          >
-            ‹ Prev
-          </button>
-          <span>
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            type="button"
-            className="admin-page-btn"
-            disabled={!pagination.hasNextPage || loading}
-            onClick={() => goToPage(page + 1)}
-          >
-            Next ›
-          </button>
-        </div>
-      )}
+        {pagination && pagination.totalPages > 1 && (
+          <Pager
+            page={pagination.currentPage || page}
+            totalPages={pagination.totalPages}
+            onChange={goToPage}
+            disabled={loading}
+            label="Submission pages"
+          />
+        )}
+      </section>
 
+      {/* Outside the panel: its entrance animation would otherwise trap the fixed overlay */}
       <ApplicationDetailModal
         application={detailApp}
         onClose={() => setDetailApp(null)}
         onUpdated={handleUpdated}
       />
-    </div>
+    </>
   );
 }
 
@@ -314,22 +334,34 @@ export default function FormsPage({ initialFormId }) {
 
   const hasFilter = Boolean(fromDate || toDate);
   const completionRate = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
+  const rangeLabel = hasFilter
+    ? `${fromDate ? formatDateOnly(fromDate) : 'Earliest'} – ${toDate ? formatDateOnly(toDate) : 'Today'}`
+    : 'All time';
 
   if (!form) {
     return (
-      <div className="admin-empty">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-        </svg>
-        <p>Select a form type from the Forms menu to view its submissions and history.</p>
+      <div className="um-page">
+        <div className="um-panel">
+          <div className="um-empty-state">
+            <span className="um-empty-icon"><FiFileText size={24} /></span>
+            <h3>Choose a form</h3>
+            <p>Select a form type from the Forms menu to view its submissions and history.</p>
+          </div>
+        </div>
       </div>
     );
   }
 
+  const tiles = [
+    { key: 'total', cls: 'total', icon: <FiFileText size={15} />, label: 'Total submissions', value: stats.total, foot: hasFilter ? 'In the selected range' : 'All time' },
+    { key: 'completed', cls: 'active', icon: <FiCheckCircle size={15} />, label: 'Completed', value: stats.completed, foot: 'Approved or confirmed' },
+    { key: 'open', cls: 'open', icon: <FiActivity size={15} />, label: 'Still open', value: Math.max(0, stats.total - stats.completed), foot: 'Pending, flagged or rejected' },
+    { key: 'rate', cls: 'roles', icon: <FiActivity size={15} />, label: 'Completion rate', value: completionRate, suffix: '%', meter: completionRate, foot: hasFilter ? 'In the selected range' : 'Across this form type' },
+  ];
+
   return (
-    <div className="um-page forms-um-page">
-      <div className="um-hero form-um-hero">
+    <div className="um-page forms-um-page frm-page">
+      <section className="um-hero form-um-hero">
         <div className="um-hero-deco" aria-hidden="true">
           <span className="um-hero-orb" />
           <span className="um-hero-slash" />
@@ -337,37 +369,28 @@ export default function FormsPage({ initialFormId }) {
         </div>
         <div className="um-hero-top">
           <div className="um-hero-text">
-            <span className="um-hero-eyebrow"><FiFileText size={13} /> Form Operations</span>
+            <span className="um-hero-eyebrow"><FiFileText size={13} /> Forms</span>
             <h1>{form.label}</h1>
-            <p>Track submission flow, completion progress and applicant history in one place.</p>
+            <p>Every {form.label.toLowerCase()} application, its progress and the team&apos;s comments.</p>
           </div>
-          <span className="form-um-hero-icon" aria-hidden="true"><FiActivity size={26} /></span>
+          <span className="frm-range-chip">{rangeLabel}</span>
         </div>
 
-        <div className="um-hero-tiles form-um-tiles">
-          <div className="um-hero-tile total">
-            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiFileText size={16} /></span>Total submissions</div>
-            <div className="um-hero-tile-value">
-              {statsLoading ? <span className="um-hero-skeleton" /> : stats.total}
+        <div className="um-hero-tiles">
+          {tiles.map((tile, idx) => (
+            <div className={`um-hero-tile ${tile.cls}`} key={tile.key} style={{ '--i': idx }}>
+              <div className="um-hero-tile-head"><span className="um-hero-tile-icon">{tile.icon}</span>{tile.label}</div>
+              <div className="um-hero-tile-value">
+                {statsLoading ? <span className="dash-skeleton um-hero-skeleton" /> : <><AnimatedNumber value={tile.value} />{tile.suffix}</>}
+              </div>
+              {tile.meter != null && (
+                <div className="um-hero-meter" aria-hidden="true"><span style={{ width: `${statsLoading ? 0 : tile.meter}%` }} /></div>
+              )}
+              <div className="um-hero-tile-foot">{tile.foot}</div>
             </div>
-            <div className="um-hero-tile-foot">{hasFilter ? 'In selected range' : 'All time'}</div>
-          </div>
-          <div className="um-hero-tile active">
-            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiCheckCircle size={16} /></span>Completed forms</div>
-            <div className="um-hero-tile-value">
-              {statsLoading ? <span className="um-hero-skeleton" /> : stats.completed}
-            </div>
-            <div className="um-hero-tile-foot">{hasFilter ? 'Approved or confirmed in range' : 'Approved or confirmed'}</div>
-          </div>
-          <div className="um-hero-tile roles">
-            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiActivity size={16} /></span>Completion rate</div>
-            <div className="um-hero-tile-value">
-              {statsLoading ? <span className="um-hero-skeleton" /> : `${completionRate}%`}
-            </div>
-            <div className="um-hero-tile-foot">{hasFilter ? 'In selected range' : 'Across this form type'}</div>
-          </div>
+          ))}
         </div>
-      </div>
+      </section>
 
       <RecentHistory
         formId={form.id}

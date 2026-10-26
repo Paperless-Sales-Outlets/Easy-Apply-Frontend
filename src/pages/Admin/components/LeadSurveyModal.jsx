@@ -87,41 +87,49 @@ export default function LeadSurveyModal({ lead, catalog, onClose, onSave }) {
   };
 
   return (
-    <div className="admin-modal-overlay" onClick={saving ? undefined : onClose}>
-      <div className="admin-modal um-modal lm-modal lm-survey-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="admin-modal-header um-modal-header">
-          <div className="um-modal-header-identity">
-            <div className="um-modal-avatar">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <div className="admin-modal-overlay ax-overlay-top" onClick={saving ? undefined : onClose}>
+      <div className="admin-modal ax-modal lm-modal lm-survey-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="lm-survey-title">
+        <div className="ax-modal-head">
+          <span className="ax-modal-head-deco" aria-hidden="true" />
+          <div className="ax-modal-identity">
+            <span className="ax-modal-avatar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 12h4l3 8 4-16 3 8h4" />
               </svg>
-            </div>
+            </span>
             <div>
-              <h3>Record Site Survey</h3>
-              <div className="admin-modal-subtitle">
-                {lead?.referenceNumber} · {lead?.customerName}
+              <span className="ax-modal-eyebrow">Site survey</span>
+              <h3 id="lm-survey-title">Record survey results</h3>
+              <div className="ax-modal-sub">
+                <span className="ax-mono-chip">{lead?.referenceNumber}</span>
+                <span>{lead?.customerName}</span>
               </div>
             </div>
           </div>
-          <button type="button" className="admin-modal-close" onClick={onClose} aria-label="Close" disabled={saving}>×</button>
+          <button type="button" className="ax-modal-close" onClick={onClose} aria-label="Close" disabled={saving}>×</button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="admin-modal-body">
+        <form onSubmit={handleSubmit} noValidate className="ax-modal-form">
+          <div className="ax-modal-body">
             {error && <div className="admin-error-banner" role="alert" style={{ marginBottom: '1rem' }}>{error}</div>}
 
-            <div className="lm-survey-summary">
-              <span className={`lm-pill lm-pill--${summary.failed ? 'bad' : 'good'}`}>
-                {summary.failed} failed
-              </span>
-              <span className={`lm-pill lm-pill--${summary.marginal ? 'warn' : 'neutral'}`}>
-                {summary.marginal} marginal
-              </span>
-              <span className="lm-pill lm-pill--neutral">{summary.pending} pending</span>
+            <div className="lmx-survey-summary">
+              <div className="lmx-survey-bar" aria-hidden="true">
+                <span className="good" style={{ flexGrow: summary.total - summary.failed - summary.marginal - summary.pending }} />
+                <span className="warn" style={{ flexGrow: summary.marginal }} />
+                <span className="bad" style={{ flexGrow: summary.failed }} />
+                <span className="pending" style={{ flexGrow: summary.pending }} />
+              </div>
+              <div className="lmx-survey-counts">
+                <span className="lmx-count good"><strong>{summary.total - summary.failed - summary.marginal - summary.pending}</strong> cleared</span>
+                <span className="lmx-count warn"><strong>{summary.marginal}</strong> marginal</span>
+                <span className="lmx-count bad"><strong>{summary.failed}</strong> failed</span>
+                <span className="lmx-count pending"><strong>{summary.pending}</strong> not measured</span>
+              </div>
               {summary.criticalFailed > 0 && (
-                <span className="lm-pill lm-pill--bad">
-                  {summary.criticalFailed} critical failure{summary.criticalFailed === 1 ? '' : 's'} — this site cannot be served as surveyed
-                </span>
+                <p className="lmx-survey-alert" role="alert">
+                  {summary.criticalFailed} critical check{summary.criticalFailed === 1 ? '' : 's'} failed — this site cannot be served as surveyed.
+                </p>
               )}
             </div>
 
@@ -130,7 +138,7 @@ export default function LeadSurveyModal({ lead, catalog, onClose, onSave }) {
                 const entry = catalogByKey[check.key];
                 const rated = rateCheck(entry, check.value);
                 return (
-                  <div className={`lm-check-row${check.status === 'fail' ? ' is-fail' : ''}`} key={check.key}>
+                  <div className={`lm-check-row lmx-check--${checkStatusTone(check.status)}${check.status === 'fail' ? ' is-fail' : ''}`} key={check.key}>
                     <div className="lm-check-head">
                       <div className="lm-check-title">
                         <span className="lm-check-label">{check.label}</span>
@@ -218,9 +226,9 @@ export default function LeadSurveyModal({ lead, catalog, onClose, onSave }) {
             </div>
           </div>
 
-          <div className="admin-modal-footer um-modal-footer">
+          <div className="ax-modal-foot">
             <button type="button" className="admin-btn ghost" onClick={onClose} disabled={saving}>Cancel</button>
-            <button type="submit" className="admin-btn primary" disabled={saving}>
+            <button type="submit" className="admin-btn primary ax-btn-brand" disabled={saving}>
               {saving ? 'Saving…' : 'Save Survey Results'}
             </button>
           </div>

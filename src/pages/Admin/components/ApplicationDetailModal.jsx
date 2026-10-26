@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
 import { FiCheck, FiCopy, FiFlag, FiMessageSquare, FiX } from 'react-icons/fi';
 import {
   formatDate,
@@ -9,6 +8,7 @@ import {
   statusLabel,
 } from '../utils/applicationUtils';
 import AuthImage from './AuthImage';
+import AdminNotice, { useAdminNotice } from './AdminNotice';
 import { updateApplicationStatus } from '../services/adminService';
 import { getFormSections } from '../utils/formDataSchema';
 
@@ -91,6 +91,7 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
   const [localNotes, setLocalNotes] = useState('');
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
+  const notice = useAdminNotice(4000);
 
   useEffect(() => {
     if (application) {
@@ -133,10 +134,9 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
-      toast.success('Reference number copied');
       setTimeout(() => setCopied(false), 1600);
     } catch {
-      toast.error('Could not copy reference number');
+      notice.error('Could not copy the reference number.');
     }
   };
 
@@ -153,7 +153,7 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
       setLocalStatus(status);
       setLocalNotes(nextNotes);
       setComment(nextNotes);
-      toast.success(`Application marked as ${statusLabel(status)}`);
+      notice.success(`Application marked as ${statusLabel(status)}.`);
       applyUpdate({
         status,
         notes: nextNotes,
@@ -161,7 +161,7 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
         actionedAt: res.application?.actionedAt,
       });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update status');
+      notice.error(err.response?.data?.message || 'Failed to update status');
     } finally {
       setBusy(false);
     }
@@ -170,7 +170,7 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
   const saveComment = async () => {
     const text = comment.trim();
     if (!text) {
-      toast.error('Enter a comment before saving');
+      notice.error('Enter a comment before saving.');
       return;
     }
     setBusy(true);
@@ -179,14 +179,14 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
       const nextNotes = res.application?.notes ?? text;
       setLocalNotes(nextNotes);
       setComment(nextNotes);
-      toast.success('Comment saved');
+      notice.success('Comment saved.');
       applyUpdate({
         notes: nextNotes,
         actionedBy: res.application?.actionedBy,
         actionedAt: res.application?.actionedAt,
       });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save comment');
+      notice.error(err.response?.data?.message || 'Failed to save comment');
     } finally {
       setBusy(false);
     }
@@ -198,39 +198,35 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
 
   return (
     <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal adm-modal-wide" onClick={(e) => e.stopPropagation()}>
-        <div className="admin-modal-header adm-modal-header">
-          <div className="adm-header-main">
-            <span className="adm-header-avatar" aria-hidden="true">{getInitials(application.name)}</span>
-            <div className="adm-header-text">
-              <div className="adm-header-top">
-                <span className="adm-ref-chip">
-                  <span className="adm-ref-label">REF</span>
-                  <span className="adm-ref-value">{application.referenceNumber}</span>
+      <div className="admin-modal ax-modal adm-modal-wide" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="adm-title">
+        <div className="ax-modal-head">
+          <span className="ax-modal-head-deco" aria-hidden="true" />
+          <div className="ax-modal-identity">
+            <span className="ax-modal-avatar" aria-hidden="true">{getInitials(application.name)}</span>
+            <div>
+              <span className="ax-modal-eyebrow">{serviceLabel(application.serviceType)} application</span>
+              <h3 id="adm-title">{application.name || 'Unknown applicant'}</h3>
+              <div className="ax-modal-sub">
+                <span className="ax-mono-chip adm-ref-chip-x">
+                  {application.referenceNumber}
                   <button
                     type="button"
-                    className="adm-ref-copy"
+                    className="adm-ref-copy-x"
                     onClick={handleCopyRef}
                     aria-label="Copy reference number"
-                    title="Copy reference number"
+                    title={copied ? 'Copied' : 'Copy reference number'}
                   >
                     {copied ? <FiCheck size={12} /> : <FiCopy size={12} />}
                   </button>
                 </span>
-                <span className={`admin-badge ${statusBadgeClass(localStatus)}`}>
+                <span className={`admin-badge ax-head-badge ${statusBadgeClass(localStatus)}`}>
                   {statusLabel(localStatus)}
                 </span>
-              </div>
-              <div className="adm-header-sub">
-                <span className="adm-header-name">{application.name || 'Unknown applicant'}</span>
-                <span className="adm-header-dot" aria-hidden="true">•</span>
-                <span>{serviceLabel(application.serviceType)}</span>
+                {application.submittedAt && <span>Submitted {formatDate(application.submittedAt)}</span>}
               </div>
             </div>
           </div>
-          <button type="button" className="admin-modal-close" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <button type="button" className="ax-modal-close" onClick={onClose} aria-label="Close">×</button>
         </div>
 
         <nav className="adm-tabs" aria-label="Application details">
@@ -249,7 +245,8 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
           ))}
         </nav>
 
-        <div className="admin-modal-body adm-modal-body">
+        <div className="ax-modal-body adm-modal-body">
+          {activeTab !== 'data' && <AdminNotice notice={notice.notice} onDismiss={notice.dismiss} />}
           {activeTab === 'data' && (
             <div className="adm-data">
               <div className="adm-customer-card">
@@ -336,6 +333,9 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
                   >
                     <FiMessageSquare size={15} /> Save comment
                   </button>
+                </div>
+                <div className="adm-verify-notice">
+                  <AdminNotice notice={notice.notice} onDismiss={notice.dismiss} />
                 </div>
               </section>
             </div>

@@ -149,22 +149,22 @@ export default function AddSalesOfficerModal({ officers = [], onClose, onCreated
 
   return (
     <div className="admin-modal-overlay" onClick={close}>
-      <div className="admin-modal um-modal um-user-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="so-add-title">
-        <div className="admin-modal-header um-modal-header">
-          <div className="um-modal-header-identity">
-            <div className="um-modal-avatar" style={{ background: 'linear-gradient(135deg, #0b4a91, #003b73)' }}>
-              {initials(form.name) || '?'}
-            </div>
+      <div className="admin-modal ax-modal um-user-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="so-add-title">
+        <div className="ax-modal-head">
+          <span className="ax-modal-head-deco" aria-hidden="true" />
+          <div className="ax-modal-identity">
+            <span className="ax-modal-avatar">{initials(form.name) || '?'}</span>
             <div>
+              <span className="ax-modal-eyebrow">QR Management</span>
               <h3 id="so-add-title">Add Sales Officer</h3>
-              <div className="admin-modal-subtitle">Create a sales officer profile from their employee number</div>
+              <div className="ax-modal-sub">Create a sales officer profile from their employee number</div>
             </div>
           </div>
-          <button type="button" className="admin-modal-close" onClick={close} aria-label="Close">×</button>
+          <button type="button" className="ax-modal-close" onClick={close} aria-label="Close">×</button>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="admin-modal-body">
+        <form onSubmit={handleSubmit} noValidate className="ax-modal-form">
+          <div className="ax-modal-body">
             {submitted && Object.keys(errors).length > 0 && (
               <div className="admin-error-banner" role="alert" style={{ marginBottom: '1rem' }}>Please fix the highlighted fields before continuing.</div>
             )}
@@ -289,16 +289,20 @@ export default function AddSalesOfficerModal({ officers = [], onClose, onCreated
                 <FieldError id={f.confirmPassword.errorId} message={f.confirmPassword.error} />
               </label>
 
-              <label className="um-field" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}>
-                <input type="checkbox" checked={generateQr} onChange={(e) => setGenerateQr(e.target.checked)} style={{ width: 16, height: 16 }} />
-                <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }}>Generate their QR code now</span>
+              <label className={`qrm-toggle-card${generateQr ? ' is-on' : ''}`}>
+                <input type="checkbox" checked={generateQr} onChange={(e) => setGenerateQr(e.target.checked)} />
+                <span className="qrm-toggle-switch" aria-hidden="true"><span /></span>
+                <span className="qrm-toggle-text">
+                  <strong>Generate their QR code now</strong>
+                  <small>The code opens straight away, ready to download or print.</small>
+                </span>
               </label>
             </div>
           </div>
 
-          <div className="um-modal-footer">
+          <div className="ax-modal-foot">
             <button type="button" className="admin-btn ghost" onClick={close} disabled={saving}>Cancel</button>
-            <button type="submit" className="admin-btn primary" disabled={saving}>
+            <button type="submit" className="admin-btn primary ax-btn-brand" disabled={saving}>
               {saving ? 'Creating…' : 'Create Sales Officer'}
             </button>
           </div>

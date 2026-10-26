@@ -11,7 +11,7 @@ import {
   updateLeadChecks,
 } from '../services/adminService';
 import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
-import { AnimatedNumber, timeAgo } from '../components/AdminVisuals';
+import { AnimatedNumber, Pager, timeAgo } from '../components/AdminVisuals';
 import LeadDetailModal from '../components/LeadDetailModal';
 import LeadFormModal from '../components/LeadFormModal';
 import LeadSurveyModal from '../components/LeadSurveyModal';
@@ -70,12 +70,31 @@ const ICON_EMPTY = (
   </svg>
 );
 
+// `count` reads the matching figure from the stats call; At Risk has no exact
+// figure there (a lead can be both ruled out and high risk), so it shows none.
 const TABS = [
-  { key: 'all', label: 'All Leads', icon: ICON_LEADS },
-  { key: 'awaitingSurvey', label: 'Awaiting Survey', icon: ICON_SURVEY },
+  { key: 'all', label: 'All Leads', icon: ICON_LEADS, count: (s) => s?.total },
+  { key: 'awaitingSurvey', label: 'Awaiting Survey', icon: ICON_SURVEY, count: (s) => s?.awaitingSurvey },
   { key: 'atRisk', label: 'At Risk', icon: ICON_RISK },
-  { key: 'qualified', label: 'Qualified', icon: ICON_OK },
+  { key: 'qualified', label: 'Qualified', icon: ICON_OK, count: (s) => s?.qualified },
 ];
+
+const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg, #0f57a8, #0b2d5b)',
+  'linear-gradient(135deg, #50b748, #2f7f2a)',
+  'linear-gradient(135deg, #2b7de9, #0a3f7e)',
+  'linear-gradient(135deg, #0f7a4d, #004d38)',
+  'linear-gradient(135deg, #3d6fb6, #1b3f75)',
+];
+
+function avatarGradient(key) {
+  const text = String(key || '');
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  return AVATAR_GRADIENTS[hash % AVATAR_GRADIENTS.length];
+}
+
+const initials = (name) => (name || '').split(' ').filter(Boolean).map((n) => n[0]).slice(0, 2).join('').toUpperCase() || 'L';
 
 const EMPTY_FILTERS = {
   search: '',
@@ -380,38 +399,48 @@ export default function LeadManagementPage() {
 
       {/* ── Why leads fail ── */}
       {blockingReasons.length > 0 && (
-        <section className="lm-reasons">
-          <div className="lm-reasons-head">
-            <h2>What is blocking leads</h2>
-            <p>The reasons sites have been ruled out or flagged, across every lead.</p>
-          </div>
-          <div className="lm-reason-chips">
-            {blockingReasons.map((reason) => (
-              <span className="lm-reason-chip" key={reason.label}>
-                <span className="lm-reason-label">{reason.label}</span>
-                <span className="lm-reason-count">{reason.count}</span>
-              </span>
-            ))}
+        <section className="lm-reasons lmx-reasons">
+          <span className="lmx-reasons-icon" aria-hidden="true">{ICON_RISK}</span>
+          <div className="lmx-reasons-body">
+            <div className="lm-reasons-head">
+              <h2>What is blocking leads</h2>
+              <p>Why sites have been ruled out or flagged, across every lead.</p>
+            </div>
+            <div className="lmx-reason-list">
+              {blockingReasons.map((reason) => (
+                <div className="lmx-reason" key={reason.label}>
+                  <span className="lmx-reason-label">{reason.label}</span>
+                  <span className="lmx-reason-track" aria-hidden="true">
+                    <span style={{ width: `${Math.max(8, (reason.count / blockingReasons[0].count) * 100)}%` }} />
+                  </span>
+                  <span className="lmx-reason-count">{reason.count} lead{reason.count === 1 ? '' : 's'}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
 
       {/* ── Tabs ── */}
-      <div className="um-tabs" role="tablist" style={{ '--tab-index': TABS.findIndex((t) => t.key === group), '--tab-count': TABS.length }}>
+      <div className="um-tabs lmx-tabs" role="tablist" style={{ '--tab-index': TABS.findIndex((t) => t.key === group), '--tab-count': TABS.length }}>
         <span className="um-tabs-indicator" aria-hidden="true" />
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            role="tab"
-            aria-selected={group === tab.key}
-            className={`um-tab${group === tab.key ? ' active' : ''}`}
-            onClick={() => handleTabChange(tab.key)}
-          >
-            <span className="um-tab-icon">{tab.icon}</span>
-            <span className="um-tab-label">{tab.label}</span>
-          </button>
-        ))}
+        {TABS.map((tab) => {
+          const count = tab.count?.(stats);
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={group === tab.key}
+              className={`um-tab${group === tab.key ? ' active' : ''}`}
+              onClick={() => handleTabChange(tab.key)}
+            >
+              <span className="um-tab-icon">{tab.icon}</span>
+              <span className="um-tab-label">{tab.label}</span>
+              {count != null && !statsLoading && <span className="um-tab-count">{count}</span>}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Lead table ── */}
@@ -482,11 +511,9 @@ export default function LeadManagementPage() {
                   <th>Customer</th>
                   <th>Site</th>
                   <th>Package</th>
-                  <th>Signal</th>
-                  <th>Checks</th>
-                  <th>Risk</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: 'center' }}>Actions</th>
+                  <th>Survey</th>
+                  <th>Status &amp; risk</th>
+                  <th className="lmx-actions-head">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -507,9 +534,14 @@ export default function LeadManagementPage() {
                         </div>
                       </td>
                       <td>
-                        <div className="lm-customer-cell">
-                          <span className="lm-customer-name">{lead.customerName}</span>
-                          <span className="lm-customer-phone">{lead.phone}</span>
+                        <div className="um-user-cell">
+                          <span className="um-avatar" style={{ background: avatarGradient(lead.phone || lead.customerName) }} aria-hidden="true">
+                            {initials(lead.customerName)}
+                          </span>
+                          <div className="lm-customer-cell">
+                            <span className="lm-customer-name">{lead.customerName}</span>
+                            <span className="lm-customer-phone">{lead.phone}</span>
+                          </div>
                         </div>
                       </td>
                       <td>
@@ -525,49 +557,49 @@ export default function LeadManagementPage() {
                         </div>
                       </td>
                       <td>
-                        {pct === null ? (
-                          <span className="lm-muted">Not measured</span>
-                        ) : (
-                          <div className="lm-signal-cell">
-                            <span className={`lm-signal-value lm-signal-value--${tone}`}>{signalValue}</span>
-                            <div className="lm-signal-track">
-                              <span className={`lm-signal-fill lm-signal-fill--${tone}`} style={{ width: `${pct}%` }} />
+                        <div className="lmx-survey-cell">
+                          <div className="lm-checks-cell">
+                            <span className="lm-checks-count">{checks.cleared}/{checks.total} checks</span>
+                            <div className="lm-check-dots">
+                              {lead.checks.map((check) => (
+                                <span
+                                  key={check.key}
+                                  className={`lm-check-dot lm-check-dot--${check.status}`}
+                                  title={`${check.label}: ${check.status}`}
+                                />
+                              ))}
                             </div>
                           </div>
-                        )}
-                      </td>
-                      <td>
-                        <div className="lm-checks-cell">
-                          <span className="lm-checks-count">{checks.cleared}/{checks.total}</span>
-                          <div className="lm-check-dots">
-                            {lead.checks.map((check) => (
-                              <span
-                                key={check.key}
-                                className={`lm-check-dot lm-check-dot--${check.status}`}
-                                title={`${check.label}: ${check.status}`}
-                              />
-                            ))}
-                          </div>
+                          {pct === null ? (
+                            <span className="lm-muted">Signal not measured</span>
+                          ) : (
+                            <div className="lm-signal-cell" title={`Optical signal ${signalValue}`}>
+                              <span className={`lm-signal-value lm-signal-value--${tone}`}>{signalValue}</span>
+                              <div className="lm-signal-track">
+                                <span className={`lm-signal-fill lm-signal-fill--${tone}`} style={{ width: `${pct}%` }} />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td>
-                        <span className={`lm-pill lm-pill--${leadRiskTone(lead.riskLevel)}`}>
-                          {leadRiskLabel(lead.riskLevel)}
-                        </span>
-                        {blocked && (
-                          <small className="lm-blocking-note">{lead.blockingIssues.length} blocking</small>
-                        )}
+                        <div className="lmx-status-cell">
+                          <span className={`lm-pill lm-pill--${leadStatusTone(lead.status)}`}>
+                            {leadStatusLabel(lead.status)}
+                          </span>
+                          <span className={`lm-pill lm-pill--${leadRiskTone(lead.riskLevel)}`}>
+                            {leadRiskLabel(lead.riskLevel)}
+                          </span>
+                          {blocked && (
+                            <small className="lm-blocking-note">{lead.blockingIssues.length} blocking</small>
+                          )}
+                          {lead.surveyDate && (
+                            <small className="lm-survey-date">Survey {formatDate(lead.surveyDate)}</small>
+                          )}
+                        </div>
                       </td>
                       <td>
-                        <span className={`lm-pill lm-pill--${leadStatusTone(lead.status)}`}>
-                          {leadStatusLabel(lead.status)}
-                        </span>
-                        {lead.surveyDate && (
-                          <small className="lm-survey-date">Survey {formatDate(lead.surveyDate)}</small>
-                        )}
-                      </td>
-                      <td>
-                        <div className="um-row-actions">
+                        <div className="um-row-actions lmx-row-actions">
                           <button
                             type="button"
                             className="um-action-btn edit"
@@ -590,26 +622,13 @@ export default function LeadManagementPage() {
         )}
 
         {!loading && leads.length > 0 && (
-          <div className="admin-pagination">
-            <span>{pagination.totalCount} lead{pagination.totalCount === 1 ? '' : 's'}</span>
-            <button
-              type="button"
-              className="admin-page-btn"
-              disabled={!pagination.hasPrevPage}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Previous
-            </button>
-            <span>Page {pagination.currentPage} of {pagination.totalPages}</span>
-            <button
-              type="button"
-              className="admin-page-btn"
-              disabled={!pagination.hasNextPage}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Next
-            </button>
-          </div>
+          <Pager
+            page={pagination.currentPage || page}
+            totalPages={Math.max(1, pagination.totalPages || 1)}
+            onChange={setPage}
+            info={`${pagination.totalCount} lead${pagination.totalCount === 1 ? '' : 's'} · page ${pagination.currentPage || page} of ${Math.max(1, pagination.totalPages || 1)}`}
+            label="Lead pages"
+          />
         )}
       </section>
 
@@ -652,20 +671,23 @@ export default function LeadManagementPage() {
       )}
 
       {pendingDelete && (
-        <div className="admin-modal-overlay" onClick={deleting ? undefined : () => setPendingDelete(null)}>
-          <div className="admin-modal um-confirm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header um-modal-header">
-              <h3>Remove lead</h3>
-              <button type="button" className="admin-modal-close" onClick={() => setPendingDelete(null)} aria-label="Close">×</button>
-            </div>
-            <div className="admin-modal-body">
+        <div className="admin-modal-overlay ax-overlay-top" onClick={deleting ? undefined : () => setPendingDelete(null)}>
+          <div className="admin-modal ax-modal ax-confirm" onClick={(e) => e.stopPropagation()} role="alertdialog" aria-modal="true" aria-labelledby="lm-delete-title">
+            <div className="ax-modal-body ax-confirm-body">
+              <span className="ax-confirm-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+              </span>
+              <h3 id="lm-delete-title">Remove this lead?</h3>
               <p>
-                Remove <strong>{pendingDelete.referenceNumber}</strong> ({pendingDelete.customerName})?
-                Its survey results and notes are deleted with it.
+                <strong>{pendingDelete.referenceNumber}</strong> · {pendingDelete.customerName}
+                <br />
+                Its survey results and notes are deleted with it. This cannot be undone.
               </p>
             </div>
-            <div className="admin-modal-footer um-modal-footer">
-              <button type="button" className="admin-btn ghost" onClick={() => setPendingDelete(null)} disabled={deleting}>Cancel</button>
+            <div className="ax-modal-foot">
+              <button type="button" className="admin-btn ghost" onClick={() => setPendingDelete(null)} disabled={deleting} autoFocus>Cancel</button>
               <button type="button" className="admin-btn danger" onClick={confirmDelete} disabled={deleting}>
                 {deleting ? 'Removing…' : 'Remove Lead'}
               </button>
