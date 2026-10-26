@@ -2,16 +2,15 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiAlertCircle } from 'react-icons/fi';
+import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv } from 'react-icons/fi';
 import CategoryChips from '../components/catalog/CategoryChips';
 import SidebarFilters from '../components/catalog/SidebarFilters';
 import ProductCard from '../components/catalog/ProductCard';
-import ProductDetailsPanel from '../components/catalog/ProductDetailsPanel';
 import PackageDetailModal from '../components/PackageDetailModal';
 import SkeletonCard from '../components/catalog/SkeletonCard';
 import Toast from '../components/common/Toast';
 import HeroBannerCarousel from '../components/catalog/HeroBannerCarousel';
-import { getProducts, addToCart, removeFromCart, getLocalCart, clearCart } from '../services/productService';
+import { getProducts, addToCart, removeFromCart, getLocalCart } from '../services/productService';
 
 const DEFAULT_MOCKUP_PRODUCTS = [
   // ── 🌐 Broadband Category (5 Packages) ──
@@ -455,7 +454,7 @@ export default function ProductCatalogPage() {
       await addToCart(prod, qty);
       setCartItems(getLocalCart());
       showToast(`${prod.name} added to cart!`, 'success');
-    } catch (err) {
+    } catch {
       showToast(`${prod.name} added to cart!`, 'success');
     }
   };
@@ -466,15 +465,9 @@ export default function ProductCatalogPage() {
       await removeFromCart(prodId);
       setCartItems(getLocalCart());
       showToast(`${prod.name} removed from cart.`, 'info');
-    } catch (err) {
+    } catch {
       setCartItems(getLocalCart());
     }
-  };
-
-  const handleClearCartSelection = async () => {
-    await clearCart();
-    setCartItems([]);
-    showToast('Selection reset. All packages are now unselected.', 'info');
   };
 
   const location = useLocation();
@@ -644,13 +637,7 @@ export default function ProductCatalogPage() {
       {/* Main Container */}
       <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem' }}>
         {/* ── Top Hero Banner & Quick Actions Section ── */}
-        <HeroBannerCarousel
-          onShopNow={() => {
-            document
-              .getElementById('products-section')
-              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }}
-        />
+        <HeroBannerCarousel />
 
         {/* ── Voice Compulsory & Bundle Rules Status Bar (Commented out: single package selection allowed) ──
         <div

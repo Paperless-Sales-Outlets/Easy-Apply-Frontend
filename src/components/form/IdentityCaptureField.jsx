@@ -19,6 +19,37 @@ import {
 
 const ANALYSIS_INTERVAL = 350;
 
+// Uploaded images already this small are kept exactly as chosen.
+const KEEP_AS_IS_BYTES = 700 * 1024;
+
+/**
+ * Scale an uploaded image down to at most `maxWidth` pixels wide and re-encode
+ * it as JPEG, the same as a camera capture. Falls back to the original if the
+ * browser can't decode it.
+ */
+const resizeImage = (dataUrl, maxWidth) =>
+  new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      if (scale === 1 && dataUrl.length <= KEEP_AS_IS_BYTES) {
+        resolve(dataUrl);
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      // JPEG has no transparency; give transparent PNGs a white background.
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.9));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+
 export default function IdentityCaptureField({
   label,
   variant = 'document',
@@ -113,7 +144,7 @@ export default function IdentityCaptureField({
         if (Math.abs(cx - 0.5) > 0.13 || Math.abs(cy - 0.5) > 0.15) { setGuidance('Centre your face in the oval'); setReady(false); return; }
         if (fh < 0.35) { setGuidance('Move a little closer'); setReady(false); return; }
         if (fh > 0.85) { setGuidance('Move back slightly'); setReady(false); return; }
-      } catch (err) { /* detector hiccup — don't block */ }
+      } catch { /* detector hiccup — don't block */ }
     }
 
     setGuidance(isFace ? 'Looking good — hold still and capture' : 'Fill the frame with your NIC, then capture');
@@ -168,7 +199,7 @@ export default function IdentityCaptureField({
       if (isFace && !detectorRef.current && typeof window !== 'undefined' && 'FaceDetector' in window) {
         try {
           detectorRef.current = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 3 });
-        } catch (err) { detectorRef.current = null; }
+        } catch { detectorRef.current = null; }
       }
 
       setFacingMode(mode);
@@ -178,8 +209,12 @@ export default function IdentityCaptureField({
       const denied = err?.name === 'NotAllowedError' || err?.name === 'SecurityError';
       setCameraError(
         denied
-          ? 'Camera access was blocked. Allow camera permission, or upload a photo instead.'
-          : 'No camera available on this device. Please upload a photo instead.'
+          ? (cameraOnly
+              ? 'Camera access was blocked. Please allow camera permissions in your browser.'
+              : 'Camera access was blocked. Allow camera permission, or upload a photo instead.')
+          : (cameraOnly
+              ? 'No camera available on this device. A camera is required for live selfie capture.'
+              : 'No camera available on this device. Please upload a photo instead.')
       );
       stopCamera();
     } finally {
@@ -227,7 +262,11 @@ export default function IdentityCaptureField({
     if (file.size > 5 * 1024 * 1024) { setCameraError('Image is larger than 5MB. Please choose a smaller file.'); return; }
     setCameraError('');
     const reader = new FileReader();
-    reader.onload = () => onChange && onChange(reader.result);
+    // Shrink uploads to the same size as a camera capture, so a 5MB photo
+    // becomes a few hundred KB and saves/submits quickly.
+    reader.onload = () => {
+      resizeImage(reader.result, isFace ? 640 : 1280).then((image) => onChange && onChange(image));
+    };
     reader.onerror = () => setCameraError('Could not read that file. Please try again.');
     reader.readAsDataURL(file);
   };
@@ -267,13 +306,19 @@ export default function IdentityCaptureField({
             />
             <div>
               <p style={{ margin: '0 0 0.5rem 0', fontWeight: 700, color: '#0f7a4d', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FiCheckCircle aria-hidden="true" /> Captured
+                <FiCheckCircle aria-hidden="true" /> Image Ready
               </p>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => { onChange(''); openCamera(); }}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem' }}>
-                  <FiRefreshCw size={14} aria-hidden="true" /> Retake
+                  <FiRefreshCw size={14} aria-hidden="true" /> Retake Photo
                 </button>
+                {!cameraOnly && (
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => uploadInputRef.current?.click()}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem' }}>
+                    <FiUpload size={14} aria-hidden="true" /> Re-upload File
+                  </button>
+                )}
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => onChange('')}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem', color: 'var(--danger, #dc3545)' }}>
                   <FiX size={14} aria-hidden="true" /> Remove

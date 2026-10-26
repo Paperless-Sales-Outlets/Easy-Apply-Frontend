@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiCheckCircle,
@@ -323,7 +323,7 @@ function AreaUnavailableModal({
 
                 <button
                   type="button"
-                  onClick={onDiscontinue}
+                  onClick={onDiscontinue || onGoBack}
                   style={{
                     backgroundColor: '#ffffff',
                     color: '#991b1b',
@@ -370,6 +370,8 @@ export default function LoopCheckStep({
   const [checkError, setCheckError] = useState('');
   const [waitlistRegistered, setWaitlistRegistered] = useState(false);
   const [showSurveyModal, setShowSurveyModal] = useState(false);
+  const checkSequenceRef = useRef(0);
+  const checkTimersRef = useRef([]);
 
   const address = formData.installAddress || formData.address || '';
   const city = formData.city || '';
@@ -377,16 +379,26 @@ export default function LoopCheckStep({
   const latitude = formData.latitude || null;
   const longitude = formData.longitude || null;
 
-  // Run OSS Feasibility Query
+  // Cancel previous visual timers to prevent out-of-date results from showing.
+  const clearCheckTimers = () => {
+    checkTimersRef.current.forEach(clearTimeout);
+    checkTimersRef.current = [];
+  };
+
+  // Run OSS feasibility against the service implementation.
   const executeOSSCheck = async () => {
+    const currentSequence = ++checkSequenceRef.current;
+    clearCheckTimers();
     setPhase('checking');
     setScanStep(1);
     setCheckError('');
+    setOssData(null);
 
-    // Multi-step scanning animation
-    const t1 = setTimeout(() => setScanStep(2), 600);
-    const t2 = setTimeout(() => setScanStep(3), 1200);
-    const t3 = setTimeout(() => setScanStep(4), 1800);
+    checkTimersRef.current = [
+      setTimeout(() => setScanStep(2), 600),
+      setTimeout(() => setScanStep(3), 1200),
+      setTimeout(() => setScanStep(4), 1800),
+    ];
 
     try {
       const data = await queryOSSFeasibility({
@@ -398,27 +410,42 @@ export default function LoopCheckStep({
         requestedProduct: selectedProduct,
       });
 
+      if (currentSequence !== checkSequenceRef.current) return;
       if (!data || typeof data !== 'object') {
         throw new Error('The coverage check returned no result.');
       }
 
-      setTimeout(() => {
+      checkTimersRef.current.push(setTimeout(() => {
+        if (currentSequence !== checkSequenceRef.current) return;
         setOssData(data);
         setPhase('completed');
-      }, 2100);
+      }, 2100));
     } catch (err) {
+      if (currentSequence !== checkSequenceRef.current) return;
       console.error('OSS check failed:', err);
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
+      clearCheckTimers();
       setCheckError('We couldn’t complete the coverage check. Please try again.');
       setPhase('error');
     }
   };
 
+  const selectedProductKey = [
+    selectedProduct?._id,
+    selectedProduct?.id,
+    selectedProduct?.category,
+    selectedProduct?.productName,
+    selectedProduct?.name,
+  ].filter(Boolean).join('|');
+
   useEffect(() => {
     executeOSSCheck();
-  }, [address, city, latitude, longitude]);
+    return () => {
+      ++checkSequenceRef.current;
+      clearCheckTimers();
+    };
+    // Object identity of selectedProduct may change while its logical choice stays the same.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, city, district, latitude, longitude, selectedProductKey]);
 
   const handleSwitchAlternative = (altProduct) => {
     if (!altProduct || !onSelectAlternativeProduct) {
@@ -428,7 +455,7 @@ export default function LoopCheckStep({
     toast.success(`Selected ${altProduct.name || altProduct.productName}.`, {
       icon: '📶',
     });
-    onAvailable();
+    onAvailable?.();
   };
 
   // Handler: customer chooses LTE from the area-unavailable modal
@@ -443,7 +470,7 @@ export default function LoopCheckStep({
 
   const handleRegisterWaitlist = () => {
     setWaitlistRegistered(true);
-    toast.success('Your interest in Optical Fibre expansion has been registered with SLTMobitel Planning (Ref #FW-84920).');
+    toast('Demo only: Fibre waitlist interest saved on this page. No request has been submitted to SLTMobitel.');
   };
 
   // Derived states
@@ -713,7 +740,7 @@ export default function LoopCheckStep({
                   </h4>
                   <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', fontWeight: 600 }}>
                     {selectedProduct
-                      ? `Your selected package (${selectedProduct.productName}) is 100% verified and ready for installation.`
+                      ? `The coverage check reports that ${selectedProduct.productName || selectedProduct.name || 'your selected package'} may be available at this address, subject to final provider confirmation.`
                       : 'High-speed broadband network infrastructure is verified and available for your premises.'}
                   </p>
                 </div>
@@ -782,7 +809,7 @@ export default function LoopCheckStep({
                       }}
                     >
                       {waitlistRegistered ? <FiCheck size={14} /> : <FiClock size={14} />}
-                      {waitlistRegistered ? 'Waitlist Registered (#FW-84920)' : 'Join Priority Fibre Waitlist'}
+                      {waitlistRegistered ? 'Demo interest saved (not submitted)' : 'Join Priority Fibre Waitlist'}
                     </button>
                   </div>
                 </div>
@@ -916,7 +943,7 @@ export default function LoopCheckStep({
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
                       <span style={{ color: '#64748b', fontWeight: 600 }}>FDP Terminal ID:</span>
-                      <strong style={{ color: '#0f172a', fontFamily: 'monospace', fontSize: '0.9rem' }}>{fibre.fdpId || 'FDP-CMB-1048'}</strong>
+                      <strong style={{ color: '#0f172a', fontFamily: 'monospace', fontSize: '0.9rem' }}>{fibre.fdpId || 'Not reported'}</strong>
                     </div>
 
                     {/* Distance Meter */}
@@ -924,13 +951,13 @@ export default function LoopCheckStep({
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                         <span style={{ color: '#64748b', fontWeight: 600 }}>Distance to FDP:</span>
                         <strong style={{ color: fibre.distanceMeters <= 350 ? '#15803d' : '#dc2626' }}>
-                          {fibre.distanceMeters || 68} meters (Max: 350m)
+                          {fibre.distanceMeters ?? 'Not reported'} meters (Max: 350m)
                         </strong>
                       </div>
                       <div style={{ width: '100%', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '9999px', overflow: 'hidden' }}>
                         <div
                           style={{
-                            width: `${Math.min(100, ((fibre.distanceMeters || 68) / 350) * 100)}%`,
+                            width: `${Math.min(100, ((Number(fibre.distanceMeters) || 0) / 350) * 100)}%`,
                             height: '100%',
                             backgroundColor: fibre.distanceMeters <= 350 ? '#10b981' : '#ef4444',
                             borderRadius: '9999px',
@@ -944,13 +971,13 @@ export default function LoopCheckStep({
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
                         <span style={{ color: '#64748b', fontWeight: 600 }}>Splitter Ports:</span>
                         <strong style={{ color: '#0f172a' }}>
-                          {fibre.availablePorts || 0} Free / {fibre.totalPorts || 8} Total
+                          {fibre.availablePorts ?? 0} Free / {fibre.totalPorts ?? 0} Total
                         </strong>
                       </div>
                       {/* Port Dots */}
                       <div style={{ display: 'flex', gap: '0.35rem' }}>
-                        {Array.from({ length: fibre.totalPorts || 8 }).map((_, i) => {
-                          const isFree = i < (fibre.availablePorts || 0);
+                        {Array.from({ length: Math.max(0, Math.min(128, Number(fibre.totalPorts) || 0)) }).map((_, i) => {
+                          const isFree = i < (fibre.availablePorts ?? 0);
                           return (
                             <div
                               key={i}
@@ -969,7 +996,7 @@ export default function LoopCheckStep({
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
                       <span style={{ color: '#64748b', fontWeight: 600 }}>Max Fibre Speed:</span>
-                      <strong style={{ color: '#0f57a8' }}>{fibre.maxSpeed || 'Up to 1 Gbps'}</strong>
+                      <strong style={{ color: '#0f57a8' }}>{fibre.maxSpeed || 'Not reported'}</strong>
                     </div>
                   </div>
                 </div>
@@ -1032,7 +1059,7 @@ export default function LoopCheckStep({
                       }}
                     >
                       {lte.available ? <FiWifi size={13} /> : <FiAlertCircle size={13} />}
-                      {lte.available ? `${lte.signalStrength || 'Excellent'} 4G` : 'No Signal'}
+                      {lte.available ? `${lte.signalStrength || 'Available'} 4G` : 'No Signal'}
                     </span>
                   </div>
 
@@ -1053,7 +1080,7 @@ export default function LoopCheckStep({
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
                         <span style={{ color: '#64748b', fontWeight: 600 }}>Cellular Signal (RSRP):</span>
                         <strong style={{ color: '#ea580c' }}>
-                          {lte.rsrp || -78} dBm ({lte.signalPercent || 94}% Signal)
+                          {lte.rsrp ?? 'Not reported'} dBm ({lte.signalPercent ?? 0}% Signal)
                         </strong>
                       </div>
                       <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '14px' }}>
@@ -1064,7 +1091,7 @@ export default function LoopCheckStep({
                               flex: 1,
                               height: `${(idx + 1) * 25}%`,
                               borderRadius: '2px',
-                              backgroundColor: (lte.signalPercent || 94) >= step ? '#f97316' : '#cbd5e1',
+                              backgroundColor: (lte.signalPercent ?? 0) >= step ? '#f97316' : '#cbd5e1',
                             }}
                           />
                         ))}
@@ -1073,22 +1100,22 @@ export default function LoopCheckStep({
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
                       <span style={{ color: '#64748b', fontWeight: 600 }}>Nearest Base Station:</span>
-                      <strong style={{ color: '#0f172a', fontSize: '0.85rem' }}>{lte.nearestTower || 'ENB-CMB-402'}</strong>
+                      <strong style={{ color: '#0f172a', fontSize: '0.85rem' }}>{lte.nearestTower || 'Not reported'}</strong>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
                       <span style={{ color: '#64748b', fontWeight: 600 }}>Tower Distance:</span>
-                      <strong style={{ color: '#0f172a' }}>{lte.distanceKm || 0.45} km</strong>
+                      <strong style={{ color: '#0f172a' }}>{lte.distanceKm ?? 'Not reported'} km</strong>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
                       <span style={{ color: '#64748b', fontWeight: 600 }}>Carrier Bands:</span>
-                      <strong style={{ color: '#0f172a', fontSize: '0.8rem' }}>B3 (1800MHz) + B40 (2300MHz)</strong>
+                      <strong style={{ color: '#0f172a', fontSize: '0.8rem' }}>{lte.carrierBands || 'Not reported'}</strong>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
                       <span style={{ color: '#64748b', fontWeight: 600 }}>Provisioning ETA:</span>
-                      <strong style={{ color: '#16a34a' }}>Instant Plug &amp; Play (Next-day)</strong>
+                      <strong style={{ color: '#16a34a' }}>{lte.provisioningEta || 'To be confirmed'}</strong>
                     </div>
                   </div>
                 </div>
@@ -1278,7 +1305,7 @@ export default function LoopCheckStep({
 
       {/* ── Area Unavailable Modal (Fiber not available → suggest LTE) ── */}
       <AreaUnavailableModal
-        isOpen={phase === 'completed' && fibre.available !== true}
+        isOpen={phase === 'completed' && isFibreSelected && fibre.available !== true}
         selectedProduct={selectedProduct}
         areaName={city || district || address || 'your area'}
         alternatives={ossData?.alternativeServices || []}
@@ -1366,7 +1393,7 @@ export default function LoopCheckStep({
                   <strong>Regional Center:</strong> {ossData?.location?.servingExchange?.name || 'Nearest Regional Teleshop'}
                 </div>
                 <div>
-                  <strong>Logged GPS Coordinates:</strong> {latitude || '6.9271'}, {longitude || '79.8612'}
+                  <strong>Logged GPS Coordinates:</strong> {latitude ?? 'Not provided'}, {longitude ?? 'Not provided'}
                 </div>
               </div>
 
@@ -1375,7 +1402,7 @@ export default function LoopCheckStep({
                   type="button"
                   onClick={() => {
                     setShowSurveyModal(false);
-                    toast.success('Field Feasibility Survey ticket #SRV-90214 created. A technician will contact you within 48h.');
+                    toast('This demo does not submit a field survey request. Please contact SLTMobitel Support at 1212.');
                   }}
                   style={{
                     backgroundColor: '#0f57a8',

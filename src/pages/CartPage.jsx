@@ -73,7 +73,7 @@ export default function CartPage() {
       await removeFromCart(productId);
       showToast('Item removed from cart', 'info');
       fetchCartData();
-    } catch (err) {
+    } catch {
       showToast('Item removed', 'info');
       fetchCartData();
     }
@@ -85,7 +85,7 @@ export default function CartPage() {
     try {
       await addToCart(item, delta);
       fetchCartData();
-    } catch (err) {
+    } catch {
       fetchCartData();
     }
   };

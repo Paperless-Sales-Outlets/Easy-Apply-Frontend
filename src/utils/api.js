@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { isSessionExpired, expireSessionDueToInactivity, getVerifiedPhone } from './authSession.js';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || 'http://localhost:5050/api';
 
 // Create an instance of Axios
 const api = axios.create({
@@ -64,19 +65,25 @@ export const clearSessionCart = async () => {
     localStorage.removeItem('easy_apply_cart');   // ← the actual key used by productService
     localStorage.removeItem('slt_session_id');    // ← backend session ID (starts a fresh cart session)
     sessionStorage.removeItem('selectedProduct'); // ← product carried into the checkout form
-  } catch (_) {
+  } catch {
     // ignore storage errors in sandboxed environments
   }
 
   // 3. Tell all listeners (navbar badge, FloatingCartButton, etc.) the cart is now empty
   try {
     window.dispatchEvent(new Event('easyapply:cart-updated'));
-  } catch (_) {}
+  } catch {}
 };
 
 // Request Interceptor: Attach in-memory admin accessToken & session ID
 api.interceptors.request.use(
   (config) => {
+    // 0. Prevent access to protected APIs using an expired customer session
+    if ((getVerifiedPhone() || localStorage.getItem('verifiedEmail')) && isSessionExpired()) {
+      expireSessionDueToInactivity();
+      return Promise.reject(new Error('Your session has expired due to inactivity. Please log in again.'));
+    }
+
     // 1. Attach in-memory admin accessToken or stored admin token if available
     const token =
       adminAccessToken ||

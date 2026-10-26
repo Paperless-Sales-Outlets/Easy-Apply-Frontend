@@ -7,9 +7,9 @@ const STATUS_ACTIONS = [
   { status: 'flagged', label: 'Flag', icon: <FiFlag size={14} />, className: 'warning' },
 ];
 
-export default function ApplicationActions({ application, busy, onStatusChange, onView }) {
+export default function ApplicationActions({ application, busy, onStatusChange, onView, variant = '' }) {
   return (
-    <div className="admin-action-group">
+    <div className={`admin-action-group application-actions ${variant ? `application-actions--${variant}` : ''}`}>
       <button
         type="button"
         className="admin-btn ghost"

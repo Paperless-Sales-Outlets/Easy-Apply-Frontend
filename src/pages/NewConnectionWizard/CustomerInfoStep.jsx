@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { FiUser, FiMapPin, FiMail, FiCheck, FiNavigation, FiPhoneCall, FiCompass, FiZap, FiCrosshair, FiMaximize2 } from 'react-icons/fi';
+import { FiUser, FiMapPin, FiCheck, FiNavigation, FiCompass, FiZap, FiCrosshair, FiMaximize2 } from 'react-icons/fi';
 import AddressInputWithMap from '../../components/form/AddressInputWithMap';
 import LocationPickerModal from '../../components/form/LocationPickerModal';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
@@ -114,19 +113,33 @@ const ReadOnlyDetail = ({ label, value }) => (
   </div>
 );
 
-export default function CustomerInfoStep({ formData, handleChange, setFields, selectedProduct }) {
-  const { t } = useTranslation();
-  const { mobileNumber, customerExists, selectedAccount } = useVerifiedContext();
+export default function CustomerInfoStep({
+  formData,
+  handleChange,
+  setFields,
+  selectedProduct: selectedProductProp = null,
+  stepNumber = 2,
+  totalSteps = 7,
+}) {
+  const { mobileNumber, selectedAccount, customerExists: verifiedCustomerExists } = useVerifiedContext();
+  const customerExists = Boolean(verifiedCustomerExists || selectedAccount);
+  const selectedProduct = selectedProductProp || formData.selectedProduct || formData.product || null;
   const [authUser] = useState(getAuthUser);
   const [autoDetectedPill, setAutoDetectedPill] = useState('');
 
   // Retrieve user identity from verified context or OCR registration
   const knownProfile = (() => {
+    const sanitizeNic = (val) => {
+      if (!val || typeof val !== 'string') return '';
+      if (val.startsWith('NIC-')) return '';
+      return val;
+    };
+
     if (selectedAccount) {
       return {
         title: selectedAccount.title || 'Mr',
         nameFull: selectedAccount.fullName || selectedAccount.customerName || '',
-        nic: selectedAccount.nic || '',
+        nic: sanitizeNic(selectedAccount.nic || ''),
         dob: selectedAccount.dob || '',
         email: selectedAccount.email || '',
         mobileNumber: selectedAccount.mobileNumber || selectedAccount.phoneNumber || mobileNumber || '',
@@ -140,18 +153,18 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
       return {
         title: authUser.title || 'Mr',
         nameFull: authUser.name || '',
-        nic: authUser.NIC || authUser.nic || '',
+        nic: sanitizeNic(authUser.NIC || authUser.nic || ''),
         dob: authUser.dob || '',
         email: authUser.email || '',
         mobileNumber: authUser.phone || authUser.mobileNumber || mobileNumber || '',
-        registeredAddress: formData.address || '',
+        registeredAddress: line || formData.address || '',
       };
     }
     return {
-      title: '',
-      nameFull: '',
-      nic: '',
-      dob: '',
+      title: formData.title || 'Mr',
+      nameFull: formData.nameFull || '',
+      nic: sanitizeNic(formData.nic || ''),
+      dob: formData.dob || '',
       email: formData.email || '',
       mobileNumber: formData.mobileNumber || mobileNumber || '',
       registeredAddress: formData.address || '',
@@ -188,7 +201,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
         installAddress: addr,
         address: addr,
         locationType: 'current',
-        areaCode: matched ? matched.code : (formData.areaCode || '011'),
+        areaCode: matched ? matched.code : (formData.areaCode || ''),
       });
       if (matched) {
         setAutoDetectedPill(`Auto-selected ${matched.code} for registered address`);
@@ -287,7 +300,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
         city: cityName,
         district: match?.district || '',
         postalCode: match?.postalCode || '',
-        areaCode: match?.areaCode || formData.areaCode || '011',
+        areaCode: match?.areaCode || formData.areaCode || '',
       };
       if (!formData.installAddress || formData.installAddress === formData.city || formData.installAddress.trim() === '') {
         updates.installAddress = match ? `${match.city}, ${match.district}` : cityName;
@@ -298,22 +311,13 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
 
   };
 
-  const handleAreaCodeSelect = (e) => {
-    const selectedCode = e.target.value;
-    if (setFields) {
-      setFields({
-        areaCode: selectedCode,
-      });
-    }
-  };
-
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <WizardStepHeader 
-        stepNumber={4} 
-        totalSteps={9} 
-        title="Service Location Selection" 
-        description="Select your installation address. Pick from your existing service location, search address, pick on map, or use your current location." 
+        stepNumber={stepNumber}
+        totalSteps={totalSteps}
+        title="Service Location Selection"
+        description="Select your installation address, use a registered address, choose a map pin, or detect your current location."
       />
 
       {/* ── Top Verified Profile Summary Card ── */}
@@ -350,7 +354,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '0.85rem 1.25rem' }}>
           <ReadOnlyDetail label="Mobile Number" value={knownProfile.mobileNumber && `+94 ${knownProfile.mobileNumber}`} />
-          <ReadOnlyDetail label="Email Address" value={knownProfile.email || formData.email || 'name@example.com'} />
+          <ReadOnlyDetail label="Email Address" value={knownProfile.email || formData.email || ''} />
         </div>
       </div>
 
@@ -423,6 +427,11 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
             </p>
           </div>
         </div>
+        {autoDetectedPill && (
+          <p role="status" style={{ marginTop: '0.6rem', color: '#166534', fontSize: '0.8rem', fontWeight: 600 }}>
+            {autoDetectedPill}
+          </p>
+        )}
       </div>
 
       {/* ── If New Location Selected: Area Code, City Dropdown & Interactive Address Input with GPS / Map Picker ── */}
@@ -484,14 +493,14 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
                   return (
                     <div style={{ marginTop: '0.55rem', padding: '0.55rem 0.85rem', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', fontSize: '0.82rem', color: '#c2410c', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                       <FiZap size={15} color="#ea580c" style={{ flexShrink: 0 }} />
-                      <span>Fibre loop is not available in <strong>{selectedCityData.city}</strong> (Colombo areas only in demo). You can choose our 4G LTE Home Broadband network instead.</span>
+                      <span>Demo coverage data does not include Fibre in <strong>{selectedCityData.city}</strong>. Check OSS feasibility for actual availability; LTE may be an alternative.</span>
                     </div>
                   );
                 } else if (selectedCityData?.fibreAvailable && isFibreReq) {
                   return (
                     <div style={{ marginTop: '0.55rem', padding: '0.55rem 0.85rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', fontSize: '0.82rem', color: '#15803d', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                       <FiCheck size={15} color="#16a34a" style={{ flexShrink: 0 }} />
-                      <span>Fibre loop coverage confirmed in <strong>{selectedCityData.city}</strong> (Colombo Demo Area).</span>
+                      <span>Demo data lists Fibre coverage in <strong>{selectedCityData.city}</strong>. Actual availability still requires OSS verification.</span>
                     </div>
                   );
                 }
@@ -642,7 +651,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
                       backdropFilter: 'blur(4px)',
                     }}
                   >
-                    📍 Verified Installation Pin (OSS Ready)
+                    📍 Selected Installation Pin (OSS check required)
                   </div>
                 </div>
               </div>
@@ -687,7 +696,7 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
         </motion.div>
       )}
 
-      {/* Standalone Map Modal triggered directly from CustomerInfoStep */}
+      {/* Standalone map modal for exact installation location */}
       <LocationPickerModal
         isOpen={isMapModalOpen}
         onClose={() => setIsMapModalOpen(false)}
@@ -695,6 +704,13 @@ export default function CustomerInfoStep({ formData, handleChange, setFields, se
         initialAddress={formData.installAddress || formData.address}
       />
 
+      {/* Contact email for billing and updates, from the verified session */}
+      <input
+        type="hidden"
+        name="email"
+        value={knownProfile.email || formData.email || ''}
+        readOnly
+      />
     </motion.div>
   );
 }

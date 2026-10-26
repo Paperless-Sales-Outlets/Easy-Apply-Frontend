@@ -1,11 +1,3 @@
-/* ============================================================
-   SLTMobitel EasyApply — SignUpPage.css
-   Light Theme Exact Match to UI Design
-   ============================================================ */
-
-/* Typography comes from the shared tokens in index.css (Raleway + Inter,
-   loaded once in index.html) so the auth screens match every other page. */
-
 /* ── Root / Background ────────────────────────────────────────── */
 .signup-root {
   min-height: 100vh;
@@ -224,28 +216,33 @@
 }
 
 .signup-form-header-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #eff6ff;
-  color: #2563eb;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #0056b3;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 86, 179, 0.08);
 }
 
 .signup-form-header h2 {
-  margin: 0 0 0.15rem;
+  margin: 0 0 0.2rem;
   font-family: var(--font-head);
-  font-size: 1.25rem;
-  color: #1e293b;
-  font-weight: 700;
+  font-size: 1.35rem;
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .signup-form-header p {
   margin: 0;
-  font-size: 0.84rem;
-  color: #64748b;
+  font-size: 0.88rem;
+  color: #059669;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 /* ── Error ────────────────────────────────────────────────────── */
@@ -370,66 +367,6 @@
   color: #94a3b8;
 }
 
-/* ── Password toggle button ───────────────────────────────────── */
-.signup-pw-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 1rem;
-  min-height: 44px;
-  min-width: 44px;
-  align-self: stretch;
-}
-
-.signup-pw-toggle:hover {
-  color: #334155;
-}
-
-/* ── Checkbox row ─────────────────────────────────────────────── */
-.signup-checkbox-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.signup-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: #475569;
-}
-
-.signup-checkbox {
-  width: 18px;
-  height: 18px;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  cursor: pointer;
-  accent-color: #0f57a8;
-}
-
-/* ── Links ────────────────────────────────────────────────────── */
-.signup-link {
-  color: #0f57a8;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.signup-link:hover {
-  text-decoration: underline;
-}
-
-.signup-link--accent {
-  color: #047857;
-}
-
 /* ── Action Buttons Row ───────────────────────────────────────── */
 .signup-action-row {
   display: flex;
@@ -449,17 +386,6 @@
   color: #0f57a8;
   cursor: pointer;
   transition: all 0.2s ease;
-}
-
-.signup-btn-secondary--auto {
-  /* The base style is flex:1 so Cancel/Continue can split the action row.
-     Standalone buttons (e.g. Change Number) should size to their label. */
-  flex: 0 0 auto;
-  padding: 0.7rem 1.25rem;
-  font-size: 0.9rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
 }
 
 .signup-btn-secondary:hover {
@@ -520,42 +446,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-/* ── Footer text ──────────────────────────────────────────────── */
-.signup-footer-text {
-  text-align: center;
-  font-size: 0.85rem;
-  color: #475569;
-  margin: 1rem 0 0;
-}
-
-/* ── Password Strength ───────────────────────────────────────── */
-.signup-pw-strength {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.signup-pw-bars {
-  display: flex;
-  gap: 6px;
-  flex: 1;
-}
-
-.signup-pw-bar {
-  height: 4px;
-  flex: 1;
-  border-radius: 4px;
-  background: #e2e8f0;
-  transition: background 0.3s ease;
-}
-
-.signup-pw-strength-text {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
 }
 
 /* ── Responsive ───────────────────────────────────────────────── */
@@ -704,13 +594,6 @@
   }
 }
 
-.signup-footer-text {
-  text-align: center;
-  margin-top: 1rem;
-  font-size: 0.85rem;
-  color: #475569;
-}
-
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .signup-card {
@@ -778,56 +661,14 @@
 /* Every interactive control on the auth screens gets a clearly visible
    keyboard focus ring. :focus-visible keeps it out of the way of mouse
    users while remaining fully visible to anyone navigating by keyboard. */
-.auth-tab:focus-visible,
 .otp-box:focus-visible,
 .auth-link-btn:focus-visible,
 .signup-btn:focus-visible,
 .signup-btn-secondary:focus-visible,
-.signup-pw-toggle:focus-visible,
-.signup-link:focus-visible,
 .auth-verify-btn:focus-visible {
   outline: 3px solid #0f57a8;
   outline-offset: 2px;
   border-radius: 8px;
-}
-
-/* ── Sign-in method tabs ──────────────────────────────────────── */
-.auth-tabs {
-  display: flex;
-  gap: 0.35rem;
-  background: #eef2f7;
-  padding: 0.35rem;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-}
-
-.auth-tab {
-  flex: 1;
-  padding: 0.7rem 1rem;
-  border: none;
-  border-radius: 10px;
-  background: transparent;
-  color: #4a5567;
-  font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.auth-tab:hover:not(.is-active) {
-  color: #0f172a;
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.auth-tab.is-active {
-  background: #ffffff;
-  color: #0b4a91;
-  box-shadow: 0 2px 6px rgba(15, 87, 168, 0.15);
 }
 
 /* ── Inline text button (resend, etc.) ────────────────────────── */
@@ -904,7 +745,6 @@
 
 /* ── Reduced motion ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .auth-tab,
   .auth-verify-btn,
   .signup-btn,
   .signup-btn-secondary {
@@ -977,16 +817,7 @@
     padding: 1.75rem 1.25rem 2rem;
   }
 
-  /* Two tabs side by side get very narrow at 375px — stack the label
-     under the icon instead of wrapping mid-phrase. */
-  .auth-tab {
-    flex-direction: column;
-    gap: 0.2rem;
-    padding: 0.6rem 0.5rem;
-    font-size: 0.82rem;
-    line-height: 1.2;
   }
-}
 
 /* Very narrow phones */
 @media (max-width: 380px) {
@@ -1054,4 +885,590 @@
   vertical-align: middle;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+/* ── Proportional Card Container ────────────────────────────── */
+.login-card {
+  max-width: 980px;
+  min-height: min(640px, calc(100vh - 2.5rem));
+}
+
+.login-card .signup-sidebar {
+  width: 40%;
+}
+
+.login-card .signup-sidebar-inner {
+  padding: 2.5rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+/* ── Logo & Brand Typography ────────────────────────────────── */
+.login-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  user-select: none;
+}
+
+.login-brand-emblem {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 174, 239, 0.45));
+  flex-shrink: 0;
+}
+
+.login-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-brand-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  line-height: 1;
+}
+
+.login-brand-title .brand-slt {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.45rem;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.login-brand-title .brand-mobitel {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.45rem;
+  color: #50b748;
+  letter-spacing: -0.02em;
+}
+
+.login-brand-tagline {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.82);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-top: 5px;
+  line-height: 1;
+}
+
+/* ── Left Sidebar Balance ───────────────────────────────────── */
+.login-sidebar-top {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-sidebar-features {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+}
+
+.login-sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+/* ── Form Section Alignment ─────────────────────────────────── */
+.login-form-section {
+  padding: 2.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-form-section > .signup-form-header {
+  margin-top: 0 !important;
+  margin-bottom: 1.25rem;
+}
+
+.login-form-section > :last-child {
+  margin-bottom: 0 !important;
+}
+
+.login-form-container {
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+/* Top micro-badge */
+.login-form-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.75rem;
+  width: max-content;
+}
+
+.login-form-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1.5rem;
+}
+
+.login-form-header h2 {
+  margin: 0;
+  font-family: var(--font-head);
+  font-size: 1.5rem;
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.login-form-header p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #64748b;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ── Segmented Phone Input ──────────────────────────────────── */
+.login-phone-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.login-prefix-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0 0.85rem;
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  border-right: none;
+  border-radius: 12px 0 0 12px;
+  color: #0f172a;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  user-select: none;
+  flex-shrink: 0;
+  height: 48px;
+  box-sizing: border-box;
+}
+
+.login-phone-group .signup-input-wrap,
+.login-phone-input-wrap {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 48px;
+  border-radius: 0 12px 12px 0;
+  border: 1.5px solid #cbd5e1;
+  border-left: 1.5px solid #cbd5e1;
+  box-sizing: border-box;
+}
+
+.login-phone-input-wrap .signup-input {
+  padding-left: 0.95rem;
+}
+
+.login-phone-group .signup-input-wrap:focus-within,
+.login-phone-input-wrap:focus-within {
+  border-color: #0b4a91;
+  box-shadow: 0 0 0 3px rgba(11, 74, 145, 0.12);
+}
+
+/* ── Standardized Email Input Wrap (Exact Length Match) ─────── */
+.login-email-wrap {
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  border-radius: 12px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-sizing: border-box !important;
+}
+
+.login-email-wrap:focus-within {
+  border-color: #0b4a91 !important;
+  box-shadow: 0 0 0 3px rgba(11, 74, 145, 0.12) !important;
+}
+
+/* ── Inline Action Button & Verified Badge ─────────────────── */
+.login-inline-action-btn {
+  background: #0b4a91;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.42rem 0.95rem;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-right: 0.4rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.login-inline-action-btn:hover:not(:disabled) {
+  background: #083c77;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(11, 74, 145, 0.25);
+}
+
+.login-inline-action-btn:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.login-infield-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-right: 0.4rem;
+  white-space: nowrap;
+}
+
+.login-infield-badge.verified {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+/* ── Inline Expandable OTP Panel ────────────────────────────── */
+.login-inline-otp-panel {
+  margin-top: 0.5rem;
+  padding: 0.9rem 1rem;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  animation: loginSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes loginSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-inline-otp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.login-inline-otp-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.login-inline-otp-timer {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.login-inline-otp-timer strong {
+  color: #0f172a;
+}
+
+.login-resend-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #0b4a91;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.login-resend-btn:hover {
+  text-decoration: underline;
+}
+
+.login-otp-grid {
+  display: flex;
+  gap: 0.45rem;
+  justify-content: flex-start;
+}
+
+.login-otp-box {
+  width: 42px;
+  height: 44px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.login-otp-box:focus {
+  border-color: #0b4a91;
+  box-shadow: 0 0 0 3px rgba(11, 74, 145, 0.12);
+}
+
+.login-otp-box.is-filled {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.login-otp-box.is-error {
+  border-color: #ef4444;
+  background: #fff5f5;
+}
+
+/* ── Progressive Step Lock/Reveal ───────────────────────────── */
+.login-step-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: opacity 0.3s ease;
+}
+
+.login-step-section.is-locked {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* ── Clear Primary Action Button ────────────────────────────── */
+.login-submit-btn {
+  position: relative;
+  overflow: hidden;
+  margin-top: 1.25rem;
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.login-submit-btn.is-ready {
+  background: linear-gradient(135deg, #0b4a91 0%, #0284c7 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(11, 74, 145, 0.3);
+}
+
+.login-submit-btn.is-ready:hover:not(:disabled) {
+  background: linear-gradient(135deg, #083c77 0%, #0369a1 100%);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px rgba(11, 74, 145, 0.4);
+}
+
+.login-submit-btn.is-disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.login-submit-btn.is-disabled .login-btn-content {
+  color: #94a3b8;
+}
+
+.login-submit-btn.is-submitting {
+  cursor: wait;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+}
+
+/* Inner content wrapper so text & icons always sit cleanly above the filling progress */
+.login-btn-content {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  color: #ffffff;
+}
+
+/* ── Green Progress Fill (Left to Right) ────────────────────── */
+.login-btn-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #008744 0%, #00a859 45%, #10b981 80%, #34d399 100%);
+  z-index: 1;
+  border-radius: 12px;
+  animation: sltProgressFill 1.8s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.65);
+}
+
+/* Glowing leading edge shimmer */
+.login-btn-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 28px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65));
+  filter: blur(2px);
+  animation: sltGlowPulse 0.9s ease-in-out infinite alternate;
+}
+
+.login-submit-btn.is-success .login-btn-progress-fill {
+  width: 100% !important;
+  animation: none;
+  background: linear-gradient(90deg, #008744 0%, #10b981 100%);
+  transition: width 0.25s ease;
+}
+
+@keyframes sltProgressFill {
+  0% {
+    width: 0%;
+  }
+  30% {
+    width: 48%;
+  }
+  70% {
+    width: 82%;
+  }
+  95% {
+    width: 93%;
+  }
+  100% {
+    width: 96%;
+  }
+}
+
+@keyframes sltGlowPulse {
+  0% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ── SLT Emblem Loader Animation ────────────────────────────── */
+.login-btn-slt-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  background: #ffffff;
+  border-radius: 7px;
+  padding: 2.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  animation: sltEmblemPulse 1.1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.login-btn-slt-img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+  display: block;
+}
+
+@keyframes sltEmblemPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.55);
+  }
+}
+
+.login-btn-check-icon {
+  animation: sltCheckPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  color: #ffffff;
+}
+
+@keyframes sltCheckPop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.login-submit-hint {
+  text-align: center;
+  margin: 0.5rem 0 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .login-card {
+    flex-direction: column;
+    max-height: none;
+    min-height: auto;
+  }
+  .login-card .signup-sidebar {
+    width: 100%;
+  }
+  .login-form-section {
+    padding: 2rem 1.5rem;
+  }
 }
