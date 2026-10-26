@@ -87,26 +87,33 @@ const NAV_ICONS = {
   ),
 };
 
-// Dashboard leads, User Management comes right after it, then every other
-// module in its usual order, with Audit Logs last. (User Privileges is no longer
-// in the sidebar — privileges are managed from User Management → Privileges.)
-const [DASHBOARD_MODULE, ...OTHER_MODULES] = MODULE_ACCESS;
-
 // Modules not used in this portal any more — hidden from the sidebar only.
+// (User Privileges is managed from User Management → Privileges.)
 const HIDDEN_NAV_KEYS = new Set(['appointments', 'technician']);
 
-const NAV_ITEMS = [
-  { ...DASHBOARD_MODULE, icon: NAV_ICONS[DASHBOARD_MODULE.key] },
-  { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
+// Every sidebar entry, keyed by page. Module entries come from MODULE_ACCESS.
+const NAV_BY_KEY = {
+  ...Object.fromEntries(MODULE_ACCESS.map((item) => [item.key, { ...item, icon: NAV_ICONS[item.key] }])),
+  users: { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
   // Sales Officer Management — Admin can manage all officers + their QR codes
-  { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'], roles: ['Admin'] },
-  ...OTHER_MODULES
-    .filter(item => !HIDDEN_NAV_KEYS.has(item.key))
-    .map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
-  { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
+  'sales-officers': { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'], roles: ['Admin'] },
+  'audit-logs': { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
   // Sales Officer personal dashboard — visible only to Sales Officer role
-  { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'], roles: ['Sales Officer'] },
-];
+  'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'], roles: ['Sales Officer'] },
+};
+
+// Sidebar order. A module that is not listed here (e.g. a new one) still shows,
+// just before Audit Logs.
+const NAV_ORDER = ['dashboard', 'users', 'leads', 'sales-officers', 'kyc', 'forms', 'analytics'];
+const NAV_LAST = ['audit-logs', 'so-dashboard'];
+
+const NAV_ITEMS = [
+  ...NAV_ORDER,
+  ...Object.keys(NAV_BY_KEY).filter((key) => !NAV_ORDER.includes(key) && !NAV_LAST.includes(key)),
+  ...NAV_LAST,
+]
+  .filter((key) => NAV_BY_KEY[key] && !HIDDEN_NAV_KEYS.has(key))
+  .map((key) => NAV_BY_KEY[key]);
 
 const SHORT_FORM_LABELS = {
   'Customer Request Acceptance': 'Cust. Request',
