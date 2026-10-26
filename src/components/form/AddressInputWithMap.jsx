@@ -9,6 +9,8 @@ export default function AddressInputWithMap({
   label = 'Address',
   value = '',
   onChange,
+  onLocationSelect,
+  defaultCenter = null,
   placeholder = 'Enter address...',
   rows = 3,
   required = false,
@@ -103,6 +105,9 @@ export default function AddressInputWithMap({
             const cleaned = cleanGoogleAddress(results);
             if (cleaned) {
               triggerChange(cleaned);
+              if (onLocationSelect) {
+                onLocationSelect({ address: cleaned, coords: { lat: latitude, lng: longitude } });
+              }
               setStatusMessage('Location detected!');
               setIsDetectingLocation(false);
               setTimeout(() => setStatusMessage(''), 3000);
@@ -117,8 +122,20 @@ export default function AddressInputWithMap({
           );
           const data = await response.json();
           const cleanedNom = cleanNominatimAddress(data);
+          const finalAddr = cleanedNom || getFallbackAddressText();
 
-          triggerChange(cleanedNom || getFallbackAddressText());
+          triggerChange(finalAddr);
+          if (onLocationSelect) {
+            onLocationSelect({
+              address: finalAddr,
+              coords: { lat: latitude, lng: longitude },
+              details: {
+                city: data.address?.city || data.address?.town || data.address?.suburb,
+                district: data.address?.county || data.address?.state_district,
+                postalCode: data.address?.postcode,
+              },
+            });
+          }
           setStatusMessage('Location detected!');
         } catch (error) {
           console.error('Error fetching address:', error);
@@ -142,9 +159,16 @@ export default function AddressInputWithMap({
     );
   };
 
-  const handleModalSelectAddress = (selectedAddress) => {
+  const handleModalSelectAddress = (selectedAddress, selectedCoords, detectedDetails) => {
     if (disabled || readOnly) return;
     triggerChange(selectedAddress);
+    if (onLocationSelect) {
+      onLocationSelect({
+        address: selectedAddress,
+        coords: selectedCoords,
+        details: detectedDetails,
+      });
+    }
     setStatusMessage('Address selected from map!');
     setTimeout(() => setStatusMessage(''), 3000);
   };
@@ -237,6 +261,7 @@ export default function AddressInputWithMap({
         onClose={() => setIsModalOpen(false)}
         onSelectAddress={handleModalSelectAddress}
         initialAddress={internalValue}
+        initialCenter={defaultCenter}
       />
     </div>
   );

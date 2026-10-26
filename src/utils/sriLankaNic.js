@@ -343,15 +343,37 @@ export function extractNICFromText(text, options = {}) {
 
   const upper = text.toUpperCase();
 
+  const cleanExpected = options.expectedNIC && typeof options.expectedNIC === 'string'
+    ? cleanNIC(options.expectedNIC)
+    : null;
+
   // Pass 1 — clean digits, optionally split by spaces the way cards print them.
   const strict = upper.match(/\b\d{9}\s?[VX]\b|\b\d{4}\s?\d{3}\s?\d{5}\b|\b\d{12}\b|\b\d{9}[VX]\b/g) || [];
+  const loose = upper.match(/[0-9OQDILZEASGTB|!]{9,12}[VX]?/g) || [];
+
+  // If expectedNIC is provided, check if any candidate matches expectedNIC within 1-character OCR confusion (e.g. 9 vs 5, 8 vs 0)
+  if (cleanExpected) {
+    for (const rawCand of [...strict, ...loose]) {
+      const cleanCand = cleanNIC(repairOcrDigits(rawCand));
+      if (cleanCand && cleanCand.length === cleanExpected.length) {
+        let diffs = 0;
+        for (let i = 0; i < cleanCand.length; i++) {
+          if (cleanCand[i] !== cleanExpected[i]) diffs++;
+        }
+        if (diffs <= 1) {
+          const parsed = parseNIC(cleanExpected, options);
+          if (parsed) return { ...parsed, repaired: diffs > 0, ocrCandidate: cleanCand };
+        }
+      }
+    }
+  }
+
   for (const candidate of strict) {
     const parsed = parseNIC(candidate, options);
     if (parsed) return { ...parsed, repaired: false };
   }
 
   // Pass 2 — allow OCR confusions inside otherwise NIC-shaped tokens.
-  const loose = upper.match(/[0-9OQDILZEASGTB|!]{9,12}[VX]?/g) || [];
   for (const candidate of loose) {
     const repaired = repairOcrDigits(candidate);
     if (repaired === candidate) continue;

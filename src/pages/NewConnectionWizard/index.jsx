@@ -12,7 +12,6 @@ import api, { clearSessionCart } from '../../utils/api';
 import { useVerifiedMobile, useVerifiedContext } from '../../components/verification';
 import { getAuthUser } from '../../utils/authSession';
 import WizardStepper from '../../components/WizardStepper';
-import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
 const formReducer = (state, action) => {
   switch (action.type) {
@@ -420,8 +419,6 @@ export default function NewConnectionWizard() {
           </div>
         </div>
       )}
-
-      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
 
       <form onSubmit={handleSubmit}>
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>

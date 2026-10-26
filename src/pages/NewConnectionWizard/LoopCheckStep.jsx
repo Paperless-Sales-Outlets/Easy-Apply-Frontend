@@ -22,15 +22,22 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
         address,
         city,
         district: formData.district,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
       });
 
       if (res.data && res.data.available) {
         setCoverageData(res.data.coverage || {});
         setPhase('available');
       } else {
-        setCoverageData(res.data?.coverage || {});
+        const cov = res.data?.coverage || {};
+        cov.message = res.data?.message;
+        cov.isMismatch = !!res.data?.mismatch;
+        setCoverageData(cov);
         setPhase('unavailable');
-        setShowModal(true);
+        if (!res.data?.mismatch) {
+          setShowModal(true);
+        }
       }
     } catch (err) {
       console.warn('Backend loop check fallback:', err);
@@ -181,19 +188,20 @@ export default function LoopCheckStep({ formData, onAvailable, onGoBack }) {
                 <FiAlertCircle size={32} />
               </div>
               <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.2rem', fontWeight: 800, color: '#991b1b' }}>
-                No Loop Available in This Area
+                {coverageData?.isMismatch ? 'Location Mismatch Detected' : 'No Loop Available in This Area'}
               </h4>
               <p
                 style={{
                   margin: '0 auto 1.5rem auto',
                   fontSize: '0.88rem',
-                  color: '#64748b',
+                  color: coverageData?.isMismatch ? '#b91c1c' : '#64748b',
                   fontWeight: 600,
-                  maxWidth: '440px',
+                  maxWidth: '460px',
                   lineHeight: 1.5,
                 }}
               >
-                We do not have a free service loop available at this address right now. Progression to payment has been stopped. Please contact your nearest SLTMobitel branch for assistance.
+                {coverageData?.message ||
+                  'We do not have a free service loop available at this address right now. Progression to payment has been stopped. Please contact your nearest SLTMobitel branch for assistance.'}
               </p>
 
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>

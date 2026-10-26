@@ -190,7 +190,7 @@ export default function Navbar() {
   return (
     <>
       <nav className="top-navbar-wrapper" ref={menuRef} style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: 'clamp(0.75rem, 2.5vw, 1.15rem) clamp(0.5rem, 4vw, 1.5rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'clamp(0.5rem, 2vw, 1.25rem)' }}>
+        <div className="top-navbar-inner" style={{ maxWidth: '1600px', margin: '0 auto', padding: '0.75rem clamp(0.75rem, 3vw, 1.5rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap', gap: 'clamp(0.5rem, 1.5vw, 1.25rem)' }}>
 
           {/* ── Left: Logo ── */}
           <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', gap: '0.45rem', flexShrink: 0 }}>
@@ -218,173 +218,173 @@ export default function Navbar() {
 
           {/* ── Center Search Input Bar (Hidden on checkout/scheduling funnel pages) ── */}
           {!location.pathname.startsWith('/schedule-installation') && !location.pathname.startsWith('/completion') && (
-          <div
-            ref={searchRef}
-            style={{ flex: 1, maxWidth: '580px', display: 'flex', alignItems: 'center', position: 'relative' }}
-            className="nav-center-search"
-          >
-            <form
-              onSubmit={handleSearchSubmit}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-                backgroundColor: '#ffffff',
-                border: '1.5px solid #cbd5e1',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              }}
+            <div
+              ref={searchRef}
+              style={{ flex: '1 1 340px', maxWidth: '440px', minWidth: '140px', display: 'flex', alignItems: 'center', position: 'relative' }}
+              className="nav-center-search"
             >
-              <FiSearch
-                style={{ color: '#94a3b8', marginLeft: '0.75rem', flexShrink: 0 }}
-                size={16}
-                aria-hidden="true"
-              />
-              <input
-                type="text"
-                aria-label="Search packages, speeds, products"
-                placeholder="Search packages, speeds, products..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
+              <form
+                onSubmit={handleSearchSubmit}
                 style={{
-                  flex: 1,
-                  minWidth: 0,
-                  padding: '0.5rem 0.75rem',
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: '0.85rem',
-                  color: '#0f172a',
-                  backgroundColor: 'transparent',
-                }}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setShowSuggestions(false);
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#94a3b8',
-                    cursor: 'pointer',
-                    padding: '0 0.4rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  <FiX size={14} />
-                </button>
-              )}
-              <select
-                value={searchCategory}
-                onChange={(e) => setSearchCategory(e.target.value)}
-                aria-label="Filter search by category"
-                style={{
-                  border: 'none',
-                  borderLeft: '1px solid #e2e8f0',
-                  backgroundColor: 'transparent',
-                  padding: '0.5rem 0.6rem',
-                  fontSize: '0.8rem',
-                  color: '#475569',
-                  fontWeight: 600,
-                  outline: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <option value="All">All</option>
-                <option value="Fibre">Fibre</option>
-                <option value="LTE">LTE</option>
-                <option value="PEO TV">PEO TV</option>
-                <option value="Voice">Voice</option>
-              </select>
-              <button
-                type="submit"
-                aria-label="Search"
-                style={{
-                  backgroundColor: '#0056b3',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '0.55rem 1.1rem',
-                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <FiSearch size={16} aria-hidden="true" />
-              </button>
-            </form>
-
-            {/* Live Search Suggestions Dropdown */}
-            {showSuggestions && searchQuery.trim() && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 4px)',
-                  left: 0,
-                  right: 0,
+                  width: '100%',
                   backgroundColor: '#ffffff',
-                  borderRadius: '12px',
-                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
-                  border: '1px solid #e2e8f0',
-                  zIndex: 1000,
+                  border: '1.5px solid #cbd5e1',
+                  borderRadius: '8px',
                   overflow: 'hidden',
-                  maxHeight: '380px',
-                  overflowY: 'auto',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                 }}
               >
-                {suggestions.length > 0 ? (
-                  suggestions.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => handleSelectSuggestion(item)}
-                      style={{
-                        padding: '0.75rem 1rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #f1f5f9',
-                        transition: 'background-color 0.15s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f8fafc';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
-                          {item.name}
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
-                          <span style={{ backgroundColor: '#eff6ff', color: '#0056b3', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
-                            {item.category}
-                          </span>
-                          <span>• {item.speed}</span>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 900, color: '#0056b3', whiteSpace: 'nowrap' }}>
-                        Rs. {item.monthlyPrice.toLocaleString()} <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>/mo</span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
-                    No matching packages found for "<strong>{searchQuery}</strong>"
-                  </div>
+                <FiSearch
+                  style={{ color: '#94a3b8', marginLeft: '0.75rem', flexShrink: 0 }}
+                  size={16}
+                  aria-hidden="true"
+                />
+                <input
+                  type="text"
+                  aria-label="Search packages, speeds, products"
+                  placeholder="Search packages, speeds, products..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    padding: '0.5rem 0.75rem',
+                    border: 'none',
+                    outline: 'none',
+                    fontSize: '0.85rem',
+                    color: '#0f172a',
+                    backgroundColor: 'transparent',
+                  }}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowSuggestions(false);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#94a3b8',
+                      cursor: 'pointer',
+                      padding: '0 0.4rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <FiX size={14} />
+                  </button>
                 )}
-              </div>
-            )}
-          </div>
+                <select
+                  value={searchCategory}
+                  onChange={(e) => setSearchCategory(e.target.value)}
+                  aria-label="Filter search by category"
+                  style={{
+                    border: 'none',
+                    borderLeft: '1px solid #e2e8f0',
+                    backgroundColor: 'transparent',
+                    padding: '0.5rem 0.6rem',
+                    fontSize: '0.8rem',
+                    color: '#475569',
+                    fontWeight: 600,
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="All">All</option>
+                  <option value="Fibre">Fibre</option>
+                  <option value="LTE">LTE</option>
+                  <option value="PEO TV">PEO TV</option>
+                  <option value="Voice">Voice</option>
+                </select>
+                <button
+                  type="submit"
+                  aria-label="Search"
+                  style={{
+                    backgroundColor: '#0056b3',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '0.55rem 1.1rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <FiSearch size={16} aria-hidden="true" />
+                </button>
+              </form>
+
+              {/* Live Search Suggestions Dropdown */}
+              {showSuggestions && searchQuery.trim() && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 4px)',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: '#ffffff',
+                    borderRadius: '12px',
+                    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
+                    border: '1px solid #e2e8f0',
+                    zIndex: 1000,
+                    overflow: 'hidden',
+                    maxHeight: '380px',
+                    overflowY: 'auto',
+                  }}
+                >
+                  {suggestions.length > 0 ? (
+                    suggestions.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => handleSelectSuggestion(item)}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f1f5f9',
+                          transition: 'background-color 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f8fafc';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
+                            {item.name}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
+                            <span style={{ backgroundColor: '#eff6ff', color: '#0056b3', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
+                              {item.category}
+                            </span>
+                            <span>• {item.speed}</span>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 900, color: '#0056b3', whiteSpace: 'nowrap' }}>
+                          Rs. {item.monthlyPrice.toLocaleString()} <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>/mo</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+                      No matching packages found for "<strong>{searchQuery}</strong>"
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           {/* ── Right: Navigation, Language and Authentication ── */}
@@ -393,10 +393,9 @@ export default function Navbar() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              flexWrap: 'wrap',
+              flexWrap: 'nowrap',
               justifyContent: 'flex-end',
-              gap: 'clamp(0.35rem, 2vw, 1.25rem)',
-              rowGap: '0.5rem',
+              gap: 'clamp(0.35rem, 1.2vw, 1rem)',
               flexShrink: 0,
             }}
           >
@@ -522,7 +521,7 @@ export default function Navbar() {
                     fontSize: '0.85rem',
                     textDecoration: 'none',
                     padding: '0.4rem 0.75rem',
-                    borderRadius: '9999px',
+                    borderRadius: '8px',
                     backgroundColor: isActivePath('/profile') ? '#eff6ff' : '#f8fafc',
                     border: `1px solid ${isActivePath('/profile') ? '#bfdbfe' : '#e2e8f0'}`,
                   }}

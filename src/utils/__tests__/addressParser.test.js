@@ -4,6 +4,7 @@ import {
   parseSriLankanAddress,
   extractAddressFromOCR,
   extractFullNameFromOCR,
+  isValidAddressText,
 } from '../nicParser.js';
 
 test('parseSriLankanAddress', async (t) => {
@@ -52,6 +53,49 @@ test('parseSriLankanAddress', async (t) => {
     assert.equal(res.district, 'Nuwara Eliya');
     assert.equal(res.postalCode, '22050');
   });
+
+  await t.test('strips Registration of Persons Act and statutory noise from address', () => {
+    const rawOcr = `
+      153, BATHFORD DIVISION, DICKOYA
+      FETC a, 5 wren op Saunt acai Reaistration ot Persons Ace, Noo 32 of 1968
+    `;
+    const extracted = extractAddressFromOCR(rawOcr);
+    const parsed = parseSriLankanAddress(extracted);
+    assert.equal(parsed.addressLine1, '153, BATHFORD DIVISION');
+    assert.equal(parsed.addressLine2, '');
+    assert.equal(parsed.city, 'Dickoya');
+    assert.equal(parsed.district, 'Nuwara Eliya');
+  });
+
+  await t.test('parses rawAddress directly when containing statutory Act noise', () => {
+    const rawAddress = '153, BATHFORD DIVISION, DICKOYA, FETC a, 5 wren op Saunt acai Reaistration ot Persons Ace, Noo 32 of 1968';
+    const parsed = parseSriLankanAddress(rawAddress);
+    assert.equal(parsed.addressLine1, '153, BATHFORD DIVISION');
+    assert.equal(parsed.addressLine2, '');
+    assert.equal(parsed.city, 'Dickoya');
+    assert.equal(parsed.district, 'Nuwara Eliya');
+  });
+
+  await t.test('rejects garbled OCR noise (51 5 i, 153, em0e, fd.) and returns empty address', () => {
+    const rawJunk = '51 5 i, 153, em0e, fd.';
+    assert.equal(isValidAddressText(rawJunk), false);
+    const parsed = parseSriLankanAddress(rawJunk);
+    assert.equal(parsed.addressLine1, '');
+    assert.equal(parsed.addressLine2, '');
+    assert.equal(parsed.city, '');
+    assert.equal(parsed.district, '');
+    assert.equal(parsed.postalCode, '');
+  });
+
+  await t.test('extractAddressFromOCR rejects garbled lines like 51 5 i', () => {
+    const rawOcr = `
+      51 5 i
+      153, em0e, fd.
+      2018/05/10
+    `;
+    const extracted = extractAddressFromOCR(rawOcr);
+    assert.equal(extracted, '');
+  });
 });
 
 test('extractFullNameFromOCR', async (t) => {
@@ -60,6 +104,24 @@ test('extractFullNameFromOCR', async (t) => {
       NATIONAL IDENTITY CARD
       UCT MAHALINGAM DAWANHAREN
       SRI LANKAN
+    `;
+    const name = extractFullNameFromOCR(rawOcr);
+    assert.equal(name, 'MAHALINGAM DAWANHAREN');
+  });
+
+  await t.test('strips TC OCR artifacts from name', () => {
+    const rawOcr = `
+      NATIONAL IDENTITY CARD
+      TC MAHALINGAM DAWANHAREN
+      SRI LANKAN
+    `;
+    const name = extractFullNameFromOCR(rawOcr);
+    assert.equal(name, 'MAHALINGAM DAWANHAREN');
+  });
+
+  await t.test('strips trailing TC from name', () => {
+    const rawOcr = `
+      MAHALINGAM DAWANHAREN TC
     `;
     const name = extractFullNameFromOCR(rawOcr);
     assert.equal(name, 'MAHALINGAM DAWANHAREN');

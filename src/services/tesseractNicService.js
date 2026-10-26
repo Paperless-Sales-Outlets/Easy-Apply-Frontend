@@ -16,7 +16,9 @@ function preprocessImageForOCR(base64Image) {
       return resolve(base64Image);
     }
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (base64Image.startsWith('http')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
@@ -82,6 +84,19 @@ function preprocessImageForOCR(base64Image) {
   });
 }
 
+// Module-level worker cache for fast re-use
+let activeWorker = null;
+
+async function getOCRWorker(onStatusChange) {
+  if (activeWorker) return activeWorker;
+  if (onStatusChange) {
+    onStatusChange({ status: 'SCANNING', message: 'Loading OCR recognition engine...' });
+  }
+  const { createWorker } = await import('tesseract.js');
+  activeWorker = await createWorker('eng');
+  return activeWorker;
+}
+
 /**
  * Scans NIC on the client device using in-browser Tesseract.js WebAssembly worker.
  * Guarantees that citizen identity documents never leave the user's browser.
@@ -92,35 +107,25 @@ function preprocessImageForOCR(base64Image) {
  * @param {Function} [params.onStatusChange] - Status callback for UI loading feedback
  * @returns {Promise<Object>} Normalized extracted details
  */
-export async function scanNICTesseract({ nicFront, nicBack, onStatusChange }) {
+export async function scanNICTesseract({ nicFront, nicBack, expectedNIC, onStatusChange }) {
   if (!nicFront) {
     throw new Error('NIC Front image is required for scanning.');
   }
 
   if (onStatusChange) {
-    onStatusChange({ status: 'SCANNING', message: 'Fetching your details (Private On-Device OCR)...' });
+    onStatusChange({ status: 'SCANNING', message: 'Scanning NIC front side (Private On-Device OCR)...' });
   }
 
-  // Dynamically import tesseract.js so it only loads into memory when needed
-  const { createWorker } = await import('tesseract.js');
-  let worker = null;
-
   try {
-    // Attempt multi-language worker (English + Sinhala + Tamil) for Sri Lankan NICs
-    try {
-      worker = await createWorker(['eng', 'sin', 'tam']);
-    } catch {
-      // Graceful fallback to English if multi-language assets fail to load
-      worker = await createWorker('eng');
-    }
+    const worker = await getOCRWorker(onStatusChange);
 
     // 1. Preprocess and recognize text from front side
     const processedFront = await preprocessImageForOCR(nicFront);
     const frontResult = await worker.recognize(processedFront);
-    const frontText = frontResult.data.text || '';
+    const frontText = frontResult?.data?.text || '';
 
     // 2. Mathematically extract and decode NIC number
-    const mathNIC = extractNICFromText(frontText);
+    const mathNIC = extractNICFromText(frontText, { expectedNIC });
 
     // 3. Extract Full Name heuristically from front text
     const fullName = extractFullNameFromOCR(frontText);
@@ -134,11 +139,9 @@ export async function scanNICTesseract({ nicFront, nicBack, onStatusChange }) {
       }
       const processedBack = await preprocessImageForOCR(nicBack);
       const backResult = await worker.recognize(processedBack);
-      rawBack = backResult.data.text || '';
+      rawBack = backResult?.data?.text || '';
       address = extractAddressFromOCR(rawBack);
     }
-
-    await worker.terminate();
 
     if (!mathNIC) {
       if (onStatusChange) {
@@ -203,12 +206,13 @@ export async function scanNICTesseract({ nicFront, nicBack, onStatusChange }) {
       reviewReason: isPartial ? 'Auto KYC Incomplete: Partial data fetched from document' : null,
     };
   } catch (err) {
-    if (worker) {
+    if (activeWorker) {
       try {
-        await worker.terminate();
+        await activeWorker.terminate();
       } catch {
         // ignore termination errors
       }
+      activeWorker = null;
     }
     console.warn('Tesseract OCR error:', err.message);
     if (onStatusChange) {

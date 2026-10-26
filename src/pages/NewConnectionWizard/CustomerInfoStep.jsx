@@ -6,56 +6,72 @@ import { getAuthUser } from '../../utils/authSession';
 import { motion } from 'framer-motion';
 import WizardStepHeader from '../../components/wizard/WizardStepHeader';
 
-const SRI_LANKA_CITY_POSTAL_DATA = [
-  { label: 'Colombo 01 (Fort) - 00100', city: 'Colombo 01', district: 'Colombo', postalCode: '00100' },
-  { label: 'Colombo 02 (Slave Island) - 00200', city: 'Colombo 02', district: 'Colombo', postalCode: '00200' },
-  { label: 'Colombo 03 (Kollupitiya) - 00300', city: 'Colombo 03', district: 'Colombo', postalCode: '00300' },
-  { label: 'Colombo 04 (Bambalapitiya) - 00400', city: 'Colombo 04', district: 'Colombo', postalCode: '00400' },
-  { label: 'Colombo 05 (Havelock Town) - 00500', city: 'Colombo 05', district: 'Colombo', postalCode: '00500' },
-  { label: 'Colombo 06 (Wellawatte) - 00600', city: 'Colombo 06', district: 'Colombo', postalCode: '00600' },
-  { label: 'Colombo 07 (Cinnamon Gardens) - 00700', city: 'Colombo 07', district: 'Colombo', postalCode: '00700' },
-  { label: 'Colombo 08 (Borella) - 00800', city: 'Colombo 08', district: 'Colombo', postalCode: '00800' },
-  { label: 'Colombo 09 (Dematagoda) - 00900', city: 'Colombo 09', district: 'Colombo', postalCode: '00900' },
-  { label: 'Colombo 10 (Maradana) - 01000', city: 'Colombo 10', district: 'Colombo', postalCode: '01000' },
-  { label: 'Colombo 11 (Pettah) - 01100', city: 'Colombo 11', district: 'Colombo', postalCode: '01100' },
-  { label: 'Colombo 12 (Hulftsdorp) - 01200', city: 'Colombo 12', district: 'Colombo', postalCode: '01200' },
-  { label: 'Colombo 13 (Kotahena) - 01300', city: 'Colombo 13', district: 'Colombo', postalCode: '01300' },
-  { label: 'Colombo 14 (Grandpass) - 01400', city: 'Colombo 14', district: 'Colombo', postalCode: '01400' },
-  { label: 'Colombo 15 (Modara) - 01500', city: 'Colombo 15', district: 'Colombo', postalCode: '01500' },
-  { label: 'Dehiwala - 10350', city: 'Dehiwala', district: 'Colombo', postalCode: '10350' },
-  { label: 'Mount Lavinia - 10370', city: 'Mount Lavinia', district: 'Colombo', postalCode: '10370' },
-  { label: 'Nugegoda - 10250', city: 'Nugegoda', district: 'Colombo', postalCode: '10250' },
-  { label: 'Maharagama - 10280', city: 'Maharagama', district: 'Colombo', postalCode: '10280' },
-  { label: 'Kottawa - 10230', city: 'Kottawa', district: 'Colombo', postalCode: '10230' },
-  { label: 'Battaramulla - 10120', city: 'Battaramulla', district: 'Colombo', postalCode: '10120' },
-  { label: 'Sri Jayawardenepura Kotte - 10100', city: 'Sri Jayawardenepura Kotte', district: 'Colombo', postalCode: '10100' },
-  { label: 'Malabe - 10115', city: 'Malabe', district: 'Colombo', postalCode: '10115' },
-  { label: 'Rajagiriya - 10107', city: 'Rajagiriya', district: 'Colombo', postalCode: '10107' },
-  { label: 'Moratuwa - 10400', city: 'Moratuwa', district: 'Colombo', postalCode: '10400' },
-  { label: 'Piliyandala - 10300', city: 'Piliyandala', district: 'Colombo', postalCode: '10300' },
-  { label: 'Gampaha - 11000', city: 'Gampaha', district: 'Gampaha', postalCode: '11000' },
-  { label: 'Negombo - 11500', city: 'Negombo', district: 'Gampaha', postalCode: '11500' },
-  { label: 'Ja-Ela - 11350', city: 'Ja-Ela', district: 'Gampaha', postalCode: '11350' },
-  { label: 'Kelaniya - 11600', city: 'Kelaniya', district: 'Gampaha', postalCode: '11600' },
-  { label: 'Wattala - 11300', city: 'Wattala', district: 'Gampaha', postalCode: '11300' },
-  { label: 'Kandy - 20000', city: 'Kandy', district: 'Kandy', postalCode: '20000' },
-  { label: 'Peradeniya - 20400', city: 'Peradeniya', district: 'Kandy', postalCode: '20400' },
-  { label: 'Gampola - 20500', city: 'Gampola', district: 'Kandy', postalCode: '20500' },
-  { label: 'Dickoya - 22050', city: 'Dickoya', district: 'Nuwara Eliya', postalCode: '22050' },
-  { label: 'Hatton - 22000', city: 'Hatton', district: 'Nuwara Eliya', postalCode: '22000' },
-  { label: 'Nuwara Eliya - 22200', city: 'Nuwara Eliya', district: 'Nuwara Eliya', postalCode: '22200' },
-  { label: 'Galle - 80000', city: 'Galle', district: 'Galle', postalCode: '80000' },
-  { label: 'Hikkaduwa - 80240', city: 'Hikkaduwa', district: 'Galle', postalCode: '80240' },
-  { label: 'Matara - 81000', city: 'Matara', district: 'Matara', postalCode: '81000' },
-  { label: 'Jaffna - 40000', city: 'Jaffna', district: 'Jaffna', postalCode: '40000' },
-  { label: 'Kurunegala - 60000', city: 'Kurunegala', district: 'Kurunegala', postalCode: '60000' },
-  { label: 'Anuradhapura - 50000', city: 'Anuradhapura', district: 'Anuradhapura', postalCode: '50000' },
-  { label: 'Badulla - 90000', city: 'Badulla', district: 'Badulla', postalCode: '90000' },
-  { label: 'Ratnapura - 70000', city: 'Ratnapura', district: 'Ratnapura', postalCode: '70000' },
-  { label: 'Trincomalee - 31000', city: 'Trincomalee', district: 'Trincomalee', postalCode: '31000' },
-  { label: 'Batticaloa - 30000', city: 'Batticaloa', district: 'Batticaloa', postalCode: '30000' },
-  { label: 'Vavuniya - 43000', city: 'Vavuniya', district: 'Vavuniya', postalCode: '43000' },
+export const SRI_LANKA_CITY_POSTAL_DATA = [
+  { label: 'Colombo 01 (Fort)', city: 'Colombo 01', district: 'Colombo', postalCode: '00100', lat: 6.9344, lng: 79.8428 },
+  { label: 'Colombo 02 (Slave Island)', city: 'Colombo 02', district: 'Colombo', postalCode: '00200', lat: 6.9214, lng: 79.8560 },
+  { label: 'Colombo 03 (Kollupitiya)', city: 'Colombo 03', district: 'Colombo', postalCode: '00300', lat: 6.9056, lng: 79.8519 },
+  { label: 'Colombo 04 (Bambalapitiya)', city: 'Colombo 04', district: 'Colombo', postalCode: '00400', lat: 6.8905, lng: 79.8561 },
+  { label: 'Colombo 05 (Havelock Town)', city: 'Colombo 05', district: 'Colombo', postalCode: '00500', lat: 6.8824, lng: 79.8703 },
+  { label: 'Colombo 06 (Wellawatte)', city: 'Colombo 06', district: 'Colombo', postalCode: '00600', lat: 6.8741, lng: 79.8606 },
+  { label: 'Colombo 07 (Cinnamon Gardens)', city: 'Colombo 07', district: 'Colombo', postalCode: '00700', lat: 6.9070, lng: 79.8670 },
+  { label: 'Colombo 08 (Borella)', city: 'Colombo 08', district: 'Colombo', postalCode: '00800', lat: 6.9175, lng: 79.8805 },
+  { label: 'Colombo 09 (Dematagoda)', city: 'Colombo 09', district: 'Colombo', postalCode: '00900', lat: 6.9312, lng: 79.8800 },
+  { label: 'Colombo 10 (Maradana)', city: 'Colombo 10', district: 'Colombo', postalCode: '01000', lat: 6.9250, lng: 79.8680 },
+  { label: 'Colombo 11 (Pettah)', city: 'Colombo 11', district: 'Colombo', postalCode: '01100', lat: 6.9370, lng: 79.8510 },
+  { label: 'Colombo 12 (Hulftsdorp)', city: 'Colombo 12', district: 'Colombo', postalCode: '01200', lat: 6.9360, lng: 79.8570 },
+  { label: 'Colombo 13 (Kotahena)', city: 'Colombo 13', district: 'Colombo', postalCode: '01300', lat: 6.9480, lng: 79.8640 },
+  { label: 'Colombo 14 (Grandpass)', city: 'Colombo 14', district: 'Colombo', postalCode: '01400', lat: 6.9530, lng: 79.8720 },
+  { label: 'Colombo 15 (Modara)', city: 'Colombo 15', district: 'Colombo', postalCode: '01500', lat: 6.9680, lng: 79.8750 },
+  { label: 'Dehiwala', city: 'Dehiwala', district: 'Colombo', postalCode: '10350', lat: 6.8511, lng: 79.8659 },
+  { label: 'Mount Lavinia', city: 'Mount Lavinia', district: 'Colombo', postalCode: '10370', lat: 6.8344, lng: 79.8653 },
+  { label: 'Nugegoda', city: 'Nugegoda', district: 'Colombo', postalCode: '10250', lat: 6.8649, lng: 79.8997 },
+  { label: 'Maharagama', city: 'Maharagama', district: 'Colombo', postalCode: '10280', lat: 6.8480, lng: 79.9268 },
+  { label: 'Kottawa', city: 'Kottawa', district: 'Colombo', postalCode: '10230', lat: 6.8413, lng: 79.9654 },
+  { label: 'Battaramulla', city: 'Battaramulla', district: 'Colombo', postalCode: '10120', lat: 6.8986, lng: 79.9222 },
+  { label: 'Sri Jayawardenepura Kotte', city: 'Sri Jayawardenepura Kotte', district: 'Colombo', postalCode: '10100', lat: 6.8914, lng: 79.9048 },
+  { label: 'Malabe', city: 'Malabe', district: 'Colombo', postalCode: '10115', lat: 6.9042, lng: 79.9549 },
+  { label: 'Rajagiriya', city: 'Rajagiriya', district: 'Colombo', postalCode: '10107', lat: 6.9092, lng: 79.8938 },
+  { label: 'Moratuwa', city: 'Moratuwa', district: 'Colombo', postalCode: '10400', lat: 6.7730, lng: 79.8816 },
+  { label: 'Piliyandala', city: 'Piliyandala', district: 'Colombo', postalCode: '10300', lat: 6.7989, lng: 79.9229 },
+  { label: 'Gampaha', city: 'Gampaha', district: 'Gampaha', postalCode: '11000', lat: 7.0840, lng: 79.9939 },
+  { label: 'Negombo', city: 'Negombo', district: 'Gampaha', postalCode: '11500', lat: 7.2008, lng: 79.8737 },
+  { label: 'Ja-Ela', city: 'Ja-Ela', district: 'Gampaha', postalCode: '11350', lat: 7.0744, lng: 79.8920 },
+  { label: 'Kelaniya', city: 'Kelaniya', district: 'Gampaha', postalCode: '11600', lat: 6.9553, lng: 79.9220 },
+  { label: 'Wattala', city: 'Wattala', district: 'Gampaha', postalCode: '11300', lat: 6.9895, lng: 79.8923 },
+  { label: 'Kandy', city: 'Kandy', district: 'Kandy', postalCode: '20000', lat: 7.2906, lng: 80.6337 },
+  { label: 'Peradeniya', city: 'Peradeniya', district: 'Kandy', postalCode: '20400', lat: 7.2600, lng: 80.5960 },
+  { label: 'Gampola', city: 'Gampola', district: 'Kandy', postalCode: '20500', lat: 7.1643, lng: 80.5694 },
+  { label: 'Dickoya', city: 'Dickoya', district: 'Nuwara Eliya', postalCode: '22050', lat: 6.8700, lng: 80.6000 },
+  { label: 'Hatton', city: 'Hatton', district: 'Nuwara Eliya', postalCode: '22000', lat: 6.8967, lng: 80.5956 },
+  { label: 'Nuwara Eliya', city: 'Nuwara Eliya', district: 'Nuwara Eliya', postalCode: '22200', lat: 6.9497, lng: 80.7891 },
+  { label: 'Galle', city: 'Galle', district: 'Galle', postalCode: '80000', lat: 6.0535, lng: 80.2210 },
+  { label: 'Hikkaduwa', city: 'Hikkaduwa', district: 'Galle', postalCode: '80240', lat: 6.1408, lng: 80.1017 },
+  { label: 'Matara', city: 'Matara', district: 'Matara', postalCode: '81000', lat: 5.9549, lng: 80.5550 },
+  { label: 'Jaffna', city: 'Jaffna', district: 'Jaffna', postalCode: '40000', lat: 9.6615, lng: 80.0255 },
+  { label: 'Kurunegala', city: 'Kurunegala', district: 'Kurunegala', postalCode: '60000', lat: 7.4863, lng: 80.3623 },
+  { label: 'Anuradhapura', city: 'Anuradhapura', district: 'Anuradhapura', postalCode: '50000', lat: 8.3114, lng: 80.4037 },
+  { label: 'Badulla', city: 'Badulla', district: 'Badulla', postalCode: '90000', lat: 6.9934, lng: 81.0550 },
+  { label: 'Ratnapura', city: 'Ratnapura', district: 'Ratnapura', postalCode: '70000', lat: 6.6828, lng: 80.4035 },
+  { label: 'Trincomalee', city: 'Trincomalee', district: 'Trincomalee', postalCode: '31000', lat: 8.5874, lng: 81.2152 },
+  { label: 'Batticaloa', city: 'Batticaloa', district: 'Batticaloa', postalCode: '30000', lat: 7.7310, lng: 81.6747 },
+  { label: 'Vavuniya', city: 'Vavuniya', district: 'Vavuniya', postalCode: '43000', lat: 8.7514, lng: 80.4971 },
 ];
+
+export const findClosestCity = (lat, lng) => {
+  if (typeof lat !== 'number' || typeof lng !== 'number') return { closest: null, distanceDeg: Infinity };
+  let closest = null;
+  let minDistance = Infinity;
+  for (const item of SRI_LANKA_CITY_POSTAL_DATA) {
+    if (typeof item.lat === 'number' && typeof item.lng === 'number') {
+      const d = Math.hypot(item.lat - lat, item.lng - lng);
+      if (d < minDistance) {
+        minDistance = d;
+        closest = item;
+      }
+    }
+  }
+  return { closest, distanceDeg: minDistance };
+};
 
 const ReadOnlyDetail = ({ label, value }) => (
   <div>
@@ -155,6 +171,11 @@ export default function CustomerInfoStep({ formData, handleChange, setFields }) 
     }
   }, [locationType, knownProfile.registeredAddress]);
 
+  const currentCityMatch = SRI_LANKA_CITY_POSTAL_DATA.find((c) => c.city === formData.city) || null;
+  const currentCityCoords = currentCityMatch && currentCityMatch.lat && currentCityMatch.lng
+    ? { lat: currentCityMatch.lat, lng: currentCityMatch.lng }
+    : (formData.latitude && formData.longitude ? { lat: Number(formData.latitude), lng: Number(formData.longitude) } : null);
+
   const handleCitySelect = (e) => {
     const cityName = e.target.value;
     const match = SRI_LANKA_CITY_POSTAL_DATA.find((c) => c.city === cityName);
@@ -164,7 +185,45 @@ export default function CustomerInfoStep({ formData, handleChange, setFields }) 
         city: cityName,
         district: match?.district || '',
         postalCode: match?.postalCode || '',
+        latitude: match?.lat || null,
+        longitude: match?.lng || null,
       });
+    }
+  };
+
+  const handleLocationSelect = ({ address, coords, details }) => {
+    const updates = {
+      installAddress: address,
+      address,
+    };
+
+    if (coords && typeof coords.lat === 'number' && typeof coords.lng === 'number') {
+      updates.latitude = coords.lat;
+      updates.longitude = coords.lng;
+
+      // Reverse synchronize: detect closest city/area from map coordinates
+      const { closest, distanceDeg } = findClosestCity(coords.lat, coords.lng);
+      if (closest && distanceDeg < 0.45) {
+        updates.city = closest.city;
+        updates.district = closest.district;
+        updates.postalCode = closest.postalCode;
+      } else if (details?.city) {
+        // Fallback: match by city/suburb text from reverse geocode
+        const nameMatch = SRI_LANKA_CITY_POSTAL_DATA.find(
+          (c) =>
+            c.city.toLowerCase().includes(details.city.toLowerCase()) ||
+            details.city.toLowerCase().includes(c.city.toLowerCase())
+        );
+        if (nameMatch) {
+          updates.city = nameMatch.city;
+          updates.district = nameMatch.district;
+          updates.postalCode = nameMatch.postalCode;
+        }
+      }
+    }
+
+    if (setFields) {
+      setFields(updates);
     }
   };
 
@@ -340,6 +399,8 @@ export default function CustomerInfoStep({ formData, handleChange, setFields }) 
               label="Installation Address"
               value={formData.installAddress || ''}
               onChange={handleChange}
+              onLocationSelect={handleLocationSelect}
+              defaultCenter={currentCityCoords}
               placeholder="e.g. No. 45, Temple Road, Mount Lavinia"
               required
             />
