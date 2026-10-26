@@ -1002,3 +1002,20 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .face-capture-spinner { animation-duration: 2s; }
 }
+
+/* The expanded navbar search already shows a focus ring on its pill container */
+.nav-center-search input:focus-visible,
+.nav-center-search select:focus-visible {
+  outline: none !important;
+}
+
+/* On phones the expanded search takes the full header width */
+@media (max-width: 768px) {
+  .nav-search-form {
+    position: fixed !important;
+    top: 0.6rem !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    width: auto !important;
+  }
+}
