@@ -264,20 +264,22 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
         if (formData.nicFront && formData.nicBack && formData.nicFront === formData.nicBack) {
           e.nicBack = 'Front and back images cannot be identical. Please upload the reverse side of your NIC.';
         }
-        // If front image is present but OCR flagged it as unreadable or invalid
-        if (formData.nicFront && ocrState.error) {
-          e.nicFront = ocrState.error;
-        }
       }
       setErrors(e);
       if (Object.keys(e).length) {
         const firstError = Object.values(e)[0];
-        toast.error(firstError || 'Please complete all mandatory identity requirements with valid documents.');
+        toast.error(firstError || 'Please complete all mandatory identity requirements.');
         return false;
       }
 
       // Persist verified identity details directly to backend DB & session
       const phone = formData.mobileNumber || getAuthUser()?.phone || localStorage.getItem('verifiedPhone') || '';
+      const manualEntryUsed = !ocrState.verified;
+      const exceptionFlags = [...(formData.ocrExtraction?.exceptionFlags || [])];
+      if (manualEntryUsed && !exceptionFlags.includes('MANUAL_ENTRY_ADMIN_REVIEW')) {
+        exceptionFlags.push('MANUAL_ENTRY_ADMIN_REVIEW');
+      }
+
       api.post('/customers/sync-ocr', {
         phone,
         name: formData.nameFull,
@@ -294,6 +296,12 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
         nicFront: formData.nicFront || '',
         nicBack: formData.nicBack || '',
         facePhoto: formData.facePhoto,
+        ocrExtraction: {
+          ...(formData.ocrExtraction || {}),
+          manualReviewRequired: true,
+          manualEntry: manualEntryUsed,
+          exceptionFlags,
+        },
       }).then((res) => {
         if (res.data?.customer) {
           localStorage.setItem('authCustomer', JSON.stringify(res.data.customer));
@@ -319,7 +327,7 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
 
     const mySeq = ++seq.current;
     setIsScanning(true);
-    setStatus({ type: 'loading', message: 'Scanning NIC & extracting details on-device...' });
+    setStatus({ type: 'loading', message: 'Analyzing NIC with AI Deep-Learning OCR...' });
 
     try {
       const r = await scanNIC({
@@ -338,17 +346,24 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
 
       const extractedNic = r?.nicNumber ? cleanNIC(r.nicNumber) : '';
       const currentEnteredNic = cleanNIC(nicInput || formData.nic || '');
+      const validEnteredNic = validateNIC(currentEnteredNic).valid ? currentEnteredNic : '';
+      const activeApplicantNic = extractedNic || validEnteredNic || cleanNIC(formData.nic || '');
+
+      // Derive DOB and Gender whenever a valid NIC exists
+      const derivedFromNic = activeApplicantNic ? deriveGenderAndDOBFromNIC(activeApplicantNic) : null;
+      const resolvedDob = r?.dob || derivedFromNic?.dob || formData.dob || '';
+      const resolvedGender = r?.gender || (derivedFromNic?.gender === 'FEMALE' ? 'Female' : derivedFromNic?.gender === 'MALE' ? 'Male' : derivedFromNic?.gender) || formData.gender || '';
 
       // Evaluate the 5 Core Identity Fields:
-      // 1. NIC Number (extracted from document OR validated from input if scan succeeded)
+      // 1. NIC Number (extracted from document OR validated from input)
       // 2. Full Name
       // 3. Date of Birth
       // 4. Gender
       // 5. Address
-      const hasNic = Boolean(extractedNic || (r?.success && currentEnteredNic));
+      const hasNic = Boolean(extractedNic || (validEnteredNic && (r?.success || activeFront)));
       const hasName = Boolean(r?.fullName && r.fullName.trim().length > 2 && r.fullName.toLowerCase() !== 'customer');
-      const hasDob = Boolean(r?.dob);
-      const hasGender = Boolean(r?.gender);
+      const hasDob = Boolean(resolvedDob);
+      const hasGender = Boolean(resolvedGender);
       const hasAddress = Boolean(r?.address && isValidAddressText(r.address));
 
       const coreFields = {
@@ -362,40 +377,23 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
       const fetchedCount = Object.values(coreFields).filter(Boolean).length;
       const missingCount = 5 - fetchedCount;
 
-      // Rule 2: If 3 or more out of 5 cannot be fetched (missingCount >= 3, i.e. fetchedCount < 3):
-      if (missingCount >= 3 || !r?.success) {
-        const missingList = Object.entries(coreFields)
-          .filter(([_, present]) => !present)
-          .map(([name]) => name);
-
-        const unreadableMsg = `NIC image is not clear enough. Unable to read essential details (missing ${missingCount} of 5 required fields: ${missingList.join(', ')}). Please re-upload a clearer, well-lit photo.`;
-        setErrors((prev) => ({ ...prev, nicFront: unreadableMsg }));
-        setOcrState({ verified: false, error: unreadableMsg });
-        setStatus({
-          type: 'error',
-          message: unreadableMsg,
-        });
-        return;
-      }
-
-      // Rule 1 & Rule 3: At least 3 of 5 fields fetched (fetchedCount >= 3) -> Accept and Autofill!
-      const parsedAddress = parseSriLankanAddress(r.address, r.city, r.district);
-      const activeApplicantNic = currentEnteredNic || extractedNic || formData.nic;
+      // Prepare autofill details with whatever was extracted (never discard extracted data!)
+      const parsedAddress = parseSriLankanAddress(r?.address, r?.city, r?.district);
       const isMismatch = Boolean(currentEnteredNic && extractedNic && currentEnteredNic !== extractedNic);
       const validAddress = Boolean(isValidAddressText(parsedAddress?.addressLine1) || isValidAddressText(r?.address));
 
       const found = {
-        nameFull: r.fullName || formData.nameFull || '',
+        nameFull: (r?.fullName && r.fullName.toLowerCase() !== 'customer') ? r.fullName : (formData.nameFull || ''),
         nic: activeApplicantNic,
-        dob: r.dob || formData.dob || '',
-        gender: r.gender || formData.gender || '',
-        title: r.suggestedTitle || formData.title || (r.gender === 'Female' ? 'Ms.' : r.gender === 'Male' ? 'Mr.' : ''),
-        nicAddress: validAddress ? (r.address || formData.nicAddress || '') : (formData.nicAddress || ''),
-        addressLine1: validAddress ? (parsedAddress.addressLine1 || r.address || formData.addressLine1 || '') : (formData.addressLine1 || ''),
-        addressLine2: validAddress ? (parsedAddress.addressLine2 || formData.addressLine2 || '') : (formData.addressLine2 || ''),
-        city: (parsedAddress.city && (isValidAddressText(parsedAddress.city) || validAddress)) ? parsedAddress.city : (formData.city || ''),
-        district: validAddress ? (parsedAddress.district || formData.district || '') : (formData.district || ''),
-        postalCode: validAddress ? (parsedAddress.postalCode || formData.postalCode || '') : (formData.postalCode || ''),
+        dob: resolvedDob || formData.dob || '',
+        gender: resolvedGender || formData.gender || '',
+        title: r?.suggestedTitle || formData.title || (resolvedGender === 'Female' ? 'Ms.' : resolvedGender === 'Male' ? 'Mr.' : ''),
+        nicAddress: validAddress ? (r?.address || formData.nicAddress || '') : (formData.nicAddress || ''),
+        addressLine1: validAddress ? (parsedAddress?.addressLine1 || r?.address || formData.addressLine1 || '') : (formData.addressLine1 || ''),
+        addressLine2: validAddress ? (parsedAddress?.addressLine2 || formData.addressLine2 || '') : (formData.addressLine2 || ''),
+        city: (parsedAddress?.city && (isValidAddressText(parsedAddress.city) || validAddress)) ? parsedAddress.city : (formData.city || ''),
+        district: validAddress ? (parsedAddress?.district || formData.district || '') : (formData.district || ''),
+        postalCode: validAddress ? (parsedAddress?.postalCode || formData.postalCode || '') : (formData.postalCode || ''),
       };
 
       const exceptionFlags = [];
@@ -413,38 +411,100 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
         scannedNic: extractedNic,
         enteredNic: currentEnteredNic,
         fetchedCount,
-        missingFields: r.missingFields || [],
+        missingFields: r?.missingFields || [],
         exceptionFlags,
-        engine: r.engine || 'TESSERACT_CLIENT_PRIVATE',
+        engine: r?.engine || 'TESSERACT_CLIENT_PRIVATE',
         manualReviewRequired: isMismatch || missingCount > 0,
         reviewReason: isMismatch
           ? `Minor NIC number variation (Entered: ${currentEnteredNic}, Scanned: ${extractedNic})`
           : (missingCount > 0 ? `Partial OCR data fetched (${fetchedCount}/5 fields)` : null),
+        fetchedFields: {
+          nic: hasNic,
+          nameFull: hasName,
+          dob: hasDob,
+          gender: hasGender,
+          nicAddress: hasAddress,
+        },
       };
 
-      // Autofill all fetched details into form
+      // Always populate the extracted details into form fields so user sees them!
       setFields({ ...found, ocrExtraction: ocrMetadata });
-      setErrors((prev) => ({ ...prev, nicFront: undefined }));
-      setOcrState({ verified: true, error: null, mismatch: isMismatch });
 
-      // Update feedback banner
-      if (isMismatch) {
-        setStatus({
-          type: 'warning',
-          message: `Notice: Minor NIC number variation detected (Entered: ${currentEnteredNic}, Card OCR: ${extractedNic}). Details have been autofilled; application will proceed and is flagged for Admin KYC review.`,
-        });
-        toast('NIC variation noted. Flagged for Admin KYC review.', { icon: 'ℹ️' });
-      } else if (missingCount > 0) {
-        setStatus({
-          type: 'warning',
-          message: `Details extracted (${fetchedCount}/5 fields verified). Please review and complete any remaining details below.`,
-        });
-      } else {
-        setStatus({
-          type: 'success',
-          message: 'All details extracted successfully! Please review them below.',
-        });
+      // Scenario A: Only FRONT side was scanned (Back side not yet uploaded)
+      if (activeFront && !activeBack) {
+        if (hasNic || hasName) {
+          setErrors((prev) => ({ ...prev, nicFront: undefined }));
+          setOcrState({ verified: true, error: null, mismatch: isMismatch });
+          setStatus({
+            type: 'success',
+            message: 'Front side details extracted! Please upload the Back side of your NIC to capture your address.',
+          });
+        } else {
+          setErrors((prev) => ({ ...prev, nicFront: undefined }));
+          setOcrState({ verified: false, error: null, manualReview: true });
+          setStatus({
+            type: 'warning',
+            message: 'Front side uploaded. Auto-read was inconclusive, but you can enter your details manually below.',
+          });
+        }
+        return;
       }
+
+      // Scenario B: Only BACK side was scanned (Front side not yet uploaded)
+      if (!activeFront && activeBack) {
+        if (hasAddress) {
+          setErrors((prev) => ({ ...prev, nicBack: undefined }));
+          setOcrState({ verified: true, error: null });
+          setStatus({
+            type: 'success',
+            message: 'Back side address extracted! Please upload the Front side of your NIC to capture your identity details.',
+          });
+        } else {
+          setErrors((prev) => ({ ...prev, nicBack: undefined }));
+          setOcrState({ verified: false, error: null, manualReview: true });
+          setStatus({
+            type: 'warning',
+            message: 'Back side uploaded. Address could not be auto-read, but you can enter it manually below.',
+          });
+        }
+        return;
+      }
+
+      // Scenario C: BOTH sides have been uploaded
+      // Rule: If at least 3 of 5 fields are present (fetchedCount >= 3) -> Accept!
+      if (fetchedCount >= 3) {
+        setErrors((prev) => ({ ...prev, nicFront: undefined, nicBack: undefined }));
+        setOcrState({ verified: true, error: null, mismatch: isMismatch });
+
+        if (isMismatch) {
+          setStatus({
+            type: 'warning',
+            message: `Notice: Minor NIC number variation detected (Entered: ${currentEnteredNic}, Card OCR: ${extractedNic}). Details have been autofilled; application will proceed and is flagged for Admin KYC review.`,
+          });
+          toast('NIC variation noted. Flagged for Admin KYC review.', { icon: 'ℹ️' });
+        } else if (missingCount > 0) {
+          setStatus({
+            type: 'warning',
+            message: `Details auto-filled (${fetchedCount}/5 fields verified). Please review and complete any remaining details below.`,
+          });
+        } else {
+          setStatus({
+            type: 'success',
+            message: 'All details extracted successfully! Please review them below.',
+          });
+        }
+        return;
+      }
+
+      // Scenario D: Both sides uploaded but fewer than 3 fields detected
+      // Non-blocking: clear card errors, allow manual entry and proceed with admin review
+      setErrors((prev) => ({ ...prev, nicFront: undefined, nicBack: undefined }));
+      setOcrState({ verified: false, error: null, manualReview: true });
+      setStatus({
+        type: 'warning',
+        message: 'Could not auto-detect card details clearly. No problem — please enter or review your details manually below. Your application will be accepted and reviewed by an SLT admin.',
+      });
+      toast('Could not auto-read card. Please enter your details manually below.', { icon: 'ℹ️' });
 
       // Persist to backend DB sync
       const phone = formData.mobileNumber || getAuthUser()?.phone || localStorage.getItem('verifiedPhone') || '';
@@ -478,10 +538,12 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
       }
     } catch (err) {
       if (seq.current !== mySeq) return;
-      const errMsg = 'Could not read your NIC document. Please upload a clear, legible photo.';
-      setErrors((prev) => ({ ...prev, nicFront: errMsg }));
-      setOcrState({ verified: false, error: errMsg });
-      setStatus({ type: 'error', message: errMsg });
+      setErrors((prev) => ({ ...prev, nicFront: undefined, nicBack: undefined }));
+      setOcrState({ verified: false, error: null, manualReview: true });
+      setStatus({
+        type: 'warning',
+        message: 'Could not auto-read card details. No problem — please enter your details manually below. An SLT admin will review and accept.',
+      });
     } finally {
       if (seq.current === mySeq) setIsScanning(false);
     }
@@ -519,6 +581,16 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
 
   const text = (name, label, type = 'text') => {
     const isFilled = Boolean(formData[name] && String(formData[name]).trim());
+    const isActuallyVerified = Boolean(
+      (ocrState.verified && formData.ocrExtraction?.fetchedFields?.[name]) ||
+      (isExistingCustomer && nicVerified) ||
+      (name === 'nic' && validateNIC(formData.nic).valid && ocrState.verified) ||
+      (name === 'dob' && formData.dob && (ocrState.verified || nicVerified)) ||
+      (name === 'gender' && formData.gender && (ocrState.verified || nicVerified)) ||
+      (name === 'nameFull' && formData.nameFull && formData.nameFull.toLowerCase() !== 'customer' && ocrState.verified) ||
+      (name === 'nicAddress' && formData.nicAddress && isValidAddressText(formData.nicAddress) && ocrState.verified)
+    );
+
     return (
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
@@ -526,53 +598,82 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
             {fieldIcons[name] || null}
             <span>{label}</span>
           </label>
-          {isFilled && (
+          {isActuallyVerified ? (
             <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#16a34a', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
               <FiCheck size={12} /> Verified
             </span>
-          )}
+          ) : isFilled ? (
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#0284c7', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+              ✓ Manual Entry
+            </span>
+          ) : null}
         </div>
-        <input
-          id={`id-${name}`}
-          type={type}
-          style={{
-            ...inputStyle,
-            borderColor: errors[name] ? '#dc2626' : isFilled ? '#86efac' : '#cbd5e1',
-            backgroundColor: isFilled ? '#f8fafc' : '#ffffff',
-            transition: 'border-color 0.2s, background-color 0.2s',
-          }}
-          value={formData[name] || ''}
-          onChange={(e) => {
-            const val = name === 'nic' ? e.target.value.toUpperCase() : e.target.value;
-            const updates = { [name]: val };
-            if (name === 'nic') {
-              setNicInput(val);
-              setIsExistingCustomer(false);
-              setNicVerified(false);
-              setVerifyMessage(null);
-              const parsed = parseSriLankanNIC(cleanNIC(val));
-              if (parsed?.isValid) {
-                if (parsed.dob && !formData.dob) updates.dob = parsed.dob;
-                if (parsed.gender && !formData.gender) {
-                  updates.gender = /^female$/i.test(parsed.gender) ? 'Female' : 'Male';
-                }
-                if (!formData.title && parsed.gender) {
-                  updates.title = /^female$/i.test(parsed.gender) ? 'Ms.' : 'Mr.';
+        {name === 'gender' ? (
+          <select
+            id={`id-${name}`}
+            style={{
+              ...inputStyle,
+              borderColor: errors[name] ? '#dc2626' : isActuallyVerified ? '#86efac' : isFilled ? '#93c5fd' : '#cbd5e1',
+              backgroundColor: isActuallyVerified ? '#f8fafc' : '#ffffff',
+              transition: 'border-color 0.2s, background-color 0.2s',
+            }}
+            value={formData[name] || ''}
+            onChange={(e) => {
+              const val = e.target.value;
+              setFields({
+                gender: val,
+                title: val === 'Female' ? 'Ms.' : val === 'Male' ? 'Mr.' : (formData.title || ''),
+              });
+              setErrors((er) => ({ ...er, [name]: undefined }));
+            }}
+          >
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        ) : (
+          <input
+            id={`id-${name}`}
+            type={type}
+            style={{
+              ...inputStyle,
+              borderColor: errors[name] ? '#dc2626' : isActuallyVerified ? '#86efac' : isFilled ? '#93c5fd' : '#cbd5e1',
+              backgroundColor: isActuallyVerified ? '#f8fafc' : '#ffffff',
+              transition: 'border-color 0.2s, background-color 0.2s',
+            }}
+            value={formData[name] || ''}
+            onChange={(e) => {
+              const val = name === 'nic' ? e.target.value.toUpperCase() : e.target.value;
+              const updates = { [name]: val };
+              if (name === 'nic') {
+                setNicInput(val);
+                setIsExistingCustomer(false);
+                setNicVerified(false);
+                setVerifyMessage(null);
+                const parsed = parseSriLankanNIC(cleanNIC(val));
+                if (parsed?.isValid) {
+                  if (parsed.dob && !formData.dob) updates.dob = parsed.dob;
+                  if (parsed.gender && !formData.gender) {
+                    updates.gender = /^female$/i.test(parsed.gender) ? 'Female' : 'Male';
+                  }
+                  if (!formData.title && parsed.gender) {
+                    updates.title = /^female$/i.test(parsed.gender) ? 'Ms.' : 'Mr.';
+                  }
                 }
               }
-            }
-            if (name === 'nicAddress' && val) {
-              const area = parseSriLankanAddress(val, formData.city, formData.district) || {};
-              if (area.city) updates.city = area.city;
-              if (area.district) updates.district = area.district;
-              if (area.postalCode) updates.postalCode = area.postalCode;
-              if (area.city && area.district) updates.serviceArea = `${area.city}, ${area.district}`;
-              if (!formData.installAddress) updates.installAddress = val;
-            }
-            setFields(updates);
-            setErrors((er) => ({ ...er, [name]: undefined }));
-          }}
-        />
+              if (name === 'nicAddress' && val) {
+                const area = parseSriLankanAddress(val, formData.city, formData.district) || {};
+                if (area.city) updates.city = area.city;
+                if (area.district) updates.district = area.district;
+                if (area.postalCode) updates.postalCode = area.postalCode;
+                if (area.city && area.district) updates.serviceArea = `${area.city}, ${area.district}`;
+                if (!formData.installAddress) updates.installAddress = val;
+              }
+              setFields(updates);
+              setErrors((er) => ({ ...er, [name]: undefined }));
+            }}
+          />
+        )}
         {errors[name] && <span style={{ color: '#dc2626', fontSize: '0.78rem', marginTop: '0.2rem', display: 'block' }}>{errors[name]}</span>}
       </div>
     );
@@ -816,7 +917,7 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
               boxShadow: '0 4px 12px rgba(15, 87, 168, 0.25)',
             }}
           >
-            <FiZap size={16} /> {isScanning ? 'Extracting Details...' : 'Re-Scan NIC & Auto-Fill Details'}
+            {isScanning ? 'Extracting Details...' : 'Re-Scan NIC & Auto-Fill Details'}
           </button>
         </div>
       )}
@@ -907,7 +1008,7 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
           <IdentityCaptureField
             label="Live Selfie"
             variant="face"
-            cameraOnly={true}
+            cameraOnly={false}
             required
             value={formData.facePhoto}
             error={errors.facePhoto}

@@ -720,6 +720,17 @@ export function extractFullNameFromOCR(text) {
       const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
       if (!isIgnored && candidate.length > bestCandidate.length) {
         bestCandidate = candidate;
+        continue;
+      }
+    }
+
+    // 4. Check if current line is a Name label header, and next line contains the actual name
+    if (/(?:Name|Full\s*Name|Names)\b/i.test(rawLine) && lines[i + 1]) {
+      const nextCandidate = cleanNameToken(lines[i + 1].replace(/[^A-Za-z\s.-]/g, '').trim().toUpperCase());
+      const words = nextCandidate.split(/\s+/).filter((w) => w.length > 1);
+      const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
+      if (!isIgnored && nextCandidate.length > 3 && nextCandidate.length > bestCandidate.length) {
+        bestCandidate = nextCandidate;
       }
     }
   }

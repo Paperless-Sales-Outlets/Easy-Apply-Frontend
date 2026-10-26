@@ -330,22 +330,41 @@ export default function IdentityCaptureField({
             </h4>
           </div>
           {value ? (
-            <span
-              style={{
-                fontSize: '0.74rem',
-                fontWeight: 700,
-                color: '#166534',
-                background: '#dcfce7',
-                border: '1px solid #86efac',
-                padding: '0.2rem 0.55rem',
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.3rem',
-              }}
-            >
-              <FiCheck size={12} /> Ready
-            </span>
+            error ? (
+              <span
+                style={{
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  color: '#b45309',
+                  background: '#fef3c7',
+                  border: '1px solid #fde68a',
+                  padding: '0.2rem 0.55rem',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}
+              >
+                <FiAlertTriangle size={12} /> Needs Review
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  color: '#166534',
+                  background: '#dcfce7',
+                  border: '1px solid #86efac',
+                  padding: '0.2rem 0.55rem',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}
+              >
+                <FiCheck size={12} /> Ready
+              </span>
+            )
           ) : cameraOnly ? (
             <span
               style={{
@@ -380,10 +399,10 @@ export default function IdentityCaptureField({
         {/* Inner Dropzone / Viewfinder */}
         <div
           style={{
-            border: `1.5px dashed ${error ? 'var(--danger, #dc3545)' : value ? '#86efac' : '#cbd5e1'}`,
+            border: `1.5px dashed ${error ? '#f59e0b' : value ? '#86efac' : '#cbd5e1'}`,
             borderRadius: '12px',
             padding: '1.2rem 1rem',
-            backgroundColor: value ? '#f0fdf4' : '#f8fafc',
+            backgroundColor: error ? '#fffbeb' : value ? '#f0fdf4' : '#f8fafc',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -404,8 +423,10 @@ export default function IdentityCaptureField({
                     height: isFace ? '130px' : '125px',
                     objectFit: 'cover',
                     borderRadius: isFace ? '50%' : '10px',
-                    border: '2.5px solid #22c55e',
-                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.18)',
+                    border: `2.5px solid ${error ? '#f59e0b' : '#22c55e'}`,
+                    boxShadow: error
+                      ? '0 4px 12px rgba(245, 158, 11, 0.2)'
+                      : '0 4px 12px rgba(34, 197, 94, 0.18)',
                   }}
                 />
                 <div
@@ -413,7 +434,7 @@ export default function IdentityCaptureField({
                     position: 'absolute',
                     bottom: isFace ? '4px' : '-8px',
                     right: isFace ? '4px' : '-8px',
-                    background: '#22c55e',
+                    background: error ? '#f59e0b' : '#22c55e',
                     color: '#ffffff',
                     borderRadius: '50%',
                     width: '26px',
@@ -425,7 +446,7 @@ export default function IdentityCaptureField({
                     boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
                   }}
                 >
-                  <FiCheck size={14} />
+                  {error ? <FiAlertTriangle size={13} /> : <FiCheck size={14} />}
                 </div>
               </div>
 
