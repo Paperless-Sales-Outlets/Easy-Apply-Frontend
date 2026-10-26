@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FiShield, FiX, FiRefreshCw, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FiShield, FiX, FiRefreshCw, FiCheck, FiAlertCircle, FiLock } from 'react-icons/fi';
 import './SignUpPage.css';
 import signupBgImage from '../assets/team_laptop.jpg';
 import api from '../utils/api';
@@ -8,6 +8,7 @@ import { saveSession } from '../utils/authSession';
 import IdentityCaptureField from '../components/form/IdentityCaptureField';
 import { parseSriLankanAddress, validateNIC, cleanNIC } from '../utils/nicParser';
 import { getPostalCodeByCity } from '../utils/sriLankaPostalCodes';
+import { formatTimer, saveOtpTimers, getOtpTimers, clearOtpTimers } from '../utils/otpSecurity';
 
 // ============================================================================
 // NIC OCR ENGINE — Tesseract.js, in the browser, and nothing else.
@@ -16,7 +17,8 @@ import { getPostalCodeByCity } from '../utils/sriLankaPostalCodes';
 // ============================================================================
 import { scanNICTesseract as scanNIC } from '../services/tesseractNicService';
 
-const RESEND_SECONDS = 30;
+const RESEND_SECONDS = 60;
+const OTP_EXPIRY_SECONDS = 300;
 const TOTAL_STEPS = 4;
 
 /* ── SVG icons (inline, zero dependencies) ─────────────────────── */
@@ -398,15 +400,48 @@ export default function SignUpPage() {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpError, setOtpError] = useState('');
+  const [otpExpiresIn, setOtpExpiresIn] = useState(OTP_EXPIRY_SECONDS);
   const [resendIn, setResendIn] = useState(RESEND_SECONDS);
+  const [lockoutIn, setLockoutIn] = useState(0);
+  const [isOtpExpired, setIsOtpExpired] = useState(false);
+  const [isLockedOut, setIsLockedOut] = useState(false);
   const otpRefs = useRef([]);
 
   const verifyBtnRef = useRef(null);
   const modalRef = useRef(null);
 
+  // Restore active OTP timers and lockout state when modal opens or phone updates
+  useEffect(() => {
+    const digits = normalisedPhone();
+    if (digits.length === 9) {
+      const timers = getOtpTimers(digits);
+      if (timers.lockoutIn > 0) {
+        setIsLockedOut(true);
+        setLockoutIn(timers.lockoutIn);
+        setOtpError('Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
+      } else {
+        setIsLockedOut(false);
+        setLockoutIn(0);
+      }
+
+      if (timers.expiresIn > 0) {
+        setOtpExpiresIn(timers.expiresIn);
+        setIsOtpExpired(false);
+      } else if (timers.isExpired) {
+        setOtpExpiresIn(0);
+        setIsOtpExpired(true);
+      }
+
+      if (timers.resendIn > 0) {
+        setResendIn(timers.resendIn);
+      } else {
+        setResendIn(0);
+      }
+    }
+  }, [otpModalOpen, form.phone]);
+
   useEffect(() => {
     if (!otpModalOpen) return;
-    setResendIn(RESEND_SECONDS);
     const id = setTimeout(() => otpRefs.current[0]?.focus(), 50);
 
     // Escape closes the dialog, and Tab is kept inside it while it's open.
@@ -439,19 +474,45 @@ export default function SignUpPage() {
     };
   }, [otpModalOpen]);
 
-  // Send focus back to the Verify button when the dialog closes, so keyboard
-  // users aren't dumped at the top of the page.
+  // Send focus back to the Verify button when the dialog closes
   const wasModalOpen = useRef(false);
   useEffect(() => {
     if (wasModalOpen.current && !otpModalOpen) verifyBtnRef.current?.focus();
     wasModalOpen.current = otpModalOpen;
   }, [otpModalOpen]);
 
+  // 15-Minute Lockout Countdown: ticks down every second during lockout
   useEffect(() => {
-    if (!otpModalOpen || resendIn <= 0) return;
-    const id = setTimeout(() => setResendIn((s) => s - 1), 1000);
-    return () => clearTimeout(id);
-  }, [otpModalOpen, resendIn]);
+    if (!isLockedOut || lockoutIn <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutIn((prev) => {
+        if (prev <= 1) {
+          setIsLockedOut(false);
+          setOtpError('');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isLockedOut, lockoutIn]);
+
+  // 5-Minute OTP Expiry Countdown: continuous timer from 05:00 to 00:00
+  useEffect(() => {
+    if (!otpModalOpen || phoneVerified || isLockedOut || otpExpiresIn <= 0) return;
+    const timer = setInterval(() => {
+      setOtpExpiresIn((prev) => {
+        if (prev <= 1) {
+          setIsOtpExpired(true);
+          setOtpError('Your OTP has expired. Please request a new OTP.');
+          setOtp(['', '', '', '', '', '']);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [otpModalOpen, phoneVerified, isLockedOut, otpExpiresIn]);
 
   const normalisedPhone = () => {
     let digits = (form.phone || '').replace(/\D/g, '');
@@ -477,21 +538,77 @@ export default function SignUpPage() {
       return;
     }
 
+    if (isLockedOut || lockoutIn > 0) {
+      setOtpError(`Too many incorrect OTP attempts. OTP verification is locked for 15 minutes. Try again in ${formatTimer(lockoutIn)}`);
+      setOtpModalOpen(true);
+      return;
+    }
+
     setSendingOtp(true);
     try {
-      await api.post('/otp/send', { phone: digits });
-    } catch {
-      // Offline/demo mode — still open the code entry.
+      const res = await api.post('/otp/send', { phone: digits });
+      const data = res.data;
+      saveOtpTimers(digits, {
+        expiresAt: data.expiresAt,
+        resendAvailableAt: data.resendAvailableAt,
+        lockedUntil: null,
+      });
+
+      setOtp(['', '', '', '', '', '']);
+      setOtpError('');
+      setIsOtpExpired(false);
+      setIsLockedOut(false);
+      setLockoutIn(0);
+      setOtpExpiresIn(data.expiresIn || OTP_EXPIRY_SECONDS);
+      setResendIn(data.resendCooldown || RESEND_SECONDS);
+      setOtpModalOpen(true);
+    } catch (err) {
+      const resData = err.response?.data || {};
+      if (err.response?.status === 429) {
+        if (resData.code === 'OTP_LOCKED' || resData.lockoutRemaining > 0) {
+          const rem = resData.lockoutRemaining || 900;
+          setIsLockedOut(true);
+          setLockoutIn(rem);
+          saveOtpTimers(digits, { lockedUntil: resData.lockedUntil || new Date(Date.now() + rem * 1000).toISOString() });
+          setOtpError(resData.message || 'Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
+        } else if (resData.code === 'OTP_STILL_VALID') {
+          // OTP still valid — keep resend section hidden, update expiry
+          const rem = resData.otpRemaining;
+          if (rem > 0) setOtpExpiresIn(rem);
+          setIsOtpExpired(false);
+          if (resData.expiresAt) saveOtpTimers(digits, { expiresAt: resData.expiresAt });
+          setOtpError('A verification code is already active. Please use the code already sent or wait for it to expire.');
+        } else if (resData.code === 'RESEND_COOLDOWN' || resData.cooldownRemaining > 0) {
+          const rem = resData.cooldownRemaining || 60;
+          setResendIn(rem);
+          saveOtpTimers(digits, { resendAvailableAt: resData.resendAvailableAt || new Date(Date.now() + rem * 1000).toISOString() });
+          setOtpError(resData.message || `Please wait ${rem} seconds before requesting a new OTP.`);
+        } else {
+          setOtpError(resData.message || 'Too many requests. Please wait.');
+        }
+      } else {
+        setOtpError(resData.message || 'Could not send verification code. Please check your mobile number.');
+      }
+      setOtpModalOpen(true);
+    } finally {
+      setSendingOtp(false);
     }
-    setSendingOtp(false);
-    setOtp(['', '', '', '', '', '']);
-    setOtpError('');
-    setOtpModalOpen(true);
   };
 
   const submitOtp = async (code) => {
     const digits = normalisedPhone();
     const cleanNicVal = cleanNIC(form.nic);
+
+    if (isLockedOut || lockoutIn > 0) {
+      setOtpError('Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
+      return;
+    }
+
+    if (isOtpExpired || otpExpiresIn <= 0) {
+      setOtpError('Your OTP has expired. Please request a new OTP.');
+      return;
+    }
+
     setVerifyingOtp(true);
     setOtpError('');
     try {
@@ -500,6 +617,8 @@ export default function SignUpPage() {
         nic: cleanNicVal,
         otp: code,
       });
+
+      clearOtpTimers(digits);
 
       if (res.data?.existing) {
         // Existing registered customer -> Direct login
@@ -530,14 +649,23 @@ export default function SignUpPage() {
       setStep(2);
       window.scrollTo(0, 0);
     } catch (err) {
-      // Demo bypass — 000000 / 123456 (or offline backend) counts as verified
-      if (code === '000000' || code === '123456' || !err.response) {
-        setPhoneVerified(true);
-        setOtpModalOpen(false);
-        setStep(2);
-        window.scrollTo(0, 0);
+      const resData = err.response?.data || {};
+      const status = err.response?.status;
+
+      if (status === 429 && (resData.code === 'OTP_LOCKED' || resData.lockoutRemaining > 0)) {
+        const rem = resData.lockoutRemaining || 900;
+        setIsLockedOut(true);
+        setLockoutIn(rem);
+        saveOtpTimers(digits, { lockedUntil: resData.lockedUntil || new Date(Date.now() + rem * 1000).toISOString() });
+        setOtpError(resData.message || 'Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.');
+        setOtp(['', '', '', '', '', '']);
+      } else if (resData.code === 'OTP_EXPIRED') {
+        setIsOtpExpired(true);
+        setOtpExpiresIn(0);
+        setOtpError(resData.message || 'Your OTP has expired. Please request a new OTP.');
+        setOtp(['', '', '', '', '', '']);
       } else {
-        setOtpError(err.response?.data?.message || 'Invalid or expired verification code.');
+        setOtpError(resData.message || 'Invalid or expired verification code.');
         setOtp(['', '', '', '', '', '']);
         setTimeout(() => otpRefs.current[0]?.focus(), 50);
       }
@@ -547,7 +675,7 @@ export default function SignUpPage() {
   };
 
   const handleOtpChange = (index, raw) => {
-    if (verifyingOtp) return;
+    if (verifyingOtp || isLockedOut || isOtpExpired) return;
     const value = raw.replace(/\D/g, '');
     const next = [...otp];
     next[index] = value.slice(-1) || '';
@@ -572,15 +700,10 @@ export default function SignUpPage() {
   };
 
   const handleResendOtp = async () => {
-    if (resendIn > 0 || verifyingOtp) return;
+    if (resendIn > 0 || verifyingOtp || isLockedOut) return;
     setOtp(['', '', '', '', '', '']);
     setOtpError('');
-    try {
-      await api.post('/otp/send', { phone: normalisedPhone() });
-    } catch {
-      // demo code still works offline
-    }
-    setResendIn(RESEND_SECONDS);
+    await sendOtp();
     setTimeout(() => otpRefs.current[0]?.focus(), 50);
   };
 
@@ -1425,9 +1548,42 @@ export default function SignUpPage() {
               <h3 id="otp-dialog-title" style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.3rem 0' }}>
                 Verify Your Mobile Number
               </h3>
-              <p id="otp-dialog-desc" style={{ fontSize: '0.85rem', color: '#5b6472', marginBottom: '1.5rem', fontWeight: 500 }}>
+              <p id="otp-dialog-desc" style={{ fontSize: '0.85rem', color: '#5b6472', marginBottom: '1.25rem', fontWeight: 500 }}>
                 Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {normalisedPhone()}</strong>
               </p>
+
+              {/* 15-Minute Lockout Display */}
+              {isLockedOut && (
+                <div
+                  role="alert"
+                  style={{
+                    backgroundColor: '#fff1f2',
+                    border: '1.5px solid #fecdd3',
+                    color: '#be123c',
+                    padding: '0.85rem 1rem',
+                    borderRadius: '12px',
+                    marginBottom: '1rem',
+                    textAlign: 'center',
+                    fontWeight: 600,
+                    fontSize: '0.88rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', marginBottom: '0.35rem' }}>
+                    <FiLock size={16} />
+                    <span>Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.</span>
+                  </div>
+                  <div style={{ color: '#9f1239', fontWeight: 800, fontSize: '0.95rem' }}>
+                    OTP verification locked. Try again in {formatTimer(lockoutIn)}
+                  </div>
+                </div>
+              )}
+
+              {/* 5-Minute Expiry Countdown Display */}
+              {!isLockedOut && (
+                <div style={{ marginBottom: '1rem', fontSize: '0.85rem' }}>
+                  <span style={{ color: '#0369a1', fontWeight: 700 }}>OTP expires in {formatTimer(otpExpiresIn)}</span>
+                </div>
+              )}
 
               <div
                 role="group"
@@ -1444,7 +1600,7 @@ export default function SignUpPage() {
                     autoComplete={index === 0 ? 'one-time-code' : 'off'}
                     maxLength={1}
                     value={digit}
-                    disabled={verifyingOtp}
+                    disabled={verifyingOtp || isLockedOut || isOtpExpired}
                     aria-label={`Verification code digit ${index + 1} of 6`}
                     aria-invalid={!!otpError}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
@@ -1464,20 +1620,25 @@ export default function SignUpPage() {
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                {resendIn > 0 ? (
-                  <span style={{ fontSize: '0.8rem', color: '#5b6472', fontWeight: 600 }} aria-live="polite">
-                    Resend code in <strong style={{ color: '#0f172a' }}>{resendIn}s</strong>
-                  </span>
-                ) : (
-                  <button type="button" className="auth-link-btn" onClick={handleResendOtp} disabled={verifyingOtp}>
-                    <FiRefreshCw size={13} aria-hidden="true" />
-                    <span>Resend Code</span>
-                  </button>
+                {/* Resend section: hidden while OTP is valid, appears immediately after expiry */}
+                {isOtpExpired && !isLockedOut && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.45rem' }}>
+                    <button
+                      type="button"
+                      className="auth-link-btn"
+                      onClick={handleResendOtp}
+                      disabled={verifyingOtp || sendingOtp}
+                      id="btn-resend-signup-otp"
+                    >
+                      <FiRefreshCw size={13} aria-hidden="true" />
+                      <span>{sendingOtp ? 'Sending…' : 'Resend OTP'}</span>
+                    </button>
+                  </div>
                 )}
 
                 {import.meta.env.DEV && (
                   <p className="auth-dev-hint" style={{ margin: 0 }}>
-                    Development only — demo code <strong>000000</strong> is accepted.
+                    Development only — demo code <strong>000000</strong> is accepted when OTP is active and valid.
                   </p>
                 )}
               </div>
