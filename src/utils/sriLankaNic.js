@@ -348,8 +348,8 @@ export function extractNICFromText(text, options = {}) {
     : null;
 
   // Pass 1 — clean digits, optionally split by spaces the way cards print them.
-  const strict = upper.match(/\b\d{9}\s?[VX]\b|\b\d{4}\s?\d{3}\s?\d{5}\b|\b\d{12}\b|\b\d{9}[VX]\b/g) || [];
-  const loose = upper.match(/[0-9OQDILZEASGTB|!]{9,12}[VX]?/g) || [];
+  const strict = upper.match(/\b\d{9}\s?[VX]\b|\b\d{4}\s?\d{3,4}\s?\d{4,5}\b|\b\d{12}\b|\b\d{9}[VX]\b/g) || [];
+  const loose = upper.match(/[0-9OQDILZEASGTB|!]{9,15}[VX]?/g) || [];
 
   // If expectedNIC is provided, check if any candidate matches expectedNIC within 1-character OCR confusion (e.g. 9 vs 5, 8 vs 0)
   if (cleanExpected) {
@@ -373,10 +373,32 @@ export function extractNICFromText(text, options = {}) {
     if (parsed) return { ...parsed, repaired: false };
   }
 
+  // Pass 1.5 — aggressive digit sequence search in cleaned alphanumeric stream
+  const strippedText = upper.replace(/[^A-Z0-9]/g, ' ');
+  const tokens = strippedText.split(/\s+/).filter((t) => t.length >= 9 && t.length <= 14);
+  for (const token of tokens) {
+    const parsed = parseNIC(token, options);
+    if (parsed) return { ...parsed, repaired: false };
+  }
+
+  // Pass 1.8 — check concatenated adjacent digit clusters (e.g. 1993 2450 1234)
+  const allWords = strippedText.split(/\s+/).filter(Boolean);
+  for (let i = 0; i < allWords.length; i++) {
+    const combo2 = allWords[i] + (allWords[i + 1] || '');
+    if (combo2.length >= 9 && combo2.length <= 13) {
+      const parsed = parseNIC(combo2, options);
+      if (parsed) return { ...parsed, repaired: false };
+    }
+    const combo3 = allWords[i] + (allWords[i + 1] || '') + (allWords[i + 2] || '');
+    if (combo3.length === 12 || (combo3.length === 10 && /[VX]$/.test(combo3))) {
+      const parsed = parseNIC(combo3, options);
+      if (parsed) return { ...parsed, repaired: false };
+    }
+  }
+
   // Pass 2 — allow OCR confusions inside otherwise NIC-shaped tokens.
   for (const candidate of loose) {
     const repaired = repairOcrDigits(candidate);
-    if (repaired === candidate) continue;
     const parsed = parseNIC(repaired, options);
     if (parsed) return { ...parsed, repaired: true };
   }

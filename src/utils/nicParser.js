@@ -842,3 +842,77 @@ export function extractAddressFromOCR(text) {
 
   return '';
 }
+
+/**
+ * Derives Gender and Date of Birth from NIC number based on Sri Lankan DRP rules:
+ * - 12-digit NIC (YYYYDDDXXXXX): 5th, 6th, 7th digits are DDD.
+ * - 9-digit NIC (YYDDDXXXXV): 3rd, 4th, 5th digits are DDD.
+ * - If DDD < 500: Gender is Male.
+ * - If DDD >= 500: Gender is Female.
+ */
+export function deriveGenderAndDOBFromNIC(nicInput) {
+  if (!nicInput) return null;
+  const cleaned = cleanNIC(nicInput);
+
+  let year = null;
+  let rawDayOfYear = null;
+
+  if (/^\d{12}$/.test(cleaned)) {
+    year = parseInt(cleaned.slice(0, 4), 10);
+    rawDayOfYear = parseInt(cleaned.slice(4, 7), 10);
+  } else if (/^\d{9}[VX]?$/i.test(cleaned)) {
+    const twoDigit = parseInt(cleaned.slice(0, 2), 10);
+    year = twoDigit === 0 ? 2000 : 1900 + twoDigit;
+    rawDayOfYear = parseInt(cleaned.slice(2, 5), 10);
+  }
+
+  if (rawDayOfYear !== null && !isNaN(rawDayOfYear)) {
+    const isMale = rawDayOfYear < 500;
+    const gender = isMale ? 'Male' : 'Female';
+    const dayOfYear = isMale ? rawDayOfYear : rawDayOfYear - 500;
+
+    let dob = null;
+    if (year && dayOfYear >= 1 && dayOfYear <= 366) {
+      const monthRanges = [
+        { m: 1, d: 31 }, { m: 2, d: 29 }, { m: 3, d: 31 },
+        { m: 4, d: 30 }, { m: 5, d: 31 }, { m: 6, d: 30 },
+        { m: 7, d: 31 }, { m: 8, d: 31 }, { m: 9, d: 30 },
+        { m: 10, d: 31 }, { m: 11, d: 30 }, { m: 12, d: 31 }
+      ];
+      let rem = dayOfYear;
+      let month = 1;
+      let day = 1;
+      for (const r of monthRanges) {
+        if (rem <= r.d) {
+          month = r.m;
+          day = rem;
+          break;
+        }
+        rem -= r.d;
+      }
+      dob = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+
+    return { gender, dob, rawDayOfYear, dayOfYear, year };
+  }
+  return null;
+}
+
+/**
+ * Extracts Service Area / City / District from address text.
+ */
+export function deriveServiceAreaFromAddress(addressStr) {
+  if (!addressStr || typeof addressStr !== 'string') return null;
+  const upper = addressStr.toUpperCase();
+  for (const [town, district] of Object.entries(SRI_LANKA_TOWN_DISTRICT_MAP)) {
+    if (upper.includes(town)) {
+      return {
+        town,
+        district,
+        city: town.charAt(0) + town.slice(1).toLowerCase(),
+      };
+    }
+  }
+  return null;
+}
+

@@ -4,6 +4,7 @@ import {
   FiRefreshCw,
   FiCheck,
   FiAlertCircle,
+  FiZap,
   FiShield,
   FiCheckCircle,
   FiUserPlus,
@@ -37,19 +38,12 @@ const inputStyle = {
 };
 
 /**
- * Identity & KYC Step:
- * 1. Prompt customer to enter NIC and click Verify.
- * 2. If existing customer found in DB:
- *    - Check whether NIC front and back copies are available in DB.
- *    - If BOTH copies are on file: Waive physical NIC document uploads (only Live Selfie required).
- *    - If copies are MISSING: Prompt with error popup modal and mandate NIC Front & Back upload.
- *    - Auto-fills registered customer details from SLT database.
- * 3. If new customer (not found in DB):
- *    - Keeps all upload fields (NIC Front, NIC Back, Live Selfie) visible and mandatory.
- *    - OCR auto-scans NIC Front/Back to extract and verify details.
- * 4. Live selfie: Camera capture ONLY (no file upload).
+ * Identity & KYC: look up customer NIC status and check whether NIC scans
+ * are already on file. New/missing-document customers capture front/back
+ * NIC images; all customers take a live camera selfie. On-device OCR
+ * extracts NIC, name, date of birth, gender and service-address details.
  */
-const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
+const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSteps = 7 }, ref) => {
   const sanitize = (val) => (!val || typeof val !== 'string' || val.startsWith('NIC-') ? '' : val);
 
   const [nicInput, setNicInput] = useState(() => sanitize(formData.nic));
@@ -68,6 +62,7 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
   const [status, setStatus] = useState(null);
   const [errors, setErrors] = useState({});
   const [ocrState, setOcrState] = useState({ verified: false, error: null });
+  const [isScanning, setIsScanning] = useState(false);
   const seq = useRef(0);
   const front = useRef(formData.nicFront);
   const back = useRef(formData.nicBack);
@@ -203,11 +198,14 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
         handleNewCustomerRecord(clean);
       }
     } catch (err) {
-      if (err.response?.status === 404 || !err.response) {
+      if (err.response?.status === 404) {
         handleNewCustomerRecord(clean);
       } else {
-        console.warn('NIC profile lookup notice:', err.message);
-        handleNewCustomerRecord(clean);
+        console.warn('NIC profile lookup failed:', err.message);
+        setErrors((prev) => ({ ...prev, nicInput: 'Unable to check your NIC right now. Please try again.' }));
+        setNicVerified(false);
+        setIsExistingCustomer(false);
+        setVerifyMessage(null);
       }
     } finally {
       setIsVerifyingNic(false);
@@ -249,15 +247,12 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
         e.nic = nicCheck.message || 'Enter a valid NIC number';
         e.nicInput = nicCheck.message || 'Enter a valid NIC number';
       }
-
       if (!formData.nameFull?.trim()) {
         e.nameFull = 'Full name is required';
       }
-
       if (!formData.facePhoto) {
         e.facePhoto = 'Take a live selfie to verify your identity';
       }
-
       // If NOT an existing customer with waived documents, NIC Front and Back are mandatory
       if (!isExistingCustomer) {
         if (!formData.nicFront) {
@@ -274,7 +269,6 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           e.nicFront = ocrState.error;
         }
       }
-
       setErrors(e);
       if (Object.keys(e).length) {
         const firstError = Object.values(e)[0];
@@ -314,21 +308,29 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
     },
   }));
 
-  const scan = async () => {
-    if (!front.current) return;
+  const scan = async (overrideFront, overrideBack) => {
+    const activeFront = overrideFront || front.current || formData.nicFront;
+    const activeBack = overrideBack || back.current || formData.nicBack;
+
+    if (!activeFront && !activeBack) {
+      toast.error('Please upload or capture your NIC front or back side first.');
+      return;
+    }
+
     const mySeq = ++seq.current;
-    setStatus({ type: 'loading', message: 'Scanning NIC & extracting details...' });
+    setIsScanning(true);
+    setStatus({ type: 'loading', message: 'Scanning NIC & extracting details on-device...' });
+
     try {
       const r = await scanNIC({
-        nicFront: front.current,
-        nicBack: back.current,
+        nicFront: activeFront,
+        nicBack: activeBack,
         expectedNIC: cleanNIC(nicInput || formData.nic || ''),
         onStatusChange: (st) => {
           if (seq.current !== mySeq) return;
-          const statusType = st.status === 'ERROR' ? 'error' : st.status === 'SUCCESS' ? 'success' : 'loading';
           setStatus({
-            type: statusType,
-            message: st.message || 'Scanning NIC & fetching details...',
+            type: st?.status === 'ERROR' ? 'error' : st?.status === 'SUCCESS' ? 'success' : 'loading',
+            message: st?.message || 'Scanning NIC & fetching details...',
           });
         },
       });
@@ -387,7 +389,7 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
         nic: activeApplicantNic,
         dob: r.dob || formData.dob || '',
         gender: r.gender || formData.gender || '',
-        title: r.suggestedTitle || formData.title || '',
+        title: r.suggestedTitle || formData.title || (r.gender === 'Female' ? 'Ms.' : r.gender === 'Male' ? 'Mr.' : ''),
         nicAddress: validAddress ? (r.address || formData.nicAddress || '') : (formData.nicAddress || ''),
         addressLine1: validAddress ? (parsedAddress.addressLine1 || r.address || formData.addressLine1 || '') : (formData.addressLine1 || ''),
         addressLine2: validAddress ? (parsedAddress.addressLine2 || formData.addressLine2 || '') : (formData.addressLine2 || ''),
@@ -460,8 +462,8 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           city: found.city || formData.city,
           district: found.district || formData.district,
           postalCode: found.postalCode || formData.postalCode,
-          nicFront: front.current || formData.nicFront,
-          nicBack: back.current || formData.nicBack,
+          nicFront: activeFront || formData.nicFront,
+          nicBack: activeBack || formData.nicBack,
           facePhoto: formData.facePhoto,
           ocrExtraction: ocrMetadata,
         }).then((res) => {
@@ -480,6 +482,8 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
       setErrors((prev) => ({ ...prev, nicFront: errMsg }));
       setOcrState({ verified: false, error: errMsg });
       setStatus({ type: 'error', message: errMsg });
+    } finally {
+      if (seq.current === mySeq) setIsScanning(false);
     }
   };
 
@@ -498,7 +502,11 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
     if (field === 'nicFront') {
       setOcrState({ verified: false, error: null });
     }
-    if (v && scanAfter) scan();
+    if (v && scanAfter) {
+      if (field === 'nicFront') scan(v, back.current);
+      else if (field === 'nicBack') scan(front.current, v);
+      else scan();
+    }
   };
 
   const fieldIcons = {
@@ -545,8 +553,21 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
               const parsed = parseSriLankanNIC(cleanNIC(val));
               if (parsed?.isValid) {
                 if (parsed.dob && !formData.dob) updates.dob = parsed.dob;
-                if (parsed.gender && !formData.gender) updates.gender = parsed.gender === 'FEMALE' ? 'Female' : 'Male';
+                if (parsed.gender && !formData.gender) {
+                  updates.gender = /^female$/i.test(parsed.gender) ? 'Female' : 'Male';
+                }
+                if (!formData.title && parsed.gender) {
+                  updates.title = /^female$/i.test(parsed.gender) ? 'Ms.' : 'Mr.';
+                }
               }
+            }
+            if (name === 'nicAddress' && val) {
+              const area = parseSriLankanAddress(val, formData.city, formData.district) || {};
+              if (area.city) updates.city = area.city;
+              if (area.district) updates.district = area.district;
+              if (area.postalCode) updates.postalCode = area.postalCode;
+              if (area.city && area.district) updates.serviceArea = `${area.city}, ${area.district}`;
+              if (!formData.installAddress) updates.installAddress = val;
             }
             setFields(updates);
             setErrors((er) => ({ ...er, [name]: undefined }));
@@ -560,8 +581,8 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
   return (
     <div>
       <WizardStepHeader
-        stepNumber={3}
-        totalSteps={7}
+        stepNumber={stepNumber}
+        totalSteps={totalSteps}
         title="NIC & Photo Verification"
         description="Verify your National Identity Card number to check your status with SLT and complete identity verification."
       />
@@ -770,6 +791,33 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           {status.type === 'error' && <FiAlertCircle size={18} />}
           {status.type === 'warning' && <FiAlertCircle size={18} />}
           <span>{status.message}</span>
+        </div>
+      )}
+
+      {/* ── Manual Re-Scan Button (Available when NIC documents are present) ── */}
+      {!isExistingCustomer && (formData.nicFront || formData.nicBack) && (
+        <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={() => scan()}
+            disabled={isScanning}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              backgroundColor: '#0f57a8',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '0.65rem 1.25rem',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              cursor: isScanning ? 'wait' : 'pointer',
+              boxShadow: '0 4px 12px rgba(15, 87, 168, 0.25)',
+            }}
+          >
+            <FiZap size={16} /> {isScanning ? 'Extracting Details...' : 'Re-Scan NIC & Auto-Fill Details'}
+          </button>
         </div>
       )}
 

@@ -103,12 +103,18 @@ export default function CartPage() {
     }
 
     const primaryItem = items[0];
+    const itemRawName = primaryItem.productName || primaryItem.name || '';
+    const isFibre = /fibre|fiber|ftth/i.test(itemRawName) || /fibre|fiber|ftth/i.test(primaryItem.category || '');
     const selectedProductData = {
       productId: primaryItem.productId || primaryItem._id || primaryItem.id,
-      productName: primaryItem.productName || primaryItem.name,
+      productName: itemRawName,
+      name: itemRawName,
+      category: primaryItem.category || (isFibre ? 'Fibre Broadband' : 'Broadband'),
       monthlyPrice: primaryItem.price || primaryItem.monthlyPrice,
       installationFee: primaryItem.installationFee !== undefined ? primaryItem.installationFee : 2500,
       quantity: primaryItem.quantity,
+      speed: primaryItem.speed,
+      features: primaryItem.features,
     };
 
     localStorage.setItem('selectedProduct', JSON.stringify(selectedProductData));
