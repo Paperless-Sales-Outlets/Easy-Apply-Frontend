@@ -1,32 +1,35 @@
 import React from 'react';
 
-export default function WizardStepHeader({ stepNumber, totalSteps = 9, title, description }) {
+export default function WizardStepHeader({ stepNumber, totalSteps = 6, title, description }) {
   return (
     <div style={{ marginBottom: '1.75rem' }}>
       {stepNumber && (
-        <span 
-          style={{ 
+        <span
+          style={{
             display: 'inline-block',
-            fontSize: '0.75rem', 
-            fontWeight: 800, 
-            color: '#0f57a8', 
-            textTransform: 'uppercase', 
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            color: '#0f57a8',
+            textTransform: 'uppercase',
             letterSpacing: '0.08em',
-            marginBottom: '0.35rem' 
+            marginBottom: '0.35rem',
+            backgroundColor: '#e0f2fe',
+            padding: '0.2rem 0.6rem',
+            borderRadius: '9999px',
           }}
         >
           STEP {stepNumber} OF {totalSteps}
         </span>
       )}
       {title && (
-        <h2 
-          style={{ 
-            fontSize: '1.65rem', 
-            fontWeight: 800, 
-            color: '#0b2d5b', 
-            margin: '0 0 0.4rem 0',
+        <h2
+          style={{
+            fontSize: '1.65rem',
+            fontWeight: 800,
+            color: '#0b2d5b',
+            margin: '0.2rem 0 0.4rem 0',
             letterSpacing: '-0.02em',
-            lineHeight: 1.25
+            lineHeight: 1.25,
           }}
         >
           {title}
