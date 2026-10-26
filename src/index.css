@@ -1003,6 +1003,117 @@ a {
   .face-capture-spinner { animation-duration: 2s; }
 }
 
+/* --------------------------------------------------------------------------
+   SLTMobitel visual refresh
+   Shared polish for the EasyApply experience: white surfaces, navy structure,
+   Mobitel blue/green accents, and the signature dual-tone slash. This layer
+   intentionally uses the existing component class names so current workflows
+   keep their behavior.
+   -------------------------------------------------------------------------- */
+:root {
+  --slt-surface-soft: #f7faff;
+  --slt-blue-soft: #e8effe;
+  --slt-green-soft: #eef9ed;
+  --slt-header-shadow: 0 4px 18px rgba(11, 45, 91, 0.08);
+}
+
+body {
+  background: var(--slt-surface-soft);
+}
+
+.navbar {
+  box-shadow: var(--slt-header-shadow);
+}
+
+.page-container,
+.page-shell,
+.page-shell--form {
+  background: transparent;
+}
+
+.section-title {
+  color: var(--navy);
+}
+
+.section-title::before {
+  border-radius: 2px;
+}
+
+.card,
+.card-tint-blue,
+.form-tile,
+.sidebar-box,
+.sidebar-btn {
+  border-color: var(--line);
+  box-shadow: 0 6px 20px rgba(11, 45, 91, 0.07);
+}
+
+.card-tint-blue {
+  background: var(--slt-surface-soft);
+}
+
+.btn-primary,
+.btn-success,
+.btn-continue {
+  border-radius: var(--radius-control);
+}
+
+.btn-secondary,
+.btn-back,
+.btn-blue {
+  border-radius: var(--radius-control);
+}
+
+.form-control {
+  background: #fff;
+  border-color: var(--line);
+}
+
+.form-control:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(15, 87, 168, 0.12);
+}
+
+.product-card,
+.product-card-blue,
+.product-card-red,
+.product-card-green,
+.product-card-orange,
+.product-card-purple {
+  border-radius: var(--radius-card);
+}
+
+.product-card-blue {
+  background: var(--brand-gradient-soft);
+}
+
+.product-card-green {
+  background: linear-gradient(135deg, #50b748, #3a9636);
+}
+
+.product-btn-primary {
+  border-radius: var(--radius-control);
+  background: var(--blue);
+}
+
+.product-btn-primary:hover {
+  background: var(--blue-deep);
+}
+
+.category-chip,
+.chip,
+.filter-chip {
+  border-radius: var(--radius-control);
+}
+
+.quick-action-card-hover,
+.hover-card,
+.product-card-anim {
+  border-radius: var(--radius-card);
+}
+
+
+
 /* The expanded navbar search already shows a focus ring on its pill container */
 .nav-center-search input:focus-visible,
 .nav-center-search select:focus-visible {

@@ -1,22 +1,27 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { 
-  FiRefreshCw, 
-  FiCheck, 
-  FiAlertCircle, 
-  FiShield, 
-  FiCheckCircle, 
-  FiUserPlus, 
+import {
+  FiRefreshCw,
+  FiCheck,
+  FiAlertCircle,
+  FiZap,
+  FiShield,
+  FiCheckCircle,
+  FiUserPlus,
   FiInfo,
   FiSearch,
   FiX,
   FiUploadCloud,
   FiClock,
-  FiEye
 } from 'react-icons/fi';
 import IdentityCaptureField from '../../components/form/IdentityCaptureField';
 import WizardStepHeader from '../../components/wizard/WizardStepHeader';
-import { validateNIC, cleanNIC, parseSriLankanNIC, parseSriLankanAddress } from '../../utils/nicParser';
+import {
+  validateNIC,
+  cleanNIC,
+  parseSriLankanNIC,
+  parseSriLankanAddress,
+} from '../../utils/nicParser';
 import { scanNICTesseract as scanNIC } from '../../services/tesseractNicService';
 import api from '../../utils/api';
 import { getAuthUser, notifyAuthUpdated } from '../../utils/authSession';
@@ -32,19 +37,12 @@ const inputStyle = {
 };
 
 /**
- * Identity & KYC Step:
- * 1. Prompt customer to enter NIC and click Verify.
- * 2. If existing customer found in DB:
- *    - Check whether NIC front and back copies are available in DB.
- *    - If BOTH copies are on file: Waive physical NIC document uploads (only Live Selfie required).
- *    - If copies are MISSING: Prompt with error popup modal and mandate NIC Front & Back upload.
- *    - Auto-fills registered customer details from SLT database.
- * 3. If new customer (not found in DB):
- *    - Keeps all upload fields (NIC Front, NIC Back, Live Selfie) visible and mandatory.
- *    - OCR auto-scans NIC Front/Back to extract and verify details.
- * 4. Live selfie: Camera capture ONLY (no file upload).
+ * Identity & KYC: look up customer NIC status and check whether NIC scans
+ * are already on file. New/missing-document customers capture front/back
+ * NIC images; all customers take a live camera selfie. On-device OCR
+ * extracts NIC, name, date of birth, gender and service-address details.
  */
-const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
+const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSteps = 7 }, ref) => {
   const sanitize = (val) => (!val || typeof val !== 'string' || val.startsWith('NIC-') ? '' : val);
 
   const [nicInput, setNicInput] = useState(() => sanitize(formData.nic));
@@ -62,6 +60,7 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
 
   const [status, setStatus] = useState(null);
   const [errors, setErrors] = useState({});
+  const [isScanning, setIsScanning] = useState(false);
   const seq = useRef(0);
   const front = useRef(formData.nicFront);
   const back = useRef(formData.nicBack);
@@ -197,11 +196,14 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
         handleNewCustomerRecord(clean);
       }
     } catch (err) {
-      if (err.response?.status === 404 || !err.response) {
+      if (err.response?.status === 404) {
         handleNewCustomerRecord(clean);
       } else {
-        console.warn('NIC profile lookup notice:', err.message);
-        handleNewCustomerRecord(clean);
+        console.warn('NIC profile lookup failed:', err.message);
+        setErrors((prev) => ({ ...prev, nicInput: 'Unable to check your NIC right now. Please try again.' }));
+        setNicVerified(false);
+        setIsExistingCustomer(false);
+        setVerifyMessage(null);
       }
     } finally {
       setIsVerifyingNic(false);
@@ -242,21 +244,17 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
       if (!nicCheck.valid) {
         e.nic = nicCheck.message || 'Enter a valid NIC number';
       }
-
       if (!formData.nameFull?.trim()) {
         e.nameFull = 'Full name is required';
       }
-
       if (!formData.facePhoto) {
         e.facePhoto = 'Take a live selfie to verify your identity';
       }
-
-      // If NOT an existing customer, NIC Front and Back are mandatory
+      // New customers and customers without complete NIC scans must upload both.
       if (!isExistingCustomer) {
-        if (!formData.nicFront) e.nicFront = 'Upload or take a photo of the front of your NIC';
-        if (!formData.nicBack) e.nicBack = 'Upload or take a photo of the back of your NIC';
+        if (!formData.nicFront) e.nicFront = 'Upload or capture the front of your NIC';
+        if (!formData.nicBack) e.nicBack = 'Upload or capture the back of your NIC';
       }
-
       setErrors(e);
       if (Object.keys(e).length) {
         toast.error('Please complete all mandatory identity requirements.');
@@ -295,106 +293,158 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
     },
   }));
 
-  const scan = async () => {
-    if (!front.current) return;
+  const scan = async (overrideFront, overrideBack) => {
+    const activeFront = overrideFront || front.current || formData.nicFront;
+    const activeBack = overrideBack || back.current || formData.nicBack;
+
+    if (!activeFront && !activeBack) {
+      toast.error('Please upload or capture your NIC front or back side first.');
+      return;
+    }
+
     const mySeq = ++seq.current;
-    setStatus({ type: 'loading', message: 'Scanning NIC & extracting details...' });
+    setIsScanning(true);
+    setStatus({ type: 'loading', message: 'Scanning NIC & extracting details on-device...' });
+
     try {
       const r = await scanNIC({
-        nicFront: front.current,
-        nicBack: back.current,
+        nicFront: activeFront,
+        nicBack: activeBack,
         onStatusChange: (st) => {
           if (seq.current !== mySeq) return;
-          const statusType = st.status === 'ERROR' ? 'error' : st.status === 'SUCCESS' ? 'success' : 'loading';
           setStatus({
-            type: statusType,
-            message: st.message || 'Scanning NIC & fetching details...',
+            type: st?.status === 'ERROR' ? 'error' : st?.status === 'SUCCESS' ? 'success' : 'loading',
+            message: st?.message || 'Scanning NIC & fetching details...',
           });
         },
       });
       if (seq.current !== mySeq) return;
-      if (r?.success) {
-        const parsedAddress = parseSriLankanAddress(r.address, r.city, r.district);
-        const extractedNic = r.nicNumber ? cleanNIC(r.nicNumber) : '';
-        const found = {
-          nameFull: r.fullName,
-          nic: extractedNic || formData.nic,
-          dob: r.dob,
-          gender: r.gender,
-          title: r.suggestedTitle,
-          nicAddress: r.address,
-          addressLine1: parsedAddress.addressLine1 || r.address || '',
-          addressLine2: parsedAddress.addressLine2 || '',
-          city: parsedAddress.city || '',
-          district: parsedAddress.district || '',
-          postalCode: parsedAddress.postalCode || '',
-        };
-        // Persist extraction metadata to formData so backend KYC review knows if partial data was fetched
-        const ocrMetadata = {
-          extractionStatus: r.extractionStatus || 'COMPLETE',
-          isPartial: r.isPartial || false,
-          missingFields: r.missingFields || [],
-          exceptionFlags: r.exceptionFlags || [],
-          engine: r.engine || 'TESSERACT_CLIENT_PRIVATE',
-        };
-        setFields({ ...validFields, ocrExtraction: ocrMetadata });
 
-        if (extractedNic) {
-          setNicInput(extractedNic);
-        }
-
-        const phone = formData.mobileNumber || getAuthUser()?.phone || localStorage.getItem('verifiedPhone') || '';
-        if (phone || validFields.nic) {
-          api.post('/customers/sync-ocr', {
-            phone,
-            name: validFields.nameFull || formData.nameFull,
-            nic: validFields.nic || formData.nic,
-            dob: validFields.dob || formData.dob,
-            gender: validFields.gender || formData.gender,
-            title: validFields.title || formData.title,
-            address: validFields.nicAddress || formData.nicAddress,
-            addressLine1: validFields.addressLine1 || formData.addressLine1,
-            addressLine2: validFields.addressLine2 || formData.addressLine2,
-            city: validFields.city || formData.city,
-            district: validFields.district || formData.district,
-            postalCode: validFields.postalCode || formData.postalCode,
-            nicFront: front.current || formData.nicFront,
-            nicBack: back.current || formData.nicBack,
-            facePhoto: formData.facePhoto,
-            ocrExtraction: ocrMetadata,
-          }).then((res) => {
-            if (res.data?.customer) {
-              localStorage.setItem('authCustomer', JSON.stringify(res.data.customer));
-              localStorage.setItem('authUser', JSON.stringify(res.data.customer));
-              notifyAuthUpdated();
-            }
-          }).catch((err) => {
-            console.warn('Silent OCR DB sync notice:', err?.message);
-          });
-        }
-
-        if (r.isPartial) {
-          setStatus({
-            type: 'error',
-            message: `Auto KYC Incomplete: Partial data detected (missing: ${r.missingFields.join(', ')}). Please verify your details below. Your application will be queued for manual verification.`,
-          });
-        } else {
-          setStatus({
-            type: 'success',
-            message: r.warnings?.[0]
-              ? `Details extracted. ${r.warnings[0]}`
-              : 'Details extracted successfully! Please review them below.',
-          });
-        }
-      } else {
+      // Support both service response forms: explicit success flag and
+      // legacy OCR responses containing extracted fields without that flag.
+      if (!r || r.success === false) {
         setStatus({
           type: 'error',
-          message: r?.message || 'Auto verification incomplete. Please enter details manually; your submission will undergo manual admin KYC review.',
+          message: r?.message || 'Auto verification incomplete. Please enter the details manually for review.',
+        });
+        return;
+      }
+
+      const extractedNic = r.nicNumber ? cleanNIC(r.nicNumber) : '';
+      const nicCheck = extractedNic ? validateNIC(extractedNic) : { valid: false };
+      const verifiedExtractedNic = nicCheck.valid ? extractedNic : '';
+      const nicForDerivation = verifiedExtractedNic || cleanNIC(formData.nic || nicInput || '');
+      const parsedNic = nicForDerivation ? parseSriLankanNIC(nicForDerivation) : null;
+      const parsedAddress = parseSriLankanAddress(r.address || '', r.city || '', r.district || '') || {};
+      const genderRaw = r.gender || (parsedNic?.isValid ? parsedNic.gender : '');
+      const gender = /^female$/i.test(String(genderRaw)) ? 'Female'
+        : /^male$/i.test(String(genderRaw)) ? 'Male' : genderRaw;
+
+      const found = {
+        nameFull: r.fullName,
+        nic: verifiedExtractedNic,
+        dob: r.dob || (parsedNic?.isValid ? parsedNic.dob : ''),
+        gender,
+        title: r.suggestedTitle || (gender === 'Female' ? 'Ms.' : gender === 'Male' ? 'Mr.' : ''),
+        nicAddress: r.address,
+        addressLine1: parsedAddress.addressLine1 || r.address || '',
+        addressLine2: parsedAddress.addressLine2,
+        city: parsedAddress.city || r.city,
+        district: parsedAddress.district || r.district,
+        postalCode: parsedAddress.postalCode,
+      };
+
+      const validFields = Object.fromEntries(
+        Object.entries(found).filter(([, value]) => value !== '' && value !== null && value !== undefined)
+      );
+      if (validFields.city && validFields.district) {
+        validFields.serviceArea = `${validFields.city}, ${validFields.district}`;
+      }
+
+      const ocrMetadata = {
+        extractionStatus: r.extractionStatus || (r.isPartial ? 'PARTIAL' : 'COMPLETE'),
+        isPartial: Boolean(r.isPartial),
+        missingFields: Array.isArray(r.missingFields) ? r.missingFields : [],
+        exceptionFlags: Array.isArray(r.exceptionFlags) ? r.exceptionFlags : [],
+        engine: r.engine || 'TESSERACT_CLIENT_PRIVATE',
+      };
+
+      if (Object.keys(validFields).length === 0) {
+        setStatus({
+          type: 'error',
+          message: r.message || 'Could not detect NIC details. Please enter them manually.',
+        });
+        return;
+      }
+
+      // OCR is not proof of identity. A changed NIC must undergo fresh
+      // customer lookup before any existing-customer NIC upload waiver applies.
+      if (validFields.nic && validFields.nic !== cleanNIC(formData.nic || nicInput || '')) {
+        setNicVerified(false);
+        setIsExistingCustomer(false);
+        setVerifyMessage(null);
+      }
+      if (validFields.nic) setNicInput(validFields.nic);
+      setFields({ ...validFields, ocrExtraction: ocrMetadata });
+
+      const phone = formData.mobileNumber || getAuthUser()?.phone || localStorage.getItem('verifiedPhone') || '';
+      if (phone) {
+        api.post('/customers/sync-ocr', {
+          phone,
+          name: validFields.nameFull || formData.nameFull,
+          nic: validFields.nic || formData.nic,
+          dob: validFields.dob || formData.dob,
+          gender: validFields.gender || formData.gender,
+          title: validFields.title || formData.title,
+          address: validFields.nicAddress || formData.nicAddress,
+          addressLine1: validFields.addressLine1 || formData.addressLine1,
+          addressLine2: validFields.addressLine2 || formData.addressLine2,
+          city: validFields.city || formData.city,
+          district: validFields.district || formData.district,
+          postalCode: validFields.postalCode || formData.postalCode,
+          nicFront: activeFront,
+          nicBack: activeBack,
+          facePhoto: formData.facePhoto,
+          ocrExtraction: ocrMetadata,
+        }).then((res) => {
+          if (res.data?.customer) {
+            localStorage.setItem('authCustomer', JSON.stringify(res.data.customer));
+            localStorage.setItem('authUser', JSON.stringify(res.data.customer));
+            notifyAuthUpdated();
+          }
+        }).catch((err) => {
+          console.warn('OCR DB sync notice:', err?.message);
         });
       }
-    } catch {
+
+      if (ocrMetadata.isPartial) {
+        setStatus({
+          type: 'error',
+          message: `Partial OCR extraction (missing: ${ocrMetadata.missingFields.join(', ') || 'some fields'}). Please review your details; manual KYC review may be needed.`,
+        });
+      } else {
+        const extracted = [
+          validFields.nic && 'NIC',
+          validFields.nameFull && 'Name',
+          validFields.gender && 'Gender',
+          validFields.dob && 'DOB',
+          validFields.nicAddress && 'Address',
+        ].filter(Boolean).join(', ');
+        setStatus({
+          type: 'success',
+          message: r.warnings?.[0] || `Details extracted: ${extracted}. Please review them below.`,
+        });
+        toast.success('NIC details auto-filled!');
+      }
+    } catch (err) {
       if (seq.current !== mySeq) return;
-      setStatus({ type: 'error', message: 'Could not auto-read your NIC. You can verify or enter the details manually.' });
+      console.warn('NIC scan failed:', err);
+      setStatus({
+        type: 'error',
+        message: 'Could not read NIC image. Please verify or enter details manually.',
+      });
+    } finally {
+      if (seq.current === mySeq) setIsScanning(false);
     }
   };
 
@@ -402,7 +452,45 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
     ref_.current = v;
     setFields({ [field]: v });
     setErrors((e) => ({ ...e, [field]: undefined }));
-    if (v && scanAfter) scan();
+    if (v && scanAfter) {
+      if (field === 'nicFront') scan(v, back.current);
+      else if (field === 'nicBack') scan(front.current, v);
+      else scan();
+    }
+  };
+
+  const handleFieldChange = (name, val) => {
+    const normalized = name === 'nic' ? String(val).toUpperCase() : val;
+    const updates = { [name]: normalized };
+
+    if (name === 'nic') {
+      setNicInput(normalized);
+      setIsExistingCustomer(false);
+      setNicVerified(false);
+      setVerifyMessage(null);
+      const parsed = parseSriLankanNIC(cleanNIC(normalized));
+      if (parsed?.isValid) {
+        if (parsed.dob && !formData.dob) updates.dob = parsed.dob;
+        if (parsed.gender && !formData.gender) {
+          updates.gender = /^female$/i.test(parsed.gender) ? 'Female' : 'Male';
+        }
+        if (!formData.title && parsed.gender) {
+          updates.title = /^female$/i.test(parsed.gender) ? 'Ms.' : 'Mr.';
+        }
+      }
+    }
+
+    if (name === 'nicAddress' && normalized) {
+      const area = parseSriLankanAddress(normalized, formData.city, formData.district) || {};
+      if (area.city) updates.city = area.city;
+      if (area.district) updates.district = area.district;
+      if (area.postalCode) updates.postalCode = area.postalCode;
+      if (area.city && area.district) updates.serviceArea = `${area.city}, ${area.district}`;
+      if (!formData.installAddress) updates.installAddress = normalized;
+    }
+
+    setFields(updates);
+    setErrors((previous) => ({ ...previous, [name]: undefined }));
   };
 
   const text = (name, label, type = 'text') => (
@@ -415,23 +503,7 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
         type={type}
         style={{ ...inputStyle, borderColor: errors[name] ? '#dc2626' : '#cbd5e1' }}
         value={formData[name] || ''}
-        onChange={(e) => {
-          const val = name === 'nic' ? e.target.value.toUpperCase() : e.target.value;
-          const updates = { [name]: val };
-          if (name === 'nic') {
-            setNicInput(val);
-            setIsExistingCustomer(false);
-            setNicVerified(false);
-            setVerifyMessage(null);
-            const parsed = parseSriLankanNIC(cleanNIC(val));
-            if (parsed?.isValid) {
-              if (parsed.dob && !formData.dob) updates.dob = parsed.dob;
-              if (parsed.gender && !formData.gender) updates.gender = parsed.gender === 'FEMALE' ? 'Female' : 'Male';
-            }
-          }
-          setFields(updates);
-          setErrors((er) => ({ ...er, [name]: undefined }));
-        }}
+        onChange={(e) => handleFieldChange(name, e.target.value)}
       />
       {errors[name] && <span style={{ color: '#dc2626', fontSize: '0.78rem' }}>{errors[name]}</span>}
     </div>
@@ -440,10 +512,10 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
   return (
     <div>
       <WizardStepHeader 
-        stepNumber={3} 
-        totalSteps={7} 
-        title="Identity & KYC — NIC & Photo Verification" 
-        description="Verify your National Identity Card number to check your status with SLT and complete identity verification." 
+        stepNumber={stepNumber}
+        totalSteps={totalSteps}
+        title="Identity & KYC — NIC, Selfie & OCR"
+        description="Verify your NIC status, capture required documents, and review OCR-extracted details."
       />
 
       {/* ── Top NIC Verification Gateway ─────────────────────────── */}
@@ -732,6 +804,33 @@ const IdentityStep = forwardRef(({ formData, setFields }, ref) => {
           </>
         )}
       </div>
+
+      {/* Manual re-scan remains available when the NIC documents need a retry. */}
+      {!isExistingCustomer && (formData.nicFront || formData.nicBack) && (
+        <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={() => scan()}
+            disabled={isScanning}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              backgroundColor: '#0f57a8',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '0.65rem 1.25rem',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              cursor: isScanning ? 'wait' : 'pointer',
+              boxShadow: '0 4px 12px rgba(15, 87, 168, 0.25)',
+            }}
+          >
+            <FiZap size={16} /> {isScanning ? 'Extracting Details...' : 'Re-Scan NIC & Auto-Fill Details'}
+          </button>
+        </div>
+      )}
 
       {/* Live Selfie is MANDATORY for both existing and new customers — CAMERA CAPTURE ONLY */}
       <IdentityCaptureField

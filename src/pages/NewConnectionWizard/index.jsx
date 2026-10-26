@@ -26,7 +26,7 @@ import {
   readLegacyDraft,
   clearLegacyDrafts,
 } from '../../services/draftService';
-import WizardStepper from '../../components/WizardStepper';
+import WizardStepper, { SIX_WIZARD_STEPS, FULL_ONBOARDING_7_STEPS } from '../../components/WizardStepper';
 import DraftSignInNotice from '../../components/DraftSignInNotice';
 import ExistingCustomerSummaryBox from '../../components/ExistingCustomerSummaryBox';
 
@@ -80,6 +80,9 @@ const initialState = {
   locationType: 'current',
   city: '',
   district: '',
+  latitude: null,
+  longitude: null,
+  gpsCoordinates: null,
 };
 
 // Image fields. They are large, so each is saved on its own, only when it
@@ -136,7 +139,8 @@ const NEXT_LABEL = {
   review: 'Submit Application →',
 };
 
-export default function NewConnectionWizard() {
+// stepperMode='six' is optional compatibility with the legacy 6-node wizard.
+export default function NewConnectionWizard({ stepperMode = 'seven' }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
@@ -156,7 +160,9 @@ export default function NewConnectionWizard() {
       if (stored) {
         try {
           setSelectedProduct(JSON.parse(stored));
-        } catch { }
+        } catch {
+          // Ignore an invalid stored package; the customer must select one.
+        }
       }
     }
   }, [location.state]);
@@ -795,11 +801,24 @@ export default function NewConnectionWizard() {
     setSubmitError('');
 
     if (step === 'location') {
-      const activeAddress = formData.installAddress || formData.address;
-      if (!activeAddress || activeAddress.trim().length === 0) {
-        toast.error('Please specify an installation address.');
+      if (!selectedProduct) {
+        toast.error('Please select a broadband package before continuing.');
+        navigate('/new-connection/products');
         return;
       }
+      let activeAddress = formData.installAddress || formData.address;
+      if ((!activeAddress || activeAddress.trim().length === 0) && formData.city) {
+        activeAddress = `${formData.city}, ${formData.district || 'Sri Lanka'}`;
+        dispatch({
+          type: 'SET_FIELDS',
+          payload: { installAddress: activeAddress, address: activeAddress },
+        });
+      }
+      if (!activeAddress || activeAddress.trim().length === 0) {
+        toast.error('Please specify an installation address or choose your city.');
+        return;
+      }
+
     }
     if (step === 'identity' && !identityRef.current?.validate()) return;
     if (step === 'signature' && !declarationRef.current?.validate()) return;
@@ -817,10 +836,26 @@ export default function NewConnectionWizard() {
     nextStep();
   };
 
-  // Final step of the journey: empty the basket, clear the draft, and land on the tracking page.
+  // The coverage screen owns the unavailable-service flow and alternatives.
+  // Returning to package selection clears the previous selection.
+  const discontinueFibreRegistration = () => {
+    try {
+      localStorage.removeItem('selectedProduct');
+      sessionStorage.removeItem('selectedProduct');
+    } catch {
+      // Storage may be disabled.
+    }
+    navigate('/new-connection/products', { replace: true });
+  };
+
+  // Final step: clear saved progress and cart, then open tracking.
   const goToTracking = async (ref) => {
     await clearSavedDraft();
-    await clearSessionCart();
+    try {
+      await clearSessionCart();
+    } catch (err) {
+      console.warn('Could not clear checkout cart after submission:', err?.message);
+    }
     navigate(`/check-status?ref=${encodeURIComponent(ref)}`, {
       replace: true,
       state: { ref, justSubmitted: true },
@@ -829,14 +864,18 @@ export default function NewConnectionWizard() {
 
   // Payment confirmation callback -> Advances flow from Payment to Review & Submit
   const handlePaymentSuccess = async (paymentOrderId, payerMobile) => {
-    const orderId = paymentOrderId || `PAY-${Date.now()}`;
+    if (!paymentOrderId) {
+      toast.error('Payment confirmation was missing an order reference. Please verify your payment status.');
+      return;
+    }
+    const orderId = paymentOrderId;
     dispatch({
       type: 'SET_FIELDS',
       payload: {
         paymentReference: orderId,
         paymentCompleted: true,
         paymentStatus: 'PAID',
-        paidAmount: selectedProduct?.installationFee || 2500,
+        paidAmount: selectedProduct?.installationFee ?? 2500,
         payerMobile: payerMobile || formData.mobileNumber,
       },
     });
@@ -851,9 +890,14 @@ export default function NewConnectionWizard() {
     const rawNic = formData.nic || authUser?.NIC || authUser?.nic || '';
     const nic = sanitizeNic(rawNic);
     const nameFull = formData.nameFull || authUser?.name || 'Customer';
-    const effectivePaymentRef = paymentRef || formData.paymentReference || `PAY-${Date.now()}`;
+    const effectivePaymentRef = paymentRef || formData.paymentReference;
     const phone = phoneOverride || verifiedMobile || formData.mobileNumber || authUser?.phone || '';
 
+    if (submitting) return null;
+    if (!effectivePaymentRef || !formData.paymentCompleted) {
+      setSubmitError('A confirmed payment is required before submitting your application.');
+      return null;
+    }
     setSubmitting(true);
     setSubmitError('');
     try {
@@ -873,21 +917,20 @@ export default function NewConnectionWizard() {
       });
 
       const officialRef = res.data?.application?.referenceNumber || res.data?.referenceNumber;
+      if (!officialRef) {
+        throw new Error('The server did not return an application reference number.');
+      }
       await goToTracking(officialRef);
       return officialRef;
     } catch (err) {
-      // If backend is offline (no response), still navigate to completion with a mock ref
-      if (!err.response) {
-        const mockRef = `REQ-${Date.now().toString().slice(-8)}`;
-        await goToTracking(mockRef);
-        return mockRef;
-      }
-      setSubmitError(err.response?.data?.message || t('common.submitError'));
+      setSubmitError(err.response?.data?.message || err.message || t('common.submitError'));
       setSubmitting(false);
-      throw err;
+      return null;
     }
   };
 
+  // Package Selection is handled before this wizard; loop checking shares
+  // the Service Location step in the progress bar.
   const MAP_TO_7_STEP = {
     location: 2,
     loop: 2,
@@ -895,14 +938,48 @@ export default function NewConnectionWizard() {
     signature: 4,
     payment: 5,
     review: 6,
-    tracking: 7,
   };
-  const active7Step = MAP_TO_7_STEP[step] || 2;
+  const MAP_TO_6_STEP = {
+    location: 1,
+    loop: 1,
+    identity: 2,
+    signature: 3,
+    payment: 4,
+    review: 5,
+  };
+  const useSixSteps = stepperMode === 'six';
+  const activeDisplayStep = (useSixSteps ? MAP_TO_6_STEP : MAP_TO_7_STEP)[step] || (useSixSteps ? 1 : 2);
+
+  // Stepper allows returning to completed steps only. Never skip ahead, and
+  // never jump past the loop availability check automatically.
+  const handleStepClick = (targetStepNumber) => {
+    const targetStep = Number(targetStepNumber);
+    if (!useSixSteps && targetStep === 1) {
+      navigate('/cart');
+      return;
+    }
+
+    const toInternalStep = useSixSteps
+      ? { 1: 'location', 2: 'identity', 3: 'signature', 4: 'payment', 5: 'review' }
+      : { 2: 'location', 3: 'identity', 4: 'signature', 5: 'payment', 6: 'review' };
+    const targetKey = toInternalStep[targetStep];
+    const targetIndex = STEPS.indexOf(targetKey);
+
+    if (targetIndex >= 0 && targetIndex < stepIndex) {
+      goTo(targetKey);
+    } else if (targetIndex > stepIndex) {
+      toast.error('Please complete the current step before proceeding.');
+    }
+  };
 
   return (
     <div className="card" style={{ padding: '2.5rem 2.75rem', width: '100%', margin: '0 auto', borderRadius: '24px', boxShadow: '0 12px 36px rgba(11, 45, 91, 0.08)' }}>
-      {/* Progress Stepper: 7-Step Tracker Bar */}
-      <WizardStepper currentStep={active7Step} />
+      {/* Seven-step onboarding by default; six-step legacy navigation remains supported. */}
+      <WizardStepper
+        currentStep={activeDisplayStep}
+        steps={useSixSteps ? SIX_WIZARD_STEPS : FULL_ONBOARDING_7_STEPS}
+        onStepClick={handleStepClick}
+      />
 
       {draftRestored && !draftAccess && (
         <div style={{ marginBottom: '1.5rem' }}>
@@ -933,7 +1010,7 @@ export default function NewConnectionWizard() {
           </div>
           <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.9rem', color: '#334155' }}>
             <span>Monthly: <strong style={{ color: '#0f57a8' }}>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
-            <span>Installation: <strong>Rs. {(selectedProduct.installationFee || 2500).toLocaleString()}</strong></span>
+            <span>Installation: <strong>Rs. {(selectedProduct.installationFee ?? 2500).toLocaleString()}</strong></span>
             {selectedProduct.quantity > 1 && <span>Qty: <strong>{selectedProduct.quantity}</strong></span>}
           </div>
         </div>
@@ -953,7 +1030,26 @@ export default function NewConnectionWizard() {
           )}
 
           {step === 'loop' && (
-            <LoopCheckStep formData={formData} onAvailable={nextStep} onGoBack={prevStep} />
+            <LoopCheckStep
+              formData={formData}
+              selectedProduct={selectedProduct}
+              onSelectAlternativeProduct={(newProd) => {
+                setSelectedProduct(newProd);
+                try {
+                  localStorage.setItem('selectedProduct', JSON.stringify(newProd));
+                } catch (e) {}
+                dispatch({
+                  type: 'UPDATE_FIELD',
+                  payload: {
+                    name: 'otherBroadbandPackage',
+                    value: `${newProd.name || newProd.productName} (Qty: 1)`,
+                  },
+                });
+              }}
+              onAvailable={nextStep}
+              onGoBack={prevStep}
+              onDiscontinue={discontinueFibreRegistration}
+            />
           )}
 
           {step === 'identity' && (
@@ -977,7 +1073,7 @@ export default function NewConnectionWizard() {
             <PaymentStep
               isActive
               verifiedPhone={verifiedMobile}
-              amount={selectedProduct?.installationFee || 2500}
+              amount={selectedProduct?.installationFee ?? 2500}
               amountLabel="Installation Fee"
               onSuccess={handlePaymentSuccess}
             />
@@ -1075,7 +1171,7 @@ export default function NewConnectionWizard() {
               <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={submitting}
+                disabled={submitting || !draftRestored}
                 style={{
                   fontWeight: 800,
                   fontSize: '0.95rem',
@@ -1089,6 +1185,7 @@ export default function NewConnectionWizard() {
           })()}
         </div>
       </form>
+
     </div>
   );
 }
