@@ -1,8 +1,8 @@
 import api from '../../../utils/api';
 
 // GET /api/admin/dashboard-stats — summary, form stats, recent applications
-export const getDashboardStats = async () => {
-  const response = await api.get('/admin/dashboard-stats');
+export const getDashboardStats = async (params = {}) => {
+  const response = await api.get('/admin/dashboard-stats', { params });
   return response.data;
 };
 
@@ -177,6 +177,61 @@ export const getAuditLogs = async (params = {}) => {
   return response.data;
 };
 
+// GET /api/admin/leads/check-catalog — the serviceability criteria a new
+// connection has to clear, with the thresholds a survey is measured against
+export const getLeadCheckCatalog = async () => {
+  const response = await api.get('/admin/leads/check-catalog');
+  return response.data;
+};
+
+// GET /api/admin/leads/stats — summary counts + what is blocking leads
+export const getLeadStats = async () => {
+  const response = await api.get('/admin/leads/stats');
+  return response.data;
+};
+
+// GET /api/admin/leads — paginated, filterable lead list
+export const getLeads = async (params = {}) => {
+  const response = await api.get('/admin/leads', { params });
+  return response.data;
+};
+
+// GET /api/admin/leads/:id — one lead with its full survey record
+export const getLeadById = async (id) => {
+  const response = await api.get(`/admin/leads/${id}`);
+  return response.data;
+};
+
+// POST /api/admin/leads — capture a new lead and open its checklist
+export const createLead = async (data) => {
+  const response = await api.post('/admin/leads', data);
+  return response.data;
+};
+
+// PATCH /api/admin/leads/:id — update details, status, assignment or notes
+export const updateLead = async (id, data) => {
+  const response = await api.patch(`/admin/leads/${id}`, data);
+  return response.data;
+};
+
+// PATCH /api/admin/leads/:id/checks — record the site survey results
+export const updateLeadChecks = async (id, checks) => {
+  const response = await api.patch(`/admin/leads/${id}/checks`, { checks });
+  return response.data;
+};
+
+// PATCH /api/admin/leads/:id/resolve — decide what happens to a blocked lead
+export const resolveLead = async (id, data) => {
+  const response = await api.patch(`/admin/leads/${id}/resolve`, data);
+  return response.data;
+};
+
+// DELETE /api/admin/leads/:id — remove a lead
+export const deleteLead = async (id) => {
+  const response = await api.delete(`/admin/leads/${id}`);
+  return response.data;
+};
+
 // POST /api/admin/privileges — create a custom privilege
 export const createPrivilege = async (data) => {
   const response = await api.post('/admin/privileges', data);
@@ -225,6 +280,15 @@ export default {
   deleteStaffRole,
   getPrivileges,
   getAuditLogs,
+  getLeadCheckCatalog,
+  getLeadStats,
+  getLeads,
+  getLeadById,
+  createLead,
+  updateLead,
+  updateLeadChecks,
+  resolveLead,
+  deleteLead,
   createPrivilege,
   updatePrivilege,
   deletePrivilege,

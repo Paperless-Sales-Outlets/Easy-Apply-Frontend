@@ -86,6 +86,12 @@ export default function ApplicationsPage() {
     setExpandedComments(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const handleUpdated = (updated) => {
+    setApplications(prev => prev.map(app => (app.id === updated.id ? { ...app, ...updated } : app)));
+    setDetailApp(prev => (prev && prev.id === updated.id ? { ...prev, ...updated } : prev));
+    loadSummary();
+  };
+
   const handleCommentChange = (id, value) => {
     setCommentDrafts(prev => ({ ...prev, [id]: value }));
   };
@@ -240,7 +246,7 @@ export default function ApplicationsPage() {
                           {app.officeFields?.crNumber || '—'}
                         </td>
                         <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>
-                          {app.officeFields?.amountPaid != null ? `Rs. ${Number(app.officeFields.amountPaid).toLocaleString()}` : '—'}
+                          {app.paidAmount != null ? `Rs. ${Number(app.paidAmount).toLocaleString()}` : '—'}
                         </td>
                         <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>
                           {app.officeFields?.appointmentDate ? formatDate(app.officeFields.appointmentDate) : '—'}
@@ -395,7 +401,11 @@ export default function ApplicationsPage() {
         )}
       </div>
 
-      <ApplicationDetailModal application={detailApp} onClose={() => setDetailApp(null)} />
+      <ApplicationDetailModal
+        application={detailApp}
+        onClose={() => setDetailApp(null)}
+        onUpdated={handleUpdated}
+      />
     </>
   );
 }

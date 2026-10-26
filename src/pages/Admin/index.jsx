@@ -12,11 +12,12 @@ import ReportsAnalyticsPage from './pages/ReportsAnalyticsPage';
 import UserPrivilegesPage from './pages/UserPrivilegesPage';
 import UserManagementPage from './pages/UserManagementPage';
 import AuditLogsPage from './pages/AuditLogsPage';
+import LeadManagementPage from './pages/LeadManagementPage';
 import './admin.css';
 
 function getPageFromPath(pathname) {
   const segment = pathname.replace(/\/$/, '').split('/').pop();
-  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'audit-logs'];
+  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'audit-logs', 'leads'];
   if (known.includes(segment)) {
     return segment === 'applications' ? 'forms' : segment;
   }
@@ -75,6 +76,8 @@ function AdminDashboardContent() {
         return <UserManagementPage />;
       case 'audit-logs':
         return <AuditLogsPage />;
+      case 'leads':
+        return <LeadManagementPage />;
       default:
         return <AdminDashboardPage />;
     }

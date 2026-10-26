@@ -34,6 +34,43 @@ function pick(obj, keys) {
   return '';
 }
 
+// Parse a money-ish value ("Rs. 2,500", 2500, "2500.00") into a number.
+function toAmount(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const numeric = Number(String(value).replace(/[^0-9.-]/g, ''));
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+const PRICE_KEYS = ['monthlyPrice', 'price', 'amount', 'total'];
+
+// formData stores the chosen package either as a `product` object or as flat
+// price fields, so check the nested object first, then the top level.
+function resolveProductPrice(fd = {}) {
+  const nested = fd.product && typeof fd.product === 'object' ? fd.product : null;
+  const nestedValue = nested
+    ? PRICE_KEYS.map((k) => nested[k]).find((v) => v !== undefined && v !== null && v !== '')
+    : undefined;
+  const topValue = PRICE_KEYS.map((k) => fd[k]).find((v) => v !== undefined && v !== null && v !== '');
+  return toAmount(nestedValue) ?? toAmount(topValue);
+}
+
+// The amount actually associated with the application, mirroring the backend
+// report precedence (analyticsController): staff-entered office amount first,
+// then the gateway payment, then the selected product price. Falls back to the
+// per-service amount fields (refund claim, reconnection dues, vacation balance).
+export function getPaidAmount(app) {
+  const fd = app?.formData || {};
+  return (
+    toAmount(app?.officeFields?.amountPaid)
+    ?? toAmount(app?.paymentDetails?.amount)
+    ?? resolveProductPrice(fd)
+    ?? toAmount(fd.paidAmount)
+    ?? toAmount(fd.amountToPay)
+    ?? toAmount(fd.outstandingBalance)
+    ?? null
+  );
+}
+
 // Map a raw Application document to the display shape used by the admin UI.
 export function normalizeApplication(app) {
   const fd = app.formData || {};
@@ -73,6 +110,8 @@ export function normalizeApplication(app) {
     documents: fd.documents || {},
     officeFields: app.officeFields || null,
     paymentStatus: app.paymentStatus || '',
+    paymentDetails: app.paymentDetails || null,
+    paidAmount: getPaidAmount(app),
   };
 }
 
