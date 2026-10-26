@@ -1,5 +1,5 @@
 import React, { useState, useReducer, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import CustomerInfoStep from './CustomerInfoStep';
 import LoopCheckStep from './LoopCheckStep';
@@ -103,6 +103,26 @@ export default function NewConnectionWizard() {
   const [submitError, setSubmitError] = useState('');
   const [formData, dispatch] = useReducer(formReducer, initialState);
   const [draftRestored, setDraftRestored] = useState(false);
+
+  // ── QR / Sales Officer attribution tracking ──────────────────────────────
+  // The QR code URL contains ?salesRef=<token>. We capture it on first load
+  // and persist it to sessionStorage so it survives step-to-step navigation.
+  const [searchParams] = useSearchParams();
+  const [salesRef, setSalesRef] = useState(() => {
+    const fromUrl = searchParams.get('salesRef');
+    if (fromUrl) {
+      sessionStorage.setItem('so_sales_ref', fromUrl);
+      return fromUrl;
+    }
+    return sessionStorage.getItem('so_sales_ref') || null;
+  });
+
+  // Keep sessionStorage in sync if the token ever changes (rare, but safe)
+  useEffect(() => {
+    if (salesRef) {
+      sessionStorage.setItem('so_sales_ref', salesRef);
+    }
+  }, [salesRef]);
 
   // Flow: Package Selection (Step 1) -> Service Location (Step 2) -> Identity & KYC (Step 3) -> Digital Signature (Step 4) -> Payment (Step 5) -> Review & Submit (Step 6) -> Tracking (Step 7)
   const STEPS = ['location', 'loop', 'identity', 'signature', 'payment', 'review'];
@@ -347,6 +367,8 @@ export default function NewConnectionWizard() {
     try {
       const res = await api.post('/applications', {
         serviceType: 'new-connection',
+        // Pass the tracking token at the top level so the backend picks it up
+        ...(salesRef ? { salesRef } : {}),
         formData: {
           ...formData,
           nic,
@@ -361,6 +383,8 @@ export default function NewConnectionWizard() {
       });
 
       const officialRef = res.data?.application?.referenceNumber || res.data?.referenceNumber;
+      // Clear the QR token now that the attribution has been recorded
+      sessionStorage.removeItem('so_sales_ref');
       await goToTracking(officialRef);
       return officialRef;
     } catch (err) {

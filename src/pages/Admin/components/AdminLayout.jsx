@@ -70,6 +70,16 @@ const NAV_ICONS = {
       <path d="M4 4h16v16H4z" /><path d="M8 8h8M8 12h8M8 16h5" />
     </svg>
   ),
+  'sales-officers': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M17 17h.01M17 20h.01M20 17h.01M20 20h.01" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  ),
+  'so-dashboard': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3v18h18" /><path d="M7 12l4-4 4 4 4-5" />
+    </svg>
+  ),
 };
 
 // Dashboard leads, User Management comes right after it, then every other
@@ -83,10 +93,14 @@ const HIDDEN_NAV_KEYS = new Set(['appointments', 'technician']);
 const NAV_ITEMS = [
   { ...DASHBOARD_MODULE, icon: NAV_ICONS[DASHBOARD_MODULE.key] },
   { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
+  // Sales Officer Management — Admin can manage all officers + their QR codes
+  { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'], roles: ['Admin'] },
   ...OTHER_MODULES
     .filter(item => !HIDDEN_NAV_KEYS.has(item.key))
     .map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
   { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
+  // Sales Officer personal dashboard — visible only to Sales Officer role
+  { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'], roles: ['Sales Officer'] },
 ];
 
 const SHORT_FORM_LABELS = {
@@ -102,8 +116,9 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
   const [openForms, setOpenForms] = useState(activePage === 'forms');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+  // Match roles case-insensitively so 'Sales Officer' and 'sales officer' both work
   const visibleNav = NAV_ITEMS.filter(item =>
-    item.roles.includes(admin?.role || 'Admin')
+    item.roles.some(r => r.toLowerCase() === (admin?.role || 'Admin').toLowerCase())
   );
 
   const handleNavClick = (item) => {
@@ -226,7 +241,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Main Content ── */}
       <div className="admin-main">
         <div className="admin-topbar" />
-        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users', 'audit-logs'].includes(activePage) ? ' admin-page-wide' : ''}`}>
+        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard'].includes(activePage) ? ' admin-page-wide' : ''}`}>
           {children}
         </div>
       </div>
