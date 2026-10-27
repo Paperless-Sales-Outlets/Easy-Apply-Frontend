@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FiDollarSign, FiList, FiPercent, FiUsers } from 'react-icons/fi';
+import { FiDollarSign, FiDownload, FiFileText, FiList, FiPercent, FiRefreshCw, FiSearch, FiUsers } from 'react-icons/fi';
 import { getAnalytics, getUserReports, getApplicationReports } from '../services/adminService';
+import { AnimatedNumber } from '../components/AdminVisuals';
 import { buildReportPdf } from '../utils/reportPdf';
 
 const SLT_PIE_COLORS = [
@@ -16,24 +17,25 @@ const SLT_PIE_COLORS = [
   '#c4372c', // red
 ];
 
+// One colour per status, matching the status badges used across the portal.
 const STATUS_COLORS = {
-  Pending: '#2b7de9',
-  'Pending Payment': '#0a3f7e',
+  Pending: '#eab034',
+  'Pending Payment': '#d97706',
   Approved: '#57b531',
   Confirmed: '#0f57a8',
-  Rejected: '#3e8f1f',
-  Flagged: '#0b2d5b',
+  Rejected: '#c4372c',
+  Flagged: '#6a3fb5',
 };
 
 const STATUSES = ['all', 'pending', 'pending payment', 'approved', 'confirmed', 'rejected', 'flagged'];
 
 const DATE_PRESETS = [
   { key: 'today', label: 'Today' },
-  { key: '7d', label: 'Last 7 days' },
-  { key: '30d', label: 'Last 30 days' },
-  { key: '90d', label: 'Last 90 days' },
+  { key: '7d', label: '7 days' },
+  { key: '30d', label: '30 days' },
+  { key: '90d', label: '90 days' },
   { key: 'month', label: 'This month' },
-  { key: 'custom', label: 'Custom range' },
+  { key: 'custom', label: 'Custom' },
 ];
 
 // -- Date helpers --------------------------------------------------------------
@@ -120,22 +122,29 @@ const formatRelative = (value) => {
 
 const titleCase = (value) => value.charAt(0).toUpperCase() + value.slice(1);
 
-// -- Charts (unchanged from the previous analytics view) -----------------------
+const roleLabel = (role) => {
+  if (role === 'Admin' || role === 'admin') return 'Administrator';
+  if (['Manage', 'manage', 'Manager', 'manager'].includes(role)) return 'Manager';
+  return role || 'Staff';
+};
+
+// -- Charts --------------------------------------------------------------------
 function BarChart({ data }) {
-  if (!data.length) return <p className="analytics-empty">No data available.</p>;
+  if (!data.length) return <p className="analytics-empty rpt-chart-empty">No submissions in this range.</p>;
   const max = Math.max(...data.map(d => d.count), 1);
+  const total = data.reduce((sum, d) => sum + d.count, 0) || 1;
 
   return (
-    <div className="service-bar-list">
+    <div className="rpt-bars">
       {data.map(item => (
-        <div className="service-bar-item" key={item.service}>
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <span style={{ fontWeight: 600, fontSize: '0.83rem' }}>{item.service}</span>
-            <div className="service-bar-bg">
-              <div className="service-bar-fill" style={{ width: `${(item.count / max) * 100}%` }} />
-            </div>
+        <div className="rpt-bar" key={item.service}>
+          <div className="rpt-bar-head">
+            <span className="rpt-bar-label">{item.service}</span>
+            <span className="rpt-bar-value"><strong>{item.count}</strong> · {Math.round((item.count / total) * 100)}%</span>
           </div>
-          <span className="service-bar-count">{item.count}</span>
+          <div className="rpt-bar-track">
+            <div className="rpt-bar-fill" style={{ width: `${(item.count / max) * 100}%` }} />
+          </div>
         </div>
       ))}
     </div>
@@ -144,17 +153,17 @@ function BarChart({ data }) {
 
 function DailyTrendChart({ data }) {
   const [tooltip, setTooltip] = useState(null);
-  if (!data.length) return <p className="analytics-empty">No data available.</p>;
+  if (!data.length) return <p className="analytics-empty rpt-chart-empty">No submissions in this range.</p>;
 
   const max = Math.max(...data.map(d => d.count), 1);
   const niceMax = Math.ceil(max / 5) * 5 || 5;
 
   const svgW = 1100;
-  const svgH = 420;
-  const padL = 50;
-  const padR = 24;
-  const padT = 24;
-  const padB = 52;
+  const svgH = 340;
+  const padL = 44;
+  const padR = 20;
+  const padT = 20;
+  const padB = 40;
   const chartW = svgW - padL - padR;
   const chartH = svgH - padT - padB;
 
@@ -180,28 +189,39 @@ function DailyTrendChart({ data }) {
       const dist = Math.abs(p.x - mouseX);
       if (dist < minDist) { minDist = dist; closest = p; }
     });
-    if (minDist < 30) {
-      setTooltip({ x: closest.x, y: closest.y, date: closest.day, count: closest.count });
-    } else {
-      setTooltip(null);
-    }
+    setTooltip({ x: closest.x, y: closest.y, date: closest.day, count: closest.count });
   };
 
+  // Keep the tooltip inside the chart at both ends.
+  const tipX = tooltip ? Math.min(Math.max(tooltip.x, padL + 56), svgW - padR - 56) : 0;
+  const tipY = tooltip ? Math.max(tooltip.y - 54, 2) : 0;
+
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <div className="rpt-trend">
       <svg
         viewBox={`0 0 ${svgW} ${svgH}`}
-        width="100%"
-        height="420"
-        style={{ display: 'block', minWidth: '600px' }}
+        className="rpt-trend-svg"
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setTooltip(null)}
+        role="img"
+        aria-label={`Daily submissions, highest ${max}`}
       >
+        <defs>
+          <linearGradient id="rptAreaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#0f57a8" stopOpacity="0.22" />
+            <stop offset="100%" stopColor="#0f57a8" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="rptLineGradient" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#2b7de9" />
+            <stop offset="100%" stopColor="#3a9636" />
+          </linearGradient>
+        </defs>
+
         {yTicks.map(tick => {
           const y = padT + chartH - (tick / niceMax) * chartH;
           return (
             <g key={tick}>
-              <line x1={padL} y1={y} x2={svgW - padR} y2={y} stroke="rgba(11,45,91,0.1)" strokeDasharray={tick === 0 ? '0' : '4 3'} />
+              <line x1={padL} y1={y} x2={svgW - padR} y2={y} stroke="rgba(11,45,91,0.08)" strokeDasharray={tick === 0 ? '0' : '4 4'} vectorEffect="non-scaling-stroke" />
               <text x={padL - 10} y={y + 4} textAnchor="end" fontSize="12" fill="#8a94a6" fontWeight="500">{tick}</text>
             </g>
           );
@@ -209,36 +229,27 @@ function DailyTrendChart({ data }) {
 
         <path
           d={`${pathD} L ${points[points.length - 1].x} ${padT + chartH} L ${points[0].x} ${padT + chartH} Z`}
-          fill="url(#areaGradient)"
+          fill="url(#rptAreaGradient)"
         />
 
-        <path d={pathD} fill="none" stroke="var(--blue)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={pathD} fill="none" stroke="url(#rptLineGradient)" strokeWidth="2.75" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
 
         {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="4" fill="#fff" stroke="var(--blue)" strokeWidth="2" style={{ cursor: 'pointer' }} />
-        ))}
-
-        {points.map((p, i) => (
-          i % xLabelStep === 0 || i === data.length - 1 ? (
-            <text key={i} x={p.x} y={svgH - padB + 20} textAnchor="middle" fontSize="11" fill="#8a94a6" fontWeight="500">
+          // The last day is always labelled, so drop a stepped label that would sit on top of it.
+          (i % xLabelStep === 0 && data.length - 1 - i >= xLabelStep / 2) || i === data.length - 1 ? (
+            <text key={i} x={p.x} y={svgH - padB + 24} textAnchor="middle" fontSize="11" fill="#8a94a6" fontWeight="500">
               {p.day}
             </text>
           ) : null
         ))}
 
-        <defs>
-          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--blue)" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="var(--blue)" stopOpacity="0.02" />
-          </linearGradient>
-        </defs>
-
         {tooltip && (
-          <g>
-            <line x1={tooltip.x} y1={padT} x2={tooltip.x} y2={padT + chartH} stroke="var(--blue)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
-            <rect x={tooltip.x - 52} y={tooltip.y - 46} width="104" height="36" rx="8" fill="var(--navy)" />
-            <text x={tooltip.x} y={tooltip.y - 24} textAnchor="middle" fontSize="14" fontWeight="700" fill="#fff">{tooltip.count}</text>
-            <text x={tooltip.x} y={tooltip.y - 14} textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.7)">{tooltip.date}</text>
+          <g pointerEvents="none">
+            <line x1={tooltip.x} y1={padT} x2={tooltip.x} y2={padT + chartH} stroke="#0f57a8" strokeWidth="1" strokeDasharray="3 3" opacity="0.45" vectorEffect="non-scaling-stroke" />
+            <circle cx={tooltip.x} cy={tooltip.y} r="5.5" fill="#fff" stroke="#0f57a8" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+            <rect x={tipX - 52} y={tipY} width="104" height="40" rx="9" fill="#0b2d5b" />
+            <text x={tipX} y={tipY + 18} textAnchor="middle" fontSize="15" fontWeight="800" fill="#fff">{tooltip.count}</text>
+            <text x={tipX} y={tipY + 32} textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.72)">{tooltip.date}</text>
           </g>
         )}
       </svg>
@@ -246,15 +257,18 @@ function DailyTrendChart({ data }) {
   );
 }
 
-function PieChart({ data }) {
+function DonutChart({ data }) {
   const [selected, setSelected] = useState(null);
-  const total = data.reduce((s, d) => s + d.count, 0) || 1;
-  const size = 340;
+  const total = data.reduce((s, d) => s + d.count, 0);
+  if (!total) return <p className="analytics-empty rpt-chart-empty">No submissions in this range.</p>;
+
+  const size = 220;
   const cx = size / 2;
   const cy = size / 2;
-  const radius = 115;
-  const strokeW = 58;
+  const radius = 82;
+  const strokeW = 30;
   const circumference = 2 * Math.PI * radius;
+  const gap = data.length > 1 ? 3 : 0;
   let cumulative = 0;
 
   const slices = data.map((item, i) => {
@@ -264,44 +278,57 @@ function PieChart({ data }) {
     return {
       ...item,
       color: STATUS_COLORS[item.status] || SLT_PIE_COLORS[i % SLT_PIE_COLORS.length],
-      dashLength: fraction * circumference,
+      pct: Math.round(fraction * 100),
+      dashLength: Math.max(0, fraction * circumference - gap),
       dashOffset: -start * circumference,
     };
   });
 
+  const active = selected == null ? null : slices[selected];
+
   return (
-    <div className="analytics-pie-layout">
-      <div className="pie-chart-figure lg">
-        <svg viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', width: '100%', height: '100%' }}>
+    <div className="rpt-donut">
+      <div className="rpt-donut-figure">
+        <svg viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Status breakdown">
+          <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#eef3f9" strokeWidth={strokeW} />
           <g transform={`rotate(-90 ${cx} ${cy})`}>
             {slices.map((slice, i) => (
               <circle
                 key={slice.status}
                 cx={cx} cy={cy} r={radius}
                 fill="none" stroke={slice.color}
-                strokeWidth={strokeW}
+                strokeWidth={selected === i ? strokeW + 6 : strokeW}
                 strokeDasharray={`${slice.dashLength} ${circumference - slice.dashLength}`}
                 strokeDashoffset={slice.dashOffset}
-                opacity={selected == null || selected === i ? 1 : 0.3}
-                style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
-                onClick={() => setSelected(selected === i ? null : i)}
+                opacity={selected == null || selected === i ? 1 : 0.28}
+                className="rpt-donut-slice"
+                onMouseEnter={() => setSelected(i)}
+                onMouseLeave={() => setSelected(null)}
               />
             ))}
           </g>
         </svg>
-        <div className="pie-chart-center">
-          <div className="pie-chart-center-value">{total}</div>
-          <div className="pie-chart-center-label">Total</div>
+        <div className="rpt-donut-center">
+          <strong>{active ? active.count : total}</strong>
+          <span>{active ? active.status : 'Applications'}</span>
         </div>
       </div>
-      <div className="analytics-pie-legend">
-        {data.map((item, i) => (
-          <div key={item.status} style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-            <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: STATUS_COLORS[item.status] || SLT_PIE_COLORS[i % SLT_PIE_COLORS.length], flexShrink: 0 }} />
-            <span style={{ color: 'var(--text)' }}>{item.status}: <strong>{item.count}</strong></span>
-          </div>
+      <ul className="rpt-legend">
+        {slices.map((slice, i) => (
+          <li
+            key={slice.status}
+            className={selected === i ? 'is-active' : ''}
+            onMouseEnter={() => setSelected(i)}
+            onMouseLeave={() => setSelected(null)}
+          >
+            <span className="rpt-legend-swatch" style={{ background: slice.color }} />
+            <span className="rpt-legend-label">{slice.status}</span>
+            <span className="rpt-legend-track"><span style={{ width: `${slice.pct}%`, background: slice.color }} /></span>
+            <strong className="rpt-legend-count">{slice.count}</strong>
+            <span className="rpt-legend-pct">{slice.pct}%</span>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
@@ -398,6 +425,20 @@ const buildCombinedCsv = (sections, range) => {
   return lines.join('\n');
 };
 
+function SectionHead({ step, title, hint, children }) {
+  return (
+    <div className="um-panel-head rpt-section-head">
+      <div className="rpt-section-title">
+        {step && <span className="rpt-step">{step}</span>}
+        <div className="um-panel-title">
+          <h2>{title}</h2>
+          {hint && <p>{hint}</p>}
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export default function ReportsAnalyticsPage() {
   // -- Filter state --
@@ -491,13 +532,18 @@ export default function ReportsAnalyticsPage() {
   const reports = reportData?.reports || [];
   const appRows = appData?.rows || [];
   const appSummary = appData?.summary;
-  const totalStatus = (analytics?.statusBreakdown || []).reduce((s, d) => s + d.count, 0);
   const hasFilters = preset !== '30d' || status !== 'all' || !!search;
   const totalUsers = reportData?.summary?.totalUsers ?? reports.length;
   const totalTasks = reportData?.summary?.totalTasks ?? reports.reduce((sum, row) => sum + (row.total || 0), 0);
   const totalCollected = appSummary?.totalCollected ?? 0;
   const completedTasks = reports.reduce((sum, row) => sum + (row.approved || 0) + (row.confirmed || 0), 0);
   const completionRate = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const firstLoad = loading && !analytics && !reportData;
+
+  const trend = analytics?.dailyTrend || [];
+  const trendTotal = trend.reduce((sum, d) => sum + d.count, 0);
+  const trendPeak = trend.reduce((best, d) => (d.count > (best?.count ?? -1) ? d : best), null);
+  const trendAverage = trend.length ? (trendTotal / trend.length).toFixed(1) : '0';
 
   // The report is a single document: per-user progress first as the summary,
   // then the full application detail. Both formats emit the same two sections
@@ -555,8 +601,15 @@ export default function ReportsAnalyticsPage() {
     );
   };
 
+  const tiles = [
+    { key: 'users', cls: 'total', icon: <FiUsers size={15} />, label: 'Users covered', value: totalUsers, foot: 'Staff who handled applications' },
+    { key: 'tasks', cls: 'active', icon: <FiList size={15} />, label: 'Tasks handled', value: totalTasks, foot: `${completedTasks} approved or confirmed` },
+    { key: 'rate', cls: 'roles', icon: <FiPercent size={15} />, label: 'Completion rate', value: completionRate, suffix: '%', meter: completionRate, foot: 'Approved or confirmed' },
+    { key: 'collected', cls: 'collected', icon: <FiDollarSign size={15} />, label: 'Collected', money: formatAmount(totalCollected), foot: 'From application payments' },
+  ];
+
   return (
-    <div className="analytics-page um-page">
+    <div className="analytics-page um-page rpt-page">
       <section className="um-hero analytics-hero">
         <div className="um-hero-deco" aria-hidden="true">
           <span className="um-hero-orb" />
@@ -572,363 +625,328 @@ export default function ReportsAnalyticsPage() {
               Operations intelligence
             </span>
             <h1>Reports &amp; Analytics</h1>
-            <p>Turn application activity into a clear view of team progress, service demand and operational outcomes.</p>
+            <p>Team progress, service demand and payments for {formatInputDay(range.from)} – {formatInputDay(range.to)}.</p>
           </div>
-          <span className="analytics-hero-icon" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 19V5M4 19h16M8 16v-4M12 16V8M16 16v-6M20 16V4" />
-            </svg>
-          </span>
+          <div className="rpt-hero-actions">
+            <button type="button" className="rpt-glass-btn" onClick={exportCombinedCsv} disabled={!canExport || loading}>
+              <FiDownload size={15} /> CSV
+            </button>
+            <button type="button" className="um-hero-action" onClick={exportCombinedPdf} disabled={!canExport || loading}>
+              <span className="um-hero-action-icon rpt-no-spin"><FiFileText size={15} /></span>
+              Download Report
+            </button>
+          </div>
         </div>
-        <div className="um-hero-tiles analytics-hero-tiles">
-          <div className="um-hero-tile total">
-            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiUsers size={16} /></span>Users covered</div>
-            <div className="um-hero-tile-value">{totalUsers}</div>
-            <div className="um-hero-tile-foot">In selected range</div>
+        <div className="um-hero-tiles">
+          {tiles.map((tile, idx) => (
+            <div className={`um-hero-tile ${tile.cls}`} key={tile.key} style={{ '--i': idx }}>
+              <div className="um-hero-tile-head"><span className="um-hero-tile-icon">{tile.icon}</span>{tile.label}</div>
+              <div className={`um-hero-tile-value${tile.money ? ' rpt-money' : ''}`}>
+                {firstLoad
+                  ? <span className="dash-skeleton um-hero-skeleton" />
+                  : tile.money ?? <><AnimatedNumber value={tile.value} />{tile.suffix}</>}
+              </div>
+              {tile.meter != null && (
+                <div className="um-hero-meter" aria-hidden="true"><span style={{ width: `${firstLoad ? 0 : tile.meter}%` }} /></div>
+              )}
+              <div className="um-hero-tile-foot">{tile.foot}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* -- Report Filters -- */}
+      <section className="um-panel rpt-filters">
+        <div className="rpt-filter-row">
+          <div className="ax-seg ax-seg--scroll" role="group" aria-label="Date range preset">
+            {DATE_PRESETS.map(option => (
+              <button
+                type="button"
+                key={option.key}
+                className={`ax-seg-btn${preset === option.key ? ' active' : ''}`}
+                aria-pressed={preset === option.key}
+                onClick={() => handlePresetChange(option.key)}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
-          <div className="um-hero-tile active">
-            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiList size={16} /></span>Tasks handled</div>
-            <div className="um-hero-tile-value">{totalTasks}</div>
-            <div className="um-hero-tile-foot">Across all services</div>
+
+          {preset === 'custom' && (
+            <div className="ax-range" role="group" aria-label="Custom date range">
+              <input type="date" value={customFrom} max={customTo} onChange={e => setCustomFrom(e.target.value)} aria-label="From date" />
+              <span aria-hidden="true">to</span>
+              <input type="date" value={customTo} min={customFrom} onChange={e => setCustomTo(e.target.value)} aria-label="To date" />
+            </div>
+          )}
+
+          <select className="admin-select" value={status} onChange={e => setStatus(e.target.value)} aria-label="Application status">
+            {STATUSES.map(value => (
+              <option key={value} value={value}>
+                {value === 'all' ? 'All statuses' : titleCase(value)}
+              </option>
+            ))}
+          </select>
+
+          <div className="admin-search um-search rpt-search">
+            <span className="admin-search-icon"><FiSearch size={15} /></span>
+            <input
+              type="text"
+              placeholder="Search user, reference, NIC or product"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              aria-label="Search the report"
+            />
           </div>
-          <div className="um-hero-tile roles">
-            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiPercent size={16} /></span>Completion rate</div>
-            <div className="um-hero-tile-value">{completionRate}%</div>
-            <div className="um-hero-tile-foot">Approved or confirmed</div>
-          </div>
-          <div className="um-hero-tile analytics-collected">
-            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiDollarSign size={16} /></span>Collected</div>
-            <div className="um-hero-tile-value analytics-money-value">{formatAmount(totalCollected)}</div>
-            <div className="um-hero-tile-foot">From application payments</div>
+
+          <div className="rpt-filter-end">
+            {hasFilters && (
+              <button type="button" className="admin-btn ghost ax-clear" onClick={resetFilters}>Clear</button>
+            )}
+            <button
+              type="button"
+              className={`rpt-icon-btn${loading ? ' is-spinning' : ''}`}
+              onClick={loadData}
+              disabled={loading}
+              aria-label="Regenerate the report"
+              title="Regenerate"
+            >
+              <FiRefreshCw size={15} />
+            </button>
           </div>
         </div>
       </section>
 
-      <div className="analytics-bleed">
-        <p className="analytics-page-note">One combined report: per-user progress summary first, then full application details.</p>
-      </div>
-
-      {/* -- Report Filters -- */}
-      <div className="analytics-bleed">
-        <div className="analytics-filter-card um-panel">
-          <div className="analytics-filter-head">
-            <h3>Report Filters</h3>
-            <div className="analytics-filter-summary">
-              {formatInputDay(range.from)} - {formatInputDay(range.to)}
-            </div>
-          </div>
-
-          <div className="admin-filters" style={{ marginBottom: 0 }}>
-            <div className="analytics-preset-group" role="group" aria-label="Date range preset">
-              {DATE_PRESETS.map(option => (
-                <button
-                  type="button"
-                  key={option.key}
-                  className={`analytics-preset ${preset === option.key ? 'active' : ''}`}
-                  onClick={() => handlePresetChange(option.key)}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            {preset === 'custom' && (
-              <div className="analytics-custom-range">
-                <label>
-                  <span>From</span>
-                  <input type="date" value={customFrom} max={customTo} onChange={e => setCustomFrom(e.target.value)} />
-                </label>
-                <label>
-                  <span>To</span>
-                  <input type="date" value={customTo} min={customFrom} onChange={e => setCustomTo(e.target.value)} />
-                </label>
-              </div>
-            )}
-
-            <select className="admin-select" value={status} onChange={e => setStatus(e.target.value)} aria-label="Application status">
-              {STATUSES.map(value => (
-                <option key={value} value={value}>
-                  {value === 'all' ? 'All statuses' : titleCase(value)}
-                </option>
-              ))}
-            </select>
-
-            <div className="admin-search">
-              <span className="admin-search-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-                </svg>
-              </span>
-              <input
-                type="text"
-                placeholder="Search by user, reference, NIC or product"
-                value={searchInput}
-                onChange={e => setSearchInput(e.target.value)}
-              />
-            </div>
-
-            <button type="button" className="admin-btn ghost" onClick={loadData} disabled={loading}>
-              {loading ? 'Generating...' : 'Regenerate'}
-            </button>
-            {hasFilters && (
-              <button type="button" className="admin-btn ghost" onClick={resetFilters}>
-                Clear filters
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
       {error && <div className="admin-error-banner">{error}</div>}
 
-      {loading ? (
-        <div className="admin-loading">Generating report...</div>
-      ) : (
-        <>
-          {/* -- Combined Report: user progress summary, then application detail -- */}
-          <div className="analytics-bleed analytics-report-stack">
-            {/* Section 1 */}
-            <div className="analytics-card um-panel">
-              <div className="analytics-card-head">
-                <h3>Section 1 &mdash; User Progress Summary</h3>
-                <div className="analytics-card-actions">
-                  <span className="analytics-card-hint">
-                    Task progress per admin &amp; staff member - click a row for the service breakdown
-                  </span>
-                  <button type="button" className="admin-btn ghost" onClick={exportCombinedCsv} disabled={!canExport}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /><path d="M12 15V3" />
-                    </svg>
-                    CSV
-                  </button>
-                  <button type="button" className="admin-btn primary" onClick={exportCombinedPdf} disabled={!canExport}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <path d="M14 2v6h6" /><path d="M12 18v-6" /><path d="m9.5 14.5 2.5-2.5 2.5 2.5" />
-                    </svg>
-                    Download Report
-                  </button>
-                </div>
-              </div>
-
-              {!reports.length ? (
-                <div className="admin-empty">
-                  <p>No users match the selected filters.</p>
-                </div>
-              ) : (
-                <div className="admin-table-wrap">
-                  <table className="admin-table um-table admin-table-striped report-table">
-                    <thead>
-                      <tr>
-                        <th>User</th>
-                        <th>Role</th>
-                        <th className="report-num">Tasks</th>
-                        <th className="report-num">Approved</th>
-                        <th className="report-num">Rejected</th>
-                        <th className="report-num">Flagged</th>
-                        <th className="report-num">Open</th>
-                        <th>Progress</th>
-                        <th className="report-num">Avg Handle</th>
-                        <th>Last Activity</th>
-                        <th aria-label="Details" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reports.map(row => {
-                        const isOpen = expanded === row.userId;
-                        return (
-                          <React.Fragment key={row.userId}>
-                            <tr
-                              className="report-row"
-                              onClick={() => setExpanded(isOpen ? null : row.userId)}
-                            >
-                              <td>
-                                <div className="report-user">
-                                  <span className="report-avatar">{initials(row.name)}</span>
-                                  <span className="report-user-meta">
-                                    <strong>{row.name}</strong>
-                                    <small>{row.email || row.phone || 'No contact on file'}</small>
-                                  </span>
-                                </div>
-                              </td>
-                              <td>
-                                 <span className={`admin-badge ${row.role === 'Admin' || row.role === 'admin' ? 'confirmed' : 'scheduled'}`}>
-                                   {row.role === 'Admin' || row.role === 'admin' ? 'Administrator' : (row.role === 'Manage' || row.role === 'manage' || row.role === 'Manager' || row.role === 'manager' ? 'Manager' : row.role)}
-                                 </span>
-                              </td>
-                              <td className="report-num report-strong">{row.total}</td>
-                              <td className="report-num report-count approved">{row.approved + row.confirmed}</td>
-                              <td className="report-num report-count rejected">{row.rejected}</td>
-                              <td className="report-num report-count flagged">{row.flagged}</td>
-                              <td className="report-num report-count open">{row.open}</td>
-                              <td>
-                                <div className="report-progress">
-                                  <div className="report-progress-track">
-                                    <div
-                                      className={`report-progress-fill ${completionTone(row.completionRate)}`}
-                                      style={{ width: `${row.completionRate}%` }}
-                                    />
-                                  </div>
-                                  <span className="report-progress-label">{row.completionRate}%</span>
-                                </div>
-                              </td>
-                              <td className="report-num">
-                                {row.avgHandleHours == null ? '-' : `${row.avgHandleHours}h`}
-                              </td>
-                              <td>
-                                <span className="report-last">{formatRelative(row.lastActionedAt)}</span>
-                              </td>
-                              <td className="report-caret">
-                                <svg
-                                  width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                                  style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
-                                >
-                                  <path d="m6 9 6 6 6-6" />
-                                </svg>
-                              </td>
-                            </tr>
-                            {isOpen && (
-                              <tr className="report-detail-row">
-                                <td colSpan={11}>
-                                  <div className="report-detail">
-                                    <div className="report-detail-block">
-                                      <h4>Service Breakdown</h4>
-                                      {row.services.length ? (
-                                        <div className="report-chips">
-                                          {row.services.map(service => (
-                                            <span className="report-chip" key={service.service}>
-                                              {service.service}
-                                              <strong>{service.count}</strong>
-                                            </span>
-                                          ))}
-                                        </div>
-                                      ) : (
-                                        <p className="report-muted">No tasks handled in this range.</p>
-                                      )}
-                                    </div>
-                                    <div className="report-detail-block">
-                                      <h4>Task Progress</h4>
-                                      <ul className="report-detail-list">
-                                        <li><span>Total handled</span><strong>{row.total}</strong></li>
-                                        <li><span>Approved</span><strong>{row.approved}</strong></li>
-                                        <li><span>Confirmed</span><strong>{row.confirmed}</strong></li>
-                                        <li><span>Rejected</span><strong>{row.rejected}</strong></li>
-                                        <li><span>Flagged</span><strong>{row.flagged}</strong></li>
-                                        <li><span>Still open</span><strong>{row.open}</strong></li>
-                                        <li><span>Avg handle time</span><strong>{row.avgHandleHours == null ? '-' : `${row.avgHandleHours} hrs`}</strong></li>
-                                      </ul>
-                                    </div>
-                                    <div className="report-detail-block">
-                                      <h4>Activity</h4>
-                                      <ul className="report-detail-list">
-                                        <li><span>Last actioned</span><strong>{formatDateTime(row.lastActionedAt)}</strong></li>
-                                        <li><span>Contact</span><strong>{row.phone || '-'}</strong></li>
-                                        <li><span>Account created</span><strong>{formatDay(row.joinedAt)}</strong></li>
-                                      </ul>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Section 2 */}
-            <div className="analytics-card um-panel">
-              <div className="analytics-card-head">
-                <h3>Section 2 &mdash; Application Information</h3>
-                <div className="analytics-card-actions">
-                  <span className="analytics-card-hint">
-                    {appSummary
-                      ? `${appSummary.totalApplications} application${appSummary.totalApplications === 1 ? '' : 's'} - ${formatAmount(appSummary.totalCollected)} collected`
-                      : ''}
-                  </span>
-                </div>
-              </div>
-
-              {!appRows.length ? (
-                <div className="admin-empty">
-                  <p>No applications match the selected filters.</p>
-                </div>
-              ) : (
-                <div className="admin-table-wrap">
-                  <table className="admin-table um-table admin-table-striped app-report-table">
-                    <thead>
-                      <tr>
-                        <th>Selected Product</th>
-                        <th>Customer Name</th>
-                        <th>NIC Number</th>
-                        <th>Mobile Number</th>
-                        <th className="report-num">Paid Amount</th>
-                        <th>Apply Date</th>
-                        <th>Reference Number</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {appRows.map(row => (
-                        <tr key={row.id}>
-                          <td className="app-report-product">{row.product}</td>
-                          <td className="app-report-customer">{row.customerName}</td>
-                          <td>{row.nic}</td>
-                          <td>{row.mobile}</td>
-                          <td className="report-num report-amount">{formatAmount(row.paidAmount)}</td>
-                          <td>{formatDateTime(row.applyDate)}</td>
-                          <td>
-                            <span className="app-report-ref">{row.referenceNumber}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {appSummary?.truncated && (
-                <p className="report-muted" style={{ marginTop: '0.75rem' }}>
-                  Showing the first {appRows.length} applications. Narrow the date range to see the rest.
-                </p>
-              )}
-            </div>
+      {firstLoad ? (
+        <section className="um-panel">
+          <div className="dash-table-skeleton">
+            {Array.from({ length: 5 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
           </div>
-
+        </section>
+      ) : (
+        <div className={`rpt-body${loading ? ' is-refreshing' : ''}`}>
           {/* -- Charts -- */}
           {analytics && (
             <>
-              <div className="analytics-bleed">
-                <div className="analytics-top-row">
-                  <div className="analytics-card um-panel">
-                    <h3>Submissions by Service Type</h3>
-                    <BarChart data={analytics.byServiceType} />
-                  </div>
-                  <div className="analytics-card um-panel">
-                    <h3>Status Breakdown</h3>
-                    <PieChart data={analytics.statusBreakdown} />
-                  </div>
-                </div>
+              <div className="rpt-chart-grid">
+                <section className="um-panel rpt-chart-card">
+                  <SectionHead title="Submissions by service" hint="Share of applications per service type" />
+                  <div className="rpt-chart-body"><BarChart data={analytics.byServiceType || []} /></div>
+                </section>
+                <section className="um-panel rpt-chart-card">
+                  <SectionHead title="Status breakdown" hint="Where applications stand now" />
+                  <div className="rpt-chart-body"><DonutChart data={analytics.statusBreakdown || []} /></div>
+                </section>
               </div>
 
-              <div className="analytics-bleed analytics-bottom-row">
-                <div className="analytics-card um-panel">
-                  <h3>
-                    Daily Submissions Trend - {formatInputDay(range.from)} to {formatInputDay(range.to)}
-                  </h3>
-                  <DailyTrendChart data={analytics.dailyTrend} />
-                </div>
-              </div>
+              <section className="um-panel rpt-chart-card">
+                <SectionHead title="Daily submissions" hint={`${formatInputDay(range.from)} – ${formatInputDay(range.to)}`}>
+                  <div className="rpt-trend-stats">
+                    <span><strong>{trendTotal}</strong> total</span>
+                    <span><strong>{trendAverage}</strong> per day</span>
+                    {trendPeak && trendPeak.count > 0 && <span><strong>{trendPeak.count}</strong> peak · {trendPeak.day}</span>}
+                  </div>
+                </SectionHead>
+                <div className="rpt-chart-body"><DailyTrendChart data={trend} /></div>
+              </section>
             </>
           )}
 
-          {!analytics && totalStatus === 0 && (
-            <div className="admin-empty"><p>No submissions in the selected range.</p></div>
-          )}
-        </>
+          {/* -- Section 1 -- */}
+          <section className="um-panel">
+            <SectionHead step="1" title="User progress summary" hint="Tasks handled per admin and staff member. Click a row for the service breakdown.">
+              <span className="ax-count">{reports.length} user{reports.length === 1 ? '' : 's'}</span>
+            </SectionHead>
+
+            {!reports.length ? (
+              <div className="um-empty-state">
+                <span className="um-empty-icon"><FiUsers size={22} /></span>
+                <h3>No users in this report</h3>
+                <p>No one handled an application with the selected filters.</p>
+              </div>
+            ) : (
+              <div className="admin-table-wrap um-table-wrap">
+                <table className="admin-table um-table report-table rpt-user-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Role</th>
+                      <th className="report-num">Tasks</th>
+                      <th className="report-num">Approved</th>
+                      <th className="report-num">Rejected</th>
+                      <th className="report-num">Flagged</th>
+                      <th className="report-num">Open</th>
+                      <th>Progress</th>
+                      <th className="report-num">Avg time</th>
+                      <th>Last active</th>
+                      <th aria-label="Details" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reports.map(row => {
+                      const isOpen = expanded === row.userId;
+                      return (
+                        <React.Fragment key={row.userId}>
+                          <tr
+                            className={`report-row${isOpen ? ' is-open' : ''}`}
+                            onClick={() => setExpanded(isOpen ? null : row.userId)}
+                          >
+                            <td>
+                              <div className="report-user">
+                                <span className="report-avatar">{initials(row.name)}</span>
+                                <span className="report-user-meta">
+                                  <strong>{row.name}</strong>
+                                  <small>{row.email || row.phone || 'No contact on file'}</small>
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                              <span className={`ax-chip ${row.role === 'Admin' || row.role === 'admin' ? 'ax-chip--info' : 'ax-chip--neutral'}`}>
+                                {roleLabel(row.role)}
+                              </span>
+                            </td>
+                            <td className="report-num report-strong">{row.total}</td>
+                            <td className="report-num report-count approved">{row.approved + row.confirmed}</td>
+                            <td className="report-num report-count rejected">{row.rejected}</td>
+                            <td className="report-num report-count flagged">{row.flagged}</td>
+                            <td className="report-num report-count open">{row.open}</td>
+                            <td>
+                              <div className="report-progress">
+                                <div className="report-progress-track">
+                                  <div
+                                    className={`report-progress-fill ${completionTone(row.completionRate)}`}
+                                    style={{ width: `${row.completionRate}%` }}
+                                  />
+                                </div>
+                                <span className="report-progress-label">{row.completionRate}%</span>
+                              </div>
+                            </td>
+                            <td className="report-num">
+                              {row.avgHandleHours == null ? '-' : `${row.avgHandleHours}h`}
+                            </td>
+                            <td>
+                              <span className="report-last">{formatRelative(row.lastActionedAt)}</span>
+                            </td>
+                            <td className="report-caret">
+                              <span className={`alog-caret${isOpen ? ' is-open' : ''}`} aria-hidden="true">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="m6 9 6 6 6-6" />
+                                </svg>
+                              </span>
+                            </td>
+                          </tr>
+                          {isOpen && (
+                            <tr className="report-detail-row">
+                              <td colSpan={11}>
+                                <div className="report-detail">
+                                  <div className="report-detail-block">
+                                    <h4>Service Breakdown</h4>
+                                    {row.services.length ? (
+                                      <div className="report-chips">
+                                        {row.services.map(service => (
+                                          <span className="report-chip" key={service.service}>
+                                            {service.service}
+                                            <strong>{service.count}</strong>
+                                          </span>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="report-muted">No tasks handled in this range.</p>
+                                    )}
+                                  </div>
+                                  <div className="report-detail-block">
+                                    <h4>Task Progress</h4>
+                                    <ul className="report-detail-list">
+                                      <li><span>Total handled</span><strong>{row.total}</strong></li>
+                                      <li><span>Approved</span><strong>{row.approved}</strong></li>
+                                      <li><span>Confirmed</span><strong>{row.confirmed}</strong></li>
+                                      <li><span>Rejected</span><strong>{row.rejected}</strong></li>
+                                      <li><span>Flagged</span><strong>{row.flagged}</strong></li>
+                                      <li><span>Still open</span><strong>{row.open}</strong></li>
+                                      <li><span>Avg handle time</span><strong>{row.avgHandleHours == null ? '-' : `${row.avgHandleHours} hrs`}</strong></li>
+                                    </ul>
+                                  </div>
+                                  <div className="report-detail-block">
+                                    <h4>Activity</h4>
+                                    <ul className="report-detail-list">
+                                      <li><span>Last actioned</span><strong>{formatDateTime(row.lastActionedAt)}</strong></li>
+                                      <li><span>Contact</span><strong>{row.phone || '-'}</strong></li>
+                                      <li><span>Account created</span><strong>{formatDay(row.joinedAt)}</strong></li>
+                                    </ul>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          {/* -- Section 2 -- */}
+          <section className="um-panel">
+            <SectionHead
+              step="2"
+              title="Application information"
+              hint={appSummary
+                ? `${appSummary.totalApplications} application${appSummary.totalApplications === 1 ? '' : 's'} · ${formatAmount(appSummary.totalCollected)} collected`
+                : 'Every application in the selected range'}
+            >
+              <span className="ax-count">{appRows.length} row{appRows.length === 1 ? '' : 's'}</span>
+            </SectionHead>
+
+            {!appRows.length ? (
+              <div className="um-empty-state">
+                <span className="um-empty-icon"><FiFileText size={22} /></span>
+                <h3>No applications in this report</h3>
+                <p>Try a wider date range or a different status.</p>
+              </div>
+            ) : (
+              <div className="admin-table-wrap um-table-wrap">
+                <table className="admin-table um-table app-report-table">
+                  <thead>
+                    <tr>
+                      <th>Selected product</th>
+                      <th>Customer name</th>
+                      <th>NIC number</th>
+                      <th>Mobile number</th>
+                      <th className="report-num">Paid amount</th>
+                      <th>Apply date</th>
+                      <th>Reference number</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {appRows.map(row => (
+                      <tr key={row.id}>
+                        <td className="app-report-product">{row.product}</td>
+                        <td className="app-report-customer">{row.customerName}</td>
+                        <td>{row.nic}</td>
+                        <td>{row.mobile}</td>
+                        <td className="report-num report-amount">{formatAmount(row.paidAmount)}</td>
+                        <td>{formatDateTime(row.applyDate)}</td>
+                        <td>
+                          <span className="app-report-ref">{row.referenceNumber}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {appSummary?.truncated && (
+              <p className="rpt-truncated">
+                Showing the first {appRows.length} applications. Narrow the date range to see the rest.
+              </p>
+            )}
+          </section>
+        </div>
       )}
     </div>
   );

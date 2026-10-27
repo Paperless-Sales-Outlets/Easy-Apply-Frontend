@@ -1,191 +1,63 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FiActivity, FiCheckCircle, FiFileText, FiMessageSquare } from 'react-icons/fi';
-import toast from 'react-hot-toast';
-import { getApplications, updateApplicationStatus } from '../services/adminService';
-import { FORM_TYPES, formatDateOnly, normalizeApplication, statusBadgeClass, statusLabel } from '../utils/applicationUtils';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FiActivity, FiCheckCircle, FiCreditCard, FiEye, FiFileText, FiPhone, FiSearch } from 'react-icons/fi';
+import { getApplications, getDashboardStats } from '../services/adminService';
+import { FORM_TYPES, STATUS_LABELS, formatDateOnly, normalizeApplication, statusBadgeClass, statusLabel } from '../utils/applicationUtils';
+import { AnimatedNumber, Pager, timeAgo } from '../components/AdminVisuals';
 import ApplicationDetailModal from '../components/ApplicationDetailModal';
-import ApplicationActions from '../components/ApplicationActions';
 
-const CHART_DAYS = 14;
-const CHART_LIMIT = 200;
 const HISTORY_PAGE_SIZE = 10;
 
-const COMPLETED_STATUSES = ['approved', 'confirmed'];
+const STATUS_VIEWS = [{ key: '', label: 'All' }, ...Object.entries(STATUS_LABELS).map(([key, label]) => ({ key, label }))];
 
-function toDateKey(dt) {
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, '0');
-  const d = String(dt.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg, #0f57a8, #0b2d5b)',
+  'linear-gradient(135deg, #50b748, #2f7f2a)',
+  'linear-gradient(135deg, #2b7de9, #0a3f7e)',
+  'linear-gradient(135deg, #0f7a4d, #004d38)',
+  'linear-gradient(135deg, #3d6fb6, #1b3f75)',
+];
+
+// A stable colour per applicant, so the same person reads the same everywhere.
+function avatarGradient(key) {
+  const text = String(key || '');
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  return AVATAR_GRADIENTS[hash % AVATAR_GRADIENTS.length];
 }
 
-function buildDailySeries(apps, days = CHART_DAYS) {
-  const buckets = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    buckets.push({
-      date: toDateKey(d),
-      day: d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-      submitted: 0,
-      completed: 0,
-    });
-  }
-
-  const findBucket = (key) => buckets.find((b) => b.date === key);
-
-  apps.forEach((app) => {
-    if (!app.submittedAt) return;
-    const subBucket = findBucket(toDateKey(new Date(app.submittedAt)));
-    if (subBucket) subBucket.submitted += 1;
-
-    // Count completions on the actual approval/completion date, not the
-    // submission date, so the completed bars reflect the correct day.
-    if (COMPLETED_STATUSES.includes(app.status)) {
-      const completedOn = app.actionedAt || app.updatedAt;
-      if (completedOn) {
-        const comBucket = findBucket(toDateKey(new Date(completedOn)));
-        if (comBucket) comBucket.completed += 1;
-      }
-    }
-  });
-
-  return buckets;
+// Two-letter monogram for the applicant avatar in the history table.
+function getInitials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function buildScale(maxValue) {
-  const max = Math.max(1, Math.ceil(maxValue));
-  if (max <= 5) return Array.from({ length: max + 1 }, (_, i) => i);
-  const rawStep = max / 5;
-  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
-  const normalized = rawStep / magnitude;
-  let step;
-  if (normalized <= 1) step = 1;
-  else if (normalized <= 2) step = 2;
-  else if (normalized <= 5) step = 5;
-  else step = 10;
-  step *= magnitude;
-  const ticks = [];
-  for (let v = 0; v <= max; v += step) ticks.push(Math.round(v));
-  if (ticks[ticks.length - 1] !== max) ticks.push(max);
-  return ticks;
-}
-
-function FormDetailBarChart({ daily }) {
-  const [popup, setPopup] = useState(null);
-  const chartRef = useRef(null);
-  const maxBar = Math.max(...daily.map(d => Math.max(d.submitted, d.completed)), 1);
-  const ticks = buildScale(maxBar);
-
-  const handleBarClick = (index, which, event) => {
-    const rect = chartRef.current.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    if (popup && popup.index === index && popup.which === which) {
-      setPopup(null);
-    } else {
-      setPopup({ index, which, x, y });
-    }
-  };
-
-  return (
-    <div className="form-detail-scroll">
-      {/* one shared-width wrapper — chart columns and day labels can never drift apart */}
-      <div className="form-detail-aligner">
-        <div className="form-detail-chart-wrap">
-          <div className="form-detail-yaxis">
-            {ticks.map(tick => (
-              <span
-                key={tick}
-                className="form-detail-tick"
-                style={{ bottom: `${(tick / maxBar) * 100}%` }}
-              >
-                {tick}
-              </span>
-            ))}
-          </div>
-          <div className="form-detail-chart" ref={chartRef}>
-            <div className="form-detail-grid">
-              {ticks.map(tick => (
-                <div
-                  key={tick}
-                  className="form-detail-gridline"
-                  style={{ bottom: `${(tick / maxBar) * 100}%` }}
-                />
-              ))}
-            </div>
-            <div className="form-detail-bars-row">
-              {daily.map((d, index) => {
-                const subH = (d.submitted / maxBar) * 100;
-                const comH = (d.completed / maxBar) * 100;
-                return (
-                  <div className="form-detail-col" key={d.date} style={{ '--bar-delay': `${index * 35}ms` }}>
-                    <div className="form-detail-bars">
-                      <div
-                        className={`form-weekly-bar completed clickable${d.completed === 0 ? ' is-empty' : ''}`}
-                        style={{ height: `${comH}%` }}
-                        title={`Completed ${d.date}: ${d.completed}`}
-                        onClick={event => handleBarClick(index, 'completed', event)}
-                      />
-                      <div
-                        className={`form-weekly-bar submitted clickable${d.submitted === 0 ? ' is-empty' : ''}`}
-                        style={{ height: `${subH}%` }}
-                        title={`Submitted ${d.date}: ${d.submitted}`}
-                        onClick={event => handleBarClick(index, 'submitted', event)}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {popup && (
-              <div className="pie-chart-popup" style={{ left: popup.x, top: popup.y }}>
-                <span className="pie-chart-popup-swatch" style={{ background: popup.which === 'completed' ? 'var(--green)' : 'var(--blue)' }} />
-                <div>
-                  <div className="pie-chart-popup-count">
-                    {popup.which === 'completed' ? daily[popup.index].completed : daily[popup.index].submitted}
-                  </div>
-                  <div className="pie-chart-popup-label">
-                    {popup.which === 'completed' ? 'Completed' : 'Submitted'} —{' '}
-                    {daily[popup.index].day}, {new Date(`${daily[popup.index].date}T00:00:00`).getFullYear()}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="form-detail-day-row">
-          {daily.map(d => (
-            <div className="form-detail-day" key={d.date}>{d.day}</div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RecentHistory({ formId }) {
+function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateChange }) {
   const [history, setHistory] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState(null);
   const [detailApp, setDetailApp] = useState(null);
-  const [activeEditorId, setActiveEditorId] = useState(null);
-  const [commentDrafts, setCommentDrafts] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [status, setStatus] = useState('');
 
   const fetchPage = useCallback(async (pageNum) => {
     setLoading(true);
     try {
-      const res = await getApplications({
+      const params = {
         serviceType: formId,
         page: pageNum,
         limit: HISTORY_PAGE_SIZE,
         sortBy: 'createdAt',
         sortOrder: 'desc',
-      });
+      };
+      if (fromDate) params.startDate = fromDate;
+      if (toDate) params.endDate = toDate;
+      if (status) params.status = status;
+
+      const res = await getApplications(params);
       setHistory((res.applications || []).map(normalizeApplication));
       setPagination(res.pagination || null);
     } catch {
@@ -194,7 +66,7 @@ function RecentHistory({ formId }) {
     } finally {
       setLoading(false);
     }
-  }, [formId]);
+  }, [formId, fromDate, toDate, status]);
 
   useEffect(() => {
     setPage(1);
@@ -213,71 +85,16 @@ function RecentHistory({ formId }) {
   };
 
   const filteredHistory = history.filter(app => matchesSearch(app, searchQuery));
-
-  const handleStatusChange = async (id, status) => {
-    setBusyId(id);
-    try {
-      const current = history.find(app => app.id === id);
-      const notes = (commentDrafts[id] ?? current?.notes ?? '').trim();
-      const res = await updateApplicationStatus(id, status, notes);
-      toast.success(`Application marked as ${statusLabel(status)}`);
-      setHistory(prev => prev.map(app => app.id === id
-        ? {
-            ...app,
-            status,
-            notes: res.application?.notes ?? notes,
-            actionedBy: res.application?.actionedBy,
-            actionedAt: res.application?.actionedAt,
-          }
-        : app));
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update status');
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const handleActionClick = (id) => {
-    setActiveEditorId(prevId => {
-      const nextId = prevId === id ? null : id;
-      if (nextId && commentDrafts[id] === undefined) {
-        const current = history.find(app => app.id === id);
-        setCommentDrafts(prev => ({ ...prev, [id]: current?.notes ?? '' }));
-      }
-      return nextId;
-    });
-  };
+  const totalCount = pagination?.totalCount ?? history.length;
+  const hasFilters = Boolean(fromDate || toDate || status || searchQuery);
 
   const handleToggleCommentExpand = (id) => {
     setExpandedComments(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleCommentChange = (id, value) => {
-    setCommentDrafts(prev => ({ ...prev, [id]: value }));
-  };
-
-  const handleSave = async (id) => {
-    const comment = (commentDrafts[id] ?? '').trim();
-    if (!comment) return;
-    setBusyId(id);
-    try {
-      const current = history.find(app => app.id === id);
-      const res = await updateApplicationStatus(id, current?.status || 'pending', comment);
-      toast.success('Comment saved');
-      setHistory(prev => prev.map(app => app.id === id
-        ? {
-            ...app,
-            notes: res.application?.notes ?? comment,
-            actionedBy: res.application?.actionedBy,
-            actionedAt: res.application?.actionedAt,
-          }
-        : app));
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save comment');
-    } finally {
-      setBusyId(null);
-      setActiveEditorId(null);
-    }
+  const handleUpdated = (updated) => {
+    setHistory(prev => prev.map(app => (app.id === updated.id ? { ...app, ...updated } : app)));
+    setDetailApp(prev => (prev && prev.id === updated.id ? { ...prev, ...updated } : prev));
   };
 
   const goToPage = (pageNum) => {
@@ -286,275 +103,265 @@ function RecentHistory({ formId }) {
     fetchPage(pageNum);
   };
 
+  const clearFilters = () => {
+    onFromDateChange('');
+    onToDateChange('');
+    setStatus('');
+    setSearchQuery('');
+  };
+
   return (
-    <div className="um-panel form-weekly-card form-history-card">
-      <div className="form-section-heading">
-        <div>
-          <span className="form-section-kicker">APPLICATION QUEUE</span>
-          <h2>Recent History</h2>
+    <>
+      <section className="um-panel frm-panel">
+        <div className="um-panel-head frm-head">
+          <div className="um-panel-title">
+            <h2>Submissions</h2>
+            <p>
+              {loading
+                ? 'Loading…'
+                : searchQuery
+                  ? `${filteredHistory.length} match${filteredHistory.length === 1 ? '' : 'es'} on this page · ${totalCount} in total`
+                  : `${totalCount} submission${totalCount === 1 ? '' : 's'}${fromDate || toDate ? ' in the selected range' : ''}`}
+            </p>
+          </div>
+          <div className="um-toolbar">
+            <div className="admin-search um-search">
+              <span className="admin-search-icon"><FiSearch size={15} aria-hidden="true" /></span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search reference, NIC, phone or name"
+                aria-label="Search application history"
+              />
+            </div>
+            <div className="ax-range" role="group" aria-label="Submission dates">
+              <input
+                type="date"
+                value={fromDate}
+                max={toDate || undefined}
+                onChange={(e) => onFromDateChange(e.target.value)}
+                aria-label="Filter submissions from date"
+              />
+              <span aria-hidden="true">to</span>
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate || undefined}
+                onChange={(e) => onToDateChange(e.target.value)}
+                aria-label="Filter submissions to date"
+              />
+            </div>
+            {hasFilters && (
+              <button type="button" className="admin-btn ghost ax-clear" onClick={clearFilters}>Clear</button>
+            )}
+          </div>
         </div>
-        <span className="form-history-count">{pagination?.totalCount ?? history.length} total</span>
-      </div>
-      <div className="form-history-toolbar">
-        <p>
-          Latest submissions for this form type — {pagination?.totalCount ?? history.length} total
-        </p>
-        <input
-          type="search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search reference, NIC, phone or name"
-          aria-label="Search application history"
-        />
-      </div>
 
-      {loading ? (
-        <div className="admin-loading">Loading history…</div>
-      ) : filteredHistory.length === 0 ? (
-        <div className="admin-empty">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-          </svg>
-          <p>No submissions found for this form type yet.</p>
+        <div className="frm-status-bar">
+          <div className="ax-seg ax-seg--scroll" role="group" aria-label="Application status">
+            {STATUS_VIEWS.map((view) => (
+              <button
+                key={view.key || 'all'}
+                type="button"
+                className={`ax-seg-btn${status === view.key ? ' active' : ''}`}
+                aria-pressed={status === view.key}
+                onClick={() => setStatus(view.key)}
+              >
+                {view.key && <span className={`frm-dot ${statusBadgeClass(view.key)}`} aria-hidden="true" />}
+                {view.label}
+              </button>
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className="admin-table-wrap um-table-wrap">
-          <table className="admin-table um-table form-history-table">
-            <thead>
-              <tr>
-                <th>Reference</th>
-                <th>Applicant</th>
-                <th>NIC</th>
-                <th>Phone</th>
-                <th>Address</th>
-                <th>Submitted</th>
-                <th>Status</th>
-                <th>Comments</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredHistory.map(app => {
-                const comment = app.notes || '';
-                const isExpanded = expandedComments[app.id];
-                const visibleText = comment.length > 90 && !isExpanded ? `${comment.slice(0, 90)}...` : comment;
-                const actioner = app.actionedBy || null;
-                const actionerName = actioner
-                  ? (actioner.name || actioner.email || actioner._id || '')
-                  : '';
 
-                return (
-                  <React.Fragment key={app.id}>
-                    <tr>
+        {loading ? (
+          <div className="dash-table-skeleton">
+            {Array.from({ length: 5 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
+          </div>
+        ) : filteredHistory.length === 0 ? (
+          <div className="um-empty-state">
+            <span className="um-empty-icon"><FiFileText size={24} /></span>
+            <h3>{hasFilters ? 'No matching submissions' : 'No submissions yet'}</h3>
+            <p>{hasFilters ? 'Try a different search, status or date range.' : 'Applications for this form will appear here as customers submit them.'}</p>
+          </div>
+        ) : (
+          <div className="admin-table-wrap um-table-wrap">
+            <table className="admin-table um-table frm-table">
+              <thead>
+                <tr>
+                  <th>Applicant</th>
+                  <th>Reference</th>
+                  <th>Contact</th>
+                  <th>Address</th>
+                  <th>Status</th>
+                  <th>Comment</th>
+                  <th className="frm-actions-head">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredHistory.map(app => {
+                  const comment = app.notes || '';
+                  const isExpanded = expandedComments[app.id];
+                  const visibleText = comment.length > 90 && !isExpanded ? `${comment.slice(0, 90)}...` : comment;
+                  const actioner = app.actionedBy || null;
+                  const actionerName = actioner
+                    ? (actioner.name || actioner.email || actioner._id || '')
+                    : '';
+
+                  return (
+                    <tr key={app.id}>
                       <td>
-                        <span style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--blue)' }}>
-                          {app.referenceNumber}
-                        </span>
+                        <div className="um-user-cell">
+                          <span className="um-avatar" style={{ background: avatarGradient(app.nic || app.name) }} aria-hidden="true">{getInitials(app.name)}</span>
+                          <div className="frm-applicant-text">
+                            <span className="um-user-name">{app.name || 'Unknown applicant'}</span>
+                            <span className="frm-sub">{app.email || 'No email on file'}</span>
+                          </div>
+                        </div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{app.name}</div>
-                        <div style={{ fontSize: '0.76rem', color: 'var(--muted)' }}>{app.email}</div>
+                        <div className="frm-ref">
+                          <span className="frm-ref-number">{app.referenceNumber}</span>
+                          <span className="frm-sub" title={formatDateOnly(app.submittedAt)}>{timeAgo(app.submittedAt) || formatDateOnly(app.submittedAt)}</span>
+                        </div>
                       </td>
-                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.nic}</td>
-                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{app.phone}</td>
-                      <td style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{app.address}</td>
-                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>{formatDateOnly(app.submittedAt)}</td>
+                      <td>
+                        <div className="frm-contact">
+                          <span><FiCreditCard size={13} aria-hidden="true" /> {app.nic || '—'}</span>
+                          <span><FiPhone size={13} aria-hidden="true" /> {app.phone || '—'}</span>
+                        </div>
+                      </td>
+                      <td><span className="frm-address" title={app.address || ''}>{app.address || '—'}</span></td>
                       <td>
                         <span className={`admin-badge ${statusBadgeClass(app.status)}`}>
                           {statusLabel(app.status)}
                         </span>
                       </td>
-                      <td style={{ fontSize: '0.82rem', color: 'var(--muted)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxWidth: '24rem' }}>
+                      <td className={`frm-comment${isExpanded ? ' is-expanded' : ''}`}>
                         {comment ? (
                           <>
-                            {visibleText}
+                            <span className="frm-comment-text">{visibleText}</span>
                             {comment.length > 90 && (
                               <button
                                 type="button"
+                                className="frm-comment-toggle"
                                 onClick={() => handleToggleCommentExpand(app.id)}
-                                style={{
-                                  border: 'none',
-                                  background: 'transparent',
-                                  color: 'var(--blue)',
-                                  cursor: 'pointer',
-                                  marginLeft: 4,
-                                  fontSize: '0.78rem',
-                                  fontWeight: 600,
-                                }}
                               >
-                                {isExpanded ? 'less' : 'more'}
+                                {isExpanded ? 'Show less' : 'Show more'}
                               </button>
                             )}
+                            {actionerName && <span className="frm-comment-author">— {actionerName}</span>}
                           </>
                         ) : (
-                          <span style={{ color: 'var(--muted)' }}>No comment</span>
-                        )}
-                        {actionerName && (
-                          <div style={{ fontSize: '0.74rem', color: 'var(--muted)', marginTop: '0.25rem' }}>
-                            — {actionerName}
-                            {actioner._id && (
-                              <span style={{ fontFamily: 'monospace' }}> (ID: {actioner._id})</span>
-                            )}
-                          </div>
+                          <span className="frm-comment-empty">No comment</span>
                         )}
                       </td>
                       <td>
-                        <div className="admin-action-group">
+                        <div className="um-row-actions frm-row-actions">
                           <button
                             type="button"
-                            onClick={() => handleActionClick(app.id)}
-                            className="form-comment-button"
-                            aria-label={comment ? 'Edit comment' : 'Add comment'}
-                            title="Comment"
+                            className="um-action-btn edit"
+                            onClick={() => setDetailApp(app)}
+                            aria-label={`Open application ${app.referenceNumber}`}
                           >
-                            <FiMessageSquare size={18} />
+                            <FiEye size={15} />
+                            <span className="um-action-label">Open</span>
                           </button>
-                          <ApplicationActions
-                            application={app}
-                            busy={busyId === app.id}
-                            onStatusChange={handleStatusChange}
-                            onView={setDetailApp}
-                            variant="form"
-                          />
                         </div>
                       </td>
                     </tr>
-                    {activeEditorId === app.id && (
-                      <tr>
-                        <td colSpan={9} style={{ padding: '0.65rem 1rem', background: 'var(--surface)', borderBottom: '1px solid var(--line)' }}>
-                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                            <textarea
-                              value={commentDrafts[app.id] ?? app.notes ?? ''}
-                              onChange={(e) => handleCommentChange(app.id, e.target.value)}
-                              placeholder="Enter admin comment for this application"
-                              style={{
-                                flex: 1,
-                                minHeight: '90px',
-                                padding: '0.85rem',
-                                border: '1px solid var(--line)',
-                                borderRadius: '10px',
-                                fontFamily: 'inherit',
-                                fontSize: '0.9rem',
-                                resize: 'vertical',
-                              }}
-                            />
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.35rem' }}>
-                              <button
-                                type="button"
-                                onClick={() => handleSave(app.id)}
-                                style={{
-                                  padding: '0.75rem 1rem',
-                                  backgroundColor: 'var(--blue)',
-                                  color: '#fff',
-                                  border: 'none',
-                                  borderRadius: '10px',
-                                  cursor: 'pointer',
-                                  minWidth: '100px',
-                                }}
-                              >
-                                Save comment
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setActiveEditorId(null)}
-                                style={{
-                                  padding: '0.75rem 1rem',
-                                  backgroundColor: 'transparent',
-                                  color: 'var(--navy)',
-                                  border: '1px solid var(--line)',
-                                  borderRadius: '10px',
-                                  cursor: 'pointer',
-                                  minWidth: '100px',
-                                }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      {pagination && pagination.totalPages > 1 && (
-        <div className="admin-pagination">
-          <button
-            type="button"
-            className="admin-page-btn"
-            disabled={!pagination.hasPrevPage || loading}
-            onClick={() => goToPage(page - 1)}
-          >
-            ‹ Prev
-          </button>
-          <span>
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          <button
-            type="button"
-            className="admin-page-btn"
-            disabled={!pagination.hasNextPage || loading}
-            onClick={() => goToPage(page + 1)}
-          >
-            Next ›
-          </button>
-        </div>
-      )}
+        {pagination && pagination.totalPages > 1 && (
+          <Pager
+            page={pagination.currentPage || page}
+            totalPages={pagination.totalPages}
+            onChange={goToPage}
+            disabled={loading}
+            label="Submission pages"
+          />
+        )}
+      </section>
 
-      <ApplicationDetailModal application={detailApp} onClose={() => setDetailApp(null)} />
-    </div>
+      {/* Outside the panel: its entrance animation would otherwise trap the fixed overlay */}
+      <ApplicationDetailModal
+        application={detailApp}
+        onClose={() => setDetailApp(null)}
+        onUpdated={handleUpdated}
+      />
+    </>
   );
 }
 
 export default function FormsPage({ initialFormId }) {
-  const [chartApps, setChartApps] = useState([]);
-  const [chartLoading, setChartLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, completed: 0 });
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   const form = FORM_TYPES.find(f => f.id === initialFormId) || null;
 
   useEffect(() => {
-    if (!form) return;
+    if (!form) return undefined;
     let cancelled = false;
-    setChartLoading(true);
-    getApplications({ serviceType: form.id, limit: CHART_LIMIT, sortBy: 'createdAt', sortOrder: 'desc' })
+    setStatsLoading(true);
+
+    const params = {};
+    if (fromDate) params.startDate = fromDate;
+    if (toDate) params.endDate = toDate;
+
+    getDashboardStats(params)
       .then((res) => {
         if (cancelled) return;
-        setChartApps((res.applications || []).map(normalizeApplication));
+        const entry = (res.byServiceType || []).find(t => t.id === form.id);
+        setStats({ total: entry?.total || 0, completed: entry?.completed || 0 });
       })
       .catch(() => {
-        if (!cancelled) setChartApps([]);
+        if (!cancelled) setStats({ total: 0, completed: 0 });
       })
       .finally(() => {
-        if (!cancelled) setChartLoading(false);
+        if (!cancelled) setStatsLoading(false);
       });
-    return () => { cancelled = true; };
-  }, [form]);
 
-  const daily = useMemo(() => buildDailySeries(chartApps), [chartApps]);
-  const totalSubmitted = daily.reduce((s, d) => s + d.submitted, 0);
-  const totalCompleted = daily.reduce((s, d) => s + d.completed, 0);
-  const completionRate = totalSubmitted ? Math.round((totalCompleted / totalSubmitted) * 100) : 0;
+    return () => { cancelled = true; };
+  }, [form, fromDate, toDate]);
+
+  const hasFilter = Boolean(fromDate || toDate);
+  const completionRate = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
+  const rangeLabel = hasFilter
+    ? `${fromDate ? formatDateOnly(fromDate) : 'Earliest'} – ${toDate ? formatDateOnly(toDate) : 'Today'}`
+    : 'All time';
 
   if (!form) {
     return (
-      <div className="admin-empty">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
-        </svg>
-        <p>Select a form type from the Forms menu to view its submission charts.</p>
+      <div className="um-page">
+        <div className="um-panel">
+          <div className="um-empty-state">
+            <span className="um-empty-icon"><FiFileText size={24} /></span>
+            <h3>Choose a form</h3>
+            <p>Select a form type from the Forms menu to view its submissions and history.</p>
+          </div>
+        </div>
       </div>
     );
   }
 
+  const tiles = [
+    { key: 'total', cls: 'total', icon: <FiFileText size={15} />, label: 'Total submissions', value: stats.total, foot: hasFilter ? 'In the selected range' : 'All time' },
+    { key: 'completed', cls: 'active', icon: <FiCheckCircle size={15} />, label: 'Completed', value: stats.completed, foot: 'Approved or confirmed' },
+    { key: 'open', cls: 'open', icon: <FiActivity size={15} />, label: 'Still open', value: Math.max(0, stats.total - stats.completed), foot: 'Pending, flagged or rejected' },
+    { key: 'rate', cls: 'roles', icon: <FiActivity size={15} />, label: 'Completion rate', value: completionRate, suffix: '%', meter: completionRate, foot: hasFilter ? 'In the selected range' : 'Across this form type' },
+  ];
+
   return (
-    <div className="um-page forms-um-page">
-      <div className="um-hero form-um-hero">
+    <div className="um-page forms-um-page frm-page">
+      <section className="um-hero form-um-hero">
         <div className="um-hero-deco" aria-hidden="true">
           <span className="um-hero-orb" />
           <span className="um-hero-slash" />
@@ -562,52 +369,36 @@ export default function FormsPage({ initialFormId }) {
         </div>
         <div className="um-hero-top">
           <div className="um-hero-text">
-            <span className="um-hero-eyebrow"><FiFileText size={13} /> Form Operations</span>
+            <span className="um-hero-eyebrow"><FiFileText size={13} /> Forms</span>
             <h1>{form.label}</h1>
-            <p>Track submission flow, completion progress and applicant history in one place.</p>
+            <p>Every {form.label.toLowerCase()} application, its progress and the team&apos;s comments.</p>
           </div>
-          <span className="form-um-hero-icon" aria-hidden="true"><FiActivity size={26} /></span>
-        </div>
-        <div className="um-hero-tiles form-um-tiles">
-          <div className="um-hero-tile total">
-            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiFileText size={16} /></span>Submissions</div>
-            <div className="um-hero-tile-value">{totalSubmitted}</div>
-            <div className="um-hero-tile-foot">Last 14 days</div>
-          </div>
-          <div className="um-hero-tile active">
-            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiCheckCircle size={16} /></span>Completed</div>
-            <div className="um-hero-tile-value">{totalCompleted}</div>
-            <div className="um-hero-tile-foot">Approved or confirmed</div>
-          </div>
-          <div className="um-hero-tile roles">
-            <div className="um-hero-tile-head"><span className="um-hero-tile-icon"><FiActivity size={16} /></span>Completion rate</div>
-            <div className="um-hero-tile-value">{completionRate}%</div>
-            <div className="um-hero-tile-foot">Across this form type</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="um-panel form-weekly-card form-chart-panel">
-        <div className="form-chart-heading">
-          <div>
-            <span className="form-section-kicker">14-DAY ACTIVITY</span>
-            <h2>Submission performance</h2>
-            <p>Compare incoming submissions with completed applications.</p>
-          </div>
-          <div className="form-weekly-legend">
-            <span><span className="fw-dot submitted" /> Submitted</span>
-            <span><span className="fw-dot completed" /> Completed</span>
-          </div>
+          <span className="frm-range-chip">{rangeLabel}</span>
         </div>
 
-        {chartLoading ? (
-          <div className="admin-loading">Loading chart data…</div>
-        ) : (
-          <FormDetailBarChart daily={daily} />
-        )}
-      </div>
+        <div className="um-hero-tiles">
+          {tiles.map((tile, idx) => (
+            <div className={`um-hero-tile ${tile.cls}`} key={tile.key} style={{ '--i': idx }}>
+              <div className="um-hero-tile-head"><span className="um-hero-tile-icon">{tile.icon}</span>{tile.label}</div>
+              <div className="um-hero-tile-value">
+                {statsLoading ? <span className="dash-skeleton um-hero-skeleton" /> : <><AnimatedNumber value={tile.value} />{tile.suffix}</>}
+              </div>
+              {tile.meter != null && (
+                <div className="um-hero-meter" aria-hidden="true"><span style={{ width: `${statsLoading ? 0 : tile.meter}%` }} /></div>
+              )}
+              <div className="um-hero-tile-foot">{tile.foot}</div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      <RecentHistory formId={form.id} />
+      <RecentHistory
+        formId={form.id}
+        fromDate={fromDate}
+        toDate={toDate}
+        onFromDateChange={setFromDate}
+        onToDateChange={setToDate}
+      />
     </div>
   );
 }
