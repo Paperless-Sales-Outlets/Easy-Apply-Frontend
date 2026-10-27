@@ -163,7 +163,7 @@ export default function CustomerInfoStep({
       };
     }
     if (authUser) {
-      const line = [authUser.addressLine1, authUser.addressLine2, authUser.city, authUser.postalCode]
+      const line = [authUser.addressLine1, authUser.addressLine2, authUser.city, authUser.district, authUser.postalCode]
         .filter(Boolean)
         .join(', ');
       return {
@@ -173,7 +173,7 @@ export default function CustomerInfoStep({
         dob: authUser.dob || '',
         email: authUser.email || '',
         mobileNumber: authUser.phone || authUser.mobileNumber || mobileNumber || '',
-        registeredAddress: line || formData.address || '',
+        registeredAddress: line || authUser.address || '',
       };
     }
     return {
@@ -183,12 +183,38 @@ export default function CustomerInfoStep({
       dob: formData.dob || '',
       email: formData.email || '',
       mobileNumber: formData.mobileNumber || mobileNumber || '',
-      registeredAddress: formData.address || '',
+      registeredAddress: '',
     };
   })();
 
+  // Only existing customers with a registered address in DB can use Old / Registered Service Location
+  const isExistingCustomer = Boolean(
+    customerExists ||
+    selectedAccount ||
+    authUser ||
+    formData.isExistingCustomer === 'yes' ||
+    formData.isExistingCustomer === true
+  );
+
+  const hasRegisteredAddress = Boolean(
+    isExistingCustomer &&
+    knownProfile.registeredAddress &&
+    knownProfile.registeredAddress.trim().length > 0
+  );
+
   // Location choice: 'current' (Old / Registered Service Location) vs 'new' (New Installation Location)
-  const [locationType, setLocationType] = useState(formData.locationType || (knownProfile.registeredAddress ? 'current' : 'new'));
+  // If no registered address exists in DB, automatically default and lock to 'new'
+  const [locationType, setLocationType] = useState(() => {
+    if (!hasRegisteredAddress) return 'new';
+    return formData.locationType === 'new' ? 'new' : 'current';
+  });
+
+  // Keep locationType synced to 'new' if no registered address exists
+  useEffect(() => {
+    if (!hasRegisteredAddress && locationType !== 'new') {
+      setLocationType('new');
+    }
+  }, [hasRegisteredAddress, locationType]);
 
   // Sync profile fields to state
   useEffect(() => {
@@ -203,15 +229,15 @@ export default function CustomerInfoStep({
     };
     setFields({
       ...Object.fromEntries(Object.entries(known).filter(([, v]) => v)),
-      isExistingCustomer: selectedAccount || customerExists ? 'yes' : 'no',
+      isExistingCustomer: isExistingCustomer ? 'yes' : 'no',
     });
-  }, [selectedAccount, authUser, customerExists]);
+  }, [selectedAccount, authUser, customerExists, isExistingCustomer]);
 
   // Sync address based on locationType
   useEffect(() => {
     if (!setFields) return;
-    if (locationType === 'current') {
-      const addr = knownProfile.registeredAddress || formData.address || '';
+    if (locationType === 'current' && hasRegisteredAddress) {
+      const addr = knownProfile.registeredAddress;
       const matched = autoDetectAreaCode(addr);
       setFields({
         installAddress: addr,
@@ -227,7 +253,7 @@ export default function CustomerInfoStep({
         locationType: 'new',
       });
     }
-  }, [locationType, knownProfile.registeredAddress]);
+  }, [locationType, hasRegisteredAddress, knownProfile.registeredAddress]);
 
   const currentCityMatch = SRI_LANKA_CITY_POSTAL_DATA.find((c) => c.city === formData.city) || null;
   const currentCityCoords = currentCityMatch && currentCityMatch.lat && currentCityMatch.lng
@@ -426,37 +452,39 @@ export default function CustomerInfoStep({
           Choose Service Installation Option
         </h4>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-          {/* Option 1: Old / Registered Service Location (for Existing Customer) */}
-          <div
-            onClick={() => setLocationType('current')}
-            style={{
-              border: `2px solid ${locationType === 'current' ? '#0f57a8' : '#e2e8f0'}`,
-              backgroundColor: locationType === 'current' ? '#f0f7ff' : '#ffffff',
-              borderRadius: '14px',
-              padding: '1.25rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              position: 'relative',
-              boxShadow: locationType === 'current' ? '0 4px 14px rgba(15, 87, 168, 0.1)' : 'none',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span style={{ fontWeight: 800, fontSize: '0.98rem', color: locationType === 'current' ? '#0f57a8' : '#1e293b', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                <FiMapPin size={16} /> Old / Registered Service Location
-              </span>
-              <input
-                type="radio"
-                name="locationOption"
-                checked={locationType === 'current'}
-                onChange={() => setLocationType('current')}
-                style={{ accentColor: '#0f57a8', width: '18px', height: '18px' }}
-              />
+        <div style={{ display: 'grid', gridTemplateColumns: hasRegisteredAddress ? 'repeat(auto-fit, minmax(280px, 1fr))' : '1fr', gap: '1rem' }}>
+          {/* Option 1: Old / Registered Service Location — ONLY SHOWN IF ADDRESS EXISTS IN DB */}
+          {hasRegisteredAddress && (
+            <div
+              onClick={() => setLocationType('current')}
+              style={{
+                border: `2px solid ${locationType === 'current' ? '#0f57a8' : '#e2e8f0'}`,
+                backgroundColor: locationType === 'current' ? '#f0f7ff' : '#ffffff',
+                borderRadius: '14px',
+                padding: '1.25rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                position: 'relative',
+                boxShadow: locationType === 'current' ? '0 4px 14px rgba(15, 87, 168, 0.1)' : 'none',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 800, fontSize: '0.98rem', color: locationType === 'current' ? '#0f57a8' : '#1e293b', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                  <FiMapPin size={16} /> Old / Registered Service Location
+                </span>
+                <input
+                  type="radio"
+                  name="locationOption"
+                  checked={locationType === 'current'}
+                  onChange={() => setLocationType('current')}
+                  style={{ accentColor: '#0f57a8', width: '18px', height: '18px' }}
+                />
+              </div>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', fontWeight: 600, lineHeight: 1.4 }}>
+                {knownProfile.registeredAddress}
+              </p>
             </div>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', fontWeight: 600, lineHeight: 1.4 }}>
-              {knownProfile.registeredAddress || 'Use existing registered account service address.'}
-            </p>
-          </div>
+          )}
 
           {/* Option 2: New Installation Location */}
           <div
@@ -495,6 +523,47 @@ export default function CustomerInfoStep({
           </p>
         )}
       </div>
+
+      {/* ── Registered Address Confirmation Card (when Old / Registered Service Location is selected) ── */}
+      {locationType === 'current' && hasRegisteredAddress && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            backgroundColor: '#ffffff',
+            border: '1.5px solid #bfdbfe',
+            borderRadius: '16px',
+            padding: '1.25rem 1.5rem',
+            marginBottom: '1.5rem',
+            boxShadow: '0 4px 15px rgba(0, 86, 179, 0.04)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+            <div
+              style={{
+                width: '26px',
+                height: '26px',
+                borderRadius: '50%',
+                backgroundColor: '#dcfce7',
+                color: '#16a34a',
+                display: 'grid',
+                placeItems: 'center',
+              }}
+            >
+              <FiCheck size={15} />
+            </div>
+            <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a' }}>
+              Service will be installed at your registered account address:
+            </span>
+          </div>
+          <p style={{ margin: '0 0 0.4rem 2.1rem', fontSize: '0.98rem', fontWeight: 700, color: '#0f57a8' }}>
+            {knownProfile.registeredAddress}
+          </p>
+          <p style={{ margin: '0 0 0 2.1rem', fontSize: '0.78rem', color: '#64748b' }}>
+            To install at a different address, select &quot;New Installation Location&quot; above.
+          </p>
+        </motion.div>
+      )}
 
       {/* ── If New Location Selected: Area Code, City Dropdown & Interactive Address Input with GPS / Map Picker ── */}
       {locationType === 'new' && (
