@@ -987,7 +987,11 @@ export default function KycReviewPage() {
                   <span className="kycv-card-icon blue"><Icon name="idCard" size={17} /></span>
                   <div>
                     <h3>Identity documents</h3>
-                    <p>{CUSTOMER_TYPES[customerTypeOf(current)].hint}.</p>
+                    <p>
+                      {customerTypeOf(current) === 'new' && current.kind === 'account'
+                        ? 'New registration — needs NIC front, NIC back and a live selfie; the selfie is compared with the NIC photo. The signature comes with their first request'
+                        : CUSTOMER_TYPES[customerTypeOf(current)].hint}.
+                    </p>
                   </div>
                   {customerTypeOf(current) !== 'registered' && compareDocs.length > 1 && faceDoc && (
                     <button type="button" className="kycv-compare-btn" onClick={openCompare}>
