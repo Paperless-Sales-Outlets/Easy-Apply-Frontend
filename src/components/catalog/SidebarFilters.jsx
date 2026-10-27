@@ -1,32 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { FiFilter, FiChevronDown, FiChevronRight, FiX, FiLayers, FiTv, FiGlobe, FiPhone, FiTag } from 'react-icons/fi';
-import { getProductHierarchy } from '../../services/productService';
+import React from 'react';
+import {
+  FiFilter,
+  FiX,
+  FiCheck,
+  FiGlobe,
+  FiTv,
+  FiPhone,
+  FiWifi,
+  FiZap,
+  FiGrid,
+  FiRotateCcw,
+} from 'react-icons/fi';
 
 const PRODUCT_TYPES = [
-  { id: 'PEO TV', label: 'PEO TV' },
-  { id: 'Fibre Broadband', label: 'Fibre Broadband' },
-  { id: 'LTE Home', label: 'LTE Home' },
-  { id: 'Voice', label: 'Voice' },
+  { id: 'Fibre Broadband', label: 'Fibre Broadband', icon: FiGlobe, iconColor: '#0284c7' },
+  { id: 'PEO TV', label: 'PEO TV', icon: FiTv, iconColor: '#7c3aed' },
+  { id: 'LTE Home', label: 'LTE Home (Wireless)', icon: FiWifi, iconColor: '#ea580c' },
+  { id: 'Voice', label: 'Voice Megaline', icon: FiPhone, iconColor: '#16a34a' },
 ];
 
 const SPEEDS = [
-  { id: 'up_to_100', label: 'Up to 100 Mbps' },
-  { id: '100_300', label: '100 – 300 Mbps' },
-  { id: '300_500', label: '300 – 500 Mbps' },
-  { id: 'above_500', label: 'Above 500 Mbps' },
+  { id: 'up_to_100', label: 'Up to 100 Mbps', tier: 'Basic' },
+  { id: '100_300', label: '100 – 300 Mbps', tier: 'Fast' },
+  { id: '300_500', label: '300 – 500 Mbps', tier: 'Ultra' },
+  { id: 'above_500', label: 'Above 500 Mbps', tier: 'Gigabit' },
 ];
-
-const normalizeTreeName = (name = '') => String(name).toLowerCase().replace(/\s+/g, ' ').trim();
 
 export default function SidebarFilters({
   activeCategory = 'All Products',
   onSelectCategory,
-  // Optional: (node, parentNode) => void. When provided, tree clicks go here instead of
-  // onSelectCategory so the page can filter by the exact node (root or child package).
-  onSelectTreeNode,
-  activeTreeKey = null,
-  // Optional: { [optionId]: number of matching products }. When provided, each checkbox
-  // shows its count and options with no products are greyed out.
+  onSelectTreeNode, // kept for backwards compatibility
+  activeTreeKey = null, // kept for backwards compatibility
   typeCounts,
   speedCounts,
   selectedTypes = [],
@@ -37,62 +41,33 @@ export default function SidebarFilters({
   onApply,
   onCloseMobile,
 }) {
-  const [hierarchy, setHierarchy] = useState([]);
-  const [expandedNodes, setExpandedNodes] = useState({});
-  const [loadingHierarchy, setLoadingHierarchy] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadHierarchy = async () => {
-      try {
-        const data = await getProductHierarchy();
-        if (isMounted) {
-          setHierarchy(Array.isArray(data) ? data : []);
-          // Auto-expand all root nodes by default
-          const initialExpanded = {};
-          (Array.isArray(data) ? data : []).forEach((node) => {
-            initialExpanded[node.id || node.name] = true;
-          });
-          setExpandedNodes(initialExpanded);
-        }
-      } catch (e) {
-        console.warn('Hierarchy fetch error:', e);
-      } finally {
-        if (isMounted) setLoadingHierarchy(false);
-      }
-    };
-    loadHierarchy();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const toggleNode = (nodeId) => {
-    setExpandedNodes((prev) => ({
-      ...prev,
-      [nodeId]: !prev[nodeId],
-    }));
-  };
-
-  const getCategoryIcon = (name = '') => {
-    const lower = name.toLowerCase();
-    if (lower.includes('peo') || lower.includes('tv')) return <FiTv size={14} color="#0056b3" />;
-    if (lower.includes('fibre') || lower.includes('broadband')) return <FiGlobe size={14} color="#0056b3" />;
-    if (lower.includes('voice') || lower.includes('phone')) return <FiPhone size={14} color="#0056b3" />;
-    return <FiLayers size={14} color="#0056b3" />;
-  };
+  const activeCount = selectedTypes.length + selectedSpeeds.length;
 
   return (
     <aside
       style={{
         backgroundColor: '#ffffff',
-        borderRadius: '16px',
+        borderRadius: '18px',
         border: '1px solid #e2e8f0',
-        padding: '1.25rem',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+        padding: '1.4rem',
+        boxShadow: '0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 0 1px rgba(15, 23, 42, 0.1)',
         width: '100%',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      {/* Top Brand Accent Line */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3.5px',
+          background: 'linear-gradient(90deg, #0056b3 0%, #0ea5e9 60%, #10b981 100%)',
+        }}
+      />
+
       {/* Header */}
       <div
         style={{
@@ -101,26 +76,70 @@ export default function SidebarFilters({
           alignItems: 'center',
           paddingBottom: '1rem',
           borderBottom: '1px solid #f1f5f9',
-          marginBottom: '1.2rem',
+          marginBottom: '1.1rem',
         }}
       >
-        <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <FiFilter size={16} color="#0056b3" /> Filter Products
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <button
-            onClick={onClearAll}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <div
             style={{
-              background: 'none',
-              border: 'none',
+              width: '32px',
+              height: '32px',
+              borderRadius: '10px',
+              backgroundColor: '#eff6ff',
               color: '#0056b3',
-              fontSize: '0.82rem',
-              fontWeight: 700,
-              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            Clear All
-          </button>
+            <FiFilter size={16} />
+          </div>
+          <div>
+            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
+              Filters
+            </div>
+            {activeCount > 0 && (
+              <span style={{ fontSize: '0.72rem', color: '#0ea5e9', fontWeight: 700 }}>
+                {activeCount} active {activeCount === 1 ? 'filter' : 'filters'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          {activeCount > 0 && (
+            <button
+              onClick={onClearAll}
+              type="button"
+              style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                color: '#475569',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                padding: '0.35rem 0.65rem',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#fee2e2';
+                e.currentTarget.style.color = '#dc2626';
+                e.currentTarget.style.borderColor = '#fca5a5';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#f8fafc';
+                e.currentTarget.style.color = '#475569';
+                e.currentTarget.style.borderColor = '#e2e8f0';
+              }}
+            >
+              <FiRotateCcw size={11} /> Reset
+            </button>
+          )}
+
           {onCloseMobile && (
             <button
               type="button"
@@ -131,8 +150,9 @@ export default function SidebarFilters({
                 background: '#f1f5f9',
                 border: 'none',
                 borderRadius: '8px',
-                width: '30px',
-                height: '30px',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#334155',
@@ -145,231 +165,353 @@ export default function SidebarFilters({
         </div>
       </div>
 
-      {/* Filter Body */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.4rem' }}>
-        {/* Section 1: Live Category Hierarchy Tree */}
-        <div>
-          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <FiLayers size={14} color="#0056b3" /> Category Tree (Live API)
-          </div>
+      {/* Active Filter Badges Quick Bar */}
+      {activeCount > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '0.4rem',
+            padding: '0.65rem',
+            backgroundColor: '#f8fafc',
+            borderRadius: '12px',
+            marginBottom: '1.25rem',
+            border: '1px dashed #cbd5e1',
+          }}
+        >
+          {selectedTypes.map((typeId) => (
+            <span
+              key={`badge-${typeId}`}
+              onClick={() => onTypeToggle(typeId)}
+              title="Click to remove"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                backgroundColor: '#eff6ff',
+                color: '#0056b3',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                padding: '0.2rem 0.55rem',
+                borderRadius: '9999px',
+                cursor: 'pointer',
+                border: '1px solid #bfdbfe',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {typeId}
+              <FiX size={12} />
+            </span>
+          ))}
 
-          {loadingHierarchy ? (
-            <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>Loading categories...</div>
-          ) : hierarchy.length === 0 ? (
-            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>No subcategories found</div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              {hierarchy.map((node) => {
-                const nodeKey = node.id || node.name;
-                const isExpanded = expandedNodes[nodeKey];
-                const hasChildren = Array.isArray(node.children) && node.children.length > 0;
-                const isChildSelected = hasChildren && node.children.some((c) => (c.id || c.name) === activeTreeKey);
-                // Case-insensitive so API names like "Peo TV" still highlight for the "PEO TV" category
-                const isNodeActive = activeTreeKey
-                  ? activeTreeKey === nodeKey || isChildSelected
-                  : activeCategory !== 'All Products' && normalizeTreeName(activeCategory) === normalizeTreeName(node.name);
-
-                return (
-                  <div key={node.id || node.name} style={{ borderRadius: '8px', overflow: 'hidden' }}>
-                    {/* Root Node Header */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '0.45rem 0.6rem',
-                        borderRadius: '8px',
-                        backgroundColor: isNodeActive ? '#eff6ff' : '#f8fafc',
-                        border: `1px solid ${isNodeActive ? '#bfdbfe' : '#e2e8f0'}`,
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
-                      onClick={() => {
-                        if (onSelectTreeNode) onSelectTreeNode(node, null);
-                        else if (onSelectCategory) onSelectCategory(node.name);
-                        if (hasChildren) toggleNode(nodeKey);
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.84rem', fontWeight: 700, color: isNodeActive ? '#0056b3' : '#1e293b' }}>
-                        {getCategoryIcon(node.name)}
-                        <span>{node.name}</span>
-                      </div>
-                      {hasChildren && (
-                        <span style={{ color: '#64748b', display: 'flex', alignItems: 'center' }}>
-                          {isExpanded ? <FiChevronDown size={14} /> : <FiChevronRight size={14} />}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Subcategory / Child Nodes */}
-                    {hasChildren && isExpanded && (
-                      <div style={{ paddingLeft: '1.25rem', paddingTop: '0.35rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                        {node.children.map((child) => {
-                          const isChildActive = (child.id || child.name) === activeTreeKey;
-                          return (
-                          <div
-                            key={child.id || child.name}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.4rem',
-                              padding: '0.35rem 0.5rem',
-                              borderRadius: '6px',
-                              fontSize: '0.8rem',
-                              color: isChildActive ? '#0056b3' : '#475569',
-                              fontWeight: isChildActive ? 700 : 600,
-                              cursor: 'pointer',
-                              backgroundColor: isChildActive ? '#eff6ff' : '#ffffff',
-                              border: `1px solid ${isChildActive ? '#bfdbfe' : 'transparent'}`,
-                              transition: 'all 0.15s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#f1f5f9';
-                              e.currentTarget.style.color = '#0056b3';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = isChildActive ? '#eff6ff' : '#ffffff';
-                              e.currentTarget.style.color = isChildActive ? '#0056b3' : '#475569';
-                            }}
-                            onClick={() => {
-                              if (onSelectTreeNode) onSelectTreeNode(child, node);
-                              else if (onSelectCategory) onSelectCategory(node.name);
-                            }}
-                          >
-                            <FiTag size={11} color={isChildActive ? '#0056b3' : '#94a3b8'} />
-                            <span>{child.name}</span>
-                          </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {selectedSpeeds.map((speedId) => {
+            const sp = SPEEDS.find((s) => s.id === speedId);
+            return (
+              <span
+                key={`badge-${speedId}`}
+                onClick={() => onSpeedToggle(speedId)}
+                title="Click to remove"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  backgroundColor: '#ecfdf5',
+                  color: '#047857',
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  padding: '0.2rem 0.55rem',
+                  borderRadius: '9999px',
+                  cursor: 'pointer',
+                  border: '1px solid #a7f3d0',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {sp ? sp.label : speedId}
+                <FiX size={12} />
+              </span>
+            );
+          })}
         </div>
+      )}
 
-        {/* Section 2: Product Type */}
+      {/* Filter Body */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.6rem' }}>
+        {/* Section 1: Product Type */}
         <div>
-          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem' }}>
-            Product Type
+          <div
+            style={{
+              fontSize: '0.82rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#64748b',
+              marginBottom: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+            }}
+          >
+            <FiGrid size={13} color="#0056b3" /> Product Type
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {PRODUCT_TYPES.map((pt) => {
               const checked = selectedTypes.includes(pt.id);
               const count = typeCounts ? typeCounts[pt.id] || 0 : null;
-              // A ticked option stays clickable so it can always be unticked
               const isEmpty = count === 0 && !checked;
+              const IconComponent = pt.icon;
+
               return (
-                <label
+                <div
                   key={pt.id}
-                  title={isEmpty ? 'No products available' : undefined}
+                  onClick={() => {
+                    if (!isEmpty) onTypeToggle(pt.id);
+                  }}
+                  role="checkbox"
+                  aria-checked={checked}
+                  tabIndex={isEmpty ? -1 : 0}
+                  onKeyDown={(e) => {
+                    if ((e.key === ' ' || e.key === 'Enter') && !isEmpty) {
+                      e.preventDefault();
+                      onTypeToggle(pt.id);
+                    }
+                  }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.6rem',
-                    fontSize: '0.85rem',
-                    color: isEmpty ? '#94a3b8' : '#334155',
+                    gap: '0.65rem',
+                    padding: '0.6rem 0.75rem',
+                    borderRadius: '12px',
+                    border: `1.5px solid ${checked ? '#0056b3' : '#f1f5f9'}`,
+                    backgroundColor: checked ? '#f0f7ff' : '#ffffff',
                     cursor: isEmpty ? 'not-allowed' : 'pointer',
+                    opacity: isEmpty ? 0.45 : 1,
+                    transition: 'all 0.15s ease',
+                    boxShadow: checked ? '0 2px 8px rgba(0, 86, 179, 0.08)' : 'none',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isEmpty && !checked) {
+                      e.currentTarget.style.backgroundColor = '#f8fafc';
+                      e.currentTarget.style.borderColor = '#cbd5e1';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isEmpty && !checked) {
+                      e.currentTarget.style.backgroundColor = '#ffffff';
+                      e.currentTarget.style.borderColor = '#f1f5f9';
+                    }
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    disabled={isEmpty}
-                    onChange={() => onTypeToggle(pt.id)}
+                  {/* Custom Checkbox Pill */}
+                  <div
                     style={{
-                      width: '16px',
-                      height: '16px',
-                      accentColor: '#0056b3',
-                      cursor: isEmpty ? 'not-allowed' : 'pointer',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '5px',
+                      border: `1.8px solid ${checked ? '#0056b3' : '#cbd5e1'}`,
+                      backgroundColor: checked ? '#0056b3' : '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      transition: 'all 0.15s ease',
                     }}
-                  />
-                  <span>{pt.label}</span>
+                  >
+                    {checked && <FiCheck size={12} color="#ffffff" strokeWidth={3} />}
+                  </div>
+
+                  {/* Icon */}
+                  <IconComponent size={15} color={checked ? '#0056b3' : pt.iconColor} />
+
+                  {/* Label */}
+                  <span
+                    style={{
+                      fontSize: '0.86rem',
+                      fontWeight: checked ? 700 : 600,
+                      color: checked ? '#0056b3' : '#1e293b',
+                      flex: 1,
+                    }}
+                  >
+                    {pt.label}
+                  </span>
+
+                  {/* Count Badge */}
                   {count !== null && (
-                    <span style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: 700, color: isEmpty ? '#cbd5e1' : '#64748b' }}>
-                      ({count})
+                    <span
+                      style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        padding: '0.15rem 0.45rem',
+                        borderRadius: '9999px',
+                        backgroundColor: checked ? '#dbeafe' : '#f1f5f9',
+                        color: checked ? '#0056b3' : '#64748b',
+                      }}
+                    >
+                      {count}
                     </span>
                   )}
-                </label>
+                </div>
               );
             })}
           </div>
         </div>
 
-        {/* Section 3: Speed */}
+        {/* Section 2: Connection Speed */}
         <div>
-          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.75rem' }}>
-            Connection Speed
+          <div
+            style={{
+              fontSize: '0.82rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#64748b',
+              marginBottom: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+            }}
+          >
+            <FiZap size={13} color="#0056b3" /> Connection Speed
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {SPEEDS.map((sp) => {
               const checked = selectedSpeeds.includes(sp.id);
               const count = speedCounts ? speedCounts[sp.id] || 0 : null;
-              // A ticked option stays clickable so it can always be unticked
               const isEmpty = count === 0 && !checked;
+
               return (
-                <label
+                <div
                   key={sp.id}
-                  title={isEmpty ? 'No products available' : undefined}
+                  onClick={() => {
+                    if (!isEmpty) onSpeedToggle(sp.id);
+                  }}
+                  role="checkbox"
+                  aria-checked={checked}
+                  tabIndex={isEmpty ? -1 : 0}
+                  onKeyDown={(e) => {
+                    if ((e.key === ' ' || e.key === 'Enter') && !isEmpty) {
+                      e.preventDefault();
+                      onSpeedToggle(sp.id);
+                    }
+                  }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.6rem',
-                    fontSize: '0.85rem',
-                    color: isEmpty ? '#94a3b8' : '#334155',
+                    gap: '0.65rem',
+                    padding: '0.6rem 0.75rem',
+                    borderRadius: '12px',
+                    border: `1.5px solid ${checked ? '#0056b3' : '#f1f5f9'}`,
+                    backgroundColor: checked ? '#f0f7ff' : '#ffffff',
                     cursor: isEmpty ? 'not-allowed' : 'pointer',
+                    opacity: isEmpty ? 0.45 : 1,
+                    transition: 'all 0.15s ease',
+                    boxShadow: checked ? '0 2px 8px rgba(0, 86, 179, 0.08)' : 'none',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isEmpty && !checked) {
+                      e.currentTarget.style.backgroundColor = '#f8fafc';
+                      e.currentTarget.style.borderColor = '#cbd5e1';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isEmpty && !checked) {
+                      e.currentTarget.style.backgroundColor = '#ffffff';
+                      e.currentTarget.style.borderColor = '#f1f5f9';
+                    }
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    disabled={isEmpty}
-                    onChange={() => onSpeedToggle(sp.id)}
+                  {/* Custom Checkbox Pill */}
+                  <div
                     style={{
-                      width: '16px',
-                      height: '16px',
-                      accentColor: '#0056b3',
-                      cursor: isEmpty ? 'not-allowed' : 'pointer',
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '5px',
+                      border: `1.8px solid ${checked ? '#0056b3' : '#cbd5e1'}`,
+                      backgroundColor: checked ? '#0056b3' : '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      transition: 'all 0.15s ease',
                     }}
-                  />
-                  <span>{sp.label}</span>
+                  >
+                    {checked && <FiCheck size={12} color="#ffffff" strokeWidth={3} />}
+                  </div>
+
+                  {/* Label */}
+                  <span
+                    style={{
+                      fontSize: '0.86rem',
+                      fontWeight: checked ? 700 : 600,
+                      color: checked ? '#0056b3' : '#1e293b',
+                      flex: 1,
+                    }}
+                  >
+                    {sp.label}
+                  </span>
+
+                  {/* Tier Pill */}
+                  <span
+                    style={{
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      padding: '0.12rem 0.4rem',
+                      borderRadius: '6px',
+                      backgroundColor: '#f1f5f9',
+                      color: '#475569',
+                    }}
+                  >
+                    {sp.tier}
+                  </span>
+
+                  {/* Count Badge */}
                   {count !== null && (
-                    <span style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: 700, color: isEmpty ? '#cbd5e1' : '#64748b' }}>
-                      ({count})
+                    <span
+                      style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        padding: '0.15rem 0.45rem',
+                        borderRadius: '9999px',
+                        backgroundColor: checked ? '#dbeafe' : '#f1f5f9',
+                        color: checked ? '#0056b3' : '#64748b',
+                      }}
+                    >
+                      {count}
                     </span>
                   )}
-                </label>
+                </div>
               );
             })}
           </div>
         </div>
 
-        {/* Apply Filters Button */}
+        {/* Apply Filters Button (for mobile drawer/popup) */}
         {onApply && (
           <div style={{ marginTop: '0.5rem' }}>
             <button
               onClick={onApply}
+              type="button"
               style={{
                 width: '100%',
-                backgroundColor: '#0056b3',
+                background: 'linear-gradient(135deg, #0056b3 0%, #0284c7 100%)',
                 color: '#ffffff',
                 border: 'none',
-                borderRadius: '8px',
-                padding: '0.65rem 1rem',
-                fontWeight: 700,
-                fontSize: '0.88rem',
+                borderRadius: '12px',
+                padding: '0.75rem 1rem',
+                fontWeight: 800,
+                fontSize: '0.9rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.45rem',
-                boxShadow: '0 3px 10px rgba(0,86,179,0.25)',
+                boxShadow: '0 4px 14px rgba(0, 86, 179, 0.25)',
+                transition: 'all 0.15s ease',
               }}
             >
               <FiFilter size={15} />
-              <span>Apply Filters</span>
+              <span>Show Results</span>
             </button>
           </div>
         )}

@@ -57,7 +57,12 @@ export default function ReviewStep({ formData, selectedProduct, goTo, onEditCart
       </Section>
 
       <Section title="Installation Location" onEdit={() => goTo('location')}>
-        <Row label="Address" value={formData.installAddress || formData.address} />
+        <Row label="Full Address" value={formData.installAddress || formData.address} />
+        {formData.addressLine1 && <Row label="Address Line 1" value={formData.addressLine1} />}
+        {formData.addressLine2 && <Row label="Address Line 2" value={formData.addressLine2} />}
+        {(formData.nearestLandmark || formData.landmark) && (
+          <Row label="Nearest Landmark" value={formData.nearestLandmark || formData.landmark} />
+        )}
         <Row label="City" value={formData.city} />
         {formData.latitude && formData.longitude && (
           <Row label="GPS Coordinates" value={`${Number(formData.latitude).toFixed(5)}° N, ${Number(formData.longitude).toFixed(5)}° E (Verified by GPS)`} />

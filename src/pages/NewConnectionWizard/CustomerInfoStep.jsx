@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiUser, FiMapPin, FiCheck, FiNavigation, FiCompass, FiZap, FiCrosshair, FiMaximize2 } from 'react-icons/fi';
-import AddressInputWithMap from '../../components/form/AddressInputWithMap';
+import { FiUser, FiMapPin, FiCheck, FiNavigation, FiCompass, FiZap, FiCrosshair, FiMaximize2, FiHome } from 'react-icons/fi';
 import LocationPickerModal from '../../components/form/LocationPickerModal';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -263,6 +262,23 @@ export default function CustomerInfoStep({
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [detectingGps, setDetectingGps] = useState(false);
 
+  // Helper to compose full installation address from separate physical fields + city/postal
+  const composeFullAddress = ({
+    addressLine1 = formData.addressLine1 || '',
+    addressLine2 = formData.addressLine2 || '',
+    nearestLandmark = formData.nearestLandmark || formData.landmark || '',
+    city = formData.city || '',
+    postalCode = formData.postalCode || '',
+  } = {}) => {
+    const parts = [];
+    if (addressLine1 && addressLine1.trim()) parts.push(addressLine1.trim());
+    if (addressLine2 && addressLine2.trim()) parts.push(addressLine2.trim());
+    if (nearestLandmark && nearestLandmark.trim()) parts.push(`Landmark: ${nearestLandmark.trim()}`);
+    if (city && city.trim()) parts.push(city.trim());
+    if (postalCode && postalCode.trim() && !city.includes(postalCode)) parts.push(postalCode.trim());
+    return parts.join(', ');
+  };
+
   // Direct High-Accuracy Device GPS Detection
   const handleDirectGpsDetect = () => {
     if (!navigator.geolocation) {
@@ -280,7 +296,7 @@ export default function CustomerInfoStep({
           );
           const data = await res.json();
           const cleanAddr = data?.display_name || `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`;
-          handleLocationSelect({ address: cleanAddr, coords: { lat, lng } });
+          handleLocationSelect({ address: cleanAddr, coords: { lat, lng }, details: data?.address });
           toast.success(`GPS Location locked: ${lat.toFixed(4)}°, ${lng.toFixed(4)}°`);
         } catch {
           handleLocationSelect({ address: `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`, coords: { lat, lng } });
@@ -297,26 +313,32 @@ export default function CustomerInfoStep({
     );
   };
 
-  // Handle address input change (typing, map picking, current GPS location)
-  const handleAddressInputChange = (e) => {
-    if (handleChange) handleChange(e);
-    const newAddressVal = e.target.value;
-    const matched = autoDetectAreaCode(newAddressVal);
-    const updates = {
-      installAddress: newAddressVal,
-      address: newAddressVal,
+  // Handle address line change (Address Line 1, Line 2, Landmark)
+  const handleAddressLineChange = (field, value) => {
+    const updated = {
+      [field]: value,
     };
-    if (e.coords) {
-      updates.latitude = e.coords.lat;
-      updates.longitude = e.coords.lng;
-      updates.gpsCoordinates = e.coords;
+    if (field === 'nearestLandmark') {
+      updated.landmark = value;
     }
+    const full = composeFullAddress({
+      ...formData,
+      [field]: value,
+    });
+    updated.installAddress = full;
+    updated.address = full;
+
+    const matched = autoDetectAreaCode(full);
     if (matched) {
-      updates.areaCode = matched.code;
-      setAutoDetectedPill(`Auto-selected Area Code ${matched.code} from address`);
+      updated.areaCode = matched.code;
+      setAutoDetectedPill(`Auto-selected Area Code ${matched.code}`);
     }
+
     if (setFields) {
-      setFields(updates);
+      setFields(updated);
+    }
+    if (handleChange) {
+      handleChange({ target: { name: field, value } });
     }
   };
 
@@ -325,6 +347,11 @@ export default function CustomerInfoStep({
     const match = SRI_LANKA_CITY_POSTAL_DATA.find((c) => c.city === cityName);
 
     if (setFields) {
+      const full = composeFullAddress({
+        ...formData,
+        city: cityName,
+        postalCode: match?.postalCode || '',
+      });
       const updates = {
         city: cityName,
         district: match?.district || '',
@@ -332,14 +359,11 @@ export default function CustomerInfoStep({
         latitude: match?.lat || null,
         longitude: match?.lng || null,
         areaCode: match?.areaCode || formData.areaCode || '',
+        installAddress: full,
+        address: full,
       };
-      if (!formData.installAddress || formData.installAddress === formData.city || formData.installAddress.trim() === '') {
-        updates.installAddress = match ? `${match.city}, ${match.district}` : cityName;
-        updates.address = updates.installAddress;
-      }
       setFields(updates);
     }
-
   };
 
   const handleLocationSelect = (param1, param2) => {
@@ -353,18 +377,7 @@ export default function CustomerInfoStep({
       address = param2;
     }
 
-    const newAddr = address || formData.installAddress || formData.address || '';
-    const matched = autoDetectAreaCode(newAddr);
-
-    const updates = {
-      installAddress: newAddr,
-      address: newAddr,
-      ...(matched ? { areaCode: matched.code } : {}),
-    };
-
-    if (matched) {
-      setAutoDetectedPill(`Auto-selected Area Code ${matched.code} from location`);
-    }
+    const updates = {};
 
     if (coords && typeof coords.lat === 'number' && typeof coords.lng === 'number') {
       updates.latitude = coords.lat;
@@ -392,6 +405,27 @@ export default function CustomerInfoStep({
           if (nameMatch.areaCode) updates.areaCode = nameMatch.areaCode;
         }
       }
+    }
+
+    // Pre-populate addressLine1 if currently empty
+    if (address && typeof address === 'string') {
+      if (!formData.addressLine1 || formData.addressLine1.trim() === '') {
+        const cleanStreet = address.split(',')[0]?.trim() || address;
+        updates.addressLine1 = cleanStreet;
+      }
+    }
+
+    const full = composeFullAddress({
+      ...formData,
+      ...updates,
+    });
+    updates.installAddress = full || address || formData.installAddress || '';
+    updates.address = updates.installAddress;
+
+    const matched = autoDetectAreaCode(updates.installAddress);
+    if (matched) {
+      updates.areaCode = matched.code;
+      setAutoDetectedPill(`Auto-selected Area Code ${matched.code} from location`);
     }
 
     if (setFields) {
@@ -565,7 +599,7 @@ export default function CustomerInfoStep({
         </motion.div>
       )}
 
-      {/* ── If New Location Selected: Area Code, City Dropdown & Interactive Address Input with GPS / Map Picker ── */}
+      {/* ── If New Location Selected: Balanced Two-Column Layout ── */}
       {locationType === 'new' && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -574,256 +608,456 @@ export default function CustomerInfoStep({
           style={{
             backgroundColor: '#ffffff',
             border: '1.5px solid #bfdbfe',
-            borderRadius: '16px',
+            borderRadius: '18px',
             padding: '1.5rem',
             marginBottom: '1.5rem',
-            boxShadow: '0 4px 15px rgba(0, 86, 179, 0.04)',
+            boxShadow: '0 4px 20px rgba(0, 86, 179, 0.04)',
           }}
         >
-          <div style={{ marginBottom: '1.25rem' }}>
-            {/* City / Area Dropdown */}
-            <div>
-              <label
-                htmlFor="nc-city-select"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.88rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.45rem' }}
-              >
-                <FiCompass size={15} color="#0f57a8" /> Select City / Region <span style={{ color: '#dc2626' }}>*</span>
-              </label>
-              <select
-                id="nc-city-select"
-                name="city"
-                value={formData.city || ''}
-                onChange={handleCitySelect}
-                style={{
-                  width: '100%',
-                  padding: '0.85rem 1rem',
-                  fontSize: '0.95rem',
-                  borderRadius: '12px',
-                  border: '1.5px solid #cbd5e1',
-                  backgroundColor: '#ffffff',
-                  color: '#0f172a',
-                  fontWeight: 600,
-                  outline: 'none',
-                }}
-                required
-              >
-                <option value="" disabled>
-                  Choose city or area
-                </option>
-                {SRI_LANKA_CITY_POSTAL_DATA.map((item) => (
-                  <option key={item.label} value={item.city}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-
-              {formData.city && (() => {
-                const selectedCityData = SRI_LANKA_CITY_POSTAL_DATA.find((item) => item.city === formData.city);
-                const isFibreReq = /fibre|fiber|ftth/i.test(selectedProduct?.productName || selectedProduct?.name || selectedProduct?.category || '');
-                if (selectedCityData?.fibreAvailable === false && isFibreReq) {
-                  return (
-                    <div style={{ marginTop: '0.55rem', padding: '0.55rem 0.85rem', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', fontSize: '0.82rem', color: '#c2410c', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                      <FiZap size={15} color="#ea580c" style={{ flexShrink: 0 }} />
-                      <span>Demo coverage data does not include Fibre in <strong>{selectedCityData.city}</strong>. Check OSS feasibility for actual availability; LTE may be an alternative.</span>
-                    </div>
-                  );
-                } else if (selectedCityData?.fibreAvailable && isFibreReq) {
-                  return (
-                    <div style={{ marginTop: '0.55rem', padding: '0.55rem 0.85rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', fontSize: '0.82rem', color: '#15803d', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                      <FiCheck size={15} color="#16a34a" style={{ flexShrink: 0 }} />
-                      <span>Demo data lists Fibre coverage in <strong>{selectedCityData.city}</strong>. Actual availability still requires OSS verification.</span>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-            </div>
-          </div>
-
-          {/* Detailed Address Input with Map Pin & Current Location Detection */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.45rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>
-                Street Address &amp; Exact Location <span style={{ color: '#dc2626' }}>*</span>
-              </label>
-
-              {/* Direct GPS Quick Trigger */}
-              <div style={{ display: 'flex', gap: '0.4rem' }}>
-                <button
-                  type="button"
-                  onClick={handleDirectGpsDetect}
-                  disabled={detectingGps}
-                  style={{
-                    backgroundColor: '#eff6ff',
-                    border: '1px solid #bfdbfe',
-                    color: '#0f57a8',
-                    padding: '0.25rem 0.6rem',
-                    borderRadius: '8px',
-                    fontSize: '0.76rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                  }}
-                >
-                  <FiCrosshair size={12} />
-                  {detectingGps ? 'Locking GPS...' : 'Auto-Detect GPS'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsMapModalOpen(true)}
-                  style={{
-                    backgroundColor: '#f0fdf4',
-                    border: '1px solid #bbf7d0',
-                    color: '#166534',
-                    padding: '0.25rem 0.6rem',
-                    borderRadius: '8px',
-                    fontSize: '0.76rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                  }}
-                >
-                  <FiMapPin size={12} />
-                  Pick Exact Spot on Map
-                </button>
-              </div>
-            </div>
-
-            <AddressInputWithMap
-              name="installAddress"
-              label=""
-              value={formData.installAddress || ''}
-              onChange={handleAddressInputChange}
-              onLocationSelect={handleLocationSelect}
-              defaultCenter={currentCityCoords}
-              selectedCoords={formData.latitude && formData.longitude ? { lat: formData.latitude, lng: formData.longitude } : null}
-              placeholder="Enter installation address, click 'Pick on Map', or 'Detect My Location'..."
-              required
-            />
-
-            {/* GPS Locked Confirmation Box & Mini Map Preview */}
-            {formData.latitude && formData.longitude ? (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
+              gap: '1.75rem',
+              alignItems: 'start',
+            }}
+          >
+            {/* ──── LEFT COLUMN: Standard Physical Installation Address ──── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div
                 style={{
-                  backgroundColor: '#f0fdf4',
-                  border: '1.5px solid #86efac',
-                  borderRadius: '14px',
-                  padding: '1rem',
-                  marginTop: '0.85rem',
-                  boxShadow: '0 2px 8px rgba(22, 163, 74, 0.05)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  borderBottom: '1.5px solid #f1f5f9',
+                  paddingBottom: '0.65rem',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#dcfce7', color: '#16a34a', display: 'grid', placeItems: 'center' }}>
-                      <FiCheck size={16} />
-                    </div>
-                    <div>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', color: '#166534', letterSpacing: '0.5px' }}>
-                        Exact GPS Location Selected
-                      </span>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a' }}>
-                        Lat: {Number(formData.latitude).toFixed(5)}° N, Lng: {Number(formData.longitude).toFixed(5)}° E
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsMapModalOpen(true)}
-                    style={{
-                      backgroundColor: '#ffffff',
-                      border: '1px solid #86efac',
-                      color: '#15803d',
-                      padding: '0.3rem 0.65rem',
-                      borderRadius: '8px',
-                      fontSize: '0.76rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.35rem',
-                    }}
-                  >
-                    <FiMaximize2 size={12} />
-                    Adjust Exact Pin
-                  </button>
+                <div
+                  style={{
+                    width: '30px',
+                    height: '30px',
+                    borderRadius: '8px',
+                    backgroundColor: '#eff6ff',
+                    color: '#0f57a8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <FiHome size={16} />
                 </div>
-
-                {/* Leaflet Mini Map Preview */}
-                <div style={{ height: '180px', width: '100%', borderRadius: '10px', overflow: 'hidden', border: '1px solid #bbf7d0', position: 'relative' }}>
-                  <MapContainer
-                    center={[formData.latitude, formData.longitude]}
-                    zoom={15}
-                    scrollWheelZoom={false}
-                    style={{ height: '100%', width: '100%' }}
-                  >
-                    <TileLayer
-                      attribution='&copy; OpenStreetMap'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <Marker position={[formData.latitude, formData.longitude]} />
-                  </MapContainer>
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '8px',
-                      left: '8px',
-                      backgroundColor: 'rgba(15, 23, 42, 0.75)',
-                      color: '#ffffff',
-                      padding: '0.2rem 0.6rem',
-                      borderRadius: '6px',
-                      fontSize: '0.72rem',
-                      fontWeight: 600,
-                      zIndex: 1000,
-                      backdropFilter: 'blur(4px)',
-                    }}
-                  >
-                    📍 Selected Installation Pin (OSS check required)
-                  </div>
+                <div>
+                  <h5 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
+                    Physical Installation Address
+                  </h5>
+                  <p style={{ margin: 0, fontSize: '0.76rem', color: '#64748b' }}>
+                    Premises details for technician dispatch, wiring &amp; billing
+                  </p>
                 </div>
               </div>
-            ) : (
+
+              {/* Address Line 1 */}
+              <div>
+                <label
+                  htmlFor="nc-address-line1"
+                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.35rem' }}
+                >
+                  Address Line 1 (House No. &amp; Street) <span style={{ color: '#dc2626' }}>*</span>
+                </label>
+                <input
+                  id="nc-address-line1"
+                  type="text"
+                  name="addressLine1"
+                  value={formData.addressLine1 || ''}
+                  onChange={(e) => handleAddressLineChange('addressLine1', e.target.value)}
+                  placeholder="e.g. No. 45/2, Temple Road"
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 0.95rem',
+                    fontSize: '0.92rem',
+                    borderRadius: '12px',
+                    border: '1.5px solid #cbd5e1',
+                    backgroundColor: '#ffffff',
+                    color: '#0f172a',
+                    fontWeight: 600,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.15s ease',
+                  }}
+                />
+              </div>
+
+              {/* Address Line 2 */}
+              <div>
+                <label
+                  htmlFor="nc-address-line2"
+                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.35rem' }}
+                >
+                  Address Line 2 (Apartment, Unit, Floor) <span style={{ color: '#64748b', fontWeight: 500 }}>(Optional)</span>
+                </label>
+                <input
+                  id="nc-address-line2"
+                  type="text"
+                  name="addressLine2"
+                  value={formData.addressLine2 || ''}
+                  onChange={(e) => handleAddressLineChange('addressLine2', e.target.value)}
+                  placeholder="e.g. Lotus Residencies, 3rd Floor, Apt 3B"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 0.95rem',
+                    fontSize: '0.92rem',
+                    borderRadius: '12px',
+                    border: '1.5px solid #cbd5e1',
+                    backgroundColor: '#ffffff',
+                    color: '#0f172a',
+                    fontWeight: 600,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.15s ease',
+                  }}
+                />
+              </div>
+
+              {/* Nearest Landmark */}
+              <div>
+                <label
+                  htmlFor="nc-nearest-landmark"
+                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.35rem' }}
+                >
+                  Nearest Landmark <span style={{ color: '#64748b', fontWeight: 500 }}>(Optional)</span>
+                </label>
+                <input
+                  id="nc-nearest-landmark"
+                  type="text"
+                  name="nearestLandmark"
+                  value={formData.nearestLandmark || formData.landmark || ''}
+                  onChange={(e) => handleAddressLineChange('nearestLandmark', e.target.value)}
+                  placeholder="e.g. Opposite Sambuddha Jayanthi Temple, Near Water Tank"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 0.95rem',
+                    fontSize: '0.92rem',
+                    borderRadius: '12px',
+                    border: '1.5px solid #cbd5e1',
+                    backgroundColor: '#ffffff',
+                    color: '#0f172a',
+                    fontWeight: 600,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    transition: 'border-color 0.15s ease',
+                  }}
+                />
+              </div>
+
+              {/* Formatted Address Live Preview Card */}
               <div
                 style={{
                   backgroundColor: '#f8fafc',
-                  border: '1px dashed #cbd5e1',
+                  border: '1px solid #e2e8f0',
                   borderRadius: '12px',
-                  padding: '0.75rem 1rem',
-                  marginTop: '0.65rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '0.75rem',
-                  flexWrap: 'wrap',
+                  padding: '0.85rem 1rem',
+                  marginTop: '0.2rem',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>
-                  <FiCompass color="#0f57a8" size={16} />
-                  <span>Pin exact location on map or use GPS to qualify Fibre FDP &amp; LTE coverage in next step.</span>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px', marginBottom: '0.3rem' }}>
+                  Formatted Installation Address:
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsMapModalOpen(true)}
+                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f57a8', lineHeight: 1.4 }}>
+                  {formData.installAddress || formData.address || (formData.city ? `${formData.city}, Sri Lanka` : 'Fill address fields and select city on the right...')}
+                </div>
+              </div>
+            </div>
+
+            {/* ──── RIGHT COLUMN: Service Area & Map Verification ──── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  borderBottom: '1.5px solid #f1f5f9',
+                  paddingBottom: '0.65rem',
+                }}
+              >
+                <div
                   style={{
-                    backgroundColor: '#0f57a8',
-                    color: '#ffffff',
-                    border: 'none',
-                    padding: '0.35rem 0.75rem',
+                    width: '30px',
+                    height: '30px',
                     borderRadius: '8px',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
+                    backgroundColor: '#eff6ff',
+                    color: '#0f57a8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
                   }}
                 >
-                  Pin Location on Map
-                </button>
+                  <FiCompass size={16} />
+                </div>
+                <div>
+                  <h5 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
+                    Service Area &amp; Map Location
+                  </h5>
+                  <p style={{ margin: 0, fontSize: '0.76rem', color: '#64748b' }}>
+                    Verify regional Fibre loop feasibility &amp; LTE coverage
+                  </p>
+                </div>
               </div>
-            )}
+
+              {/* Select City / Region Dropdown */}
+              <div>
+                <label
+                  htmlFor="nc-city-select"
+                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.35rem' }}
+                >
+                  Select City / Region <span style={{ color: '#dc2626' }}>*</span>
+                </label>
+                <select
+                  id="nc-city-select"
+                  name="city"
+                  value={formData.city || ''}
+                  onChange={handleCitySelect}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 0.95rem',
+                    fontSize: '0.92rem',
+                    borderRadius: '12px',
+                    border: '1.5px solid #cbd5e1',
+                    backgroundColor: '#ffffff',
+                    color: '#0f172a',
+                    fontWeight: 600,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                  required
+                >
+                  <option value="" disabled>Choose city or area</option>
+                  {SRI_LANKA_CITY_POSTAL_DATA.map((item) => (
+                    <option key={item.label} value={item.city}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+
+                {formData.city && (() => {
+                  const selectedCityData = SRI_LANKA_CITY_POSTAL_DATA.find((item) => item.city === formData.city);
+                  const isFibreReq = /fibre|fiber|ftth/i.test(selectedProduct?.productName || selectedProduct?.name || selectedProduct?.category || '');
+                  if (selectedCityData?.fibreAvailable === false && isFibreReq) {
+                    return (
+                      <div style={{ marginTop: '0.45rem', padding: '0.45rem 0.75rem', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', fontSize: '0.78rem', color: '#c2410c', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <FiZap size={14} color="#ea580c" style={{ flexShrink: 0 }} />
+                        <span>Demo coverage: Fibre unconfirmed in <strong>{selectedCityData.city}</strong>. OSS check will confirm.</span>
+                      </div>
+                    );
+                  } else if (selectedCityData?.fibreAvailable && isFibreReq) {
+                    return (
+                      <div style={{ marginTop: '0.45rem', padding: '0.45rem 0.75rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', fontSize: '0.78rem', color: '#15803d', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <FiCheck size={14} color="#16a34a" style={{ flexShrink: 0 }} />
+                        <span>Fibre loop available in <strong>{selectedCityData.city}</strong>. OSS feasibility check in next step.</span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+
+              {/* Single Unified Action Bar (NO DUPLICATE BUTTONS) */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.45rem', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  <label style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>
+                    Pin Location on Map
+                  </label>
+                  <div style={{ display: 'flex', gap: '0.45rem' }}>
+                    <button
+                      type="button"
+                      onClick={handleDirectGpsDetect}
+                      disabled={detectingGps}
+                      style={{
+                        backgroundColor: '#eff6ff',
+                        border: '1.5px solid #bfdbfe',
+                        color: '#0f57a8',
+                        padding: '0.3rem 0.65rem',
+                        borderRadius: '8px',
+                        fontSize: '0.76rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <FiCrosshair size={12} />
+                      {detectingGps ? 'Locking GPS...' : 'Auto-Detect GPS'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsMapModalOpen(true)}
+                      style={{
+                        backgroundColor: '#f0fdf4',
+                        border: '1.5px solid #bbf7d0',
+                        color: '#166534',
+                        padding: '0.3rem 0.65rem',
+                        borderRadius: '8px',
+                        fontSize: '0.76rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <FiMapPin size={12} />
+                      Pick on Map
+                    </button>
+                  </div>
+                </div>
+
+                {/* GPS Locked Confirmation Box & Mini Map Preview */}
+                {formData.latitude && formData.longitude ? (
+                  <div
+                    style={{
+                      backgroundColor: '#f0fdf4',
+                      border: '1.5px solid #86efac',
+                      borderRadius: '14px',
+                      padding: '0.85rem',
+                      boxShadow: '0 2px 8px rgba(22, 163, 74, 0.05)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.65rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#dcfce7', color: '#16a34a', display: 'grid', placeItems: 'center' }}>
+                          <FiCheck size={14} />
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: '#166534', letterSpacing: '0.5px' }}>
+                            Exact GPS Coordinates Locked
+                          </span>
+                          <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>
+                            {Number(formData.latitude).toFixed(5)}° N, {Number(formData.longitude).toFixed(5)}° E
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsMapModalOpen(true)}
+                        style={{
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #86efac',
+                          color: '#15803d',
+                          padding: '0.25rem 0.6rem',
+                          borderRadius: '8px',
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                        }}
+                      >
+                        <FiMaximize2 size={11} />
+                        Adjust Pin
+                      </button>
+                    </div>
+
+                    {/* Leaflet Mini Map Preview */}
+                    <div style={{ height: '170px', width: '100%', borderRadius: '10px', overflow: 'hidden', border: '1px solid #bbf7d0', position: 'relative' }}>
+                      <MapContainer
+                        center={[formData.latitude, formData.longitude]}
+                        zoom={15}
+                        scrollWheelZoom={false}
+                        style={{ height: '100%', width: '100%' }}
+                      >
+                        <TileLayer
+                          attribution='&copy; OpenStreetMap'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <Marker position={[formData.latitude, formData.longitude]} />
+                      </MapContainer>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: '6px',
+                          left: '6px',
+                          backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                          color: '#ffffff',
+                          padding: '0.2rem 0.55rem',
+                          borderRadius: '6px',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          zIndex: 1000,
+                          backdropFilter: 'blur(4px)',
+                        }}
+                      >
+                        📍 Pinned Installation Spot
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      backgroundColor: '#f8fafc',
+                      border: '1px dashed #cbd5e1',
+                      borderRadius: '12px',
+                      padding: '1.1rem 1rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      gap: '0.65rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        backgroundColor: '#eff6ff',
+                        color: '#0f57a8',
+                        display: 'grid',
+                        placeItems: 'center',
+                      }}
+                    >
+                      <FiMapPin size={18} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b' }}>
+                        No Map Coordinates Pinned Yet
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', maxWidth: '300px', marginTop: '0.15rem' }}>
+                        Pin your exact spot on the map or use GPS to verify Fibre loop availability in the next step.
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsMapModalOpen(true)}
+                      style={{
+                        backgroundColor: '#0f57a8',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '0.45rem 0.95rem',
+                        borderRadius: '10px',
+                        fontSize: '0.8rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                      }}
+                    >
+                      <FiMapPin size={13} />
+                      Open Map Picker
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </motion.div>
       )}
