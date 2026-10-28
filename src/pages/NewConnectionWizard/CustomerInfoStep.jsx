@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiUser, FiMapPin, FiCheck, FiNavigation, FiCompass, FiZap, FiCrosshair, FiMaximize2, FiHome } from 'react-icons/fi';
+import { FiMapPin, FiCheck, FiNavigation, FiCompass, FiZap, FiCrosshair, FiMaximize2, FiHome } from 'react-icons/fi';
 import LocationPickerModal from '../../components/form/LocationPickerModal';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -116,17 +116,6 @@ export const findClosestCity = (lat, lng) => {
   }
   return { closest, distanceDeg: minDistance };
 };
-
-const ReadOnlyDetail = ({ label, value }) => (
-  <div>
-    <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.2rem' }}>
-      {label}
-    </span>
-    <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
-      {value || <span style={{ color: '#94a3b8', fontWeight: 600 }}>N/A</span>}
-    </span>
-  </div>
-);
 
 export default function CustomerInfoStep({
   formData,
@@ -441,45 +430,6 @@ export default function CustomerInfoStep({
         title="Service Location Selection"
         description="Select your installation address, use a registered address, choose a map pin, or detect your current location."
       />
-
-      {/* ── Top Verified Profile Summary Card ── */}
-      <div
-        style={{
-          backgroundColor: '#f8fafc',
-          border: '1.5px solid #e2e8f0',
-          borderRadius: '16px',
-          padding: '1.25rem 1.5rem',
-          marginBottom: '1.75rem',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-          <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiUser color="#0f57a8" /> Contact Details & Verification
-          </h4>
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              backgroundColor: '#dcfce7',
-              color: '#15803d',
-              padding: '0.2rem 0.65rem',
-              borderRadius: '9999px',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-            }}
-          >
-            <FiCheck size={12} /> Verified by OTP
-          </span>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '0.85rem 1.25rem' }}>
-          <ReadOnlyDetail label="Mobile Number" value={knownProfile.mobileNumber && `+94 ${knownProfile.mobileNumber}`} />
-          <ReadOnlyDetail label="Email Address" value={knownProfile.email || formData.email || ''} />
-        </div>
-      </div>
-
       {/* ── Location Option Selection Tiles for Existing Customer (Old vs New Location) ── */}
       <div style={{ marginBottom: '1.75rem' }}>
         <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.85rem 0' }}>

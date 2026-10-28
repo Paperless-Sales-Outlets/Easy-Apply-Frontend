@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv } from 'react-icons/fi';
+import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiLayers } from 'react-icons/fi';
 import CategoryChips from '../components/catalog/CategoryChips';
 import SidebarFilters from '../components/catalog/SidebarFilters';
 import ProductCard from '../components/catalog/ProductCard';
@@ -595,10 +595,12 @@ export default function ProductCatalogPage() {
       sections.push({
         id: 'voice-section',
         title: t('catalog.sections.voiceTitle', 'Voice Packages (Max 1)'),
-        subtitle: t('catalog.sections.voiceSubtitle', 'Voice packages for crystal clear home & office calls'),
+        subtitle: t('catalog.sections.voiceSubtitle', 'Crystal clear crystal voice calling for home & enterprise'),
         icon: <FiPhone />,
-        bgColor: '#eff6ff',
-        iconColor: '#0b4a91',
+        bgColor: '#f0fdf4',
+        iconColor: '#16a34a',
+        badgeBg: '#dcfce7',
+        badgeColor: '#15803d',
         products: voiceProds,
       });
     }
@@ -607,10 +609,12 @@ export default function ProductCatalogPage() {
       sections.push({
         id: 'broadband-section',
         title: t('catalog.sections.broadbandTitle', 'Broadband Packages (Fibre & LTE - Max 1)'),
-        subtitle: t('catalog.sections.broadbandSubtitle', 'High-speed internet for home, gaming & business'),
+        subtitle: t('catalog.sections.broadbandSubtitle', 'High-speed broadband internet for home, 4K streaming & gaming'),
         icon: <FiGlobe />,
         bgColor: '#eff6ff',
-        iconColor: '#0b4a91',
+        iconColor: '#0284c7',
+        badgeBg: '#e0f2fe',
+        badgeColor: '#0369a1',
         products: broadbandProds,
       });
     }
@@ -619,10 +623,12 @@ export default function ProductCatalogPage() {
       sections.push({
         id: 'peotv-section',
         title: t('catalog.sections.peoTvTitle', 'PEO TV Packages (Max 1)'),
-        subtitle: t('catalog.sections.peoTvSubtitle', 'Live HD channels, catch-up TV & 4K entertainment'),
+        subtitle: t('catalog.sections.peoTvSubtitle', 'Live HD channels, catch-up TV & cinema entertainment'),
         icon: <FiTv />,
-        bgColor: '#eff6ff',
-        iconColor: '#0b4a91',
+        bgColor: '#f5f3ff',
+        iconColor: '#7c3aed',
+        badgeBg: '#ede9fe',
+        badgeColor: '#6d28d9',
         products: peoTvProds,
       });
     }
@@ -803,54 +809,77 @@ export default function ProductCatalogPage() {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '1.2rem',
+                marginBottom: '1.25rem',
                 width: '100%',
                 flexWrap: 'wrap',
-                gap: '0.75rem',
+                gap: '0.85rem',
+                backgroundColor: '#ffffff',
+                padding: '0.85rem 1.25rem',
+                borderRadius: '16px',
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)',
               }}
             >
-              <div style={{ fontSize: '0.92rem', color: '#475569', fontWeight: 600 }}>
-                {t('catalog.controls.showingResults', { count: filteredProducts.length, defaultValue: 'Showing {{count}} total results across categories' })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '30px',
+                    height: '30px',
+                    borderRadius: '8px',
+                    backgroundColor: '#e0f2fe',
+                    color: '#0284c7',
+                  }}
+                >
+                  <FiLayers size={15} />
+                </span>
+                <span style={{ fontSize: '0.88rem', color: '#1e293b', fontWeight: 700 }}>
+                  {t('catalog.controls.showingResults', { count: filteredProducts.length, defaultValue: 'Showing {{count}} total packages' })}
+                </span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   className="catalog-filter-toggle-btn"
                   onClick={() => setShowMobileFilters((prev) => !prev)}
                   style={{
                     alignItems: 'center',
-                    gap: '0.4rem',
-                    padding: '0.45rem 0.85rem',
-                    borderRadius: '8px',
+                    gap: '0.45rem',
+                    padding: '0.45rem 0.95rem',
+                    borderRadius: '10px',
                     border: '1px solid #cbd5e1',
-                    backgroundColor: showMobileFilters ? '#0056b3' : '#ffffff',
+                    backgroundColor: showMobileFilters ? '#0056b3' : '#f8fafc',
                     color: showMobileFilters ? '#ffffff' : '#0f172a',
                     fontSize: '0.82rem',
                     fontWeight: 700,
                     cursor: 'pointer',
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   <FiSliders size={14} />
                   <span>{t('catalog.controls.filters', 'Filters')}</span>
                 </button>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>{t('catalog.controls.sortBy', 'Sort by:')}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.controls.sortBy', 'Sort by:')}</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                     aria-label={t('catalog.controls.sortBy', 'Sort by:')}
                     style={{
-                      padding: '0.4rem 0.75rem',
-                      borderRadius: '8px',
-                      border: '1px solid #cbd5e1',
-                      backgroundColor: '#ffffff',
+                      padding: '0.42rem 0.95rem',
+                      borderRadius: '10px',
+                      border: '1.5px solid #e2e8f0',
+                      backgroundColor: '#f8fafc',
                       fontSize: '0.82rem',
                       fontWeight: 700,
                       color: '#0f172a',
                       cursor: 'pointer',
                       outline: 'none',
+                      transition: 'border-color 0.2s ease',
                     }}
                   >
                     <option value="Popularity">{t('catalog.controls.popularity', 'Popularity')}</option>
@@ -859,7 +888,16 @@ export default function ProductCatalogPage() {
                   </select>
                 </div>
 
-                <div style={{ display: 'flex', gap: '2px', backgroundColor: '#f1f5f9', padding: '3px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '3px',
+                    backgroundColor: '#f1f5f9',
+                    padding: '3px',
+                    borderRadius: '10px',
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
                   <button
                     onClick={() => setViewMode('grid')}
                     aria-label="Grid view"
@@ -868,11 +906,13 @@ export default function ProductCatalogPage() {
                       border: 'none',
                       backgroundColor: viewMode === 'grid' ? '#0056b3' : 'transparent',
                       color: viewMode === 'grid' ? '#ffffff' : '#64748b',
-                      padding: '0.35rem 0.55rem',
+                      padding: '0.4rem 0.65rem',
                       borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
+                      boxShadow: viewMode === 'grid' ? '0 2px 6px rgba(0, 86, 179, 0.3)' : 'none',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     <FiGrid size={15} aria-hidden="true" />
@@ -885,11 +925,13 @@ export default function ProductCatalogPage() {
                       border: 'none',
                       backgroundColor: viewMode === 'list' ? '#0056b3' : 'transparent',
                       color: viewMode === 'list' ? '#ffffff' : '#64748b',
-                      padding: '0.35rem 0.55rem',
+                      padding: '0.4rem 0.65rem',
                       borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
+                      boxShadow: viewMode === 'list' ? '0 2px 6px rgba(0, 86, 179, 0.3)' : 'none',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     <FiList size={15} aria-hidden="true" />
@@ -920,23 +962,76 @@ export default function ProductCatalogPage() {
                 {categorySections.map((section) => {
                   if (section.products.length === 0) return null;
                   return (
-                    <div key={section.id} style={{ backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-                      {/* Section Header — flexWrap lets the "Packages Available" badge
-                          drop to its own line on narrow screens instead of being
-                          squeezed into a sliver of a column and wrapping into an
-                          illegible multi-line blob. */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', rowGap: '0.65rem', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '2px solid #f1f5f9' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
-                          <div style={{ backgroundColor: section.bgColor, color: section.iconColor, width: '38px', height: '38px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 900, flexShrink: 0 }}>
+                    <div
+                      key={section.id}
+                      style={{
+                        backgroundColor: '#ffffff',
+                        borderRadius: '20px',
+                        border: '1px solid #e2e8f0',
+                        padding: '1.5rem',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
+                        position: 'relative',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {/* Section Header */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          rowGap: '0.65rem',
+                          marginBottom: '1.35rem',
+                          paddingBottom: '0.85rem',
+                          borderBottom: '1px solid #f1f5f9',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: 0 }}>
+                          <div
+                            style={{
+                              backgroundColor: section.bgColor,
+                              color: section.iconColor,
+                              width: '42px',
+                              height: '42px',
+                              borderRadius: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '1.25rem',
+                              fontWeight: 900,
+                              flexShrink: 0,
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                            }}
+                          >
                             {section.icon}
                           </div>
                           <div style={{ minWidth: 0 }}>
-                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>{section.title}</h3>
-                            <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{section.subtitle}</span>
+                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.01em' }}>
+                              {section.title}
+                            </h3>
+                            <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>
+                              {section.subtitle}
+                            </span>
                           </div>
                         </div>
-                        <span style={{ backgroundColor: '#f1f5f9', color: '#0056b3', padding: '0.3rem 0.85rem', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                          {t('catalog.sections.packagesAvailable', { count: section.products.length, defaultValue: '{{count}} Packages Available' })}
+                        <span
+                          style={{
+                            backgroundColor: section.badgeBg || '#f1f5f9',
+                            color: section.badgeColor || '#0056b3',
+                            padding: '0.35rem 0.85rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.78rem',
+                            fontWeight: 800,
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                            border: `1px solid ${section.badgeColor ? section.badgeColor + '22' : '#e2e8f0'}`,
+                          }}
+                        >
+                          {t('catalog.sections.packagesAvailable', {
+                            count: section.products.length,
+                            defaultValue: '{{count}} Packages Available',
+                          })}
                         </span>
                       </div>
 
@@ -1008,7 +1103,7 @@ export default function ProductCatalogPage() {
         <div
           style={{
             backgroundColor: '#ffffff',
-            borderRadius: '16px',
+            borderRadius: '20px',
             border: '1px solid #e2e8f0',
             padding: '1.25rem 2rem',
             marginTop: '2.5rem',

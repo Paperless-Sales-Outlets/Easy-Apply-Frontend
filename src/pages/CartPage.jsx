@@ -19,11 +19,34 @@ import {
   FiInfo,
   FiGrid,
   FiZap,
+  FiCheck,
 } from 'react-icons/fi';
 import ProductCard from '../components/catalog/ProductCard';
 import ProductDeviceGraphic from '../components/catalog/ProductDeviceGraphic';
 import { getCart, removeFromCart, addToCart, getProducts, getLocalCart } from '../services/productService';
 import Toast from '../components/common/Toast';
+
+/**
+ * Cleans duplicate category suffixes and cleans spacing in package titles
+ * e.g. "FTTH Broadband Fibre Double Play ( PeoTV + Voice) - Broadband"
+ *   -> "FTTH Broadband Fibre Double Play (PeoTV + Voice)"
+ */
+const cleanCartTitle = (name = '') => {
+  let cleaned = String(name || '').trim();
+  // Fix spacing in parentheses like '( PeoTV + Voice)' -> '(PeoTV + Voice)'
+  cleaned = cleaned.replace(/\(\s+/g, '(').replace(/\s+\)/g, ')');
+  // Strip duplicate category suffixes if the category keyword is already present in title
+  if (/broadband/i.test(cleaned)) {
+    cleaned = cleaned.replace(/\s*-\s*broadband$/i, '');
+  }
+  if (/voice/i.test(cleaned)) {
+    cleaned = cleaned.replace(/\s*-\s*voice$/i, '');
+  }
+  if (/peo\s*tv/i.test(cleaned)) {
+    cleaned = cleaned.replace(/\s*-\s*peo\s*tv$/i, '');
+  }
+  return cleaned.trim();
+};
 
 export default function CartPage() {
   const { t } = useTranslation();
@@ -69,24 +92,46 @@ export default function CartPage() {
   };
 
   const handleRemove = async (productId) => {
+    // Optimistic removal (instant 0ms UI update)
+    setCart((prev) => {
+      if (!prev?.items) return prev;
+      return {
+        ...prev,
+        items: prev.items.filter((i) => (i.productId || i._id || i.id) !== productId),
+      };
+    });
+
     try {
       await removeFromCart(productId);
       showToast('Item removed from cart', 'info');
-      fetchCartData();
     } catch {
       showToast('Item removed', 'info');
-      fetchCartData();
     }
   };
 
   const handleQuantityChange = async (item, delta) => {
-    const newQty = item.quantity + delta;
+    const newQty = (item.quantity || 1) + delta;
     if (newQty < 1) return;
+
+    const itemId = item.productId || item._id || item.id;
+
+    // 1. Instant optimistic state update (0ms, zero flickering or page reloads)
+    setCart((prev) => {
+      if (!prev?.items) return prev;
+      return {
+        ...prev,
+        items: prev.items.map((i) => {
+          const id = i.productId || i._id || i.id;
+          return id === itemId ? { ...i, quantity: newQty } : i;
+        }),
+      };
+    });
+
+    // 2. Persist in background (backend API & localStorage) without full page reload
     try {
       await addToCart(item, delta);
-      fetchCartData();
-    } catch {
-      fetchCartData();
+    } catch (err) {
+      console.warn('Could not sync cart quantity:', err);
     }
   };
 
@@ -199,18 +244,6 @@ export default function CartPage() {
                 overflow: 'hidden',
               }}
             >
-              {/* Gradient Accent Bar */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '4px',
-                  background: 'linear-gradient(90deg, #0056b3 0%, #10b981 100%)',
-                }}
-              />
-
               {/* SLTMobitel Badge */}
               <span
                 style={{
@@ -387,167 +420,291 @@ export default function CartPage() {
                   const prodName = item.productName || item.name || 'SLTMobitel Connection';
                   const monthly = item.price || item.monthlyPrice || 0;
                   const instFee = item.installationFee !== undefined ? item.installationFee : 2500;
-                  const speed = item.speed || '300 Mbps';
+                  const speed = item.speed || '';
                   const isPopular = item.popular !== undefined ? item.popular : true;
+                  const cleanedTitle = cleanCartTitle(prodName);
+                  const itemSubtotal = monthly * (item.quantity || 1);
 
                   return (
                     <div
-                      key={idx}
+                      key={prodId || idx}
                       style={{
                         backgroundColor: '#ffffff',
-                        borderRadius: '16px',
-                        padding: '1.5rem',
-                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
+                        borderRadius: '20px',
+                        padding: '1.4rem 1.5rem',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
                         border: '1px solid #e2e8f0',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '1rem',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        transition: 'box-shadow 0.2s ease',
                       }}
                     >
-                      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-
-                        {/* Left visual box with POPULAR badge and Device Graphic */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '1.25rem',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        {/* 1. Left visual tile with Device Graphic */}
                         <div
                           style={{
-                            width: '140px',
-                            height: '140px',
+                            width: '100px',
+                            height: '100px',
                             borderRadius: '16px',
-                            background: 'linear-gradient(135deg, #091e42 0%, #0056b3 100%)',
+                            background: 'linear-gradient(135deg, #0a1f3b 0%, #0056b3 100%)',
                             position: 'relative',
                             display: 'flex',
-                            flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: '#fff',
                             flexShrink: 0,
                             overflow: 'hidden',
-                            padding: '0.5rem',
+                            padding: '0.4rem',
+                            boxShadow: '0 4px 12px rgba(0, 86, 179, 0.15)',
                           }}
                         >
                           {isPopular && (
                             <span
                               style={{
                                 position: 'absolute',
-                                top: '0.5rem',
-                                left: '0.5rem',
+                                top: '0.4rem',
+                                left: '0.4rem',
                                 backgroundColor: '#10b981',
                                 color: '#ffffff',
-                                fontSize: '0.62rem',
-                                fontWeight: 800,
-                                padding: '0.2rem 0.5rem',
-                                borderRadius: '8px',
+                                fontSize: '0.55rem',
+                                fontWeight: 900,
+                                padding: '0.15rem 0.4rem',
+                                borderRadius: '9999px',
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.04em',
+                                zIndex: 2,
                               }}
                             >
                               POPULAR
                             </span>
                           )}
-                          <ProductDeviceGraphic name={prodName} speed={speed} category={item.category} size="small" />
+                          <ProductDeviceGraphic name={cleanedTitle} speed={speed} category={item.category} size="small" />
                         </div>
 
-                        {/* Product Title & Features */}
-                        <div style={{ flex: 1, minWidth: '240px' }}>
-                          <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.85rem 0' }}>
-                            {prodName}
-                          </h3>
+                        {/* 2. Middle: Package Title, Features & Unit Price */}
+                        <div style={{ flex: '1 1 240px', minWidth: '220px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                            <span
+                              style={{
+                                fontSize: '0.68rem',
+                                fontWeight: 800,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.04em',
+                                padding: '0.18rem 0.5rem',
+                                borderRadius: '6px',
+                                backgroundColor: '#eff6ff',
+                                color: '#0056b3',
+                                border: '1px solid #bfdbfe',
+                              }}
+                            >
+                              {item.category || 'Package'}
+                            </span>
+                            {speed && (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.2rem',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 700,
+                                  color: '#0284c7',
+                                }}
+                              >
+                                <FiZap size={12} /> {speed}
+                              </span>
+                            )}
+                          </div>
 
-                          {/* 5 Feature Icons Strip */}
-                          <div
+                          <h3
                             style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.85rem',
-                              backgroundColor: '#f8fafc',
-                              padding: '0.6rem 0.85rem',
-                              borderRadius: '12px',
-                              border: '1px solid #f1f5f9',
-                              marginBottom: '1rem',
-                              flexWrap: 'wrap',
+                              fontSize: '1.15rem',
+                              fontWeight: 800,
+                              color: '#0f172a',
+                              margin: '0 0 0.5rem 0',
+                              lineHeight: 1.35,
                             }}
                           >
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '0.68rem', color: '#475569', textAlign: 'center' }}>
-                              <FiActivity size={15} color="#0056b3" />
-                              <span style={{ marginTop: '0.2rem', fontWeight: 600 }}>{speed}</span>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '0.68rem', color: '#475569', textAlign: 'center' }}>
-                              <FiDatabase size={15} color="#0056b3" />
-                              <span style={{ marginTop: '0.2rem', fontWeight: 600 }}>Unlimited Data</span>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '0.68rem', color: '#475569', textAlign: 'center' }}>
-                              <FiWifi size={15} color="#0056b3" />
-                              <span style={{ marginTop: '0.2rem', fontWeight: 600 }}>Free Router</span>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '0.68rem', color: '#475569', textAlign: 'center' }}>
-                              <FiTag size={15} color="#0056b3" />
-                              <span style={{ marginTop: '0.2rem', fontWeight: 600 }}>{instFee === 0 ? 'Free Setup' : 'Standard Setup'}</span>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '0.68rem', color: '#475569', textAlign: 'center' }}>
-                              <FiHeadphones size={15} color="#0056b3" />
-                              <span style={{ marginTop: '0.2rem', fontWeight: 600 }}>24/7 Support</span>
-                            </div>
+                            {cleanedTitle}
+                          </h3>
+
+                          {/* Dynamic Features List */}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem 0.75rem', marginBottom: '0.65rem' }}>
+                            {(Array.isArray(item.features) && item.features.length > 0
+                              ? item.features.slice(0, 3)
+                              : ['High Speed Connectivity', '24/7 Support']
+                            ).map((feat, fIdx) => (
+                              <span
+                                key={fIdx}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  fontSize: '0.75rem',
+                                  color: '#64748b',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                <FiCheck size={13} style={{ color: '#16a34a', flexShrink: 0 }} />
+                                <span>{String(feat).replace(/^[✓✔]\s*/, '')}</span>
+                              </span>
+                            ))}
                           </div>
 
-                          {/* Pricing Row */}
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0056b3' }}>
-                              Rs. {monthly.toLocaleString()}
-                            </span>
-                            <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>/month</span>
-                            <span style={{ fontSize: '0.825rem', color: '#475569', fontWeight: 600, marginLeft: '0.5rem' }}>
-                              {instFee === 0 ? 'Installation Fee: Free' : `Installation Fee: Rs. ${instFee.toLocaleString()} (One-time)`}
-                            </span>
+                          {/* Package Unit Price & Installation Fee */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+                            <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
+                              Unit Price: <strong style={{ color: '#0f172a', fontSize: '0.95rem' }}>Rs. {monthly.toLocaleString()}</strong> <span style={{ fontSize: '0.75rem' }}>/mo</span>
+                            </div>
+                            {instFee === 0 ? (
+                              <span
+                                style={{
+                                  backgroundColor: '#dcfce7',
+                                  color: '#15803d',
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '6px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                Free Installation
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
+                                Installation: Rs. {instFee.toLocaleString()}
+                              </span>
+                            )}
                           </div>
                         </div>
 
-                        {/* Right: Quantity Selector, Remove Button & Item Total */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', alignSelf: 'stretch', gap: '1rem' }}>
-
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                            {/* Quantity Selector [- 1 +] */}
-                            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#fff' }}>
+                        {/* 3. Right: Quantity Controls, Subtotal & Delete Action */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-end',
+                            justifyContent: 'center',
+                            gap: '0.75rem',
+                            flexShrink: 0,
+                            marginLeft: 'auto',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            {/* Quantity Stepper [- 1 +] */}
+                            <div
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                border: '1.5px solid #cbd5e1',
+                                borderRadius: '10px',
+                                overflow: 'hidden',
+                                backgroundColor: '#f8fafc',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                              }}
+                            >
                               <button
-                                onClick={() => handleQuantityChange(item, -1)}
-                                style={{ border: 'none', background: '#f8fafc', padding: '0.35rem 0.65rem', cursor: 'pointer', color: '#334155' }}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleQuantityChange(item, -1);
+                                }}
+                                style={{
+                                  border: 'none',
+                                  background: 'transparent',
+                                  padding: '0.4rem 0.7rem',
+                                  cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer',
+                                  color: item.quantity <= 1 ? '#94a3b8' : '#1e293b',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'background-color 0.15s ease',
+                                }}
+                                disabled={item.quantity <= 1}
                                 title="Decrease quantity"
                               >
-                                <FiMinus size={12} />
+                                <FiMinus size={12} strokeWidth={2.5} />
                               </button>
-                              <span style={{ padding: '0.35rem 0.75rem', fontSize: '0.875rem', fontWeight: 700, color: '#0f172a', minWidth: '28px', textAlign: 'center' }}>
+                              <span
+                                style={{
+                                  padding: '0.4rem 0.75rem',
+                                  fontSize: '0.9rem',
+                                  fontWeight: 800,
+                                  color: '#0f172a',
+                                  minWidth: '32px',
+                                  textAlign: 'center',
+                                  backgroundColor: '#ffffff',
+                                }}
+                              >
                                 {item.quantity}
                               </span>
                               <button
-                                onClick={() => handleQuantityChange(item, 1)}
-                                style={{ border: 'none', background: '#f8fafc', padding: '0.35rem 0.65rem', cursor: 'pointer', color: '#334155' }}
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleQuantityChange(item, 1);
+                                }}
+                                style={{
+                                  border: 'none',
+                                  background: 'transparent',
+                                  padding: '0.4rem 0.7rem',
+                                  cursor: 'pointer',
+                                  color: '#1e293b',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'background-color 0.15s ease',
+                                }}
                                 title="Increase quantity"
                               >
-                                <FiPlus size={12} />
+                                <FiPlus size={12} strokeWidth={2.5} />
                               </button>
                             </div>
 
                             {/* Trash Icon */}
                             <button
-                              onClick={() => handleRemove(prodId)}
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleRemove(prodId);
+                              }}
                               style={{
-                                background: 'none',
-                                border: 'none',
+                                background: '#fef2f2',
+                                border: '1px solid #fee2e2',
                                 color: '#ef4444',
                                 cursor: 'pointer',
-                                padding: '0.4rem',
+                                padding: '0.5rem',
                                 display: 'flex',
                                 alignItems: 'center',
-                                borderRadius: '8px',
+                                justifyContent: 'center',
+                                borderRadius: '10px',
+                                transition: 'all 0.15s ease',
                               }}
                               title="Remove item"
                             >
-                              <FiTrash2 size={18} />
+                              <FiTrash2 size={16} />
                             </button>
                           </div>
 
-                          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0056b3' }}>
-                            Rs. {(monthly * item.quantity).toLocaleString()} <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>/month</span>
+                          {/* Line Item Subtotal */}
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                              Item Subtotal
+                            </div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0056b3' }}>
+                              Rs. {itemSubtotal.toLocaleString()}
+                              <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 600 }}>/mo</span>
+                            </div>
+                            {item.quantity > 1 && (
+                              <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500 }}>
+                                {item.quantity} × Rs. {monthly.toLocaleString()}
+                              </div>
+                            )}
                           </div>
-
                         </div>
                       </div>
                     </div>
@@ -598,15 +755,15 @@ export default function CartPage() {
                 <div
                   style={{
                     backgroundColor: '#ffffff',
-                    borderRadius: '16px',
+                    borderRadius: '20px',
                     padding: '1.75rem',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
                     border: '1px solid #e2e8f0',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '1.25rem',
                     position: 'sticky',
-                    top: '1.5rem',
+                    top: 'calc(var(--nav-height, 90px) + 1.25rem)',
                   }}
                 >
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>

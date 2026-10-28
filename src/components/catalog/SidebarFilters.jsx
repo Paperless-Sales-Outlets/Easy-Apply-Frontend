@@ -56,18 +56,6 @@ export default function SidebarFilters({
         overflow: 'hidden',
       }}
     >
-      {/* Top Brand Accent Line */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '3.5px',
-          background: 'linear-gradient(90deg, #0056b3 0%, #0ea5e9 60%, #10b981 100%)',
-        }}
-      />
-
       {/* Header */}
       <div
         style={{

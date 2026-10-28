@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiCheck, FiHeart, FiShoppingCart, FiPackage } from 'react-icons/fi';
-import { FaHeart } from 'react-icons/fa';
+import {
+  FiCheck,
+  FiShoppingCart,
+  FiPackage,
+  FiArrowRight,
+} from 'react-icons/fi';
 import ProductDeviceGraphic from './ProductDeviceGraphic';
 
 /**
@@ -46,27 +50,31 @@ function AnimatedAddToCartButton({
       onClick={handleClick}
       disabled={disabled}
       title={isInCart ? t('catalog.card.removeFromCart', 'Remove from cart') : undefined}
-      whileTap={{ scale: disabled ? 1 : 0.94 }}
+      whileTap={{ scale: disabled ? 1 : 0.95 }}
       whileHover={{ scale: disabled ? 1 : 1.02 }}
       animate={{
-        backgroundColor: isSuccessState ? '#16a34a' : disabled ? '#e2e8f0' : '#0056b3',
-        color: isSuccessState ? '#ffffff' : disabled ? '#475569' : '#ffffff',
+        background: isSuccessState
+          ? 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)'
+          : disabled
+            ? '#e2e8f0'
+            : 'linear-gradient(135deg, #0056b3 0%, #0284c7 100%)',
+        color: isSuccessState ? '#ffffff' : disabled ? '#64748b' : '#ffffff',
         boxShadow: disabled
           ? 'none'
           : isSuccessState
             ? '0 4px 14px rgba(22, 163, 74, 0.35)'
             : '0 4px 14px rgba(0, 86, 179, 0.25)',
       }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.25 }}
       style={{
         position: 'relative',
         overflow: 'hidden',
         width: fullWidth ? '100%' : 'auto',
         border: disabled ? '1px solid #cbd5e1' : 'none',
-        borderRadius: '8px',
-        padding: '0.55rem 0.95rem',
+        borderRadius: '12px',
+        padding: '0.62rem 1.1rem',
         fontWeight: 800,
-        fontSize: '0.82rem',
+        fontSize: '0.84rem',
         cursor: disabled ? 'not-allowed' : 'pointer',
         display: 'inline-flex',
         alignItems: 'center',
@@ -88,7 +96,7 @@ function AnimatedAddToCartButton({
               transition={{ type: 'spring', stiffness: 450, damping: 22 }}
               style={{ display: 'inline-flex' }}
             >
-              <FiCheck size={16} />
+              <FiCheck size={16} strokeWidth={3} />
             </motion.span>
           ) : isAdding ? (
             <motion.span key="animating" style={{ position: 'relative', display: 'inline-flex' }}>
@@ -189,21 +197,6 @@ function AnimatedAddToCartButton({
   );
 }
 
-// Cards are tinted by product family, using four depths of the SLT navy →
-// green identity rather than a different hue per product. Category still reads
-// at a glance, but the catalogue looks like one product instead of a swatch
-// book.
-const CATEGORY_GRADIENTS = {
-  Broadband: 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)',
-  Fibre: 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)',
-  LTE: 'linear-gradient(135deg, #0b4a91 0%, #00305e 100%)',
-  Voice: 'linear-gradient(135deg, #00566b 0%, #012f3d 100%)',
-  'PEO TV': 'linear-gradient(135deg, #004d38 0%, #01291e 100%)',
-  PEOTV: 'linear-gradient(135deg, #004d38 0%, #01291e 100%)',
-};
-
-const DEFAULT_GRADIENT = 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)';
-
 export default function ProductCard({
   product,
   isSelected,
@@ -239,45 +232,84 @@ export default function ProductCard({
     ? rawFeatures 
     : (description ? [description] : ['High-speed connectivity', '24/7 SLT Customer Support']);
 
-  const cardGradient = CATEGORY_GRADIENTS[category] || DEFAULT_GRADIENT;
 
+  // Category Theme Colors & Hero Backdrop
+  const categoryTheme = (() => {
+    const lower = category.toLowerCase();
+    if (lower.includes('peo') || lower.includes('tv')) {
+      return {
+        tagBg: '#faf5ff',
+        tagColor: '#7c3aed',
+        tagBorder: '#e9d5ff',
+        heroBg: 'linear-gradient(135deg, #1e1135 0%, #2e1065 100%)',
+      };
+    }
+    if (lower.includes('voice') || lower.includes('megaline')) {
+      return {
+        tagBg: '#f0fdf4',
+        tagColor: '#16a34a',
+        tagBorder: '#bbf7d0',
+        heroBg: 'linear-gradient(135deg, #063828 0%, #064e3b 100%)',
+      };
+    }
+    if (lower.includes('lte')) {
+      return {
+        tagBg: '#fff7ed',
+        tagColor: '#ea580c',
+        tagBorder: '#fed7aa',
+        heroBg: 'linear-gradient(135deg, #2e1107 0%, #451a03 100%)',
+      };
+    }
+    return {
+      tagBg: '#eff6ff',
+      tagColor: '#0056b3',
+      tagBorder: '#bfdbfe',
+      heroBg: 'linear-gradient(135deg, #0a1f3b 0%, #0f3260 100%)',
+    };
+  })();
+
+  /* ─────────────────────────────────────────────────────────────
+   * 1. LIST VIEW RENDERING
+   * ───────────────────────────────────────────────────────────── */
   if (viewMode === 'list') {
     return (
       <motion.div
-        whileHover={{ y: -2, boxShadow: '0 10px 28px rgba(0, 86, 179, 0.14)' }}
+        whileHover={{ y: -3, boxShadow: '0 12px 30px rgba(0, 86, 179, 0.12)' }}
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
         style={{
           backgroundColor: '#ffffff',
-          borderRadius: '16px',
+          borderRadius: '18px',
           border: isSelected ? '2px solid #0056b3' : '1px solid #e2e8f0',
           overflow: 'hidden',
-          boxShadow: isSelected ? '0 8px 25px rgba(0,86,179,0.2)' : '0 2px 10px rgba(0,0,0,0.03)',
+          boxShadow: isSelected ? '0 8px 25px rgba(0,86,179,0.18)' : '0 2px 10px rgba(0,0,0,0.03)',
           display: 'flex',
           alignItems: 'stretch',
-          gap: '1rem',
-          padding: '0.85rem',
+          gap: '1.25rem',
+          padding: '1rem',
+          position: 'relative',
         }}
         className="catalog-product-list-row"
       >
-        {/* Left gradient icon tile */}
+        {/* Left Visual Icon / Graphic Tile */}
         <div
           style={{
-            background: cardGradient,
-            borderRadius: '12px',
-            width: '92px',
-            minWidth: '92px',
+            background: categoryTheme.heroBg,
+            borderRadius: '14px',
+            width: '105px',
+            minWidth: '105px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             position: 'relative',
+            overflow: 'hidden',
           }}
         >
-          <div style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '65px', height: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {bannerUrl ? (
               <img
                 src={bannerUrl}
                 alt={name}
-                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }}
+                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.35))' }}
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
             ) : (
@@ -288,49 +320,32 @@ export default function ProductCard({
             <span
               style={{
                 position: 'absolute',
-                top: '0.35rem',
-                left: '0.35rem',
-                backgroundColor: '#047857',
+                top: '0.4rem',
+                left: '0.4rem',
+                backgroundColor: '#10b981',
                 color: '#ffffff',
                 fontSize: '0.55rem',
                 fontWeight: 900,
-                padding: '0.15rem 0.4rem',
+                padding: '0.15rem 0.45rem',
                 borderRadius: '9999px',
-                letterSpacing: '0.03em',
+                letterSpacing: '0.04em',
               }}
             >
-              {t('catalog.card.popular', 'POPULAR')}
+              POPULAR
             </span>
           )}
         </div>
 
-        {/* Middle: title + features */}
+        {/* Middle: Title */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.35rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <h3 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>{name}</h3>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFavorite(_id || id);
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: isFavorite ? '#f87171' : '#cbd5e1',
-                display: 'flex',
-                flexShrink: 0,
-              }}
-            >
-              {isFavorite ? <FaHeart size={13} /> : <FiHeart size={13} />}
-            </button>
-          </div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexWrap: 'wrap', gap: '0.25rem 0.9rem' }}>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>{name}</h3>
+
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexWrap: 'wrap', gap: '0.25rem 1rem' }}>
             {features.slice(0, 3).map((feat, idx) => {
               const cleanText = String(feat).replace(/^[✓✔]\s*/, '');
               return (
-                <li key={idx} style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#64748b', fontWeight: 500 }}>
-                  <FiCheck size={12} style={{ color: '#16a34a', flexShrink: 0 }} />
+                <li key={idx} style={{ fontSize: '0.76rem', display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#64748b', fontWeight: 500 }}>
+                  <FiCheck size={13} style={{ color: '#16a34a', flexShrink: 0 }} />
                   <span>{cleanText}</span>
                 </li>
               );
@@ -338,7 +353,7 @@ export default function ProductCard({
           </ul>
         </div>
 
-        {/* Right: price + actions */}
+        {/* Right: Price & Quick Action Buttons */}
         <div
           style={{
             display: 'flex',
@@ -351,11 +366,11 @@ export default function ProductCard({
           className="catalog-product-list-actions"
         >
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>
               Rs. {monthlyPrice ? monthlyPrice.toLocaleString() : '0'}
-              <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.card.perMo', '/mo')}</span>
+              <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.card.perMo', '/mo')}</span>
             </div>
-            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+            <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
               {t('catalog.card.installation', 'Installation:')} Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
             </div>
           </div>
@@ -366,12 +381,13 @@ export default function ProductCard({
               backgroundColor: '#f8fafc',
               color: '#0056b3',
               border: '1px solid #cbd5e1',
-              borderRadius: '8px',
-              padding: '0.5rem 0.85rem',
+              borderRadius: '12px',
+              padding: '0.55rem 0.95rem',
               fontWeight: 700,
-              fontSize: '0.78rem',
+              fontSize: '0.8rem',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
+              transition: 'all 0.15s ease',
             }}
           >
             {t('catalog.card.details', 'Details')}
@@ -385,34 +401,38 @@ export default function ProductCard({
             onAddToCart={onAddToCart}
             onRemoveFromCart={onRemoveFromCart}
             t={t}
-            style={{ padding: '0.5rem 0.9rem', fontSize: '0.8rem' }}
+            style={{ padding: '0.55rem 1rem', fontSize: '0.82rem' }}
           />
         </div>
       </motion.div>
     );
   }
 
+  /* ─────────────────────────────────────────────────────────────
+   * 2. GRID VIEW RENDERING (MODERN ELEVATED CARD)
+   * ───────────────────────────────────────────────────────────── */
   return (
     <motion.div
-      whileHover={{ y: -7, boxShadow: '0 18px 40px rgba(0, 86, 179, 0.18)' }}
+      whileHover={{ y: -7, boxShadow: '0 20px 40px rgba(0, 86, 179, 0.15)' }}
       transition={{ type: 'spring', stiffness: 350, damping: 25 }}
       style={{
         backgroundColor: '#ffffff',
-        borderRadius: '16px',
+        borderRadius: '20px',
         border: isSelected ? '2px solid #0056b3' : '1px solid #e2e8f0',
         overflow: 'hidden',
-        boxShadow: isSelected ? '0 8px 25px rgba(0,86,179,0.2)' : '0 4px 15px rgba(0,0,0,0.04)',
+        boxShadow: isSelected ? '0 8px 30px rgba(0,86,179,0.2)' : '0 4px 20px rgba(0,0,0,0.04)',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        position: 'relative',
       }}
     >
       {/* Top Visual Showcase (Hero Image with Ambient Blurred Backdrop) */}
       <div
         style={{
-          height: '165px',
-          backgroundColor: '#0f172a',
-          borderBottom: '1px solid #e2e8f0',
+          height: '175px',
+          background: categoryTheme.heroBg,
+          borderBottom: '1px solid #f1f5f9',
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
@@ -430,47 +450,37 @@ export default function ProductCard({
                 backgroundImage: `url(${bannerUrl})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                filter: 'blur(26px) saturate(2) brightness(0.7)',
+                filter: 'blur(26px) saturate(2) brightness(0.65)',
                 opacity: 0.65,
                 transform: 'scale(1.3)',
                 pointerEvents: 'none',
               }}
             />
-            {/* Subtle Gradient Overlay for depth */}
             <div
               style={{
                 position: 'absolute',
                 inset: 0,
-                background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.45) 100%)',
+                background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.5) 100%)',
                 pointerEvents: 'none',
               }}
             />
           </>
-        ) : (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: cardGradient,
-              opacity: 0.9,
-            }}
-          />
-        )}
+        ) : null}
 
-        {/* Floating Badges */}
-        <div style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', zIndex: 3 }}>
+        {/* Floating Top Badges */}
+        <div style={{ position: 'absolute', top: '0.85rem', left: '0.85rem', zIndex: 3 }}>
           {popular && (
             <span
               style={{
                 backgroundColor: '#10b981',
                 color: '#ffffff',
-                fontSize: '0.62rem',
+                fontSize: '0.64rem',
                 fontWeight: 900,
-                padding: '0.2rem 0.55rem',
+                padding: '0.22rem 0.6rem',
                 borderRadius: '9999px',
                 letterSpacing: '0.04em',
                 textTransform: 'uppercase',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                boxShadow: '0 3px 10px rgba(0, 0, 0, 0.25)',
               }}
             >
               {t('catalog.card.popular', 'POPULAR')}
@@ -478,40 +488,6 @@ export default function ProductCard({
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleFavorite(_id || id);
-          }}
-          aria-label={
-            isFavorite
-              ? t('catalog.card.removeFavorite', 'Remove {{name}} from favourites', { name })
-              : t('catalog.card.addFavorite', 'Add {{name}} to favourites', { name })
-          }
-          aria-pressed={!!isFavorite}
-          style={{
-            position: 'absolute',
-            top: '0.75rem',
-            right: '0.75rem',
-            zIndex: 3,
-            background: 'rgba(255, 255, 255, 0.85)',
-            backdropFilter: 'blur(8px)',
-            border: 'none',
-            borderRadius: '50%',
-            width: '30px',
-            height: '30px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-            color: isFavorite ? '#ef4444' : '#64748b',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          {isFavorite ? <FaHeart size={13} aria-hidden="true" /> : <FiHeart size={13} aria-hidden="true" />}
-        </button>
 
         {/* Foreground Centered Sharp Graphic */}
         <div
@@ -523,7 +499,7 @@ export default function ProductCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0.85rem 1rem',
+            padding: '1rem',
           }}
         >
           {bannerUrl ? (
@@ -531,11 +507,11 @@ export default function ProductCard({
               src={bannerUrl}
               alt={name}
               style={{
-                maxHeight: '135px',
-                maxWidth: '92%',
+                maxHeight: '140px',
+                maxWidth: '90%',
                 objectFit: 'contain',
                 borderRadius: '8px',
-                filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.4))',
+                filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.45))',
                 transition: 'transform 0.25s ease',
               }}
               onError={(e) => {
@@ -543,7 +519,7 @@ export default function ProductCard({
               }}
             />
           ) : (
-            <div style={{ width: '85px', height: '85px', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.25))' }}>
+            <div style={{ width: '90px', height: '90px', filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.3))' }}>
               <ProductDeviceGraphic name={name} category={category} />
             </div>
           )}
@@ -551,38 +527,34 @@ export default function ProductCard({
       </div>
 
       {/* Card Body */}
-      <div style={{ padding: '1.15rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#ffffff' }}>
+      <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#ffffff' }}>
         <div>
-          {/* Category Chip */}
-          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#0056b3', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.35rem' }}>
-            {category}
-          </div>
 
           {/* Product Title */}
           <h3
             style={{
-              fontSize: '1.05rem',
+              fontSize: '1.08rem',
               fontWeight: 800,
-              lineHeight: 1.3,
+              lineHeight: 1.35,
               color: '#0f172a',
-              margin: '0 0 0.65rem 0',
+              margin: '0 0 0.75rem 0',
             }}
           >
             {name}
           </h3>
 
           {/* Features List */}
-          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem 0', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.15rem 0', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
             {features.slice(0, 3).map((feat, idx) => {
               const cleanText = String(feat).replace(/^[✓✔]\s*/, '');
               return (
                 <li
                   key={idx}
                   style={{
-                    fontSize: '0.76rem',
+                    fontSize: '0.78rem',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.4rem',
+                    gap: '0.45rem',
                     color: '#475569',
                     fontWeight: 500,
                   }}
@@ -597,19 +569,19 @@ export default function ProductCard({
 
         {/* Pricing & Actions */}
         <div>
-          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '0.75rem', marginBottom: '0.65rem' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', marginBottom: '0.2rem' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a' }}>
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '0.85rem', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem', marginBottom: '0.2rem' }}>
+              <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>
                 Rs. {monthlyPrice ? monthlyPrice.toLocaleString() : '0'}
               </span>
-              <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.card.perMonth', '/month')}</span>
+              <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.card.perMonth', '/month')}</span>
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+            <div style={{ fontSize: '0.74rem', color: '#64748b' }}>
               {t('catalog.card.installation', 'Installation:')} Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <AnimatedAddToCartButton
               product={product}
               isInCart={isInCart}
@@ -619,20 +591,21 @@ export default function ProductCard({
               onRemoveFromCart={onRemoveFromCart}
               t={t}
               fullWidth={true}
-              style={{ padding: '0.55rem 0.75rem', fontSize: '0.82rem' }}
+              style={{ padding: '0.65rem 0.85rem', fontSize: '0.84rem' }}
             />
 
             <button
               onClick={() => onSelect(product)}
+              type="button"
               style={{
                 width: '100%',
                 backgroundColor: '#f8fafc',
                 color: '#0056b3',
                 border: '1px solid #cbd5e1',
-                borderRadius: '8px',
-                padding: '0.45rem 0.75rem',
+                borderRadius: '12px',
+                padding: '0.5rem 0.75rem',
                 fontWeight: 700,
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -640,8 +613,17 @@ export default function ProductCard({
                 gap: '0.35rem',
                 transition: 'all 0.15s ease',
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#eff6ff';
+                e.currentTarget.style.borderColor = '#bfdbfe';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#f8fafc';
+                e.currentTarget.style.borderColor = '#cbd5e1';
+              }}
             >
-              {t('catalog.card.viewDetails', 'View Details')}
+              <span>{t('catalog.card.viewDetails', 'View Details')}</span>
+              <FiArrowRight size={13} />
             </button>
           </div>
         </div>
