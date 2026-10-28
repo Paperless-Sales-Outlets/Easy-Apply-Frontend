@@ -52,6 +52,11 @@ const NAV_ICONS = {
       <path d="M8 18h5" />
     </svg>
   ),
+  leads: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12h4l3 8 4-16 3 8h4" />
+    </svg>
+  ),
   privileges: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="11" width="18" height="11" rx="2" />
@@ -70,19 +75,45 @@ const NAV_ICONS = {
       <path d="M4 4h16v16H4z" /><path d="M8 8h8M8 12h8M8 16h5" />
     </svg>
   ),
+  'sales-officers': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M17 17h.01M17 20h.01M20 17h.01M20 20h.01" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  ),
+  'so-dashboard': (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 3v18h18" /><path d="M7 12l4-4 4 4 4-5" />
+    </svg>
+  ),
 };
 
-// Dashboard leads, User Management comes right after it, then every other
-// module in its usual order, with Audit Logs last. (User Privileges is no longer
-// in the sidebar — privileges are managed from User Management → Privileges.)
-const [DASHBOARD_MODULE, ...OTHER_MODULES] = MODULE_ACCESS;
+// Modules not used in this portal any more — hidden from the sidebar only.
+// (User Privileges is managed from User Management → Privileges.)
+const HIDDEN_NAV_KEYS = new Set(['appointments', 'technician']);
+
+// Every sidebar entry, keyed by page. Module entries come from MODULE_ACCESS.
+const NAV_BY_KEY = {
+  ...Object.fromEntries(MODULE_ACCESS.map((item) => [item.key, { ...item, icon: NAV_ICONS[item.key] }])),
+  users: { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
+  // Sales Officer Management — Admin can manage all officers + their QR codes
+  'sales-officers': { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'], roles: ['Admin'] },
+  'audit-logs': { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
+  // Sales Officer personal dashboard — visible only to Sales Officer role
+  'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'], roles: ['Sales Officer'] },
+};
+
+// Sidebar order. A module that is not listed here (e.g. a new one) still shows,
+// just before Audit Logs.
+const NAV_ORDER = ['dashboard', 'users', 'leads', 'sales-officers', 'kyc', 'forms', 'analytics'];
+const NAV_LAST = ['audit-logs', 'so-dashboard'];
 
 const NAV_ITEMS = [
-  { ...DASHBOARD_MODULE, icon: NAV_ICONS[DASHBOARD_MODULE.key] },
-  { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
-  ...OTHER_MODULES.map(item => ({ ...item, icon: NAV_ICONS[item.key] })),
-  { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
-];
+  ...NAV_ORDER,
+  ...Object.keys(NAV_BY_KEY).filter((key) => !NAV_ORDER.includes(key) && !NAV_LAST.includes(key)),
+  ...NAV_LAST,
+]
+  .filter((key) => NAV_BY_KEY[key] && !HIDDEN_NAV_KEYS.has(key))
+  .map((key) => NAV_BY_KEY[key]);
 
 const SHORT_FORM_LABELS = {
   'Customer Request Acceptance': 'Cust. Request',
@@ -97,8 +128,9 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
   const [openForms, setOpenForms] = useState(activePage === 'forms');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+  // Match roles case-insensitively so 'Sales Officer' and 'sales officer' both work
   const visibleNav = NAV_ITEMS.filter(item =>
-    item.roles.includes(admin?.role || 'Admin')
+    item.roles.some(r => r.toLowerCase() === (admin?.role || 'Admin').toLowerCase())
   );
 
   const handleNavClick = (item) => {
@@ -221,7 +253,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Main Content ── */}
       <div className="admin-main">
         <div className="admin-topbar" />
-        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users', 'audit-logs'].includes(activePage) ? ' admin-page-wide' : ''}`}>
+        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'].includes(activePage) ? ' admin-page-wide' : ''}`}>
           {children}
         </div>
       </div>

@@ -5,6 +5,8 @@ import {
   reviewKycApplication,
   runKycAutoReview,
   rerunKycAutoReview,
+  startKycRecheckAll,
+  getKycRecheckAllStatus,
 } from '../services/adminService';
 import AuthImage from '../components/AuthImage';
 import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
@@ -16,6 +18,9 @@ const STATUS_ORDER = ['pending', 'pending payment', 'flagged', 'approved', 'reje
 const REFRESH_MS = 30000;
 const PAGE_SIZE = 25;
 const SYSTEM_NAME = 'Automated KYC';
+const RECHECK_POLL_MS = 2000;
+// What "Re-check all" covers: open cases whose decision no person has made.
+const RECHECK_STATUSES = ['pending', 'flagged'];
 
 const VIEWS = [
   { key: 'attention', label: 'Needs review', hint: 'Open cases and automated decisions nobody has confirmed yet' },
@@ -34,17 +39,30 @@ const SORTS = [
 const DEFAULT_FILTERS = { view: 'attention', status: 'all', type: 'all', customer: 'all', sort: 'smart', search: '' };
 
 // Which path through the customer flow a case took (decided by the backend):
-//   new        – uploaded NIC front + back and took a live selfie
-//   returning  – NIC photos already on file, took a new live selfie only
-//   existing-new-nic – registered earlier without NIC photos, uploaded them now
+//   new        – registering: NIC front + back, live selfie and signature;
+//                the selfie is compared with the NIC photo
+//   registered – an existing customer's request: live selfie and signature;
+//                details are checked, photos are not compared
 const CUSTOMER_TYPES = {
-  new: { label: 'New customer', short: 'New', hint: 'Uploaded NIC front, NIC back and a live selfie' },
-  returning: { label: 'Returning customer', short: 'Returning', hint: 'NIC photos on file — took a new live selfie' },
-  'existing-new-nic': { label: 'Existing · NIC added', short: 'NIC added', hint: 'Registered earlier without NIC photos and uploaded them now' },
-  unknown: { label: 'Not determined', short: 'Unknown', hint: 'Not enough photos to tell' },
+  new: { label: 'New customer', short: 'New', hint: 'New registration — needs NIC front, NIC back, a live selfie and a signature; the selfie is compared with the NIC photo' },
+  registered: { label: 'Registered customer', short: 'Registered', hint: 'Registered customer — needs a live selfie and a signature; details are checked, faces are not compared' },
+  unknown: { label: 'Not determined', short: 'Unknown', hint: 'Not enough information to tell whether this is a new or a registered customer' },
 };
-const CUSTOMER_ORDER = ['new', 'returning', 'existing-new-nic', 'unknown'];
-const customerTypeOf = (item) => (CUSTOMER_TYPES[item.customerType] ? item.customerType : 'unknown');
+const CUSTOMER_ORDER = ['new', 'registered', 'unknown'];
+// Older automated runs used 'returning' / 'existing-new-nic' — both are registered customers.
+const LEGACY_TYPES = { returning: 'registered', 'existing-new-nic': 'registered' };
+const customerTypeOf = (item) => {
+  const key = LEGACY_TYPES[item.customerType] || item.customerType;
+  return CUSTOMER_TYPES[key] ? key : 'unknown';
+};
+
+// The items each kind of customer must provide (a registration on its own has no signature step).
+function requiredSlots(item) {
+  const type = customerTypeOf(item);
+  if (type === 'registered') return new Set(['facePhoto', 'signature']);
+  if (item.kind === 'account') return new Set(['nicFront', 'nicBack', 'facePhoto']);
+  return new Set(['nicFront', 'nicBack', 'facePhoto', 'signature']);
+}
 
 const DECISIONS = [
   { status: 'approved', label: 'Approve', cls: 'success', icon: 'check' },
@@ -272,7 +290,7 @@ function CustomerTag({ item, short }) {
   const meta = CUSTOMER_TYPES[key];
   return (
     <span className={`kycv-ctype ${key}`} title={meta.hint}>
-      <Icon name={key === 'returning' ? 'history' : key === 'unknown' ? 'alert' : 'user'} size={11} stroke={2.4} />
+      <Icon name={key === 'registered' ? 'userCheck' : key === 'unknown' ? 'alert' : 'user'} size={11} stroke={2.4} />
       {short ? meta.short : meta.label}
     </span>
   );
@@ -292,7 +310,7 @@ function FaceMeter({ face }) {
   if (!face || typeof face.distance !== 'number') return null;
   const SCALE = 1; // distances run 0 (identical) … ~1 (clearly different people)
   const pct = Math.min(100, (face.distance / SCALE) * 100);
-  const limit = Math.min(100, ((face.threshold || 0.45) / SCALE) * 100);
+  const limit = Math.min(100, ((face.threshold || 0.5) / SCALE) * 100);
   const passed = face.result === 'pass';
   return (
     <div className={`kycv-face ${passed ? 'pass' : 'unsure'}`}>
@@ -302,7 +320,7 @@ function FaceMeter({ face }) {
           <strong>{passed ? 'Strong face match' : 'Faces need a human check'}</strong>
           <small>
             Selfie vs {face.against === 'selfie' ? `verified selfie (${face.referenceNumber})` : 'NIC photo'} · difference {face.distance.toFixed(2)}
-            {' '}(pass at {(face.threshold || 0.45).toFixed(2)} or less)
+            {' '}(pass at {(face.threshold || 0.5).toFixed(2)} or less)
           </small>
         </div>
       </div>
@@ -392,17 +410,19 @@ function History({ history }) {
   );
 }
 
-function DocSlot({ spec, doc, note, onZoom }) {
+function DocSlot({ spec, doc, note, required = true, onZoom }) {
   if (!doc) {
     return (
-      <div className="kycv-doc empty">
+      <div className={`kycv-doc empty${required ? '' : ' optional'}`}>
         <div className="kycv-doc-label">
           <span><Icon name={spec.icon || 'file'} size={13} />{spec.label}</span>
-          {!note && <span className="kycv-doc-flag">Missing</span>}
+          {!note && (required
+            ? <span className="kycv-doc-flag">Missing</span>
+            : <span className="kycv-doc-flag optional">Not needed</span>)}
         </div>
         <div className="kycv-doc-empty">
           <Icon name="image" size={26} stroke={1.8} />
-          <strong>Not provided</strong>
+          <strong>{required ? 'Not provided' : 'Not needed for this customer'}</strong>
           {note ? <span>{note}</span> : null}
         </div>
       </div>
@@ -462,6 +482,9 @@ export default function KycReviewPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState('');
+  const [recheckJob, setRecheckJob] = useState(null);
+  const [confirmRecheck, setConfirmRecheck] = useState(false);
+  const recheckRunning = !!recheckJob?.running;
 
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [limit, setLimit] = useState(PAGE_SIZE);
@@ -499,6 +522,36 @@ export default function KycReviewPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // A re-check that is already running (started earlier, or by a colleague) keeps
+  // showing its progress after the page is opened or reloaded.
+  useEffect(() => {
+    getKycRecheckAllStatus().then((res) => { if (res.job?.running) setRecheckJob(res.job); }).catch(() => {});
+  }, []);
+
+  // Follow a running re-check, then refresh the list and report the result once.
+  useEffect(() => {
+    if (!recheckRunning) return undefined;
+    let polls = 0;
+    const t = setInterval(async () => {
+      polls += 1;
+      try {
+        const { job } = await getKycRecheckAllStatus();
+        if (!job) return;
+        setRecheckJob(job);
+        if (!job.running) {
+          load({ silent: true });
+          const parts = [`${job.approved} approved`, `${job.rejected} rejected`, `${job.flagged} flagged`, `${job.unchanged} unchanged`];
+          if (job.failed) parts.push(`${job.failed} could not be checked`);
+          pageNotice.info(`Re-check finished — ${job.done} case${job.done === 1 ? '' : 's'}: ${parts.join(', ')}.`
+            + (job.skippedByPerson ? ` ${job.skippedByPerson} case${job.skippedByPerson === 1 ? '' : 's'} decided by a person were left as they are.` : ''));
+        } else if (polls % 5 === 0) {
+          load({ silent: true }); // let decisions appear while it runs
+        }
+      } catch { /* a missed poll is fine — keep polling */ }
+    }, RECHECK_POLL_MS);
+    return () => clearInterval(t);
+  }, [recheckRunning, load]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Automated decisions arrive in the background, so keep the list fresh.
   useEffect(() => {
@@ -815,6 +868,23 @@ export default function KycReviewPage() {
     }
   };
 
+  const recheckCount = items.filter((i) => RECHECK_STATUSES.includes(i.status) && !byPerson(i)).length;
+
+  const startRecheck = async () => {
+    setConfirmRecheck(false);
+    try {
+      const { job, started } = await startKycRecheckAll();
+      setRecheckJob(job);
+      if (!started) pageNotice.info('A re-check is already running — showing its progress.');
+      else if (!job.total) {
+        setRecheckJob(null);
+        pageNotice.info('There are no open cases to re-check.');
+      }
+    } catch (err) {
+      pageNotice.error(err.response?.data?.message || err.message || 'Could not start the re-check.');
+    }
+  };
+
   const total = items.length;
   const share = (n) => (total ? (n / total) * 100 : 0);
 
@@ -917,9 +987,13 @@ export default function KycReviewPage() {
                   <span className="kycv-card-icon blue"><Icon name="idCard" size={17} /></span>
                   <div>
                     <h3>Identity documents</h3>
-                    <p>{CUSTOMER_TYPES[customerTypeOf(current)].hint}.</p>
+                    <p>
+                      {customerTypeOf(current) === 'new' && current.kind === 'account'
+                        ? 'New registration — needs NIC front, NIC back and a live selfie; the selfie is compared with the NIC photo. The signature comes with their first request'
+                        : CUSTOMER_TYPES[customerTypeOf(current)].hint}.
+                    </p>
                   </div>
-                  {compareDocs.length > 1 && faceDoc && (
+                  {customerTypeOf(current) !== 'registered' && compareDocs.length > 1 && faceDoc && (
                     <button type="button" className="kycv-compare-btn" onClick={openCompare}>
                       <Icon name="compare" size={14} />Compare faces
                     </button>
@@ -932,7 +1006,8 @@ export default function KycReviewPage() {
                       key={spec.slot}
                       spec={spec}
                       doc={pickDoc(current, spec.keys)}
-                      note={spec.slot === 'signature' && current.signatureMode === 'otp' ? 'Signed digitally by OTP — no drawn signature' : null}
+                      note={spec.slot === 'signature' && current.signatureMode === 'otp' ? 'Only confirmed by OTP — no signature was drawn' : null}
+                      required={requiredSlots(current).has(spec.slot)}
                       onZoom={openZoom}
                     />
                   ))}
@@ -1131,7 +1206,7 @@ export default function KycReviewPage() {
               >
                 <Icon name="rotate" size={16} />
               </button>
-              {!zoom.compare && compareDocs.length > 1 && faceDoc && (
+              {!zoom.compare && customerTypeOf(current) !== 'registered' && compareDocs.length > 1 && faceDoc && (
                 <button type="button" className="kycv-lb-btn wide" onClick={openCompare} title="NIC photo beside the selfie">
                   <Icon name="compare" size={15} />Compare
                 </button>
@@ -1261,7 +1336,7 @@ export default function KycReviewPage() {
           </div>
 
           <div className="kycv-hero-actions">
-            <button type="button" className="kycv-run-btn" onClick={sweep} disabled={!!busy || loading}>
+            <button type="button" className="kycv-run-btn" onClick={sweep} disabled={!!busy || loading || recheckRunning}>
               <span className="kycv-run-icon"><Icon name="bolt" size={15} className={busy === 'sweep' ? 'dash-spin' : ''} /></span>
               {busy === 'sweep' ? 'Reviewing…' : 'Run automatic review'}
             </button>
@@ -1276,6 +1351,29 @@ export default function KycReviewPage() {
               <Icon name="refresh" size={16} className={refreshing ? 'dash-spin' : ''} />
             </button>
           </div>
+
+          {recheckRunning ? (
+            <div className="kycv-recheck progress" role="status" aria-live="polite">
+              <div className="kycv-recheck-row">
+                <Icon name="refresh" size={14} className="dash-spin" />
+                <span>Re-checking {Math.min(recheckJob.done + 1, recheckJob.total)} of {recheckJob.total}…</span>
+                <b>{recheckJob.total ? Math.round((recheckJob.done / recheckJob.total) * 100) : 0}%</b>
+              </div>
+              <div className="kycv-recheck-bar"><span style={{ width: `${recheckJob.total ? (recheckJob.done / recheckJob.total) * 100 : 0}%` }} /></div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="kycv-recheck-btn"
+              onClick={() => setConfirmRecheck(true)}
+              disabled={loading || !!busy || recheckCount === 0}
+              title="Run the current automated checks again on every open case"
+            >
+              <Icon name="history" size={14} />
+              Re-check all open cases
+              <span>{loading ? '–' : recheckCount}</span>
+            </button>
+          )}
         </aside>
       </section>
 
@@ -1534,6 +1632,39 @@ export default function KycReviewPage() {
       )}
 
       {popup}
+
+      {confirmRecheck && createPortal(
+        <div className="kycv-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) setConfirmRecheck(false); }}>
+          <div
+            className="kycv-confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="kycv-recheck-title"
+            aria-describedby="kycv-recheck-desc"
+            onKeyDown={(e) => { if (e.key === 'Escape') setConfirmRecheck(false); }}
+          >
+            <span className="kycv-confirm-dialog-icon"><Icon name="history" size={22} stroke={2.2} /></span>
+            <h2 id="kycv-recheck-title">Re-check all open cases?</h2>
+            <p id="kycv-recheck-desc">
+              The automated checks will run again on <b>{recheckCount}</b> open {recheckCount === 1 ? 'case' : 'cases'} (pending and flagged) using the current rules.
+            </p>
+            <ul>
+              <li>Statuses may change — every change is recorded in the case history and the audit log.</li>
+              <li>Cases a person decided are left exactly as they are.</li>
+              <li>It runs in the background; you can keep working while it does.</li>
+            </ul>
+            <div className="kycv-confirm-dialog-actions">
+              {/* Focus starts on Cancel so an accidental Enter never starts a re-check */}
+              {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
+              <button type="button" className="admin-btn ghost" onClick={() => setConfirmRecheck(false)} autoFocus>Cancel</button>
+              <button type="button" className="admin-btn primary" onClick={startRecheck}>
+                <Icon name="history" size={14} />Start re-check
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
