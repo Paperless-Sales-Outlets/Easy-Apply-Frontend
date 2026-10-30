@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  FiCamera, FiRefreshCw, FiCheckCircle, FiAlertTriangle,
+  FiCamera, FiRefreshCw, FiCheckCircle, FiCheck, FiAlertTriangle,
   FiUpload, FiX, FiUser, FiCreditCard, FiRepeat,
 } from 'react-icons/fi';
 
@@ -60,6 +60,9 @@ export default function IdentityCaptureField({
   helpText = '',
   instructions = [],
   cameraOnly = false, // hide the file-upload fallback — live camera capture only
+  footerContent = null,
+  style: customStyle = {},
+  className: customClassName = '',
 }) {
   const isFace = variant === 'face';
 
@@ -276,197 +279,466 @@ export default function IdentityCaptureField({
   const mirrored = facingMode === 'user';
 
   return (
-    <div className="form-group" role="group" aria-labelledby={labelId} style={{ marginBottom: '1.5rem' }}>
-      <span className="form-label" id={labelId} style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-        {label}
-        {required && <span style={{ color: 'var(--danger, #dc3545)' }} aria-hidden="true">*</span>}
-        {required && <span className="sr-only">(required)</span>}
-      </span>
-
-      <div
-        style={{
-          border: `2px dashed ${error ? 'var(--danger, #dc3545)' : 'var(--border-color, #ccc)'}`,
-          borderRadius: 'var(--radius-card, 16px)',
-          padding: '1.25rem',
-          backgroundColor: '#ffffff',
-        }}
-      >
-        {value ? (
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1.25rem' }}>
-            <img
-              src={value}
-              alt={`${label} preview`}
+    <div
+      className={`kyc-capture-card ${customClassName}`.trim()}
+      role="group"
+      aria-labelledby={labelId}
+      style={{
+        background: '#ffffff',
+        border: '1.5px solid #e2e8f0',
+        borderRadius: 'var(--radius-card, 16px)',
+        padding: '1.25rem',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        boxSizing: 'border-box',
+        minHeight: '220px',
+        height: '100%',
+        ...customStyle,
+      }}
+    >
+      <div>
+        {/* Card Header matching Details card */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '1rem',
+            borderBottom: '1px solid #f1f5f9',
+            paddingBottom: '0.65rem',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div
               style={{
-                width: isFace ? '140px' : '190px',
-                height: isFace ? '140px' : '120px',
-                objectFit: 'cover',
-                borderRadius: 'var(--radius-control, 12px)',
-                border: '2px solid #0f7a4d',
+                width: '30px',
+                height: '30px',
+                borderRadius: '8px',
+                background: '#eff6ff',
+                color: '#0b4a91',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
-            />
-            <div>
-              <p style={{ margin: '0 0 0.5rem 0', fontWeight: 700, color: '#0f7a4d', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FiCheckCircle aria-hidden="true" /> Image Ready
-              </p>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <button type="button" className="btn btn-secondary btn-sm" onClick={() => { onChange(''); openCamera(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem' }}>
-                  <FiRefreshCw size={14} aria-hidden="true" /> Retake Photo
+            >
+              {isFace ? <FiCamera size={16} /> : <FiCreditCard size={16} />}
+            </div>
+            <h4 id={labelId} style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#0f172a' }}>
+              {label}
+            </h4>
+          </div>
+          {value ? (
+            error ? (
+              <span
+                style={{
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  color: '#b45309',
+                  background: '#fef3c7',
+                  border: '1px solid #fde68a',
+                  padding: '0.2rem 0.55rem',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}
+              >
+                <FiAlertTriangle size={12} /> Needs Review
+              </span>
+            ) : (
+              <span
+                style={{
+                  fontSize: '0.74rem',
+                  fontWeight: 700,
+                  color: '#166534',
+                  background: '#dcfce7',
+                  border: '1px solid #86efac',
+                  padding: '0.2rem 0.55rem',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}
+              >
+                <FiCheck size={12} /> Ready
+              </span>
+            )
+          ) : cameraOnly ? (
+            <span
+              style={{
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                color: '#1e40af',
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                padding: '0.2rem 0.55rem',
+                borderRadius: '6px',
+              }}
+            >
+              Live Camera
+            </span>
+          ) : (
+            <span
+              style={{
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                color: '#64748b',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                padding: '0.2rem 0.55rem',
+                borderRadius: '6px',
+              }}
+            >
+              Required
+            </span>
+          )}
+        </div>
+
+        {/* Inner Dropzone / Viewfinder */}
+        <div
+          style={{
+            border: `1.5px dashed ${error ? '#f59e0b' : value ? '#86efac' : '#cbd5e1'}`,
+            borderRadius: '12px',
+            padding: '1.2rem 1rem',
+            backgroundColor: error ? '#fffbeb' : value ? '#f0fdf4' : '#f8fafc',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            boxSizing: 'border-box',
+            minHeight: '190px',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {value ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem', width: '100%', textAlign: 'center' }}>
+              <div style={{ position: 'relative' }}>
+                <img
+                  src={value}
+                  alt={`${label} preview`}
+                  style={{
+                    width: isFace ? '130px' : '200px',
+                    height: isFace ? '130px' : '125px',
+                    objectFit: 'cover',
+                    borderRadius: isFace ? '50%' : '10px',
+                    border: `2.5px solid ${error ? '#f59e0b' : '#22c55e'}`,
+                    boxShadow: error
+                      ? '0 4px 12px rgba(245, 158, 11, 0.2)'
+                      : '0 4px 12px rgba(34, 197, 94, 0.18)',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: isFace ? '4px' : '-8px',
+                    right: isFace ? '4px' : '-8px',
+                    background: error ? '#f59e0b' : '#22c55e',
+                    color: '#ffffff',
+                    borderRadius: '50%',
+                    width: '26px',
+                    height: '26px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px solid #ffffff',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  {error ? <FiAlertTriangle size={13} /> : <FiCheck size={14} />}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => { onChange(''); openCamera(); }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '0.45rem 0.85rem',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: '#0b4a91',
+                    backgroundColor: '#eff6ff',
+                    border: '1px solid #bfdbfe',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <FiRefreshCw size={13} /> Retake
                 </button>
                 {!cameraOnly && (
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => uploadInputRef.current?.click()}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem' }}>
-                    <FiUpload size={14} aria-hidden="true" /> Re-upload File
+                  <button
+                    type="button"
+                    onClick={() => uploadInputRef.current?.click()}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      padding: '0.45rem 0.85rem',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      color: '#334155',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <FiUpload size={13} /> Replace
                   </button>
                 )}
-                <button type="button" className="btn btn-secondary btn-sm" onClick={() => onChange('')}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.4rem 0.8rem', fontSize: '0.82rem', color: 'var(--danger, #dc3545)' }}>
-                  <FiX size={14} aria-hidden="true" /> Remove
+                <button
+                  type="button"
+                  onClick={() => onChange('')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    padding: '0.45rem 0.85rem',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: '#dc2626',
+                    backgroundColor: '#fff5f5',
+                    border: '1px solid #fecaca',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <FiX size={13} /> Remove
                 </button>
               </div>
             </div>
-          </div>
-        ) : cameraOn ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem' }}>
-            <div
-              style={{
-                position: 'relative',
-                width: '100%',
-                maxWidth: isFace ? '340px' : '460px',
-                aspectRatio: isFace ? '1 / 1' : '4 / 3',
-                borderRadius: 'var(--radius-card, 16px)',
-                overflow: 'hidden',
-                backgroundColor: '#0f172a',
-              }}
-            >
-              <video
-                ref={videoRef}
-                playsInline
-                muted
-                autoPlay
-                aria-label={`Live camera preview for ${label}`}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', transform: mirrored ? 'scaleX(-1)' : 'none' }}
-              />
+          ) : cameraOn ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem', width: '100%' }}>
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  maxWidth: isFace ? '300px' : '400px',
+                  aspectRatio: isFace ? '1 / 1' : '4 / 3',
+                  borderRadius: 'var(--radius-card, 16px)',
+                  overflow: 'hidden',
+                  backgroundColor: '#0f172a',
+                }}
+              >
+                <video
+                  ref={videoRef}
+                  playsInline
+                  muted
+                  autoPlay
+                  aria-label={`Live camera preview for ${label}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', transform: mirrored ? 'scaleX(-1)' : 'none' }}
+                />
 
-              {!videoReady && (
-                <div role="status" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.85rem', backgroundColor: '#0f172a', color: '#fff', fontSize: '0.85rem', fontWeight: 600, zIndex: 2 }}>
-                  <span className="face-capture-spinner" aria-hidden="true" />
-                  Starting camera…
+                {!videoReady && (
+                  <div role="status" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.85rem', backgroundColor: '#0f172a', color: '#fff', fontSize: '0.85rem', fontWeight: 600, zIndex: 2 }}>
+                    <span className="face-capture-spinner" aria-hidden="true" />
+                    Starting camera…
+                  </div>
+                )}
+
+                {/* Framing guide */}
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    top: '50%', left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: isFace ? '58%' : '86%',
+                    height: isFace ? '74%' : '76%',
+                    border: `3px solid ${ready ? '#22c55e' : '#f8fafc'}`,
+                    borderRadius: isFace ? '50%' : 'var(--radius-control, 12px)',
+                    boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.45)',
+                    transition: 'border-color 0.2s ease',
+                    opacity: videoReady ? 1 : 0,
+                  }}
+                />
+
+                <div
+                  id={guidanceId}
+                  role="status"
+                  aria-live="polite"
+                  style={{
+                    position: 'absolute', bottom: '0.6rem', left: '0.6rem', right: '0.6rem',
+                    textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#fff',
+                    backgroundColor: ready ? 'rgba(13, 110, 52, 0.95)' : 'rgba(15, 23, 42, 0.85)',
+                    borderRadius: '9999px', padding: '0.35rem 0.75rem',
+                    opacity: videoReady ? 1 : 0,
+                  }}
+                >
+                  {guidance}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={capturePhoto}
+                  disabled={!ready || !videoReady}
+                  aria-describedby={guidanceId}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    backgroundColor: '#0056b3',
+                    opacity: ready && videoReady ? 1 : 0.6,
+                    borderRadius: '8px',
+                    padding: '0.5rem 1rem',
+                  }}
+                >
+                  <FiCamera size={16} aria-hidden="true" /> Capture
+                </button>
+
+                {canSwapCamera && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={swapCamera}
+                    disabled={starting}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '8px', padding: '0.5rem 1rem' }}
+                  >
+                    <FiRepeat size={16} aria-hidden="true" />
+                    {facingMode === 'user' ? 'Use back camera' : 'Use front camera'}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={stopCamera}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '8px', padding: '0.5rem 1rem' }}
+                >
+                  <FiX size={16} aria-hidden="true" /> Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', width: '100%' }}>
+              <div
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '12px',
+                  backgroundColor: '#eff6ff',
+                  color: '#0b4a91',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 0.65rem auto',
+                }}
+              >
+                {isFace ? <FiCamera size={22} /> : <FiCreditCard size={22} />}
+              </div>
+
+              {instructions.length > 0 && (
+                <div style={{ margin: '0 auto 1rem auto', maxWidth: '340px', textAlign: 'left' }}>
+                  {instructions.map((line) => (
+                    <div key={line} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', marginBottom: '0.25rem', fontSize: '0.78rem', color: '#64748b', lineHeight: 1.4 }}>
+                      <FiCheckCircle size={13} color="#059669" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+                      <span>{line}</span>
+                    </div>
+                  ))}
                 </div>
               )}
 
-              {/* Framing guide: an oval for a face, a card outline for a NIC */}
-              <div
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  top: '50%', left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: isFace ? '58%' : '86%',
-                  height: isFace ? '74%' : '76%',
-                  border: `3px solid ${ready ? '#22c55e' : '#f8fafc'}`,
-                  borderRadius: isFace ? '50%' : 'var(--radius-control, 12px)',
-                  boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.45)',
-                  transition: 'border-color 0.2s ease',
-                  opacity: videoReady ? 1 : 0,
-                }}
-              />
+              <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => openCamera()}
+                  disabled={starting}
+                  aria-busy={starting}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    backgroundColor: '#0056b3',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '0.52rem 1.15rem',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 6px rgba(0, 86, 179, 0.25)',
+                  }}
+                >
+                  {starting ? (
+                    <>
+                      <span className="face-capture-spinner face-capture-spinner--sm" aria-hidden="true" />
+                      Opening camera…
+                    </>
+                  ) : (
+                    <>
+                      <FiCamera size={16} /> Take Photo
+                    </>
+                  )}
+                </button>
 
-              <div
-                id={guidanceId}
-                role="status"
-                aria-live="polite"
-                style={{
-                  position: 'absolute', bottom: '0.6rem', left: '0.6rem', right: '0.6rem',
-                  textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#fff',
-                  backgroundColor: ready ? 'rgba(13, 110, 52, 0.95)' : 'rgba(15, 23, 42, 0.85)',
-                  borderRadius: '9999px', padding: '0.35rem 0.75rem',
-                  opacity: videoReady ? 1 : 0,
-                }}
-              >
-                {guidance}
+                {!cameraOnly && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => uploadInputRef.current?.click()}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.45rem',
+                        backgroundColor: '#ffffff',
+                        color: '#1e293b',
+                        border: '1.5px solid #cbd5e1',
+                        borderRadius: '8px',
+                        padding: '0.52rem 1.15rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <FiUpload size={16} /> Upload Photo
+                    </button>
+
+                    <input
+                      ref={uploadInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleUpload}
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+                    />
+                  </>
+                )}
               </div>
             </div>
+          )}
 
-            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button type="button" className="btn btn-primary" onClick={capturePhoto}
-                disabled={!ready || !videoReady} aria-describedby={guidanceId}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', opacity: ready && videoReady ? 1 : 0.6 }}>
-                <FiCamera size={16} aria-hidden="true" /> Capture
-              </button>
+          {cameraError && (
+            <p role="alert" style={{ marginTop: '0.85rem', marginBottom: 0, fontSize: '0.82rem', color: 'var(--danger, #dc3545)', display: 'flex', alignItems: 'center', gap: '0.35rem', justifyContent: 'center' }}>
+              <FiAlertTriangle size={14} aria-hidden="true" /> {cameraError}
+            </p>
+          )}
 
-              {canSwapCamera && (
-                <button type="button" className="btn btn-secondary" onClick={swapCamera} disabled={starting}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <FiRepeat size={16} aria-hidden="true" />
-                  {facingMode === 'user' ? 'Use back camera' : 'Use front camera'}
-                </button>
-              )}
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+          <canvas ref={analysisCanvasRef} style={{ display: 'none' }} />
+        </div>
 
-              <button type="button" className="btn btn-secondary" onClick={stopCamera}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FiX size={16} aria-hidden="true" /> Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '56px', height: '56px', borderRadius: 'var(--radius-control, 12px)', backgroundColor: '#eff6ff', color: '#0b4a91', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem auto' }} aria-hidden="true">
-              {isFace ? <FiUser size={26} /> : <FiCreditCard size={26} />}
-            </div>
-
-            {instructions.length > 0 && (
-              <ul role="list" style={{ listStyle: 'none', padding: 0, margin: '0 auto 1rem auto', fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.7, maxWidth: '420px' }}>
-                {instructions.map((line) => <li key={line}>{line}</li>)}
-              </ul>
-            )}
-
-            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button type="button" className="btn btn-primary" onClick={() => openCamera()} disabled={starting} aria-busy={starting}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                {starting
-                  ? <><span className="face-capture-spinner face-capture-spinner--sm" aria-hidden="true" /> Opening camera…</>
-                  : <><FiCamera size={16} aria-hidden="true" /> Take Photo</>}
-              </button>
-
-              {!cameraOnly && (
-                <>
-              <button type="button" className="btn btn-secondary" onClick={() => uploadInputRef.current?.click()}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <FiUpload size={16} aria-hidden="true" /> Upload
-              </button>
-
-              <input
-                ref={uploadInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleUpload}
-                tabIndex={-1}
-                aria-hidden="true"
-                style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
-              />
-                </>
-              )}
-            </div>
-          </div>
+        {helpText && !error && (
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>{helpText}</div>
         )}
-
-        {cameraError && (
-          <p role="alert" style={{ marginTop: '0.85rem', marginBottom: 0, fontSize: '0.82rem', color: 'var(--danger, #dc3545)', display: 'flex', alignItems: 'center', gap: '0.35rem', justifyContent: 'center' }}>
-            <FiAlertTriangle size={14} aria-hidden="true" /> {cameraError}
-          </p>
-        )}
-
-        <canvas ref={canvasRef} style={{ display: 'none' }} />
-        <canvas ref={analysisCanvasRef} style={{ display: 'none' }} />
+        <div role="alert" aria-live="assertive">
+          {error && <div style={{ fontSize: '0.8rem', color: 'var(--danger, #dc3545)', marginTop: '0.35rem', fontWeight: 600 }}>{error}</div>}
+        </div>
       </div>
 
-      {helpText && !error && (
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>{helpText}</div>
+      {footerContent && (
+        <div style={{ marginTop: '0.85rem' }}>
+          {footerContent}
+        </div>
       )}
-      <div role="alert" aria-live="assertive">
-        {error && <div style={{ fontSize: '0.8rem', color: 'var(--danger, #dc3545)', marginTop: '0.35rem', fontWeight: 600 }}>{error}</div>}
-      </div>
     </div>
   );
 }

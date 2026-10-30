@@ -1040,8 +1040,6 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
         </div>
       )}
 
-      <ExistingCustomerSummaryBox customerData={selectedAccount} customerExists={customerExists} />
-
       <form onSubmit={handleSubmit}>
         <div style={{ minHeight: '300px', marginBottom: '2rem' }}>
           {step === 'location' && (

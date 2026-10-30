@@ -419,6 +419,8 @@ export const SINHALA_TAMIL_TOWN_MAP = {
 export function cleanTownNoise(str) {
   if (!str || typeof str !== 'string') return '';
   let cleaned = str
+    .replace(/(?:FETC|SETEC|DRP)\b.*$/i, '')
+    .replace(/(?:Reaistration|Registration|Persons|Ace|Act|Noo?\s*32|1968)\b.*$/i, '')
     .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|pS|jie|jle|die|sie|fetc|etc|fec|setec|drp|a|e|h)\b.*$/i, '')
     .replace(/\b(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|pS|jie|jle|die|sie|fetc|etc|fec|setec|drp)\b/gi, '')
     .replace(/[.,\-/\\_]+$/, '')
@@ -439,6 +441,53 @@ export function cleanTownNoise(str) {
 }
 
 /**
+ * Checks whether an extracted address string is genuinely readable and valid,
+ * or just garbled OCR noise / watermark artifacts (e.g. "51 5 i, 153, em0e, fd.").
+ */
+export function isValidAddressText(text) {
+  if (!text || typeof text !== 'string') return false;
+  const trimmed = text.trim();
+  if (trimmed.length < 5) return false;
+
+  const upper = trimmed.toUpperCase();
+
+  // 1. Check if it matches any known Sri Lankan town or district
+  const hasKnownTown = Object.keys(SRI_LANKA_TOWN_DISTRICT_MAP).some((town) => {
+    const rx = new RegExp(`\\b${town}\\b`, 'i');
+    return rx.test(trimmed);
+  });
+  if (hasKnownTown) return true;
+
+  // 2. Check if it matches any Sinhala or Tamil town keyword
+  const hasLocalTown = Object.keys(SINHALA_TAMIL_TOWN_MAP).some((local) => trimmed.includes(local));
+  if (hasLocalTown) return true;
+
+  // 3. Check for standard Sri Lankan address suffix/keywords
+  const standardAddressKeywords = [
+    'ROAD', 'STREET', 'MAWATHA', 'DIVISION', 'LANE', 'AVENUE', 'ESTATE',
+    'GARDENS', 'WATTE', 'TOWN', 'NAGAR', 'THOTTAM', 'GAMAYA', 'VILLAGE',
+    'SCHEME', 'HOUSING', 'COLOMBO', 'KANDY', 'GALLE', 'MATARA', 'JAFFNA',
+    'KURUNEGALA', 'GAMPAHA', 'DICKOYA', 'HATTON', 'NUWARA', 'BADULLA',
+    'RATNAPURA', 'KEGALLE', 'KALUTARA', 'AMPARA', 'BATTICALOA', 'TRINCOMALEE',
+    'පාර', 'මාවත', 'වත්ත', 'කොට්ඨාශය', 'ගම', 'නිවස', 'වීදිය',
+    'வீதி', 'தோட்டம்', 'கிராமம்', 'பிரிவு'
+  ];
+  const hasStandardKw = standardAddressKeywords.some((kw) => upper.includes(kw) || trimmed.includes(kw));
+  if (hasStandardKw) return true;
+
+  // 4. If neither a known town nor standard address keyword is present:
+  // Check token quality. If tokens are mostly numbers, single letters, or digit-embedded noise (e.g. "em0e", "51", "5", "i", "fd."):
+  // It is NOT a valid address.
+  const words = trimmed.split(/[\s,.-]+/).filter(Boolean);
+  const validWords = words.filter((w) => /^[A-Za-z]{4,}$/.test(w));
+  if (validWords.length >= 2) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Parses and splits a Sri Lankan NIC address into addressLine1, addressLine2, city, and district.
  * e.g. "153, BATHFORD DIVISION, DICKOYA. FETC a" ->
  * addressLine1: "153, BATHFORD DIVISION", city: "Dickoya", district: "Nuwara Eliya", postalCode: "22050"
@@ -448,6 +497,8 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
 
   let clean = (rawAddress || '')
     .replace(/[\r\n]+/g, ', ')
+    .replace(/(?:FETC|SETEC|DRP)\b.*$/i, '')
+    .replace(/(?:Reaistration|Registration|Persons|Ace|Act|Noo?\s*32|1968)\b.*$/i, '')
     .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|fetc|etc|fec|setec|drp)\b.*$/i, '')
     .replace(/[£§©®™|\\_~@#^*=[\]{}]/g, '')
     .replace(/\.+$/, '')
@@ -455,6 +506,17 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
 
   let city = (givenCity || '').trim();
   let district = (givenDistrict || '').trim();
+
+  // If the clean address string is just OCR noise / gibberish and no valid town is given, return empty
+  if (!isValidAddressText(clean) && !givenCity && !givenDistrict) {
+    return {
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      district: '',
+      postalCode: '',
+    };
+  }
 
   // 1. Detect Sinhala/Tamil city or district in raw address or givenCity
   for (const [localTown, engTown] of Object.entries(SINHALA_TAMIL_TOWN_MAP)) {
@@ -471,7 +533,12 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
 
   // Strip trailing noise tokens
   const rawParts = clean.split(',').map((p) => p.trim()).filter(Boolean);
-  let parts = rawParts.filter((p) => !/^(?:peo|pro|geo|se|emo|bior|h|e|eb|pS|fetc|etc|fec|a)$/i.test(p));
+  let parts = rawParts.filter((p) => {
+    if (!p) return false;
+    if (/(?:Registration|Reaistration|Persons|Ace|Act|1968|Saunt|wren|FETC|SETEC)/i.test(p)) return false;
+    if (/^(?:peo|pro|geo|se|emo|bior|h|e|eb|pS|fetc|etc|fec|a|drp)$/i.test(p)) return false;
+    return true;
+  });
 
   // If parts contain both English lines and non-English lines, keep English parts only
   const hasEnglish = parts.some((p) => /[A-Za-z]{3,}/.test(p));
@@ -516,6 +583,8 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
 
   if (addressLine1) {
     addressLine1 = addressLine1
+      .replace(/(?:FETC|SETEC|DRP)\b.*$/i, '')
+      .replace(/(?:Reaistration|Registration|Persons|Ace|Act|Noo?\s*32|1968)\b.*$/i, '')
       .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|pS|jie|jle|die|sie|fetc|etc|fec|setec|drp)\b.*$/i, '')
       .replace(/[.,\-/\\_]+$/, '')
       .trim();
@@ -544,7 +613,7 @@ export function parseSriLankanAddress(rawAddress = '', givenCity = '', givenDist
   }
 
   return {
-    addressLine1: addressLine1 || clean,
+    addressLine1: addressLine1 || (isValidAddressText(clean) ? clean : ''),
     addressLine2: addressLine2 || '',
     city: city || '',
     district: district || '',
@@ -588,7 +657,7 @@ export function extractFullNameFromOCR(text) {
     'PERSONS', 'DATE', 'BIRTH', 'GENDER', 'SEX', 'MALE', 'FEMALE',
     'HOLDER', 'SIGNATURE', 'PLACE', 'COUNTRY', 'LANKAN', 'SRILANKAN',
     'MINISTRY', 'DEFENCE', 'OFFICIAL', 'SECRETARY',
-    'UCT', 'UTC', 'ICT', 'NIC', 'SLT', 'NATIONALITY',
+    'UCT', 'UTC', 'ICT', 'TC', 'NIC', 'SLT', 'NATIONALITY',
     'DICKOYA', 'HATTON', 'TALAWAKELE', 'COLOMBO', 'KANDY', 'GALLE',
     'MATARA', 'JAFFNA', 'KURUNEGALA', 'GAMPAHA', 'NEGOMBO', 'RATNAPURA',
     'BADULLA', 'KEGALLE', 'KALUTARA', 'AMPARA', 'BATTICALOA', 'TRINCOMALEE',
@@ -603,10 +672,13 @@ export function extractFullNameFromOCR(text) {
 
   const cleanNameToken = (cand) => {
     let cleaned = cand
-      .replace(/^(?:UCT|UTC|ICT|NIC|IC|E\s*IC|NO|ID|DOC|SRI\s*LANKAN|LANKAN)\s+/i, '')
+      .replace(/^(?:UCT|UTC|ICT|TC|NIC|IC|E\s*IC|NO|ID|DOC|SRI\s*LANKAN|LANKAN)\s+/i, '')
       .replace(/^(?:DICKOYA|COLOMBO|KANDY|GALLE|MATARA|JAFFNA|KURUNEGALA|GAMPAHA|HATTON|NUWARA\s*ELIYA|BADULLA|RATNAPURA|KEGALLE|KALUTARA|AMPARA|BATTICALOA|TRINCOMALEE|ANURADHAPURA|POLONNARUWA|MATALE|PUTTALAM|VAVUNIYA|MANNAR|MULLAITIVU|KILINOCHCHI|HAMBANTOTA|MONARAGALA)[\s,]+(?:Jie|Jle|die|sie|peo|pro|geo|se|eb|sb|le)?\s*,?\s*/i, '')
-      .replace(/\s+(?:UCT|UTC|ICT|NIC|IC|NO|ID|Jie|Jle|peo|se)$/i, '')
+      .replace(/\s+(?:UCT|UTC|ICT|TC|NIC|IC|NO|ID|Jie|Jle|die|sie|peo|se)$/i, '')
+      .replace(/\bTC\b/gi, '')
       .replace(/^[,\s.-]+/, '')
+      .replace(/[,\s.-]+$/, '')
+      .replace(/\s{2,}/g, ' ')
       .trim();
     return repairOcrName(cleaned);
   };
@@ -648,6 +720,17 @@ export function extractFullNameFromOCR(text) {
       const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
       if (!isIgnored && candidate.length > bestCandidate.length) {
         bestCandidate = candidate;
+        continue;
+      }
+    }
+
+    // 4. Check if current line is a Name label header, and next line contains the actual name
+    if (/(?:Name|Full\s*Name|Names)\b/i.test(rawLine) && lines[i + 1]) {
+      const nextCandidate = cleanNameToken(lines[i + 1].replace(/[^A-Za-z\s.-]/g, '').trim().toUpperCase());
+      const words = nextCandidate.split(/\s+/).filter((w) => w.length > 1);
+      const isIgnored = words.some((w) => ignoredKeywords.includes(w.toUpperCase()));
+      if (!isIgnored && nextCandidate.length > 3 && nextCandidate.length > bestCandidate.length) {
+        bestCandidate = nextCandidate;
       }
     }
   }
@@ -670,10 +753,13 @@ export function extractAddressFromOCR(text) {
     'REGISTRATION OF PERSONS', 'COMMISSIONER GENERAL', 'PLACE OF BIRTH',
     'DATE OF ISSUE', 'DEPARTMENT', 'REPUBLIC OF SRI LANKA', 'HOLDER',
     'SIGNATURE', 'MINISTRY', 'SECRETARY',
+    'REAISTRATION', 'REGISTRATION', 'PERSONS ACE', 'PERSONS ACT',
+    '32 OF 1968', 'NO. 32', 'NOO 32', 'ACT NO', 'ACT, NO', 'SAUNT', 'WREN OP',
+    'FETC', 'SETEC',
     'පුද්ගලයින් ලියාපදිංචි', 'පාලක ජනරාල්', 'උපන් ස්ථානය', 'නිකුත් කළ දිනය',
-    'දෙපාර්තමේන්තුව', 'උප්පැන්න සහතිකය', 'ශ්‍රී ලංකා', 'අත්සන',
+    'දෙපාර්තමේන්තුව', 'උප්පැන්න සහතිකය', 'ශ්‍රී ලංකා', 'අත්සන', 'පනත',
     'ஆட்பதிவுத் திணைக்களம்', 'ஆணையாளர் நாயகம்', 'பிறந்த இடம்', 'வழங்கப்பட்ட திகதி',
-    'பிறப்பு அத்தாட்சிப் பத்திரம்'
+    'பிறப்பு அத்தாட்சிப் பத்திரம்', 'சட்டம்'
   ];
 
   const addressKeywords = [
@@ -701,16 +787,28 @@ export function extractAddressFromOCR(text) {
     const isIgnored = ignoredAdministrativeKeywords.some((kw) => upper.includes(kw) || rawLine.includes(kw));
     if (isIgnored) continue;
 
+    // Skip statutory / Act references or corrupted Act lines (e.g. "Reaistration ot Persons Ace, Noo 32 of 1968")
+    if (/(?:Registration|Reaistration|Persons|Act|Ace|Noo?\s*32|1968|Commissioner|Birth|Issue)/i.test(rawLine) &&
+        /(?:32|1968|Act|Ace|Persons|Reaistration|Saunt|wren)/i.test(rawLine)) {
+      continue;
+    }
+
+    if (/\b(?:FETC|SETEC)\b/i.test(rawLine)) {
+      continue;
+    }
+
     // Skip date-like footer lines (e.g. 1995/12/30 or 2018-05-10)
     if (/^\d{4}[/.-]\d{2}[/.-]\d{2}/.test(rawLine.trim())) continue;
 
-    // Check if line has address keywords or starts with number/house indicator
+    // Check if line has address keywords or starts with number/house indicator followed by word
     const hasAddressKw = addressKeywords.some((kw) => upper.includes(kw) || rawLine.includes(kw));
-    const isHouseNumberLine = /^(?:No\.?|#)?\s*\d+[/\-A-Za-z0-9]*,?\s+/i.test(rawLine);
+    const isHouseNumberLine = /^(?:No\.?|#)?\s*\d+[/\-A-Za-z0-9]*,?\s+[A-Za-z\u0D80-\u0DFF\u0B80-\u0BFF]{3,}/i.test(rawLine);
 
     if (hasAddressKw || isHouseNumberLine) {
       let clean = rawLine
-        .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley)\b.*$/i, '')
+        .replace(/(?:FETC|SETEC|DRP)\b.*$/i, '')
+        .replace(/(?:Reaistration|Registration|Persons|Ace|Act|Noo?\s*32|1968)\b.*$/i, '')
+        .replace(/\s+(?:peo|pro|geo|gemo|emo|bior|bion|se|eb|sb|le|nfley|fetc|etc|fec|setec|drp)\b.*$/i, '')
         .replace(/^[^\dA-Za-z\u0D80-\u0DFF\u0B80-\u0BFF]+/, '')
         .replace(/\b(?=[A-Za-z0-9]*\d)(?=[A-Za-z0-9]*[A-Za-z])[A-Za-z0-9]{8,16}(?:-[A-Za-z0-9]+)?\b/g, '')
         .replace(/[£§©®™|\\_~@#^*=[\]{}]/g, '')
@@ -733,17 +831,23 @@ export function extractAddressFromOCR(text) {
       .replace(/\s+,/g, ', ')
       .replace(/,([A-Za-z0-9\u0D80-\u0DFF\u0B80-\u0BFF])/g, ', $1')
       .trim();
-    return combined;
+
+    if (isValidAddressText(combined)) {
+      return combined;
+    }
   }
 
   // Fallback: search for first line starting with a number before official footer
   for (const rawLine of lines) {
-    if (/(?:Registration of Persons|Commissioner General|Place of Birth|Date of Issue|\d{4}\/\d{2}\/\d{2})/i.test(rawLine)) {
+    if (/(?:Registration|Reaistration|Persons|Commissioner General|Place of Birth|Date of Issue|\d{4}\/\d{2}\/\d{2}|Act|Ace|1968)/i.test(rawLine)) {
       break;
     }
     const matchNo = rawLine.match(/^(\d{1,4}[A-Za-z]?[\s,]+[A-Za-z\u0D80-\u0DFF\u0B80-\u0BFF\s,]{4,50})/);
     if (matchNo && matchNo[1]) {
-      return matchNo[1].trim().replace(/,([A-Za-z0-9])/g, ', $1');
+      const candidateFallback = matchNo[1].trim().replace(/,([A-Za-z0-9])/g, ', $1');
+      if (isValidAddressText(candidateFallback)) {
+        return candidateFallback;
+      }
     }
   }
 

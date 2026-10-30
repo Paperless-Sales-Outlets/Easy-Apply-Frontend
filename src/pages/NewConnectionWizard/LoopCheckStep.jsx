@@ -404,9 +404,9 @@ export default function LoopCheckStep({
       const data = await queryOSSFeasibility({
         address,
         city,
-        district,
-        latitude,
-        longitude,
+        district: formData.district || district,
+        latitude: formData.latitude || latitude,
+        longitude: formData.longitude || longitude,
         requestedProduct: selectedProduct,
       });
 
@@ -503,6 +503,7 @@ export default function LoopCheckStep({
           </div>
 
         </div>
+
       </div>
 
       {/* ── Verified Installation Location Card with GPS Indicator ── */}

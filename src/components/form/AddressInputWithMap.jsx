@@ -11,6 +11,7 @@ export default function AddressInputWithMap({
   onChange,
   onLocationSelect,
   selectedCoords = null,
+  defaultCenter = null,
   placeholder = 'Enter address...',
   rows = 3,
   required = false,
@@ -131,6 +132,9 @@ export default function AddressInputWithMap({
             const cleaned = cleanGoogleAddress(results);
             if (cleaned) {
               triggerChange(cleaned, coords);
+              if (onLocationSelect) {
+                onLocationSelect({ address: cleaned, coords });
+              }
               setStatusMessage('GPS location detected!');
               setIsDetectingLocation(false);
               setTimeout(() => setStatusMessage(''), 3000);
@@ -145,8 +149,20 @@ export default function AddressInputWithMap({
           );
           const data = await response.json();
           const cleanedNom = cleanNominatimAddress(data);
+          const finalAddr = cleanedNom || getFallbackAddressText();
 
-          triggerChange(cleanedNom || getFallbackAddressText(), coords);
+          triggerChange(finalAddr, coords);
+          if (onLocationSelect) {
+            onLocationSelect({
+              address: finalAddr,
+              coords,
+              details: {
+                city: data.address?.city || data.address?.town || data.address?.suburb,
+                district: data.address?.county || data.address?.state_district,
+                postalCode: data.address?.postcode,
+              },
+            });
+          }
           setStatusMessage('GPS location detected!');
         } catch (error) {
           console.error('Error fetching address:', error);
@@ -170,10 +186,17 @@ export default function AddressInputWithMap({
     );
   };
 
-  const handleModalSelectAddress = (selectedAddress, position) => {
+  const handleModalSelectAddress = (selectedAddress, position, detectedDetails) => {
     if (disabled || readOnly) return;
-    const coords = position ? { lat: position.lat, lng: position.lng } : null;
+    const coords = position ? (position.lat && position.lng ? { lat: position.lat, lng: position.lng } : position) : null;
     triggerChange(selectedAddress, coords);
+    if (onLocationSelect) {
+      onLocationSelect({
+        address: selectedAddress,
+        coords,
+        details: detectedDetails,
+      });
+    }
     setStatusMessage('Address & exact GPS coordinates selected!');
     setTimeout(() => setStatusMessage(''), 3000);
   };
@@ -288,6 +311,7 @@ export default function AddressInputWithMap({
         onClose={() => setIsModalOpen(false)}
         onSelectAddress={handleModalSelectAddress}
         initialAddress={internalValue}
+        initialCenter={defaultCenter}
       />
     </div>
   );

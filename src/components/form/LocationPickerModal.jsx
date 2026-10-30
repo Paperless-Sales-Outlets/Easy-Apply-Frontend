@@ -41,11 +41,12 @@ function MapRecenter({ center }) {
   return null;
 }
 
-export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, initialAddress = '' }) {
+export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, initialAddress = '', initialCenter = null }) {
   const [useGoogleMaps, setUseGoogleMaps] = useState(false);
   const [googleLoaded, setGoogleLoaded] = useState(false);
-  const [position, setPosition] = useState(DEFAULT_CENTER);
+  const [position, setPosition] = useState(initialCenter && initialCenter.lat ? initialCenter : DEFAULT_CENTER);
   const [addressText, setAddressText] = useState(initialAddress);
+  const [detectedDetails, setDetectedDetails] = useState(null);
   const [isFetchingAddress, setIsFetchingAddress] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -73,10 +74,18 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
     }
   }, [isOpen]);
 
-  // Initial user location detection
+  // Initial user location or initialCenter detection
   useEffect(() => {
     if (isOpen) {
-      if (navigator.geolocation) {
+      if (initialCenter && typeof initialCenter.lat === 'number' && typeof initialCenter.lng === 'number') {
+        const coords = { lat: initialCenter.lat, lng: initialCenter.lng };
+        setPosition(coords);
+        reverseGeocode(coords.lat, coords.lng);
+        if (useGoogleMaps && mapInstanceRef.current) {
+          mapInstanceRef.current.setCenter(coords);
+          if (markerInstanceRef.current) markerInstanceRef.current.setPosition(coords);
+        }
+      } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -92,7 +101,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
         reverseGeocode(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
       }
     }
-  }, [isOpen]);
+  }, [isOpen, initialCenter]);
 
   // Initialize Native Google Map when Google Maps API is active
   useEffect(() => {
@@ -178,7 +187,23 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
           });
         });
 
-        if (results) {
+        if (results && results[0]) {
+          const comps = results[0].address_components || [];
+          const getComp = (types) => {
+            const found = comps.find((c) => types.some((t) => c.types.includes(t)));
+            return found ? found.long_name : '';
+          };
+          const locality = getComp(['locality', 'sublocality_level_1', 'sublocality', 'neighborhood']);
+          const district = getComp(['administrative_area_level_2', 'administrative_area_level_1']);
+          const postal = getComp(['postal_code']);
+          setDetectedDetails({
+            city: locality,
+            district,
+            postalCode: postal,
+            lat,
+            lng,
+          });
+
           const cleaned = cleanGoogleAddress(results);
           if (cleaned) {
             setAddressText(cleaned);
@@ -194,6 +219,20 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
         { headers: { 'Accept-Language': 'en' } }
       );
       const data = await response.json();
+      if (data && data.address) {
+        const addr = data.address;
+        const locality = addr.city || addr.town || addr.suburb || addr.village || addr.municipality || '';
+        const district = addr.county || addr.state_district || addr.state || '';
+        const postal = addr.postcode || '';
+        setDetectedDetails({
+          city: locality,
+          district,
+          postalCode: postal,
+          lat,
+          lng,
+        });
+      }
+
       const cleanedNom = cleanNominatimAddress(data);
       if (cleanedNom) {
         setAddressText(cleanedNom);
@@ -284,7 +323,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
 
   const handleConfirm = () => {
     if (addressText) {
-      onSelectAddress(addressText, position);
+      onSelectAddress(addressText, position, detectedDetails);
     }
     onClose();
   };

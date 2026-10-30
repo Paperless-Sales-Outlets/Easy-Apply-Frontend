@@ -30,8 +30,10 @@ export default function FloatingCartButton() {
     };
   }, []);
 
-  // Do not surface the floating button when already on the cart page or inside admin portal
-  const isExcludedPage = location.pathname.startsWith('/cart') || location.pathname.includes('/admin');
+  // Do not surface the floating button when on cart, admin portal, or new-connection wizard
+  const isExcludedPage = location.pathname.startsWith('/cart') || 
+    location.pathname.includes('/admin') || 
+    location.pathname.startsWith('/new-connection');
   if (cartCount <= 0 || isExcludedPage) {
     return null;
   }
