@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test \"src/utils/__tests__/*.test.js\""
+    "test": "node --test \"src/shared/utils/__tests__/*.test.js\""
   },
   "engines": {
     "node": ">=20.14.0"
