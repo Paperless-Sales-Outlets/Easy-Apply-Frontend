@@ -1,0 +1,717 @@
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut, FiShoppingCart, FiChevronDown } from 'react-icons/fi';
+import sltLogo from '../../../assets/sltlogoOnly.png';
+import { getVerifiedPhone, getVerifiedName, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../../shared/utils/authSession';
+import { getLocalCart } from '../../services/productService';
+
+const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : n ? `+94 ${n}` : '');
+
+// A little extra breathing room below the fixed nav so page content never
+// feels flush against it, even before the exact height is measured.
+const NAV_HEIGHT_ESTIMATE = 88;
+const NAV_SPACER_BUFFER = 16;
+
+// Searchable products dataset for navbar suggestions
+const SEARCHABLE_PRODUCTS = [
+  { id: 'prod-1', name: '500 Mbps Fibre Broadband', category: 'Fibre Broadband', speed: '500 Mbps', monthlyPrice: 7999 },
+  { id: 'prod-2', name: '300 Mbps Fibre Broadband', category: 'Fibre Broadband', speed: '300 Mbps', monthlyPrice: 5499 },
+  { id: 'prod-3', name: '1 Gbps Fibre Broadband', category: 'Fibre Broadband', speed: '1 Gbps', monthlyPrice: 10999 },
+  { id: 'prod-4', name: 'LTE Home 150 GB', category: 'LTE Home', speed: '100 Mbps', monthlyPrice: 3999 },
+  { id: 'prod-5', name: 'LTE Home 300 GB', category: 'LTE Home', speed: '100 Mbps', monthlyPrice: 4999 },
+  { id: 'prod-8', name: 'Fibre Voice Home', category: 'Voice', speed: 'Voice', monthlyPrice: 990 },
+  { id: 'prod-9', name: 'Voice Unlimited', category: 'Voice', speed: 'Voice', monthlyPrice: 1490 },
+  { id: 'prod-10', name: 'Megaline Voice Basic', category: 'Voice', speed: 'Voice', monthlyPrice: 790 },
+  { id: 'prod-11', name: 'Voice Business Prime', category: 'Voice', speed: 'Voice', monthlyPrice: 1990 },
+  { id: 'prod-6', name: 'PEO TV Gold Pack', category: 'PEO TV', speed: 'HD TV', monthlyPrice: 2990 },
+  { id: 'prod-7', name: 'PEO TV Starter Pack', category: 'PEO TV', speed: 'HD TV', monthlyPrice: 1490 },
+  { id: 'prod-12', name: 'PEO TV Entertainment', category: 'PEO TV', speed: 'HD TV', monthlyPrice: 2190 },
+  { id: 'prod-13', name: 'PEO TV Titanium', category: 'PEO TV', speed: '4K HD TV', monthlyPrice: 3890 },
+];
+
+/** Site header: navigation, language switch, cart and account menu. */
+export default function Navbar() {
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchCategory, setSearchCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(() => {
+    try {
+      return getLocalCart().reduce((sum, item) => sum + (item.quantity || 1), 0);
+    } catch {
+      return 0;
+    }
+  });
+  const menuRef = useRef(null);
+  const searchRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const userRef = useRef(null);
+
+  useEffect(() => {
+    const syncCart = () => {
+      try {
+        setCartCount(getLocalCart().reduce((sum, item) => sum + (item.quantity || 1), 0));
+      } catch {
+        setCartCount(0);
+      }
+    };
+    syncCart();
+    window.addEventListener('easyapply:cart-updated', syncCart);
+    window.addEventListener('storage', syncCart);
+    return () => {
+      window.removeEventListener('easyapply:cart-updated', syncCart);
+      window.removeEventListener('storage', syncCart);
+    };
+  }, []);
+
+  // Filter search suggestions
+  const suggestions = React.useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return SEARCHABLE_PRODUCTS.filter((p) => {
+      if (searchCategory !== 'All') {
+        const cat = p.category.toLowerCase();
+        if (searchCategory.toLowerCase() === 'fibre' && !cat.includes('fibre')) return false;
+        if (searchCategory.toLowerCase() === 'lte' && !cat.includes('lte')) return false;
+        if (searchCategory.toLowerCase() === 'peo tv' && !cat.includes('peo')) return false;
+        if (searchCategory.toLowerCase() === 'voice' && !cat.includes('voice')) return false;
+      }
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        p.speed.toLowerCase().includes(q)
+      );
+    }).slice(0, 6);
+  }, [searchQuery, searchCategory]);
+
+  useEffect(() => {
+    const handleClickOutsideSearch = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+        setSearchOpen(false);
+      }
+      if (userRef.current && !userRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutsideSearch);
+    return () => document.removeEventListener('mousedown', handleClickOutsideSearch);
+  }, []);
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  const handleSelectSuggestion = (product) => {
+    setSearchQuery(product.name);
+    setShowSuggestions(false);
+    setSearchOpen(false);
+    window.dispatchEvent(new CustomEvent('easyapply:search', { detail: product.name }));
+    navigate(`/new-connection/products?search=${encodeURIComponent(product.name)}`);
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    setShowSuggestions(false);
+    setSearchOpen(false);
+    if (searchQuery.trim()) {
+      window.dispatchEvent(new CustomEvent('easyapply:search', { detail: searchQuery }));
+      navigate(`/new-connection/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  // useLayoutEffect (not useEffect) so the spacer is sized before the browser
+  // paints — otherwise content briefly renders behind the fixed nav on first
+  // load. Seeded with a sane estimate so there's no gap even before that.
+  const [navHeight, setNavHeight] = useState(NAV_HEIGHT_ESTIMATE);
+  useLayoutEffect(() => {
+    const el = menuRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const update = () => setNavHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const [verifiedPhone, setVerifiedPhone] = useState(getVerifiedPhone);
+  const [verifiedName, setVerifiedName] = useState(getVerifiedName);
+
+  useEffect(() => {
+    const syncAuth = () => {
+      setVerifiedPhone(getVerifiedPhone());
+      setVerifiedName(getVerifiedName());
+    };
+    syncAuth();
+    window.addEventListener(AUTH_UPDATED_EVENT, syncAuth);
+    window.addEventListener('storage', syncAuth);
+    return () => {
+      window.removeEventListener(AUTH_UPDATED_EVENT, syncAuth);
+      window.removeEventListener('storage', syncAuth);
+    };
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    logoutVerifiedSession();
+    navigate('/login', { replace: true });
+  };
+
+  const isActivePath = (path) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
+  const navLinkStyle = (path) =>
+    isActivePath(path)
+      ? {
+        color: '#0056b3',
+        textDecoration: 'none',
+        fontWeight: 800,
+        fontSize: '0.88rem',
+        position: 'relative',
+        paddingBottom: '0.25rem',
+        borderBottom: '2.5px solid #0056b3',
+      }
+      : {
+        color: '#334155',
+        textDecoration: 'none',
+        fontWeight: 600,
+        fontSize: '0.88rem',
+        position: 'relative',
+        paddingBottom: '0.25rem',
+        borderBottom: '2.5px solid transparent',
+      };
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setUserMenuOpen(false);
+    setSearchOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
+
+  return (
+    <>
+      <nav className="top-navbar-wrapper" ref={menuRef} style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
+        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: 'clamp(0.75rem, 2.5vw, 1.15rem) clamp(0.5rem, 4vw, 1.5rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'clamp(0.5rem, 2vw, 1.25rem)' }}>
+
+          {/* ── Left: Logo ── */}
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', gap: '0.45rem', flexShrink: 0 }}>
+            <img
+              src={sltLogo}
+              alt="SLTMobitel logo"
+              style={{ height: '26px', width: 'auto', objectFit: 'contain' }}
+            />
+            <span
+              style={{
+                fontFamily: 'var(--font-head)',
+                fontSize: '1.05rem',
+                fontWeight: 800,
+                color: '#191970',
+                letterSpacing: '-0.02em',
+                whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                gap: '0.3rem',
+              }}
+            >
+              <span>SLTMobitel</span>
+              <span style={{ fontWeight: 700 }}>EasyApply</span>
+            </span>
+          </Link>
+
+        {/* ── Desktop Nav Links ── */}
+        <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '1.75rem', marginLeft: 'clamp(0.5rem, 2.5vw, 2rem)', marginRight: 'auto', opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? 'none' : 'auto', transition: 'opacity 0.2s ease' }}>
+          <Link to="/" style={navLinkStyle('/')}>
+            {t('nav.home', 'Home')}
+          </Link>
+          <Link to="/check-status" style={navLinkStyle('/check-status')}>
+            {t('nav.applicationStatus', 'Application Status')}
+          </Link>
+          <Link to="/help" style={navLinkStyle('/help')}>
+            {t('nav.help', 'Help & Support')}
+          </Link>
+        </div>
+
+          {/* ── Right: Navigation, Language and Authentication ── */}
+          <div
+            className="navbar-right"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end',
+              gap: 'clamp(0.35rem, 2vw, 1.25rem)',
+              rowGap: '0.5rem',
+              flexShrink: 0,
+            }}
+          >
+            {/* Search: icon only; expands inline when clicked (hidden on checkout/scheduling funnel pages) */}
+            {!location.pathname.startsWith('/schedule-installation') && !location.pathname.startsWith('/completion') && (
+            <div
+              ref={searchRef}
+              className="nav-center-search"
+              style={{ position: 'relative', width: '38px', height: '38px', flexShrink: 0 }}
+            >
+              <button
+                  type="button"
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Open search"
+                  title="Search"
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '50%',
+                    border: '1px solid #e2e8f0',
+                    backgroundColor: '#f8fafc',
+                    color: '#0056b3',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    opacity: searchOpen ? 0 : 1,
+                    pointerEvents: searchOpen ? 'none' : 'auto',
+                    transition: 'opacity 0.2s ease',
+                  }}
+                >
+                  <FiSearch size={17} aria-hidden="true" />
+                </button>
+                <form
+                  onSubmit={handleSearchSubmit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setSearchOpen(false);
+                      setShowSuggestions(false);
+                    }
+                  }}
+                  className="nav-search-form"
+                  aria-hidden={!searchOpen}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    zIndex: 5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: searchOpen ? 'min(380px, calc(100vw - 2rem))' : '38px',
+                    height: '38px',
+                    backgroundColor: '#ffffff',
+                    border: '1.5px solid #0056b3',
+                    borderRadius: '9999px',
+                    overflow: 'hidden',
+                    boxShadow: '0 0 0 3px rgba(0, 86, 179, 0.12)',
+                    opacity: searchOpen ? 1 : 0,
+                    visibility: searchOpen ? 'visible' : 'hidden',
+                    transition: `width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, visibility 0s linear ${searchOpen ? '0s' : '0.3s'}`,
+                  }}
+                >
+                  <FiSearch style={{ color: '#94a3b8', marginLeft: '0.85rem', flexShrink: 0 }} size={16} aria-hidden="true" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    aria-label="Search packages, speeds, products"
+                    placeholder="Search packages, speeds, products..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      padding: '0 0.6rem',
+                      border: 'none',
+                      outline: 'none',
+                      fontSize: '0.85rem',
+                      color: '#0f172a',
+                      backgroundColor: 'transparent',
+                    }}
+                  />
+                  <select
+                    value={searchCategory}
+                    onChange={(e) => setSearchCategory(e.target.value)}
+                    aria-label="Filter search by category"
+                    style={{
+                      border: 'none',
+                      borderLeft: '1px solid #e2e8f0',
+                      backgroundColor: 'transparent',
+                      padding: '0 0.5rem',
+                      height: '60%',
+                      fontSize: '0.8rem',
+                      color: '#475569',
+                      fontWeight: 600,
+                      outline: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="All">All</option>
+                    <option value="Fibre">Fibre</option>
+                    <option value="LTE">LTE</option>
+                    <option value="PEO TV">PEO TV</option>
+                    <option value="Voice">Voice</option>
+                  </select>
+                  <button
+                    type="button"
+                    aria-label="Close search"
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setShowSuggestions(false);
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0 0.75rem 0 0.35rem', display: 'flex', alignItems: 'center' }}
+                  >
+                    <FiX size={16} />
+                  </button>
+                </form>
+            {/* Live Search Suggestions Dropdown */}
+            {showSuggestions && searchQuery.trim() && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 4px)',
+                  right: 0,
+                  width: 'min(380px, calc(100vw - 2rem))',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '12px',
+                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
+                  border: '1px solid #e2e8f0',
+                  zIndex: 1000,
+                  overflow: 'hidden',
+                  maxHeight: '380px',
+                  overflowY: 'auto',
+                }}
+              >
+                {suggestions.length > 0 ? (
+                  suggestions.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleSelectSuggestion(item)}
+                      style={{
+                        padding: '0.75rem 1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f1f5f9',
+                        transition: 'background-color 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8fafc';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
+                          {item.name}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
+                          <span style={{ backgroundColor: '#eff6ff', color: '#0056b3', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
+                            {item.category}
+                          </span>
+                          <span>• {item.speed}</span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 900, color: '#0056b3', whiteSpace: 'nowrap' }}>
+                        Rs. {item.monthlyPrice.toLocaleString()} <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>/mo</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+                    No matching packages found for "<strong>{searchQuery}</strong>"
+                  </div>
+                )}
+              </div>
+            )}
+            </div>
+            )}
+
+            {/* Cart quick-access button */}
+            <Link
+              to="/cart"
+              className="navbar-cart-btn"
+              style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                backgroundColor: isActivePath('/cart') ? '#eff6ff' : '#f8fafc',
+                border: `1px solid ${isActivePath('/cart') ? '#bfdbfe' : '#e2e8f0'}`,
+                borderRadius: '8px',
+                padding: '0.4rem 0.75rem',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                color: '#0056b3',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s ease',
+              }}
+              aria-label={`Shopping Cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
+              title={t('nav.cart', 'Shopping Cart')}
+            >
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <FiShoppingCart size={16} />
+                {cartCount > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-10px',
+                      backgroundColor: '#10b981',
+                      color: '#ffffff',
+                      fontSize: '0.68rem',
+                      fontWeight: 800,
+                      minWidth: '17px',
+                      height: '17px',
+                      lineHeight: '17px',
+                      borderRadius: '9999px',
+                      textAlign: 'center',
+                      padding: '0 3px',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.18)',
+                    }}
+                  >
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </span>
+                )}
+              </div>
+              <span className="navbar-cart-label">{t('nav.cart', 'Cart')}</span>
+            </Link>
+
+            {/* Language Switcher */}
+            <div
+              className="lang-switcher"
+              style={{
+                alignItems: 'center',
+                gap: '0.35rem',
+                backgroundColor: '#f8fafc',
+                padding: '0.35rem 0.65rem',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <FiGlobe style={{ color: '#0056b3' }} size={15} />
+              <select
+                value={i18n.language}
+                onChange={(e) => i18n.changeLanguage(e.target.value)}
+                aria-label="Language"
+                style={{
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  outline: 'none',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  color: '#334155',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="en">English</option>
+                <option value="si">සිංහල</option>
+                <option value="ta">தமிழ்</option>
+              </select>
+            </div>
+
+            {/* Login / Logout */}
+            {verifiedPhone ? (
+              <div
+                className="navbar-auth"
+                ref={userRef}
+                style={{
+                  position: 'relative',
+                  borderLeft: '1px solid #cbd5e1',
+                  paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((o) => !o)}
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
+                  className="navbar-auth-phone"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: '#334155',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    padding: '0.3rem 0.6rem 0.3rem 0.35rem',
+                    borderRadius: '9999px',
+                    backgroundColor: userMenuOpen || isActivePath('/profile') ? '#eff6ff' : '#f8fafc',
+                    border: `1px solid ${userMenuOpen || isActivePath('/profile') ? '#bfdbfe' : '#e2e8f0'}`,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#0056b3', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: 800 }}>
+                    {(verifiedName || '#').trim().charAt(0).toUpperCase()}
+                  </span>
+                  <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {verifiedName || formatPhone(verifiedPhone)}
+                  </span>
+                  <FiChevronDown size={14} style={{ transition: 'transform 0.2s', transform: userMenuOpen ? 'rotate(180deg)' : 'none' }} />
+                </button>
+
+                {userMenuOpen && (
+                  <div
+                    role="menu"
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      right: 0,
+                      minWidth: '200px',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
+                      padding: '0.4rem',
+                      zIndex: 1000,
+                    }}
+                  >
+                    <div style={{ padding: '0.5rem 0.75rem 0.6rem', borderBottom: '1px solid #f1f5f9', marginBottom: '0.3rem' }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a' }}>{verifiedName || t('nav.account', 'My Account')}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{formatPhone(verifiedPhone)}</div>
+                    </div>
+                    <Link
+                      to="/profile"
+                      role="menuitem"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', padding: '0.55rem 0.75rem', borderRadius: '8px', color: '#0f172a', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    >
+                      <FiUser size={15} style={{ color: '#0056b3' }} />
+                      {t('nav.myProfile', 'My Profile')}
+                    </Link>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', background: 'none', border: 'none', color: '#dc2626', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', textAlign: 'left' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    >
+                      <FiLogOut size={15} />
+                      {t('nav.logout', 'Logout')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="navbar-login-btn"
+                onClick={() => navigate('/login')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: 'none',
+                  border: 'none',
+                  borderLeft: '1px solid #cbd5e1',
+                  paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)',
+                  color: '#0056b3',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                }}
+              >
+                <FiUser size={16} />
+                <span>{t('nav.login', 'Login')}</span>
+              </button>
+            )}
+
+            {/* Mobile Hamburger */}
+            <button
+              className="hamburger-btn"
+              type="button"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              style={{ cursor: 'pointer' }}
+            >
+              {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+            </button>
+          </div>
+        </div>
+        {/* Mobile Slide Menu */}
+        {menuOpen && (
+          <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', padding: '1rem' }}>
+            {[
+              { to: '/', label: t('nav.home', 'Home') },
+              { to: '/cart', label: `${t('nav.cart', 'Cart')}${cartCount > 0 ? ` (${cartCount})` : ''}` },
+              { to: '/check-status', label: t('nav.applicationStatus', 'Application Status') },
+              { to: '/help', label: t('nav.help', 'Help & Support') },
+            ].map(({ to, label }) => {
+              const active = isActivePath(to);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  style={{
+                    display: 'block',
+                    padding: '0.6rem 0.75rem',
+                    color: active ? '#0056b3' : '#0f172a',
+                    textDecoration: 'none',
+                    fontWeight: active ? 800 : 600,
+                    backgroundColor: active ? '#eff6ff' : 'transparent',
+                    borderRadius: '8px',
+                    borderLeft: active ? '3px solid #0056b3' : '3px solid transparent',
+                  }}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+
+            <div style={{ borderTop: '1px solid #e2e8f0', margin: '0.5rem 0', paddingTop: '0.5rem' }}>
+              {verifiedPhone ? (
+                <>
+                  <Link
+                    to="/profile"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', color: isActivePath('/profile') ? '#0056b3' : '#0f172a', textDecoration: 'none', fontWeight: isActivePath('/profile') ? 800 : 600, fontSize: '0.95rem', backgroundColor: isActivePath('/profile') ? '#eff6ff' : 'transparent', borderRadius: '8px', borderLeft: isActivePath('/profile') ? '3px solid #0056b3' : '3px solid transparent' }}
+                  >
+                    <FiUser size={16} style={{ color: '#50b748' }} />
+                    <span>{verifiedName || formatPhone(verifiedPhone)}</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
+                  >
+                    <FiLogOut size={16} />
+                    <span>{t('nav.logout', 'Logout')}</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate('/login')}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#0056b3', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
+                >
+                  <FiUser size={16} />
+                  <span>{t('nav.login', 'Login')}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </nav>
+      {/* Spacer so fixed-position nav doesn't cover page content; height tracks the nav's own (responsive) height, plus a little breathing room */}
+      <div style={{ height: navHeight + NAV_SPACER_BUFFER }} aria-hidden="true" />
+    </>
+  );
+}
