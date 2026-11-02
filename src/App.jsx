@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { lazy, Suspense, useEffect } from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -9,37 +9,39 @@ import {
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 
-import Dashboard from './pages/Dashboard';
-import NewConnectionWizard from './pages/NewConnectionWizard';
+import Dashboard from './customer/pages/Dashboard';
+import NewConnectionWizard from './customer/pages/NewConnectionWizard';
 
-import CheckStatusPage from './pages/CheckStatusPage';
-import CompletionPage from './pages/CompletionPage';
-import InstallationSchedulingPage from './pages/InstallationSchedulingPage';
-import ThankYouPage from './pages/ThankYouPage';
-import PaymentSuccessPage from './pages/PaymentSuccessPage';
-import PaymentCancelPage from './pages/PaymentCancelPage';
-import AdminDashboard from './pages/Admin';
+import CheckStatusPage from './customer/pages/CheckStatusPage';
+import CompletionPage from './customer/pages/CompletionPage';
+import InstallationSchedulingPage from './customer/pages/InstallationSchedulingPage';
+import ThankYouPage from './customer/pages/ThankYouPage';
+import PaymentSuccessPage from './customer/pages/PaymentSuccessPage';
+import PaymentCancelPage from './customer/pages/PaymentCancelPage';
 
-import ProductCatalogPage from './pages/ProductCatalogPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import CartPage from './pages/CartPage';
-import HelpSupportPage from './pages/HelpSupportPage';
-import MyProfilePage from './pages/MyProfilePage';
-import SignUpPage from './pages/SignUpPage';
-import LoginPage from './pages/LoginPage';
-import LandingPage from './pages/LandingPage';
+import ProductCatalogPage from './customer/pages/ProductCatalogPage';
+import ProductDetailPage from './customer/pages/ProductDetailPage';
+import CartPage from './customer/pages/CartPage';
+import HelpSupportPage from './customer/pages/HelpSupportPage';
+import MyProfilePage from './customer/pages/MyProfilePage';
+import SignUpPage from './customer/pages/SignUpPage';
+import LoginPage from './customer/pages/LoginPage';
+import LandingPage from './customer/pages/LandingPage';
 
-import Navbar from './components/layout/Navbar';
-import Footer from './components/layout/Footer';
-import FloatingCartButton from './components/layout/FloatingCartButton';
-import ErrorBoundary from './components/ErrorBoundary';
-import SessionGate from './components/SessionGate';
+import Navbar from './customer/components/layout/Navbar';
+import Footer from './customer/components/layout/Footer';
+import FloatingCartButton from './customer/components/layout/FloatingCartButton';
+import ErrorBoundary from './shared/components/ErrorBoundary';
+import SessionGate from './customer/components/SessionGate';
 
-import ProtectedRoute from './components/ProtectedRoute';
-import { isAuthenticated } from './utils/authSession';
-import SessionTimeoutHandler from './components/SessionTimeoutHandler';
-import AdminLoginPage from './pages/Admin/pages/AdminLoginPage';
-import { AdminAuthProvider } from './pages/Admin/context/AdminAuthContext';
+import ProtectedRoute from './customer/components/ProtectedRoute';
+import { isAuthenticated } from './shared/utils/authSession';
+import SessionTimeoutHandler from './customer/components/SessionTimeoutHandler';
+import { AdminAuthProvider } from './admin/context/AdminAuthContext';
+
+// Admin portal is code-split so customers never download it.
+const AdminDashboard = lazy(() => import('./admin'));
+const AdminLoginPage = lazy(() => import('./admin/pages/AdminLoginPage'));
 
 const PageWrapper = ({ children, fullBleed = false, form = false }) => {
   return (
@@ -183,15 +185,6 @@ const AnimatedRoutes = () => {
             </PageWrapper>
           }
         />
-
-
-
-
-
-
-
-
-
 
         {/* Auth — rendered without the site header/footer */}
         <Route path="/login" element={<LoginPage />} />
@@ -392,7 +385,9 @@ function App() {
           <SessionTimeoutHandler />
           <NavigationLayout>
             <SalesRefCapture />
-            <AnimatedRoutes />
+            <Suspense fallback={null}>
+              <AnimatedRoutes />
+            </Suspense>
           </NavigationLayout>
         </AdminAuthProvider>
       </MotionConfig>
