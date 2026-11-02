@@ -1,4 +1,5 @@
 import { getPostalCodeByCity } from './sriLankaPostalCodes.js';
+import { cleanNIC } from './sriLankaNic.js';
 
 /**
  * The NIC number itself is modelled in ./sriLankaNic.js — decoding, validation,
@@ -671,6 +672,10 @@ export function extractFullNameFromOCR(text) {
       .replace(/[,\s.-]+$/, '')
       .replace(/\s{2,}/g, ' ')
       .trim();
+    // Hologram/background noise after the name often reads as stray single letters
+    // ("KESAVAN AVANEESH C V"); drop them as long as at least two real words remain.
+    const trimmed = cleaned.replace(/(?:\s+[A-Za-z])+$/, '');
+    if (trimmed.split(/\s+/).length >= 2) cleaned = trimmed;
     return repairOcrName(cleaned);
   };
 
@@ -728,6 +733,16 @@ export function extractFullNameFromOCR(text) {
 
   return cleanNameToken(bestCandidate);
 }
+
+/**
+ * Whole-word keyword test. Plain substring matching let short keywords such as
+ * "NO" match inside OCR noise ("QANOGINY"), pulling garbage lines into the address.
+ */
+const lineHasKeyword = (upper, rawLine, kw) => {
+  if (!/^\p{ASCII}+$/u.test(kw)) return rawLine.includes(kw);
+  const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`(?:^|[^A-Z0-9])${escaped}(?:$|[^A-Z0-9])`).test(upper);
+};
 
 /**
  * Heuristically extracts Address text from OCR raw text on Sri Lankan NIC reverse side
@@ -789,11 +804,11 @@ export function extractAddressFromOCR(text) {
     }
 
     // Skip date-like footer lines (e.g. 1995/12/30 or 2018-05-10)
-    if (/^\d{4}[/.-]\d{2}[/.-]\d{2}/.test(rawLine.trim())) continue;
+    if (/\d{4}[/.-]\d{2}[/.-]\d{2}/.test(rawLine)) continue;
 
     // Check if line has address keywords or starts with number/house indicator followed by word
-    const hasAddressKw = addressKeywords.some((kw) => upper.includes(kw) || rawLine.includes(kw));
-    const isHouseNumberLine = /^(?:No\.?|#)?\s*\d+[/\-A-Za-z0-9]*,?\s+[A-Za-z\u0D80-\u0DFF\u0B80-\u0BFF]{3,}/i.test(rawLine);
+    const hasAddressKw = addressKeywords.some((kw) => lineHasKeyword(upper, rawLine, kw));
+    const isHouseNumberLine = /^(?:No\.?|#)?\s*[A-Za-z]?\d+[A-Za-z]?(?:[/-]\d+[A-Za-z]?)*,?\s+[A-Za-z\u0D80-\u0DFF\u0B80-\u0BFF]{3,}/i.test(rawLine);
 
     if (hasAddressKw || isHouseNumberLine) {
       let clean = rawLine
@@ -805,6 +820,9 @@ export function extractAddressFromOCR(text) {
         .replace(/[£§©®™|\\_~@#^*=[\]{}]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
+
+      // Stray OCR tokens after the closing full stop ("…MORATUWA. Q Sef") are noise.
+      clean = clean.replace(/(\.)\s+\S{1,4}(?:\s+\S{1,4})*$/, '$1');
 
       if (clean.length >= 3) {
         candidateLines.push(clean);
