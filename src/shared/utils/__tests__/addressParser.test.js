@@ -5,6 +5,7 @@ import {
   extractAddressFromOCR,
   extractFullNameFromOCR,
   isValidAddressText,
+  deriveGenderAndDOBFromNIC,
 } from '../nicParser.js';
 
 test('parseSriLankanAddress', async (t) => {
@@ -141,5 +142,45 @@ test('extractFullNameFromOCR', async (t) => {
     `;
     const name = extractFullNameFromOCR(rawOcr);
     assert.equal(name, 'MAHALINGAM DAWANHAREN');
+  });
+});
+
+// OCR output shaped like real engine output for a new-format NIC (all values are made up).
+const PADDLE_FRONT = `SRILANKA  NATIONAL IDENTITY CARD α
+v./No.:199212345678 D S L 0 2 8 5 n D 7 C G: C g
+Name: KAMAL PERERA C V
+036MV-828
+Male
+/Date of Birth: 1992/05/02`;
+const PADDLE_BACK = `@ 2 / pauf/Address: P A6P86G03-N
+C12/3/4, 0 , , 6 0. 036MM-828
+C12/3/4,Q mi π Q TLLOmq.Q5 i TIJ.QLOmLG .
+C12/3/4, LAKE FLATS, LAKEPURA, MORATUWA.
+Date of Issue  Place of Birth: coLomBo Commisioner General
+1968 32 8 |1968 32  m ù u ga iò / Registration of Persons Act, No. 32 of 1968`;
+const TESSERACT_BACK = `88» | wseurf | Address : P ABP86G03-N
+C12/3/4, @e08e ®wE Bows, @eBesazys, @@690. 036MM—-828
+c2erzQemisn Qgm_jomg, Qsmissmyy,Qurpr Gene.
+C12/3/4, LAKE FLATS, LAKEPURA, MORATUWA. Q Sef
+QULDRIGLILILL $549020/05/19 nib Qanoginy EORTIUNTNT FETUS 1S)
+Date of Issue 3 Place of Birth Ia Commissioner General`;
+
+test('NIC OCR text parsing (engine-shaped output)', async (t) => {
+  await t.test('drops stray hologram letters after the name', () => {
+    assert.equal(extractFullNameFromOCR(PADDLE_FRONT), 'KAMAL PERERA');
+  });
+
+  await t.test('finds the English address line among Sinhala/Tamil noise (PaddleOCR)', () => {
+    assert.equal(extractAddressFromOCR(PADDLE_BACK), 'C12/3/4, LAKE FLATS, LAKEPURA, MORATUWA.');
+  });
+
+  await t.test('does not match address keywords inside noise words (Tesseract)', () => {
+    assert.equal(extractAddressFromOCR(TESSERACT_BACK), 'C12/3/4, LAKE FLATS, LAKEPURA, MORATUWA.');
+  });
+
+  await t.test('deriveGenderAndDOBFromNIC decodes a 12-digit NIC', () => {
+    const r = deriveGenderAndDOBFromNIC('199212345678');
+    assert.equal(r.gender, 'Male');
+    assert.equal(r.dob, '1992-05-02');
   });
 });
