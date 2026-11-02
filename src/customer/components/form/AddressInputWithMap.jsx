@@ -1,0 +1,349 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { FiMapPin, FiNavigation } from 'react-icons/fi';
+import LocationPickerModal from './LocationPickerModal';
+import { loadGoogleMapsScript } from '../../../shared/utils/loadGoogleMaps';
+import { cleanGoogleAddress, cleanNominatimAddress, getFallbackAddressText } from '../../../shared/utils/addressFormatter';
+
+/** Address text field with a map picker for choosing the location. */
+export default function AddressInputWithMap({
+  name = 'address',
+  label = 'Address',
+  value = '',
+  onChange,
+  onLocationSelect,
+  selectedCoords = null,
+  defaultCenter = null,
+  placeholder = 'Enter address...',
+  rows = 3,
+  required = false,
+  className = 'form-control',
+  disabled = false,
+  readOnly = false,
+}) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [internalValue, setInternalValue] = useState(value || '');
+  const [currentCoords, setCurrentCoords] = useState(selectedCoords || null);
+  const textareaRef = useRef(null);
+
+  // Sync coords if prop changes
+  useEffect(() => {
+    if (selectedCoords) {
+      setCurrentCoords(selectedCoords);
+    }
+  }, [selectedCoords]);
+
+  // A hidden <input> that Google Maps Autocomplete attaches to.
+  // google.maps.places.Autocomplete ONLY accepts HTMLInputElement —
+  // passing a <textarea> throws "InvalidValueError: not an instance of HTMLInputElement".
+  const hiddenInputRef = useRef(null);
+
+  // Sync internalValue with controlled value prop
+  useEffect(() => {
+    setInternalValue(value || '');
+  }, [value]);
+
+  // Initialize Google Places Autocomplete on the hidden <input>.
+  // Falls back gracefully — the textarea + map picker still work without it.
+  useEffect(() => {
+    if (disabled || readOnly) return;
+
+    loadGoogleMapsScript()
+      .then((gMaps) => {
+        if (!hiddenInputRef.current || !gMaps?.places?.Autocomplete) return;
+        try {
+          const autocomplete = new gMaps.places.Autocomplete(hiddenInputRef.current, {
+            types: ['geocode', 'establishment'],
+          });
+          autocomplete.addListener('place_changed', () => {
+            const place = autocomplete.getPlace();
+            let coords = null;
+            if (place?.geometry?.location) {
+              coords = {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+              };
+            }
+            if (place?.formatted_address) {
+              const cleaned = cleanGoogleAddress([place]);
+              triggerChange(cleaned || place.formatted_address, coords);
+            } else if (place?.name) {
+              triggerChange(place.name, coords);
+            }
+            // Clear the hidden input after selection so it doesn't show stale text
+            if (hiddenInputRef.current) hiddenInputRef.current.value = '';
+          });
+        } catch (e) {
+          console.warn('Google Maps Autocomplete init failed:', e);
+        }
+      })
+      .catch((err) => {
+        console.warn('Google Maps Autocomplete not enabled:', err);
+      });
+  }, [disabled, readOnly]);
+
+  const triggerChange = (newAddressValue, coords = null) => {
+    setInternalValue(newAddressValue);
+    if (coords) {
+      setCurrentCoords(coords);
+    }
+    if (onChange) {
+      onChange({
+        target: { name, value: newAddressValue },
+        coords: coords || currentCoords,
+      });
+    }
+    if (onLocationSelect && coords) {
+      onLocationSelect(coords, newAddressValue);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    if (disabled || readOnly) return;
+    setInternalValue(e.target.value);
+    if (onChange) onChange(e);
+  };
+
+  const handleDetectLocation = () => {
+    if (disabled || readOnly) return;
+    if (!navigator.geolocation) {
+      setStatusMessage('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setIsDetectingLocation(true);
+    setStatusMessage('Detecting GPS location...');
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        const coords = { lat: latitude, lng: longitude };
+        setCurrentCoords(coords);
+        try {
+          // Try Google Maps Geocoding first
+          if (window.google?.maps?.Geocoder) {
+            const geocoder = new window.google.maps.Geocoder();
+            const results = await new Promise((resolve) => {
+              geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (res, status) => {
+                resolve(status === 'OK' && res ? res : null);
+              });
+            });
+
+            const cleaned = cleanGoogleAddress(results);
+            if (cleaned) {
+              triggerChange(cleaned, coords);
+              if (onLocationSelect) {
+                onLocationSelect({ address: cleaned, coords });
+              }
+              setStatusMessage('GPS location detected!');
+              setIsDetectingLocation(false);
+              setTimeout(() => setStatusMessage(''), 3000);
+              return;
+            }
+          }
+
+          // Fallback: OpenStreetMap Nominatim Reverse Geocoding
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          const data = await response.json();
+          const cleanedNom = cleanNominatimAddress(data);
+          const finalAddr = cleanedNom || getFallbackAddressText();
+
+          triggerChange(finalAddr, coords);
+          if (onLocationSelect) {
+            onLocationSelect({
+              address: finalAddr,
+              coords,
+              details: {
+                city: data.address?.city || data.address?.town || data.address?.suburb,
+                district: data.address?.county || data.address?.state_district,
+                postalCode: data.address?.postcode,
+              },
+            });
+          }
+          setStatusMessage('GPS location detected!');
+        } catch (error) {
+          console.error('Error fetching address:', error);
+          setStatusMessage('Failed to get address.');
+        } finally {
+          setIsDetectingLocation(false);
+          setTimeout(() => setStatusMessage(''), 3000);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setIsDetectingLocation(false);
+        setStatusMessage(
+          error.code === error.PERMISSION_DENIED
+            ? 'Location permission denied.'
+            : 'Location unavailable.'
+        );
+        setTimeout(() => setStatusMessage(''), 3000);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
+
+  const handleModalSelectAddress = (selectedAddress, position, detectedDetails) => {
+    if (disabled || readOnly) return;
+    const coords = position ? (position.lat && position.lng ? { lat: position.lat, lng: position.lng } : position) : null;
+    triggerChange(selectedAddress, coords);
+    if (onLocationSelect) {
+      onLocationSelect({
+        address: selectedAddress,
+        coords,
+        details: detectedDetails,
+      });
+    }
+    setStatusMessage('Address & exact GPS coordinates selected!');
+    setTimeout(() => setStatusMessage(''), 3000);
+  };
+
+
+  return (
+    <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+      {label && <label className="form-label" htmlFor={`${name}-input`}>{label}</label>}
+
+      {/* Hidden <input> for Google Maps Autocomplete widget — must be an HTMLInputElement */}
+      {!disabled && !readOnly && (
+        <input
+          ref={hiddenInputRef}
+          type="text"
+          placeholder="Search for an address..."
+          style={{
+            width: '100%',
+            padding: '0.45rem 0.75rem',
+            fontSize: '0.9rem',
+            border: '1px solid var(--line, #d9e2ef)',
+            borderRadius: 'var(--radius, 12px) var(--radius, 12px) 0 0',
+            outline: 'none',
+            fontFamily: 'inherit',
+            marginBottom: '-1px',
+            backgroundColor: '#fff',
+            color: 'var(--text, #16233a)',
+          }}
+          aria-label="Search address with autocomplete"
+        />
+      )}
+
+      <div style={{ position: 'relative' }}>
+        <textarea
+          id={`${name}-input`}
+          ref={textareaRef}
+          name={name}
+          className={className}
+          rows={rows}
+          value={internalValue}
+          onChange={handleInputChange}
+          placeholder={placeholder}
+          required={required}
+          disabled={disabled || readOnly}
+          readOnly={readOnly}
+          style={{
+            width: '100%',
+            resize: 'vertical',
+            borderRadius: disabled || readOnly ? 'var(--radius, 12px)' : '0 0 var(--radius, 12px) var(--radius, 12px)',
+            backgroundColor: disabled || readOnly ? '#f8fafc' : undefined,
+            cursor: disabled || readOnly ? 'not-allowed' : undefined,
+            color: disabled || readOnly ? '#334155' : undefined,
+          }}
+        />
+      </div>
+
+      {/* Action Buttons: Detect Location & Pick on Map */}
+      {!disabled && !readOnly && (
+        <div style={actionsContainerStyle}>
+          <button
+            type="button"
+            onClick={handleDetectLocation}
+            disabled={isDetectingLocation}
+            style={actionButtonStyle}
+            title="Auto-detect current location"
+          >
+            <FiNavigation style={{ color: '#0284c7', fontSize: '0.95rem' }} />
+            {isDetectingLocation ? 'Detecting...' : 'Detect My Location (GPS)'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            style={actionButtonStyle}
+            title="Open interactive map to select address"
+          >
+            <FiMapPin style={{ color: '#16a34a', fontSize: '0.95rem' }} />
+            Pick on Map
+          </button>
+
+          {currentCoords && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                backgroundColor: '#eff6ff',
+                color: '#1d4ed8',
+                border: '1px solid #bfdbfe',
+                padding: '0.3rem 0.65rem',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+              }}
+            >
+              <FiNavigation size={12} />
+              GPS: {Number(currentCoords.lat).toFixed(4)}°, {Number(currentCoords.lng).toFixed(4)}°
+            </span>
+          )}
+
+          {statusMessage && (
+            <span style={statusMessageStyle}>
+              {statusMessage}
+            </span>
+          )}
+        </div>
+      )}
+
+
+      {/* Interactive Map Modal */}
+      <LocationPickerModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelectAddress={handleModalSelectAddress}
+        initialAddress={internalValue}
+        initialCenter={defaultCenter}
+      />
+    </div>
+  );
+}
+
+const actionsContainerStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.75rem',
+  marginTop: '0.4rem',
+  flexWrap: 'wrap',
+};
+
+const actionButtonStyle = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '0.4rem',
+  backgroundColor: '#f8fafc',
+  border: '1px solid #cbd5e1',
+  borderRadius: '8px',
+  padding: '0.35rem 0.75rem',
+  fontSize: '0.8rem',
+  fontWeight: 500,
+  color: '#334155',
+  cursor: 'pointer',
+  transition: 'all 0.15s ease-in-out',
+};
+
+const statusMessageStyle = {
+  fontSize: '0.75rem',
+  color: '#0284c7',
+  fontWeight: 500,
+  marginLeft: 'auto',
+};
