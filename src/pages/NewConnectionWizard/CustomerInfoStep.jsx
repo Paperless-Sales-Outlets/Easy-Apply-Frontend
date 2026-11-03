@@ -34,6 +34,20 @@ export const SRI_LANKA_AREA_CODES = [
   { code: '067', label: '067 — Eastern (Ampara & Kalmunai)', keywords: ['ampara', 'kalmunai', 'samanthurai', 'akkaraipattu', 'pottuvil', 'arugam bay'] },
 ];
 
+export function formatAddressString(val) {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    if (typeof val.lat === 'number' && typeof val.lng === 'number') {
+      return `Lat: ${val.lat.toFixed(5)}, Lng: ${val.lng.toFixed(5)}`;
+    }
+    return Object.values(val)
+      .filter((v) => typeof v === 'string')
+      .join(', ');
+  }
+  return String(val);
+}
+
 export function autoDetectAreaCode(addressStr) {
   if (!addressStr || typeof addressStr !== 'string') return null;
   const lower = addressStr.toLowerCase();
@@ -147,7 +161,7 @@ export default function CustomerInfoStep({
         dob: selectedAccount.dob || '',
         email: selectedAccount.email || '',
         mobileNumber: selectedAccount.mobileNumber || selectedAccount.phoneNumber || mobileNumber || '',
-        registeredAddress: selectedAccount.address || selectedAccount.addressLine1 || '',
+        registeredAddress: formatAddressString(selectedAccount.address || selectedAccount.addressLine1 || ''),
       };
     }
     if (authUser) {
@@ -161,7 +175,7 @@ export default function CustomerInfoStep({
         dob: authUser.dob || '',
         email: authUser.email || '',
         mobileNumber: authUser.phone || authUser.mobileNumber || mobileNumber || '',
-        registeredAddress: line || authUser.address || '',
+        registeredAddress: formatAddressString(line || authUser.address || ''),
       };
     }
     return {
@@ -355,15 +369,27 @@ export default function CustomerInfoStep({
     }
   };
 
-  const handleLocationSelect = (param1, param2) => {
-    let address, coords, details;
+  const handleLocationSelect = (param1, param2, param3) => {
+    let address = '';
+    let coords = null;
+    let details = null;
+
     if (param1 && typeof param1 === 'object' && ('address' in param1 || 'coords' in param1)) {
-      address = param1.address;
+      address = typeof param1.address === 'string' ? param1.address : formatAddressString(param1.address);
       coords = param1.coords;
       details = param1.details;
-    } else {
+    } else if (typeof param1 === 'string') {
+      address = param1;
+      coords = param2;
+      details = param3;
+    } else if (param1 && typeof param1.lat === 'number') {
       coords = param1;
-      address = param2;
+      address = typeof param2 === 'string' ? param2 : formatAddressString(param2);
+      details = param3;
+    }
+
+    if (typeof address !== 'string') {
+      address = formatAddressString(address);
     }
 
     const updates = {};
@@ -408,7 +434,7 @@ export default function CustomerInfoStep({
       ...formData,
       ...updates,
     });
-    updates.installAddress = full || address || formData.installAddress || '';
+    updates.installAddress = full || address || (typeof formData.installAddress === 'string' ? formData.installAddress : '') || '';
     updates.address = updates.installAddress;
 
     const matched = autoDetectAreaCode(updates.installAddress);
@@ -465,7 +491,7 @@ export default function CustomerInfoStep({
                 />
               </div>
               <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', fontWeight: 600, lineHeight: 1.4 }}>
-                {knownProfile.registeredAddress}
+                {formatAddressString(knownProfile.registeredAddress)}
               </p>
             </div>
           )}
@@ -541,7 +567,7 @@ export default function CustomerInfoStep({
             </span>
           </div>
           <p style={{ margin: '0 0 0.4rem 2.1rem', fontSize: '0.98rem', fontWeight: 700, color: '#0f57a8' }}>
-            {knownProfile.registeredAddress}
+            {formatAddressString(knownProfile.registeredAddress)}
           </p>
           <p style={{ margin: '0 0 0 2.1rem', fontSize: '0.78rem', color: '#64748b' }}>
             To install at a different address, select &quot;New Installation Location&quot; above.
@@ -716,7 +742,7 @@ export default function CustomerInfoStep({
                   Formatted Installation Address:
                 </div>
                 <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f57a8', lineHeight: 1.4 }}>
-                  {formData.installAddress || formData.address || (formData.city ? `${formData.city}, Sri Lanka` : 'Fill address fields and select city on the right...')}
+                  {formatAddressString(formData.installAddress) || formatAddressString(formData.address) || (formData.city ? `${formData.city}, Sri Lanka` : 'Fill address fields and select city on the right...')}
                 </div>
               </div>
             </div>
