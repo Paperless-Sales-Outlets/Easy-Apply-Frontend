@@ -32,6 +32,27 @@ function MapEventsHandler({ onPositionChange }) {
   return null;
 }
 
+/**
+ * Leaflet measures its container once at start-up. Inside a modal that is still
+ * animating in, the size is wrong, so tiles render misaligned (a visible seam).
+ * Re-measure whenever the container's size changes.
+ */
+function MapResizeFix() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    const refresh = () => map.invalidateSize();
+    const timers = [0, 150, 400].map((ms) => setTimeout(refresh, ms));
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(refresh) : null;
+    observer?.observe(container);
+    return () => {
+      timers.forEach(clearTimeout);
+      observer?.disconnect();
+    };
+  }, [map]);
+  return null;
+}
+
 function MapRecenter({ center }) {
   const map = useMap();
   useEffect(() => {
@@ -417,6 +438,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
+              <MapResizeFix />
               <MapRecenter center={position} />
               <MapEventsHandler onPositionChange={handlePositionChange} />
               <Marker
