@@ -13,6 +13,8 @@ import {
 } from 'react-icons/fi';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import sltLogo from '../../assets/slt-logo.png';
+// This page is its own lazy chunk, so it must load the admin styles itself.
+import '../admin.css';
 
 const HIGHLIGHTS = [
   {
