@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import toast from 'react-hot-toast';
 import { FiX, FiCheck, FiMapPin, FiNavigation, FiSearch } from 'react-icons/fi';
 import { loadGoogleMapsScript } from '../../../shared/utils/loadGoogleMaps';
 import { cleanGoogleAddress, cleanNominatimAddress, getFallbackAddressText } from '../../../shared/utils/addressFormatter';
@@ -306,7 +307,10 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
   };
 
   const handleLocateMe = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      toast.error('Location is not supported by this browser. Search or click the map instead.');
+      return;
+    }
     setLocatingUser(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -315,8 +319,13 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
         setLocatingUser(false);
       },
       (err) => {
-        console.error('Geolocation error:', err);
+        console.warn('Geolocation error:', err?.message);
         setLocatingUser(false);
+        toast.error(
+          err?.code === 1
+            ? 'Location access was denied. Allow it in your browser, or search / click the map instead.'
+            : 'Could not get your location. Search or click the map instead.'
+        );
       },
       { timeout: 10000, enableHighAccuracy: true }
     );
