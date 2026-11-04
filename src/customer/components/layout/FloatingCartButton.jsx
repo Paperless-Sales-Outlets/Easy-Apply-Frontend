@@ -30,10 +30,13 @@ export default function FloatingCartButton() {
     };
   }, []);
 
-  // Do not surface the floating button when on cart, admin portal, or new-connection wizard
-  const isExcludedPage = location.pathname.startsWith('/cart') || 
-    location.pathname.includes('/admin') || 
-    location.pathname.startsWith('/new-connection');
+  // Hidden on the cart, the admin portal and the application wizard itself. The catalogue
+  // and product pages live under /new-connection/..., so only the exact wizard path is
+  // excluded; a prefix match would hide the button right where items are added.
+  const path = location.pathname.replace(/\/+$/, '');
+  const isExcludedPage = path.startsWith('/cart') ||
+    path.includes('/admin') ||
+    path === '/new-connection';
   if (cartCount <= 0 || isExcludedPage) {
     return null;
   }
