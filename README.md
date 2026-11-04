@@ -60,3 +60,18 @@ SLTMobitel EasyApply is a responsive web application designed to digitize and st
 2. The optimized production files will be generated in the `dist` directory. These files can be deployed to any static file hosting service (e.g., Nginx, Vercel, Netlify, AWS S3).
 
 ---
+
+## Project structure
+
+```
+src/
+  admin/      Admin / staff portal (pages, components, context, services, utils)
+  customer/   Customer-facing app (pages, components, services)
+  shared/     Code used by both: API client, auth session, utils, i18n, ErrorBoundary
+  assets/     Static images
+```
+
+The admin portal is lazy-loaded, so customers never download it.
+
+NIC OCR is requested from the backend (`/api/ocr/scan-nic`): Gemini Vision first, then the
+server-side PaddleOCR model, and finally on-device Tesseract.js if the backend is unreachable.

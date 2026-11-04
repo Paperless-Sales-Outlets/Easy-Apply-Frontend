@@ -1,0 +1,112 @@
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAdminAuth } from './context/AdminAuthContext';
+import AdminLayout from './components/AdminLayout';
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import FormsPage from './pages/FormsPage';
+import KycReviewPage from './pages/KycReviewPage';
+import AppointmentsCalendarPage from './pages/AppointmentsCalendarPage';
+import FieldTechnicianPage from './pages/FieldTechnicianPage';
+import ReportsAnalyticsPage from './pages/ReportsAnalyticsPage';
+import UserPrivilegesPage from './pages/UserPrivilegesPage';
+import UserManagementPage from './pages/UserManagementPage';
+import AuditLogsPage from './pages/AuditLogsPage';
+import SalesOfficerManagementPage from './pages/SalesOfficerManagementPage';
+import SalesOfficerDashboardPage from './pages/SalesOfficerDashboardPage';
+import LeadManagementPage from './pages/LeadManagementPage';
+import './admin.css';
+
+function getPageFromPath(pathname) {
+  const segment = pathname.replace(/\/$/, '').split('/').pop();
+  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'];
+  if (known.includes(segment)) {
+    return segment === 'applications' ? 'forms' : segment;
+  }
+  return 'dashboard';
+}
+
+function AdminDashboardContent() {
+  const { admin, login } = useAdminAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [activePage, setActivePage] = useState(() => getPageFromPath(location.pathname));
+  const [selectedFormId, setSelectedFormId] = useState(null);
+
+  useEffect(() => {
+    const page = getPageFromPath(location.pathname);
+    setActivePage(page);
+  }, [location.pathname]);
+
+  const handleSetActivePage = (pageKey) => {
+    setActivePage(pageKey);
+    const targetPath = pageKey === 'dashboard' ? '/admin' : `/admin/${pageKey}`;
+    if (location.pathname !== targetPath) {
+      navigate(targetPath);
+    }
+  };
+
+  // If not logged in, render the login page
+  if (!admin) {
+    return <AdminLoginPage onLogin={login} />;
+  }
+
+  const handleSelectForm = (formId) => {
+    setSelectedFormId(formId);
+    handleSetActivePage('forms');
+  };
+
+  // Render correct page view
+  // Sales Officers only have access to their own dashboard; every other admin
+  // page calls staff/admin APIs that answer 403 for them.
+  const isSalesOfficer = /^sales\s*officer$/i.test((admin.role || '').trim());
+  const effectivePage = isSalesOfficer ? 'so-dashboard' : activePage;
+
+  const renderActivePage = () => {
+    switch (effectivePage) {
+      case 'dashboard':
+        return <AdminDashboardPage />;
+      case 'forms':
+        return <FormsPage initialFormId={selectedFormId} />;
+      case 'kyc':
+        return <KycReviewPage />;
+      case 'appointments':
+        return <AppointmentsCalendarPage />;
+      case 'technician':
+        return <FieldTechnicianPage />;
+      case 'analytics':
+        return <ReportsAnalyticsPage />;
+      case 'privileges':
+        return <UserPrivilegesPage />;
+      case 'users':
+        return <UserManagementPage />;
+      case 'audit-logs':
+        return <AuditLogsPage />;
+      case 'sales-officers':
+        return <SalesOfficerManagementPage />;
+      case 'so-dashboard':
+        return <SalesOfficerDashboardPage />;
+      case 'leads':
+        return <LeadManagementPage />;
+      default:
+        return <AdminDashboardPage />;
+    }
+  };
+
+  return (
+    <AdminLayout
+      activePage={effectivePage}
+      setActivePage={handleSetActivePage}
+      onSelectForm={handleSelectForm}
+      activeFormId={selectedFormId}
+    >
+      {renderActivePage()}
+    </AdminLayout>
+  );
+}
+
+/** Admin portal entry: picks the page for the current /admin/* route inside the shared layout. */
+export default function AdminDashboardIndex() {
+  return <AdminDashboardContent />;
+}
