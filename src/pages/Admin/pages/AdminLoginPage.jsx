@@ -4,8 +4,11 @@ import {
   FiAlertCircle,
   FiArrowRight,
   FiBarChart2,
+  FiCheckCircle,
+  FiCpu,
   FiEye,
   FiEyeOff,
+  FiKey,
   FiLock,
   FiMail,
   FiShield,
@@ -33,12 +36,14 @@ const HIGHLIGHTS = [
 ];
 
 export default function AdminLoginPage({ onLogin }) {
-  const { login: contextLogin, admin, accessToken } = useAdminAuth();
+  const { login: contextLogin, loginWithPasskey, admin, accessToken } = useAdminAuth();
   const navigate = useNavigate();
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
+  const [error, setError]               = useState('');
+  const [success, setSuccess]           = useState('');
+  const [loading, setLoading]           = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   // If already authenticated, redirect to admin dashboard
@@ -46,9 +51,11 @@ export default function AdminLoginPage({ onLogin }) {
     return <Navigate to="/admin" replace />;
   }
 
+  // 1. Password sign-in handler (existing functionality preserved)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
     const loginFn = onLogin || contextLogin;
     const result = await loginFn(email, password);
@@ -58,6 +65,29 @@ export default function AdminLoginPage({ onLogin }) {
       navigate('/admin', { replace: true });
     }
     setLoading(false);
+  };
+
+  // 2. Passkey sign-in handler (new WebAuthn functionality)
+  const handlePasskeyLogin = async () => {
+    setError('');
+    setSuccess('');
+    setPasskeyLoading(true);
+
+    try {
+      const result = await loginWithPasskey(email);
+      if (!result || !result.ok) {
+        setError(result?.message || 'Passkey authentication failed. Please try again or use your password.');
+      } else {
+        setSuccess('Passkey verified successfully! Loading Admin Dashboard…');
+        setTimeout(() => {
+          navigate('/admin', { replace: true });
+        }, 200);
+      }
+    } catch (err) {
+      setError(err.message || 'Passkey authentication failed. You can sign in using your password below.');
+    } finally {
+      setPasskeyLoading(false);
+    }
   };
 
   return (
@@ -128,7 +158,7 @@ export default function AdminLoginPage({ onLogin }) {
 
             <h1 className="admin-login-title">Sign in to continue</h1>
             <p className="admin-login-subtitle">
-              Sign in with your SLTMobitel staff credentials.
+              Sign in with your SLTMobitel staff credentials or device passkey.
             </p>
 
             {error && (
@@ -138,6 +168,14 @@ export default function AdminLoginPage({ onLogin }) {
               </div>
             )}
 
+            {success && (
+              <div className="admin-login-success" role="status">
+                <FiCheckCircle size={16} aria-hidden="true" />
+                <span>{success}</span>
+              </div>
+            )}
+
+            {/* Standard Username and Password Form (Option 1) */}
             <form onSubmit={handleSubmit} noValidate>
               <div className="admin-login-field">
                 <label className="admin-login-label" htmlFor="admin-email">
@@ -156,7 +194,7 @@ export default function AdminLoginPage({ onLogin }) {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
-                    autoComplete="username"
+                    autoComplete="username webauthn"
                     autoFocus
                   />
                 </div>
@@ -194,7 +232,12 @@ export default function AdminLoginPage({ onLogin }) {
                 </div>
               </div>
 
-              <button type="submit" className="admin-login-submit" disabled={loading} aria-busy={loading}>
+              <button
+                type="submit"
+                className="admin-login-submit"
+                disabled={loading || passkeyLoading}
+                aria-busy={loading}
+              >
                 {loading ? (
                   <>
                     <span className="admin-login-spinner" aria-hidden="true" />
@@ -208,6 +251,41 @@ export default function AdminLoginPage({ onLogin }) {
                 )}
               </button>
             </form>
+
+            {/* Visual separator between the two login options */}
+            <div className="admin-login-divider" role="separator" aria-label="Alternative login options">
+              <span>or</span>
+            </div>
+
+            {/* Passkey Login Option (Option 2) */}
+            <div className="admin-passkey-login-wrapper">
+              <button
+                type="button"
+                className="admin-login-passkey-btn"
+                onClick={handlePasskeyLogin}
+                disabled={loading || passkeyLoading}
+                aria-busy={passkeyLoading}
+              >
+                {passkeyLoading ? (
+                  <>
+                    <span className="admin-login-spinner passkey-spinner" aria-hidden="true" />
+                    <span>Prompting device authenticator…</span>
+                  </>
+                ) : (
+                  <>
+                    <FiKey size={18} aria-hidden="true" className="admin-passkey-icon" />
+                    <span>Use Passkey (Windows Hello / Touch ID / PIN)</span>
+                  </>
+                )}
+              </button>
+
+              {passkeyLoading && (
+                <p className="admin-passkey-status-hint">
+                  <FiCpu size={13} aria-hidden="true" />
+                  Follow your device's prompt to authenticate with Windows Hello, Touch ID, or security key.
+                </p>
+              )}
+            </div>
 
             <p className="admin-login-note">
               <FiLock size={13} aria-hidden="true" />

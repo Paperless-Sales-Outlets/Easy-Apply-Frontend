@@ -6868,3 +6868,412 @@ select.um-input.valid {
   .privileges-section .priv-role-grid { margin: 1rem; }
   .privileges-users-section .priv-users-head { padding: 1rem; }
 }
+
+
+/* ── Passkey Authentication & Management ─────────────────────────────────── */
+
+.admin-login-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.25rem 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-login-divider::before,
+.admin-login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-login-divider span {
+  padding: 0 0.85rem;
+}
+
+.admin-passkey-login-wrapper {
+  margin-bottom: 0.5rem;
+}
+
+.admin-login-passkey-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 0.88rem 1.4rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--navy);
+  background: #ffffff;
+  border: 1.5px solid rgba(15, 87, 168, 0.22);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 87, 168, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-login-passkey-btn:hover:not(:disabled) {
+  background: #f4f8fd;
+  border-color: var(--blue);
+  color: var(--blue);
+  box-shadow: 0 6px 18px rgba(15, 87, 168, 0.12);
+  transform: translateY(-1px);
+}
+
+.admin-login-passkey-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-passkey-icon {
+  color: var(--blue);
+  flex-shrink: 0;
+}
+
+.passkey-spinner {
+  border-color: rgba(15, 87, 168, 0.3) !important;
+  border-top-color: var(--blue) !important;
+}
+
+.admin-passkey-status-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.65rem 0 0;
+  font-size: 0.8rem;
+  color: var(--blue);
+  background: rgba(15, 87, 168, 0.06);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  line-height: 1.4;
+  animation: admin-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes admin-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+.admin-login-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  background: rgba(58, 150, 54, 0.08);
+  border: 1px solid rgba(58, 150, 54, 0.25);
+  border-left: 3px solid #3a9636;
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #216a1e;
+  margin-bottom: 1.25rem;
+}
+
+.admin-sidebar-footer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.admin-passkey-manage-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--navy);
+  background: rgba(15, 87, 168, 0.06);
+  border: 1px solid rgba(15, 87, 168, 0.16);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.admin-passkey-manage-btn:hover {
+  background: rgba(15, 87, 168, 0.12);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* Modal styles */
+.admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 45, 91, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1.25rem;
+}
+
+.admin-modal-content.passkey-modal {
+  background: #ffffff;
+  border-radius: 18px;
+  max-width: 540px;
+  width: 100%;
+  box-shadow: 0 24px 48px rgba(11, 45, 91, 0.22);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modal-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-pop {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.admin-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.4rem 1.6rem 1.1rem;
+  border-bottom: 1px solid var(--line);
+  background: #fbfcfe;
+}
+
+.passkey-modal-header-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.passkey-modal-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: rgba(15, 87, 168, 0.1);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.admin-modal-title {
+  margin: 0;
+  font-family: var(--font-head);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.admin-modal-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.admin-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.admin-modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--navy);
+}
+
+.admin-modal-body {
+  padding: 1.4rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.passkey-add-form {
+  background: #f7f9fc;
+  padding: 1rem 1.15rem;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+.passkey-form-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.passkey-confirm-btn {
+  width: auto !important;
+  margin-top: 0 !important;
+  padding: 0.65rem 1.1rem !important;
+  font-size: 0.85rem !important;
+  white-space: nowrap;
+}
+
+.admin-passkey-cancel-btn {
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: #f0f3f8;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.admin-passkey-cancel-btn:hover {
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+.passkey-form-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.77rem;
+  color: var(--muted);
+}
+
+.passkey-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.passkey-list-title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.passkey-loading-state,
+.passkey-empty-state {
+  text-align: center;
+  padding: 1.75rem 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  background: #fafbfe;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+}
+
+.passkey-empty-icon {
+  margin-bottom: 0.45rem;
+  color: #a0aec0;
+}
+
+.passkey-empty-state p {
+  margin: 0 0 0.2rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.passkey-empty-state small {
+  font-size: 0.78rem;
+}
+
+.passkey-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.passkey-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.95rem;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: border-color 0.15s ease;
+}
+
+.passkey-item:hover {
+  border-color: rgba(15, 87, 168, 0.3);
+}
+
+.passkey-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(15, 87, 168, 0.08);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.passkey-item-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.passkey-item-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.passkey-item-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+.passkey-item-delete {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.passkey-item-delete:hover {
+  color: var(--danger);
+  background: rgba(196, 55, 44, 0.08);
+}
+
+.admin-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem 1.6rem;
+  border-top: 1px solid var(--line);
+  background: #fbfcfe;
+}
