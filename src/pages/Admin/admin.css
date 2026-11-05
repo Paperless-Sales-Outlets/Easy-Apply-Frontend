@@ -9231,3 +9231,15 @@ span.alog-caret { cursor: inherit; }
   .rpt-icon-btn.is-spinning svg,
   .qrm-spin svg { animation: none !important; }
 }
+
+/* Global zebra striping for every admin table: white / light blue rows so
+   wide data sets stay easy to scan. Special-state rows are re-asserted below
+   so warnings, selections and audit group headers keep their own colours. */
+.admin-page table tbody tr:nth-child(odd) { background: #ffffff; }
+.admin-page table tbody tr:nth-child(even) { background: #eef4fd; }
+.admin-page table tbody tr:hover { background: #dbe8fb; }
+
+.admin-page table tbody tr.lm-row-blocked:not(:hover) { background: rgba(196, 55, 44, 0.035); }
+.admin-page .kycv-table tbody tr.selected:not(:hover) { background: #eaf2fd; }
+.admin-page table tbody tr.alog-day-row,
+.admin-page table tbody tr.alog-day-row:hover { background: transparent; }

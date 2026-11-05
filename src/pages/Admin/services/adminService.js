@@ -214,6 +214,24 @@ export const getLeadById = async (id) => {
   return response.data;
 };
 
+// GET /api/admin/leads/drafts/stats — unfinished application summary
+export const getDraftLeadStats = async () => {
+  const response = await api.get('/admin/leads/drafts/stats');
+  return response.data;
+};
+
+// GET /api/admin/leads/drafts — paginated abandoned application drafts
+export const getDraftLeads = async (params = {}) => {
+  const response = await api.get('/admin/leads/drafts', { params });
+  return response.data;
+};
+
+// GET /api/admin/leads/drafts/:id — one draft with its captured form and photos
+export const getDraftLeadById = async (id) => {
+  const response = await api.get(`/admin/leads/drafts/${id}`);
+  return response.data;
+};
+
 // POST /api/admin/leads — capture a new lead and open its checklist
 export const createLead = async (data) => {
   const response = await api.post('/admin/leads', data);
