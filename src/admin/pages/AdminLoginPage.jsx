@@ -277,7 +277,7 @@ export default function AdminLoginPage({ onLogin }) {
                 ) : (
                   <>
                     <FiKey size={18} aria-hidden="true" className="admin-passkey-icon" />
-                    <span>Use Passkey (Windows Hello / Touch ID / PIN)</span>
+                    <span>Use Passkey (Touch ID / Windows Hello / PIN)</span>
                   </>
                 )}
               </button>
@@ -285,7 +285,7 @@ export default function AdminLoginPage({ onLogin }) {
               {passkeyLoading && (
                 <p className="admin-passkey-status-hint">
                   <FiCpu size={13} aria-hidden="true" />
-                  Follow your device's prompt to authenticate with Windows Hello, Touch ID, or security key.
+                  Follow your device's prompt to authenticate with Touch ID, Windows Hello, or a security key.
                 </p>
               )}
             </div>

@@ -13,6 +13,21 @@ export const isPasskeySupported = () => {
 };
 
 /**
+ * A sensible default name for the passkey being registered, based on the device
+ * and the built-in authenticator it most likely offers (Touch ID, Windows Hello, ...).
+ * `ua` is injectable for tests.
+ */
+export const suggestDeviceName = (ua = typeof navigator !== 'undefined' ? navigator.userAgent : '') => {
+  if (/iPhone/i.test(ua)) return 'iPhone (Face ID / Touch ID)';
+  if (/iPad/i.test(ua)) return 'iPad (Face ID / Touch ID)';
+  if (/Android/i.test(ua)) return 'Android phone (fingerprint / screen lock)';
+  if (/Macintosh|Mac OS X/i.test(ua)) return 'Mac (Touch ID)';
+  if (/Windows/i.test(ua)) return 'Windows PC (Windows Hello)';
+  if (/Linux|CrOS/i.test(ua)) return 'Linux / Chromebook device';
+  return 'My Passkey Device';
+};
+
+/**
  * Friendly error parser for WebAuthn browser ceremonies.
  */
 export const formatPasskeyError = (err) => {
