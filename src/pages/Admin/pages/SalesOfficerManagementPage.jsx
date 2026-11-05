@@ -419,12 +419,14 @@ export default function SalesOfficerManagementPage() {
     try {
       const empId = officer.employeeNumber || officer.id;
       const [statsRes, appsRes] = await Promise.all([
-        getOfficerStatistics(empId).catch(() => ({
-          statistics: { totalApplications: 0, totalCompletedSales: 0, completionRate: 0 },
-        })),
-        getOfficerApplications(empId, { limit: 20 }).catch(() => ({
-          applications: [],
-        })),
+        getOfficerStatistics(empId).catch((e) => {
+          notice.error(`Could not load statistics: ${e.response?.data?.message || e.message}`);
+          return { statistics: null };
+        }),
+        getOfficerApplications(empId, { limit: 20 }).catch((e) => {
+          notice.error(`Could not load applications: ${e.response?.data?.message || e.message}`);
+          return { applications: [] };
+        }),
       ]);
       setStatsData(statsRes.statistics || null);
       setOfficerApps(appsRes.applications || []);

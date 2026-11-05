@@ -26,7 +26,7 @@ export default function SalesOfficerDashboardPage({ initialTab = 'overview' }) {
   const canvasRef = useRef(null);
 
   const officerEmployeeNumber =
-    admin?.employeeNumber || admin?.employeeId || '095756';
+    admin?.employeeNumber || admin?.employeeId || '';
   const officerName = admin?.name || 'Sales Officer';
 
   // Fetch all officer data strictly through the authenticated endpoints
@@ -36,10 +36,12 @@ export default function SalesOfficerDashboardPage({ initialTab = 'overview' }) {
       const [statsRes, appsRes, qrRes] = await Promise.all([
         getMyStatistics().catch((e) => {
           console.warn('Could not load statistics:', e);
+          notice.error(`Could not load statistics: ${e.response?.data?.message || e.message}`);
           return { statistics: null };
         }),
         getMyApplications({ limit: 50 }).catch((e) => {
           console.warn('Could not load applications:', e);
+          notice.error(`Could not load applications: ${e.response?.data?.message || e.message}`);
           return { applications: [] };
         }),
         getMyQr().catch((e) => {

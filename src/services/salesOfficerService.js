@@ -7,6 +7,38 @@ import QRCode from 'qrcode';
  * management, QR tracking generation/download, attribution, and statistics.
  */
 
+// ── Portal URL helpers ─────────────────────────────────────────────────────
+
+/**
+ * Rebuilds a QR link so it points at the site the admin is actually using
+ * (origin + the app's base path), keeping only the officer's tracking token.
+ * This stops QR codes breaking when the backend's QR_FRONTEND_URL /
+ * QR_PORTAL_PATH differ from how the frontend is served (e.g. Vite base path).
+ */
+const localizeQrUrl = (qrUrl) => {
+  try {
+    const token = new URL(qrUrl).searchParams.get('salesRef');
+    if (!token) return qrUrl;
+    const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
+    return `${window.location.origin}${base}new-connection?salesRef=${encodeURIComponent(token)}`;
+  } catch {
+    return qrUrl;
+  }
+};
+
+const localizeQrUrls = (data) => {
+  if (Array.isArray(data)) return data.map(localizeQrUrls);
+  if (data && typeof data === 'object') {
+    return Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [
+        k,
+        k === 'qrUrl' && typeof v === 'string' ? localizeQrUrl(v) : localizeQrUrls(v),
+      ])
+    );
+  }
+  return data;
+};
+
 // ── Admin Endpoints ────────────────────────────────────────────────────────
 
 /**
@@ -16,7 +48,7 @@ import QRCode from 'qrcode';
 export const getSalesOfficers = async (params = {}) => {
   try {
     const response = await api.get('/admin/sales-officers', { params });
-    return response.data;
+    return localizeQrUrls(response.data);
   } catch (err) {
     // Graceful fallback to /admin/users if dedicated endpoint returns 404
     if (err.response?.status === 404) {
@@ -54,7 +86,7 @@ export const createSalesOfficer = async (data) => {
  */
 export const getSalesOfficerByEmployeeId = async (employeeId) => {
   const response = await api.get(`/admin/sales-officers/${encodeURIComponent(employeeId)}`);
-  return response.data;
+  return localizeQrUrls(response.data);
 };
 
 /**
@@ -67,7 +99,7 @@ export const createOrGetOfficerQr = async (employeeId, { regenerate = false } = 
     `/admin/sales-officers/${encodeURIComponent(employeeId)}/qr`,
     { regenerate }
   );
-  return response.data;
+  return localizeQrUrls(response.data);
 };
 
 /**
@@ -76,7 +108,7 @@ export const createOrGetOfficerQr = async (employeeId, { regenerate = false } = 
  */
 export const getOfficerQr = async (employeeId) => {
   const response = await api.get(`/admin/sales-officers/${encodeURIComponent(employeeId)}/qr`);
-  return response.data;
+  return localizeQrUrls(response.data);
 };
 
 /**
@@ -131,7 +163,7 @@ export const getMyApplications = async (params = {}) => {
  */
 export const getMyQr = async () => {
   const response = await api.get('/sales-officer/me/qr');
-  return response.data;
+  return localizeQrUrls(response.data);
 };
 
 // ── Public Tracking Endpoint ──────────────────────────────────────────────
