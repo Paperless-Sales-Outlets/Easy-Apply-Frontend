@@ -9,6 +9,7 @@ import api, {
   setAdminAccessToken,
   setAdminLogoutHandler,
 } from '../../shared/utils/api';
+import { loginWithPasskey as passkeyLogin } from '../services/passkeyService';
 
 const AdminAuthContext = createContext(null);
 
@@ -292,6 +293,71 @@ export function AdminAuthProvider({ children }) {
     }
   };
 
+  const loginWithPasskey = async (email = '') => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await passkeyLogin(email);
+
+      const {
+        user,
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      } = data;
+
+      if (!user || !isPortalRole(user.role)) {
+        const message = 'Admin or Staff access required for this portal.';
+        setError(message);
+        return {
+          ok: false,
+          message,
+        };
+      }
+
+      if (!newAccessToken) {
+        throw new Error('Access token was not returned by the server.');
+      }
+
+      updateAccessToken(newAccessToken);
+
+      if (newRefreshToken) {
+        sessionStorage.setItem('refreshToken', newRefreshToken);
+      }
+
+      const session = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      };
+
+      setAdmin(session);
+      saveSession(session);
+
+      return {
+        ok: true,
+        user: session,
+      };
+    } catch (err) {
+      clearAuthState();
+
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        'Passkey login failed';
+
+      setError(message);
+
+      return {
+        ok: false,
+        message,
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     const storedRefreshToken =
       sessionStorage.getItem('refreshToken');
@@ -324,6 +390,7 @@ export function AdminAuthProvider({ children }) {
     error,
 
     login,
+    loginWithPasskey,
     logout,
     refreshAuthToken,
 
