@@ -15,6 +15,7 @@ import {
   registerPasskey,
   deletePasskey,
   isPasskeySupported,
+  suggestDeviceName,
 } from '../services/passkeyService';
 
 export default function PasskeyManagementModal({ isOpen, onClose }) {
@@ -59,9 +60,9 @@ export default function PasskeyManagementModal({ isOpen, onClose }) {
     setRegistering(true);
 
     try {
-      const nameToUse = deviceName.trim() || 'My Passkey Device';
+      const nameToUse = deviceName.trim() || suggestDeviceName();
       await registerPasskey(nameToUse);
-      setStatusMessage(`Successfully registered passkey "${nameToUse}"! You can now use Windows Hello, Touch ID, or your device authenticator to sign in.`);
+      setStatusMessage(`Successfully registered passkey "${nameToUse}"! You can now sign in with Touch ID, Windows Hello, or your device authenticator.`);
       setDeviceName('');
       setShowAddForm(false);
       await fetchPasskeys();
@@ -101,7 +102,7 @@ export default function PasskeyManagementModal({ isOpen, onClose }) {
             <div>
               <h3 className="admin-modal-title">Passkey Authentication</h3>
               <p className="admin-modal-subtitle">
-                Register device authenticators (Windows Hello, Fingerprint, Touch ID, PIN) for quick, passwordless login.
+                Register device authenticators (Touch ID, Windows Hello, fingerprint, PIN) for quick, passwordless login.
               </p>
             </div>
           </div>
@@ -163,7 +164,7 @@ export default function PasskeyManagementModal({ isOpen, onClose }) {
                       id="passkey-device-name"
                       type="text"
                       className="admin-login-input"
-                      placeholder="e.g. Work Laptop (Windows Hello)"
+                      placeholder={`e.g. ${suggestDeviceName()}`}
                       value={deviceName}
                       onChange={(e) => setDeviceName(e.target.value)}
                       autoFocus
@@ -186,7 +187,7 @@ export default function PasskeyManagementModal({ isOpen, onClose }) {
                     </button>
                   </div>
                   <p className="passkey-form-hint">
-                    Your browser will prompt you to authenticate using Windows Hello, fingerprint, PIN, or facial recognition.
+                    Your browser will prompt you to authenticate using Touch ID, Windows Hello, fingerprint, PIN, or facial recognition.
                   </p>
                 </form>
               )}
