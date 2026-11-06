@@ -1,15 +1,12 @@
-import {
-  startAuthentication,
-  startRegistration,
-  browserSupportsWebAuthn,
-} from '@simplewebauthn/browser';
 import api from '../../shared/utils/api.js';
 
 /**
  * Check if the current browser and platform support WebAuthn / Passkeys.
  */
 export const isPasskeySupported = () => {
-  return browserSupportsWebAuthn();
+  return typeof window !== 'undefined' &&
+    window.PublicKeyCredential !== undefined &&
+    typeof window.PublicKeyCredential === 'function';
 };
 
 /**
@@ -35,12 +32,131 @@ export const formatPasskeyError = (err) => {
   return err.message || 'Passkey operation failed. Please try again.';
 };
 
+// ---------------------------------------------------------------------------
+// Helpers for native WebAuthn base64url <-> ArrayBuffer conversions
+// ---------------------------------------------------------------------------
+function base64urlToBuffer(base64url) {
+  if (!base64url || typeof base64url !== 'string') return new Uint8Array(0).buffer;
+  const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
+  const base64 = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const output = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    output[i] = rawData.charCodeAt(i);
+  }
+  return output.buffer;
+}
+
+function bufferToBase64url(buffer) {
+  if (!buffer) return '';
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+/**
+ * Native browser WebAuthn authentication ceremony
+ */
+async function nativeStartAuthentication(options) {
+  const publicKey = {
+    ...options,
+    challenge: base64urlToBuffer(options.challenge),
+  };
+
+  if (Array.isArray(options.allowCredentials)) {
+    publicKey.allowCredentials = options.allowCredentials.map((cred) => ({
+      ...cred,
+      id: base64urlToBuffer(cred.id),
+    }));
+  }
+
+  const credential = await navigator.credentials.get({ publicKey });
+  if (!credential) {
+    throw new Error('No passkey credential returned by browser.');
+  }
+
+  return {
+    id: credential.id,
+    rawId: bufferToBase64url(credential.rawId),
+    type: credential.type,
+    response: {
+      authenticatorData: bufferToBase64url(credential.response.authenticatorData),
+      clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+      signature: bufferToBase64url(credential.response.signature),
+      userHandle: credential.response.userHandle ? bufferToBase64url(credential.response.userHandle) : null,
+    },
+  };
+}
+
+/**
+ * Native browser WebAuthn registration ceremony
+ */
+async function nativeStartRegistration(options) {
+  const publicKey = {
+    ...options,
+    challenge: base64urlToBuffer(options.challenge),
+    user: {
+      ...options.user,
+      id: base64urlToBuffer(options.user.id),
+    },
+  };
+
+  if (Array.isArray(options.excludeCredentials)) {
+    publicKey.excludeCredentials = options.excludeCredentials.map((cred) => ({
+      ...cred,
+      id: base64urlToBuffer(cred.id),
+    }));
+  }
+
+  const credential = await navigator.credentials.create({ publicKey });
+  if (!credential) {
+    throw new Error('Failed to create passkey credential on device.');
+  }
+
+  return {
+    id: credential.id,
+    rawId: bufferToBase64url(credential.rawId),
+    type: credential.type,
+    response: {
+      attestationObject: bufferToBase64url(credential.response.attestationObject),
+      clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+    },
+  };
+}
+
+/**
+ * Helper to dynamically load @simplewebauthn/browser if available,
+ * falling back to native browser WebAuthn implementation seamlessly.
+ */
+async function performAuthentication(options) {
+  try {
+    const pkg = await import(/* @vite-ignore */ '@simplewebauthn/browser');
+    if (pkg && pkg.startAuthentication) {
+      return await pkg.startAuthentication({ optionsJSON: options });
+    }
+  } catch {
+    // Package not installed, use robust native WebAuthn fallback
+  }
+  return await nativeStartAuthentication(options);
+}
+
+async function performRegistration(options) {
+  try {
+    const pkg = await import(/* @vite-ignore */ '@simplewebauthn/browser');
+    if (pkg && pkg.startRegistration) {
+      return await pkg.startRegistration({ optionsJSON: options });
+    }
+  } catch {
+    // Package not installed, use robust native WebAuthn fallback
+  }
+  return await nativeStartRegistration(options);
+}
+
 /**
  * Execute Passkey Login ceremony.
- * 1. Request authentication options from backend.
- * 2. Invoke browser/device passkey authenticator (Windows Hello, Touch ID, PIN, etc.).
- * 3. Send response to backend for cryptographic verification.
- * 4. Return authenticated user session tokens.
  */
 export const loginWithPasskey = async (email = '') => {
   if (!isPasskeySupported()) {
@@ -62,7 +178,7 @@ export const loginWithPasskey = async (email = '') => {
   // 2. Invoke device passkey prompt
   let authResponse;
   try {
-    authResponse = await startAuthentication({ optionsJSON: options });
+    authResponse = await performAuthentication(options);
   } catch (ceremonyErr) {
     throw new Error(formatPasskeyError(ceremonyErr));
   }
@@ -95,7 +211,7 @@ export const registerPasskey = async (deviceName = '') => {
   // 2. Invoke device passkey registration prompt
   let regResponse;
   try {
-    regResponse = await startRegistration({ optionsJSON: options });
+    regResponse = await performRegistration(options);
   } catch (ceremonyErr) {
     throw new Error(formatPasskeyError(ceremonyErr));
   }

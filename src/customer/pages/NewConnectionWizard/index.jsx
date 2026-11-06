@@ -86,7 +86,7 @@ const initialState = {
 
 // Image fields. They are large, so each is saved on its own, only when it
 // changes, separately from the rest of the form.
-const PHOTO_FIELDS = ['nicFront', 'nicBack', 'facePhoto'];
+const PHOTO_FIELDS = ['nicFront', 'nicBack', 'facePhoto', 'signature'];
 
 // Wait this long after the last change before saving progress. Moving to
 // another step saves immediately.
@@ -605,7 +605,7 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
   useEffect(() => {
     if (!draftRestored || !userEdited.current || draftClosed.current) return;
     uploadPhotos();
-  }, [formData.nicFront, formData.nicBack, formData.facePhoto, draftRestored]);
+  }, [formData.nicFront, formData.nicBack, formData.facePhoto, formData.signature, draftRestored]);
 
   // Leaving the wizard (e.g. Back to Cart) saves anything still waiting.
   useEffect(() => () => {
