@@ -16,6 +16,7 @@ import {
 import { useAdminAuth } from '../context/AdminAuthContext';
 import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
 import { AnimatedNumber, timeAgo } from '../components/AdminVisuals';
+import { EMPLOYEE_NUMBER_LENGTH, employeeNumberError, normalizeEmployeeNumberInput } from '../utils/employeeNumber';
 
 // Brand-family tones for roles; Administrator always uses the SLT brand sweep.
 const ADMIN_TONE = ['#0b4a91', '#00543c'];
@@ -55,10 +56,8 @@ const EMPTY_ROLE_FORM = { name: '', permissions: [] };
 const EMPTY_PRIVILEGE_FORM = { name: '', description: '' };
 const PRIVILEGE_DESCRIPTION_MAX = 300;
 
-// Employee Number is typed in by the admin (the company's own staff number)
-// and must be unique across staff accounts.
-const EMPLOYEE_NUMBER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9/-]*$/;
-const EMPLOYEE_NUMBER_MAX = 20;
+// Employee Number is typed in by the admin (the company's own 6-digit staff
+// number — see ../utils/employeeNumber.js) and must be unique across staff accounts.
 const EMAIL_DOMAIN = 'slt.com.lk';
 const EMAIL_PATTERN = new RegExp(`^[a-zA-Z0-9._%+-]+@${EMAIL_DOMAIN.replace(/\./g, '\\.')}$`, 'i');
 
@@ -107,10 +106,8 @@ function validateUserForm(form, { editingUser, users }) {
   // Required for every new account; an older account that never had one may stay blank.
   if (!employeeNumber) {
     if (!editingUser || editingUser.employeeNumber) errors.employeeNumber = 'Employee number is required.';
-  } else if (employeeNumber.length > EMPLOYEE_NUMBER_MAX) {
-    errors.employeeNumber = `Employee number must be ${EMPLOYEE_NUMBER_MAX} characters or fewer.`;
-  } else if (!EMPLOYEE_NUMBER_PATTERN.test(employeeNumber)) {
-    errors.employeeNumber = 'Use letters, numbers, hyphens or slashes only — no spaces.';
+  } else if (employeeNumberError(employeeNumber)) {
+    errors.employeeNumber = employeeNumberError(employeeNumber);
   } else if (users.some((u) => u.id !== editingUser?.id && sameText(u.employeeNumber, employeeNumber))) {
     errors.employeeNumber = 'Another account already uses this employee number.';
   }
@@ -1198,10 +1195,11 @@ export default function UserManagementPage() {
                         className={`um-input um-input-icon${uf.employeeNumber.cls}`}
                         {...uf.employeeNumber.props}
                         value={form.employeeNumber}
-                        maxLength={EMPLOYEE_NUMBER_MAX}
+                        maxLength={EMPLOYEE_NUMBER_LENGTH}
+                        inputMode="numeric"
                         autoComplete="off"
-                        onChange={(e) => setForm((f) => ({ ...f, employeeNumber: e.target.value }))}
-                        placeholder="e.g. 012345"
+                        onChange={(e) => setForm((f) => ({ ...f, employeeNumber: normalizeEmployeeNumberInput(e.target.value) }))}
+                        placeholder="e.g. 099885"
                       />
                     </div>
                     <FieldError id={uf.employeeNumber.errorId} message={uf.employeeNumber.error} />

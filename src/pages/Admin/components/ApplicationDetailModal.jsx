@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FiCheck, FiCopy, FiFlag, FiMessageSquare, FiX } from 'react-icons/fi';
 import {
   formatDate,
   getAssetUrl,
@@ -8,7 +8,9 @@ import {
   statusLabel,
 } from '../utils/applicationUtils';
 import AuthImage from './AuthImage';
-import { updateOfficeFields, createAppointment } from '../services/adminService';
+import AdminNotice, { useAdminNotice } from './AdminNotice';
+import { updateApplicationStatus } from '../services/adminService';
+import { getFormSections } from '../utils/formDataSchema';
 
 const DOC_LABELS = {
   nicFront: 'NIC Front',
@@ -22,52 +24,24 @@ const DOC_LABELS = {
   proofOfAddress: 'Proof of Address',
   authorizationLetter: 'Authorization Letter',
   sketchFile: 'Site Sketch',
+  premisesPhoto: 'Premises Photo',
   signature: 'Signature',
   signatureUpload: 'Signature Upload',
   signatureFile: 'Signature',
+  signatureDoc: 'Signature Document',
+  digitalSignature: 'Digital Signature',
+  receiptUpload: 'Payment Receipt',
+  paymentReceipt: 'Payment Receipt',
+  requestDocument: 'Request Document',
+  newOwnerNicPdf: 'New Owner NIC (PDF)',
+  newOwnerNicFront: 'New Owner NIC Front',
+  newOwnerNicBack: 'New Owner NIC Back',
 };
 
-const FILE_FIELD_KEYS = new Set([
-  'documents', 'signature', 'signatureUpload', 'signatureFile', 'digitalSignature',
-  'signatureBase64', 'digitalSignatureBase64', 'proofOfAddress', 'authorizationLetter',
-  'sketchFile', 'brcFile', 'brc', 'nicFront', 'nicBack', 'facePhoto', 'passportDoc', 'brcDoc',
-  'vatDoc', 'taxExemptionDoc',
-]);
-
-function looksLikeFileString(value) {
-  return (
-    typeof value === 'string' &&
-    (value.startsWith('/uploads/') || value.startsWith('http') || value.startsWith('data:'))
-  );
-}
-
-function flattenFormData(obj, prefix = '', acc = []) {
-  Object.entries(obj || {}).forEach(([key, value]) => {
-    const label = prefix ? `${prefix}.${key}` : key;
-    if (!prefix && FILE_FIELD_KEYS.has(key)) return;
-    if (value === null || value === undefined || value === '') return;
-
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      if (value.name || value.path || value.url || value.preview) return;
-      flattenFormData(value, label, acc);
-      return;
-    }
-
-    if (Array.isArray(value)) {
-      if (value.length === 0) return;
-      if (typeof value[0] === 'object') {
-        acc.push({ key: label, value: `${value.length} item(s)` });
-      } else {
-        acc.push({ key: label, value: value.join(', ') });
-      }
-      return;
-    }
-
-    if (typeof value === 'string' && (looksLikeFileString(value) || value.length > 400)) return;
-    acc.push({ key: label, value: String(value) });
-  });
-  return acc;
-}
+const TABS = [
+  { id: 'data', label: 'Application data' },
+  { id: 'documents', label: 'Documents' },
+];
 
 // GridFS references (gridfs://<id> or a bare 24-hex id) are served by the protected /api/files/:id route
 function fileRefToUrl(value) {
@@ -103,31 +77,30 @@ function isImageUrl(url) {
   return /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(url) || url.startsWith('data:image');
 }
 
-function toInputDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return '';
-  return d.toISOString().slice(0, 10);
+function getInitials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-export default function ApplicationDetailModal({ application, onClose }) {
-  const [officeFields, setOfficeFields] = useState({
-    crNumber: '',
-    amountPaid: '',
-    staffSignature: '',
-    appointmentDate: '',
-  });
-  const [saving, setSaving] = useState(false);
+export default function ApplicationDetailModal({ application, onClose, onUpdated }) {
+  const [activeTab, setActiveTab] = useState('data');
+  const [copied, setCopied] = useState(false);
+  const [localStatus, setLocalStatus] = useState('pending');
+  const [localNotes, setLocalNotes] = useState('');
+  const [comment, setComment] = useState('');
+  const [busy, setBusy] = useState(false);
+  const notice = useAdminNotice(4000);
 
   useEffect(() => {
     if (application) {
-      const of = application.officeFields || {};
-      setOfficeFields({
-        crNumber: of.crNumber || '',
-        amountPaid: of.amountPaid != null ? of.amountPaid : '',
-        staffSignature: of.staffSignature || '',
-        appointmentDate: toInputDate(of.appointmentDate),
-      });
+      setActiveTab('data');
+      setCopied(false);
+      setLocalStatus(application.status || 'pending');
+      setLocalNotes(application.notes || '');
+      setComment(application.notes || '');
+      setBusy(false);
     }
   }, [application]);
 
@@ -139,196 +112,257 @@ export default function ApplicationDetailModal({ application, onClose }) {
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
+  const sections = useMemo(
+    () => getFormSections(application?.serviceType, application?.formData),
+    [application],
+  );
+  const docs = useMemo(() => collectDocuments(application?.formData), [application]);
+
   if (!application) return null;
 
-  const rows = flattenFormData(application.formData);
-  const docs = collectDocuments(application.formData);
-
-  const handleOfficeChange = (field, value) => {
-    setOfficeFields(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSaveOffice = async () => {
-    setSaving(true);
+  const handleCopyRef = async () => {
+    const value = application.referenceNumber || '';
+    if (!value) return;
     try {
-      const payload = {
-        crNumber: officeFields.crNumber || '',
-        amountPaid: officeFields.amountPaid !== '' ? Number(officeFields.amountPaid) : null,
-        staffSignature: officeFields.staffSignature || '',
-        appointmentDate: officeFields.appointmentDate || null,
-      };
-      await updateOfficeFields(application.id, payload);
-
-      // Auto-create appointment when appointment date is set
-      if (officeFields.appointmentDate) {
-        const scheduledAt = new Date(officeFields.appointmentDate);
-        scheduledAt.setHours(9, 0, 0, 0); // default to 09:00
-
-        await createAppointment({
-          applicationId: application.id,
-          referenceNumber: application.referenceNumber || '',
-          customer: application.name || '',
-          customerName: application.name || '',
-          phone: application.phone || '',
-          address: application.address || '',
-          serviceType: application.serviceType || 'new-connection',
-          scheduledAt: scheduledAt.toISOString(),
-          notes: `Auto-created from application ${application.referenceNumber}`,
-        });
-        toast.success('Office fields saved & appointment created');
-      } else {
-        toast.success('Office fields saved');
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save office fields');
-    } finally {
-      setSaving(false);
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      notice.error('Could not copy the reference number.');
     }
   };
 
+  const applyUpdate = (extra) => {
+    onUpdated?.({ ...application, ...extra });
+  };
+
+  const runStatus = async (status) => {
+    setBusy(true);
+    try {
+      const notes = comment.trim() || localNotes || '';
+      const res = await updateApplicationStatus(application.id, status, notes);
+      const nextNotes = res.application?.notes ?? notes;
+      setLocalStatus(status);
+      setLocalNotes(nextNotes);
+      setComment(nextNotes);
+      notice.success(`Application marked as ${statusLabel(status)}.`);
+      applyUpdate({
+        status,
+        notes: nextNotes,
+        actionedBy: res.application?.actionedBy,
+        actionedAt: res.application?.actionedAt,
+      });
+    } catch (err) {
+      notice.error(err.response?.data?.message || 'Failed to update status');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveComment = async () => {
+    const text = comment.trim();
+    if (!text) {
+      notice.error('Enter a comment before saving.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await updateApplicationStatus(application.id, localStatus, text);
+      const nextNotes = res.application?.notes ?? text;
+      setLocalNotes(nextNotes);
+      setComment(nextNotes);
+      notice.success('Comment saved.');
+      applyUpdate({
+        notes: nextNotes,
+        actionedBy: res.application?.actionedBy,
+        actionedAt: res.application?.actionedAt,
+      });
+    } catch (err) {
+      notice.error(err.response?.data?.message || 'Failed to save comment');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const actionerName = application.actionedBy
+    ? (application.actionedBy.name || application.actionedBy.email || '')
+    : '';
+
   return (
     <div className="admin-modal-overlay" onClick={onClose}>
-      <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="admin-modal-header">
-          <div>
-            <h3>{application.referenceNumber}</h3>
-            <div className="admin-modal-subtitle">
-              {serviceLabel(application.serviceType)}
-              <span className={`admin-badge ${statusBadgeClass(application.status)}`}>
-                {statusLabel(application.status)}
-              </span>
+      <div className="admin-modal ax-modal adm-modal-wide" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="adm-title">
+        <div className="ax-modal-head">
+          <span className="ax-modal-head-deco" aria-hidden="true" />
+          <div className="ax-modal-identity">
+            <span className="ax-modal-avatar" aria-hidden="true">{getInitials(application.name)}</span>
+            <div>
+              <span className="ax-modal-eyebrow">{serviceLabel(application.serviceType)} application</span>
+              <h3 id="adm-title">{application.name || 'Unknown applicant'}</h3>
+              <div className="ax-modal-sub">
+                <span className="ax-mono-chip adm-ref-chip-x">
+                  {application.referenceNumber}
+                  <button
+                    type="button"
+                    className="adm-ref-copy-x"
+                    onClick={handleCopyRef}
+                    aria-label="Copy reference number"
+                    title={copied ? 'Copied' : 'Copy reference number'}
+                  >
+                    {copied ? <FiCheck size={12} /> : <FiCopy size={12} />}
+                  </button>
+                </span>
+                <span className={`admin-badge ax-head-badge ${statusBadgeClass(localStatus)}`}>
+                  {statusLabel(localStatus)}
+                </span>
+                {application.submittedAt && <span>Submitted {formatDate(application.submittedAt)}</span>}
+              </div>
             </div>
           </div>
-          <button type="button" className="admin-modal-close" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <button type="button" className="ax-modal-close" onClick={onClose} aria-label="Close">×</button>
         </div>
 
-        <div className="admin-modal-body">
-          <div className="admin-modal-meta">
-            <div><span>Applicant</span><strong>{application.name || '—'}</strong></div>
-            <div><span>NIC</span><strong>{application.nic || '—'}</strong></div>
-            <div><span>Phone</span><strong>{application.phone || '—'}</strong></div>
-            <div><span>Email</span><strong>{application.email || '—'}</strong></div>
-            <div><span>Address</span><strong>{application.address || '—'}</strong></div>
-            <div><span>Submitted</span><strong>{formatDate(application.submittedAt)}</strong></div>
-          </div>
-
-          {application.formData?.product && (
-            <>
-              <h4>Purchase</h4>
-              <div className="admin-modal-meta">
-                <div><span>Package</span><strong>{application.formData.product.productName} × {application.formData.product.quantity || 1}</strong></div>
-                <div><span>Monthly</span><strong>Rs. {Number(application.formData.product.monthlyPrice || 0).toLocaleString()}</strong></div>
-                <div><span>Installation Fee</span><strong>Rs. {Number(application.formData.product.installationFee || 0).toLocaleString()}</strong></div>
-                <div><span>Payment</span><strong>{application.paymentStatus || '—'} · {application.formData.paymentReference || 'no reference'}</strong></div>
-                <div><span>Install Address</span><strong>{application.formData.installAddress || application.address || '—'}</strong></div>
-              </div>
-            </>
-          )}
-
-          {/* ── Office Processing ── */}
-          <h4>Office Processing</h4>
-          <div className="admin-form-grid" style={{ marginBottom: '1rem' }}>
-            <div className="admin-form-field">
-              <span>CR Number</span>
-              <input
-                type="text"
-                value={officeFields.crNumber}
-                onChange={(e) => handleOfficeChange('crNumber', e.target.value)}
-                placeholder="Enter CR number"
-                style={{
-                  width: '100%', padding: '0.55rem 0.75rem', border: '1px solid var(--line)',
-                  borderRadius: '8px', fontSize: '0.88rem', fontFamily: 'inherit',
-                }}
-              />
-            </div>
-            <div className="admin-form-field">
-              <span>Amount Paid (LKR)</span>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={officeFields.amountPaid}
-                onChange={(e) => handleOfficeChange('amountPaid', e.target.value)}
-                placeholder="0.00"
-                style={{
-                  width: '100%', padding: '0.55rem 0.75rem', border: '1px solid var(--line)',
-                  borderRadius: '8px', fontSize: '0.88rem', fontFamily: 'inherit',
-                }}
-              />
-            </div>
-            <div className="admin-form-field">
-              <span>Staff Signature</span>
-              <input
-                type="text"
-                value={officeFields.staffSignature}
-                onChange={(e) => handleOfficeChange('staffSignature', e.target.value)}
-                placeholder="Staff member name"
-                style={{
-                  width: '100%', padding: '0.55rem 0.75rem', border: '1px solid var(--line)',
-                  borderRadius: '8px', fontSize: '0.88rem', fontFamily: 'inherit',
-                }}
-              />
-            </div>
-            <div className="admin-form-field">
-              <span>Appointment Date</span>
-              <input
-                type="date"
-                value={officeFields.appointmentDate}
-                onChange={(e) => handleOfficeChange('appointmentDate', e.target.value)}
-                style={{
-                  width: '100%', padding: '0.55rem 0.75rem', border: '1px solid var(--line)',
-                  borderRadius: '8px', fontSize: '0.88rem', fontFamily: 'inherit',
-                }}
-              />
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+        <nav className="adm-tabs" aria-label="Application details">
+          {TABS.map((tab) => (
             <button
               type="button"
-              onClick={handleSaveOffice}
-              disabled={saving}
-              className="admin-btn primary"
-              style={{ minWidth: '140px' }}
+              key={tab.id}
+              className={`adm-tab${activeTab === tab.id ? ' is-active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
             >
-              {saving ? 'Saving…' : 'Save Office Fields'}
+              {tab.label}
+              {tab.id === 'documents' && docs.length > 0 && (
+                <span className="adm-tab-count">{docs.length}</span>
+              )}
             </button>
-          </div>
+          ))}
+        </nav>
 
-          <h4>Form Data</h4>
-          {rows.length === 0 ? (
-            <p className="admin-modal-empty">No additional form data captured.</p>
-          ) : (
-            <div className="admin-form-grid">
-              {rows.map((row) => (
-                <div className="admin-form-field" key={row.key}>
-                  <span>{row.key}</span>
-                  <strong>{row.value}</strong>
+        <div className="ax-modal-body adm-modal-body">
+          {activeTab !== 'data' && <AdminNotice notice={notice.notice} onDismiss={notice.dismiss} />}
+          {activeTab === 'data' && (
+            <div className="adm-data">
+              <div className="adm-customer-card">
+                <span className="adm-customer-avatar" aria-hidden="true">{getInitials(application.name)}</span>
+                <div className="adm-customer-text">
+                  <div className="adm-customer-name">{application.name || 'Unknown applicant'}</div>
+                  <div className="adm-customer-meta">
+                    {application.phone && <span>{application.phone}</span>}
+                    {application.email && <span>{application.email}</span>}
+                  </div>
                 </div>
-              ))}
+                <span className="adm-customer-ref">{formatDate(application.submittedAt)}</span>
+              </div>
+
+              {sections.length === 0 ? (
+                <p className="admin-modal-empty">No customer data captured for this application.</p>
+              ) : (
+                sections.map((section, index) => (
+                  <section className="adm-data-section" key={section.title}>
+                    <h4 className="adm-section-title">
+                      <span className="adm-step-index">{index + 1}</span>
+                      {section.title}
+                    </h4>
+                    <div className="adm-data-grid">
+                      {section.entries.map((entry) => (
+                        <div className="adm-data-field" key={entry.key}>
+                          <span className="adm-data-label">{entry.label}</span>
+                          <strong className="adm-data-value">{entry.display}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                ))
+              )}
+
+              <section className="adm-verify">
+                <h4 className="adm-section-title">Verification &amp; Actions</h4>
+                <p className="adm-verify-hint">
+                  Review the customer details above, then approve, reject or flag the application.
+                  A comment is saved with the decision.
+                </p>
+                <label className="adm-comment-field">
+                  <span>Admin comment</span>
+                  <textarea
+                    rows={3}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Add a note for the applicant file (optional)"
+                  />
+                </label>
+                {localNotes && actionerName && (
+                  <p className="adm-comment-author">Last updated by {actionerName}</p>
+                )}
+                <div className="adm-verify-actions">
+                  <button
+                    type="button"
+                    className="adm-action approve"
+                    disabled={busy || localStatus === 'approved'}
+                    onClick={() => runStatus('approved')}
+                  >
+                    <FiCheck size={15} /> Approve
+                  </button>
+                  <button
+                    type="button"
+                    className="adm-action reject"
+                    disabled={busy || localStatus === 'rejected'}
+                    onClick={() => runStatus('rejected')}
+                  >
+                    <FiX size={15} /> Reject
+                  </button>
+                  <button
+                    type="button"
+                    className="adm-action flag"
+                    disabled={busy || localStatus === 'flagged'}
+                    onClick={() => runStatus('flagged')}
+                  >
+                    <FiFlag size={15} /> Flag
+                  </button>
+                  <button
+                    type="button"
+                    className="adm-action ghost"
+                    disabled={busy}
+                    onClick={saveComment}
+                  >
+                    <FiMessageSquare size={15} /> Save comment
+                  </button>
+                </div>
+                <div className="adm-verify-notice">
+                  <AdminNotice notice={notice.notice} onDismiss={notice.dismiss} />
+                </div>
+              </section>
             </div>
           )}
 
-          <h4>Documents</h4>
-          {docs.length === 0 ? (
-            <p className="admin-modal-empty">No documents attached.</p>
-          ) : (
-            <div className="admin-doc-grid">
-              {docs.map((doc) => {
-                const url = getAssetUrl(doc.url);
-                const isFile = doc.url.startsWith('/api/files/');
-                return (
-                  <a className="admin-doc-item" key={doc.key} href={isFile ? undefined : url} target="_blank" rel="noreferrer">
-                    {isFile || isImageUrl(url) ? (
-                      <AuthImage url={doc.url} alt={doc.label} />
-                    ) : (
-                      <span className="admin-doc-fallback">PDF</span>
-                    )}
-                    <span className="admin-doc-label">{doc.label}</span>
-                  </a>
-                );
-              })}
+          {activeTab === 'documents' && (
+            <div>
+              {docs.length === 0 ? (
+                <p className="admin-modal-empty">No documents attached.</p>
+              ) : (
+                <div className="admin-doc-grid">
+                  {docs.map((doc) => {
+                    const url = getAssetUrl(doc.url);
+                    const isFile = doc.url.startsWith('/api/files/');
+                    return (
+                      <a className="admin-doc-item" key={doc.key} href={isFile ? undefined : url} target="_blank" rel="noreferrer">
+                        {isFile || isImageUrl(url) ? (
+                          <AuthImage url={doc.url} alt={doc.label} style={{ height: 96, minHeight: 96 }} />
+                        ) : (
+                          <span className="admin-doc-fallback">PDF</span>
+                        )}
+                        <span className="admin-doc-label">{doc.label}</span>
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut, FiShoppingCart } from 'react-icons/fi';
+import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut, FiShoppingCart, FiChevronDown } from 'react-icons/fi';
 import sltLogo from '../../assets/sltlogoOnly.png';
 import { getVerifiedPhone, getVerifiedName, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../utils/authSession';
 import { getLocalCart } from '../../services/productService';
@@ -38,6 +38,8 @@ export default function Navbar() {
   const [searchCategory, setSearchCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(() => {
     try {
       return getLocalCart().reduce((sum, item) => sum + (item.quantity || 1), 0);
@@ -47,6 +49,8 @@ export default function Navbar() {
   });
   const menuRef = useRef(null);
   const searchRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const userRef = useRef(null);
 
   useEffect(() => {
     const syncCart = () => {
@@ -89,15 +93,24 @@ export default function Navbar() {
     const handleClickOutsideSearch = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setShowSuggestions(false);
+        setSearchOpen(false);
+      }
+      if (userRef.current && !userRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutsideSearch);
     return () => document.removeEventListener('mousedown', handleClickOutsideSearch);
   }, []);
 
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
   const handleSelectSuggestion = (product) => {
     setSearchQuery(product.name);
     setShowSuggestions(false);
+    setSearchOpen(false);
     window.dispatchEvent(new CustomEvent('easyapply:search', { detail: product.name }));
     navigate(`/new-connection/products?search=${encodeURIComponent(product.name)}`);
   };
@@ -105,6 +118,7 @@ export default function Navbar() {
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     setShowSuggestions(false);
+    setSearchOpen(false);
     if (searchQuery.trim()) {
       window.dispatchEvent(new CustomEvent('easyapply:search', { detail: searchQuery }));
       navigate(`/new-connection/products?search=${encodeURIComponent(searchQuery.trim())}`);
@@ -173,6 +187,8 @@ export default function Navbar() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setUserMenuOpen(false);
+    setSearchOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -216,120 +232,157 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* ── Center Search Input Bar (Hidden on checkout/scheduling funnel pages) ── */}
-          {!location.pathname.startsWith('/schedule-installation') && !location.pathname.startsWith('/completion') && (
+        {/* ── Desktop Nav Links ── */}
+        <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '1.75rem', marginLeft: 'clamp(0.5rem, 2.5vw, 2rem)', marginRight: 'auto', opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? 'none' : 'auto', transition: 'opacity 0.2s ease' }}>
+          <Link to="/" style={navLinkStyle('/')}>
+            {t('nav.home', 'Home')}
+          </Link>
+          <Link to="/check-status" style={navLinkStyle('/check-status')}>
+            {t('nav.applicationStatus', 'Application Status')}
+          </Link>
+          <Link to="/help" style={navLinkStyle('/help')}>
+            {t('nav.help', 'Help & Support')}
+          </Link>
+        </div>
+
+          {/* ── Right: Navigation, Language and Authentication ── */}
           <div
-            ref={searchRef}
-            style={{ flex: 1, maxWidth: '580px', display: 'flex', alignItems: 'center', position: 'relative' }}
-            className="nav-center-search"
+            className="navbar-right"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end',
+              gap: 'clamp(0.35rem, 2vw, 1.25rem)',
+              rowGap: '0.5rem',
+              flexShrink: 0,
+            }}
           >
-            <form
-              onSubmit={handleSearchSubmit}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                width: '100%',
-                backgroundColor: '#ffffff',
-                border: '1.5px solid #cbd5e1',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              }}
+            {/* Search: icon only; expands inline when clicked (hidden on checkout/scheduling funnel pages) */}
+            {!location.pathname.startsWith('/schedule-installation') && !location.pathname.startsWith('/completion') && (
+            <div
+              ref={searchRef}
+              className="nav-center-search"
+              style={{ position: 'relative', width: '38px', height: '38px', flexShrink: 0 }}
             >
-              <FiSearch
-                style={{ color: '#94a3b8', marginLeft: '0.75rem', flexShrink: 0 }}
-                size={16}
-                aria-hidden="true"
-              />
-              <input
-                type="text"
-                aria-label="Search packages, speeds, products"
-                placeholder="Search packages, speeds, products..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  padding: '0.5rem 0.75rem',
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: '0.85rem',
-                  color: '#0f172a',
-                  backgroundColor: 'transparent',
-                }}
-              />
-              {searchQuery && (
-                <button
+              <button
                   type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setShowSuggestions(false);
-                  }}
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Open search"
+                  title="Search"
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#94a3b8',
-                    cursor: 'pointer',
-                    padding: '0 0.4rem',
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '50%',
+                    border: '1px solid #e2e8f0',
+                    backgroundColor: '#f8fafc',
+                    color: '#0056b3',
                     display: 'flex',
                     alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    opacity: searchOpen ? 0 : 1,
+                    pointerEvents: searchOpen ? 'none' : 'auto',
+                    transition: 'opacity 0.2s ease',
                   }}
                 >
-                  <FiX size={14} />
+                  <FiSearch size={17} aria-hidden="true" />
                 </button>
-              )}
-              <select
-                value={searchCategory}
-                onChange={(e) => setSearchCategory(e.target.value)}
-                aria-label="Filter search by category"
-                style={{
-                  border: 'none',
-                  borderLeft: '1px solid #e2e8f0',
-                  backgroundColor: 'transparent',
-                  padding: '0.5rem 0.6rem',
-                  fontSize: '0.8rem',
-                  color: '#475569',
-                  fontWeight: 600,
-                  outline: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                <option value="All">All</option>
-                <option value="Fibre">Fibre</option>
-                <option value="LTE">LTE</option>
-                <option value="PEO TV">PEO TV</option>
-                <option value="Voice">Voice</option>
-              </select>
-              <button
-                type="submit"
-                aria-label="Search"
-                style={{
-                  backgroundColor: '#0056b3',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '0.55rem 1.1rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <FiSearch size={16} aria-hidden="true" />
-              </button>
-            </form>
-
+                <form
+                  onSubmit={handleSearchSubmit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setSearchOpen(false);
+                      setShowSuggestions(false);
+                    }
+                  }}
+                  className="nav-search-form"
+                  aria-hidden={!searchOpen}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    zIndex: 5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: searchOpen ? 'min(380px, calc(100vw - 2rem))' : '38px',
+                    height: '38px',
+                    backgroundColor: '#ffffff',
+                    border: '1.5px solid #0056b3',
+                    borderRadius: '9999px',
+                    overflow: 'hidden',
+                    boxShadow: '0 0 0 3px rgba(0, 86, 179, 0.12)',
+                    opacity: searchOpen ? 1 : 0,
+                    visibility: searchOpen ? 'visible' : 'hidden',
+                    transition: `width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, visibility 0s linear ${searchOpen ? '0s' : '0.3s'}`,
+                  }}
+                >
+                  <FiSearch style={{ color: '#94a3b8', marginLeft: '0.85rem', flexShrink: 0 }} size={16} aria-hidden="true" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    aria-label="Search packages, speeds, products"
+                    placeholder="Search packages, speeds, products..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      padding: '0 0.6rem',
+                      border: 'none',
+                      outline: 'none',
+                      fontSize: '0.85rem',
+                      color: '#0f172a',
+                      backgroundColor: 'transparent',
+                    }}
+                  />
+                  <select
+                    value={searchCategory}
+                    onChange={(e) => setSearchCategory(e.target.value)}
+                    aria-label="Filter search by category"
+                    style={{
+                      border: 'none',
+                      borderLeft: '1px solid #e2e8f0',
+                      backgroundColor: 'transparent',
+                      padding: '0 0.5rem',
+                      height: '60%',
+                      fontSize: '0.8rem',
+                      color: '#475569',
+                      fontWeight: 600,
+                      outline: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="All">All</option>
+                    <option value="Fibre">Fibre</option>
+                    <option value="LTE">LTE</option>
+                    <option value="PEO TV">PEO TV</option>
+                    <option value="Voice">Voice</option>
+                  </select>
+                  <button
+                    type="button"
+                    aria-label="Close search"
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setShowSuggestions(false);
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0 0.75rem 0 0.35rem', display: 'flex', alignItems: 'center' }}
+                  >
+                    <FiX size={16} />
+                  </button>
+                </form>
             {/* Live Search Suggestions Dropdown */}
             {showSuggestions && searchQuery.trim() && (
               <div
                 style={{
                   position: 'absolute',
                   top: 'calc(100% + 4px)',
-                  left: 0,
                   right: 0,
+                  width: 'min(380px, calc(100vw - 2rem))',
                   backgroundColor: '#ffffff',
                   borderRadius: '12px',
                   boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
@@ -384,34 +437,8 @@ export default function Navbar() {
                 )}
               </div>
             )}
-          </div>
-          )}
-
-          {/* ── Right: Navigation, Language and Authentication ── */}
-          <div
-            className="navbar-right"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              justifyContent: 'flex-end',
-              gap: 'clamp(0.35rem, 2vw, 1.25rem)',
-              rowGap: '0.5rem',
-              flexShrink: 0,
-            }}
-          >
-            {/* Desktop Nav Links */}
-            <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '1.5rem' }}>
-              <Link to="/" style={navLinkStyle('/')}>
-                {t('nav.home', 'Home')}
-              </Link>
-              <Link to="/check-status" style={navLinkStyle('/check-status')}>
-                {t('nav.applicationStatus', 'Application Status')}
-              </Link>
-              <Link to="/help" style={navLinkStyle('/help')}>
-                {t('nav.help', 'Help & Support')}
-              </Link>
             </div>
+            )}
 
             {/* Cart quick-access button */}
             <Link
@@ -502,54 +529,85 @@ export default function Navbar() {
             {verifiedPhone ? (
               <div
                 className="navbar-auth"
+                ref={userRef}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.6rem',
+                  position: 'relative',
                   borderLeft: '1px solid #cbd5e1',
                   paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)',
                 }}
               >
-                <Link
-                  to="/profile"
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((o) => !o)}
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
                   className="navbar-auth-phone"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.4rem',
+                    gap: '0.5rem',
                     color: '#334155',
                     fontWeight: 700,
                     fontSize: '0.85rem',
-                    textDecoration: 'none',
-                    padding: '0.4rem 0.75rem',
+                    padding: '0.3rem 0.6rem 0.3rem 0.35rem',
                     borderRadius: '9999px',
-                    backgroundColor: isActivePath('/profile') ? '#eff6ff' : '#f8fafc',
-                    border: `1px solid ${isActivePath('/profile') ? '#bfdbfe' : '#e2e8f0'}`,
-                  }}
-                  title={t('nav.goToProfile', 'Go to My Profile')}
-                >
-                  <FiUser size={15} style={{ color: '#50b748' }} />
-                  {verifiedName || formatPhone(verifiedPhone)}
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    background: 'none',
-                    border: 'none',
-                    color: '#dc2626',
-                    fontWeight: 700,
-                    fontSize: '0.85rem',
+                    backgroundColor: userMenuOpen || isActivePath('/profile') ? '#eff6ff' : '#f8fafc',
+                    border: `1px solid ${userMenuOpen || isActivePath('/profile') ? '#bfdbfe' : '#e2e8f0'}`,
                     cursor: 'pointer',
-                    padding: 0,
                   }}
                 >
-                  <FiLogOut size={15} />
-                  <span>{t('nav.logout', 'Logout')}</span>
+                  <span style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#0056b3', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: 800 }}>
+                    {(verifiedName || '#').trim().charAt(0).toUpperCase()}
+                  </span>
+                  <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {verifiedName || formatPhone(verifiedPhone)}
+                  </span>
+                  <FiChevronDown size={14} style={{ transition: 'transform 0.2s', transform: userMenuOpen ? 'rotate(180deg)' : 'none' }} />
                 </button>
+
+                {userMenuOpen && (
+                  <div
+                    role="menu"
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 8px)',
+                      right: 0,
+                      minWidth: '200px',
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
+                      padding: '0.4rem',
+                      zIndex: 1000,
+                    }}
+                  >
+                    <div style={{ padding: '0.5rem 0.75rem 0.6rem', borderBottom: '1px solid #f1f5f9', marginBottom: '0.3rem' }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a' }}>{verifiedName || t('nav.account', 'My Account')}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{formatPhone(verifiedPhone)}</div>
+                    </div>
+                    <Link
+                      to="/profile"
+                      role="menuitem"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', padding: '0.55rem 0.75rem', borderRadius: '8px', color: '#0f172a', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    >
+                      <FiUser size={15} style={{ color: '#0056b3' }} />
+                      {t('nav.myProfile', 'My Profile')}
+                    </Link>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', background: 'none', border: 'none', color: '#dc2626', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', textAlign: 'left' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                    >
+                      <FiLogOut size={15} />
+                      {t('nav.logout', 'Logout')}
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <button

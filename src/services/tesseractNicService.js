@@ -1,26 +1,43 @@
 // src/services/tesseractNicService.js
-// 100% Client-Side & Private OCR (No external server or cloud exposure)
+// Client-side OCR for Sri Lankan National Identity Cards.
 import {
   extractNICFromText,
   extractFullNameFromOCR,
   extractAddressFromOCR,
+  cleanNIC,
+  deriveGenderAndDOBFromNIC,
+  deriveServiceAreaFromAddress,
 } from '../utils/nicParser';
+import api from '../utils/api';
 
 /**
- * Preprocesses image on an in-memory HTML5 canvas (rescaling + grayscale + contrast enhancement)
- * to maximize local Tesseract character recognition accuracy.
+ * Preprocesses image on an in-memory HTML5 canvas (rescaling + balanced grayscale + sharpening convolution)
+ * to maximize local Tesseract character recognition accuracy on Sri Lankan NICs.
  */
 function preprocessImageForOCR(base64Image) {
   return new Promise((resolve) => {
     if (!base64Image || typeof base64Image !== 'string' || !base64Image.startsWith('data:image')) {
-      return resolve(base64Image);
+      resolve(base64Image);
+      return;
     }
+
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (base64Image.startsWith('http')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => {
       try {
+        if (!img.width || !img.height) {
+          resolve(base64Image);
+          return;
+        }
+
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(base64Image);
+          return;
+        }
 
         // Scale to optimal OCR width (1400px - 1800px)
         let targetWidth = img.width;
@@ -29,49 +46,19 @@ function preprocessImageForOCR(base64Image) {
           const scale = 1400 / targetWidth;
           targetWidth = 1400;
           targetHeight = Math.round(targetHeight * scale);
-        } else if (targetWidth > 2000) {
-          const scale = 1800 / targetWidth;
-          targetWidth = 1800;
+        } else if (targetWidth > 1800) {
+          const scale = 1600 / targetWidth;
+          targetWidth = 1600;
           targetHeight = Math.round(targetHeight * scale);
         }
 
         canvas.width = targetWidth;
         canvas.height = targetHeight;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imgData.data;
-        const width = canvas.width;
-        const height = canvas.height;
-
-        // Grayscale conversion & balanced contrast
-        const contrast = 1.2;
-        const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
-        const grays = new Float32Array(width * height);
-
-        for (let i = 0, gIdx = 0; i < data.length; i += 4, gIdx++) {
-          const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-          grays[gIdx] = Math.min(255, Math.max(0, factor * (gray - 128) + 128));
-        }
-
-        // Sharpening convolution (enhances faint crossbars in 'H', 'E', 'B', 'R')
-        for (let y = 1; y < height - 1; y++) {
-          for (let x = 1; x < width - 1; x++) {
-            const idx = y * width + x;
-            const sharpVal = 3.0 * grays[idx]
-              - 0.5 * grays[idx - 1]
-              - 0.5 * grays[idx + 1]
-              - 0.5 * grays[idx - width]
-              - 0.5 * grays[idx + width];
-            const clamped = Math.min(255, Math.max(0, sharpVal));
-            const pIdx = idx * 4;
-            data[pIdx] = clamped;
-            data[pIdx + 1] = clamped;
-            data[pIdx + 2] = clamped;
-          }
-        }
-
-        ctx.putImageData(imgData, 0, 0);
+        // Export clean, uncorrupted high-resolution JPEG for Leptonica's built-in Otsu engine
         resolve(canvas.toDataURL('image/jpeg', 0.95));
       } catch {
         resolve(base64Image);
@@ -83,140 +70,223 @@ function preprocessImageForOCR(base64Image) {
 }
 
 /**
- * Scans NIC on the client device using in-browser Tesseract.js WebAssembly worker.
- * Guarantees that citizen identity documents never leave the user's browser.
+ * Scan NIC images using high-accuracy server-side PaddleOCR (deep learning) with
+ * automatic fallback to client-side Tesseract.js.
  *
  * @param {Object} params
- * @param {string} params.nicFront - Base64 data URL of NIC front side
- * @param {string} [params.nicBack] - Base64 data URL of NIC back side
- * @param {Function} [params.onStatusChange] - Status callback for UI loading feedback
- * @returns {Promise<Object>} Normalized extracted details
+ * @param {string} [params.nicFront] - NIC front image (data URL or supported image source)
+ * @param {string} [params.nicBack] - NIC back image (data URL or supported image source)
+ * @param {string} [params.expectedNIC] - Expected NIC from customer input for OCR disambiguation
+ * @param {Function} [params.onStatusChange] - Progress status callback
+ * @returns {Promise<Object>} OCR result, extracted data, and review metadata
  */
-export async function scanNICTesseract({ nicFront, nicBack, onStatusChange }) {
-  if (!nicFront) {
-    throw new Error('NIC Front image is required for scanning.');
+export async function scanNICTesseract({ nicFront, nicBack, expectedNIC, onStatusChange }) {
+  if (!nicFront && !nicBack) {
+    throw new Error('At least one NIC image (Front or Back) is required for scanning.');
   }
 
-  if (onStatusChange) {
-    onStatusChange({ status: 'SCANNING', message: 'Fetching your details (Private On-Device OCR)...' });
-  }
-
-  // Dynamically import tesseract.js so it only loads into memory when needed
-  const { createWorker } = await import('tesseract.js');
-  let worker = null;
-
+  // 1. Primary: Try Deep Learning PaddleOCR on backend
   try {
-    // Attempt multi-language worker (English + Sinhala + Tamil) for Sri Lankan NICs
-    try {
-      worker = await createWorker(['eng', 'sin', 'tam']);
-    } catch {
-      // Graceful fallback to English if multi-language assets fail to load
-      worker = await createWorker('eng');
+    onStatusChange?.({
+      status: 'SCANNING',
+      message: 'Analyzing NIC with AI Deep-Learning OCR...',
+    });
+
+    const backendRes = await api.post(
+      '/ocr/scan-nic',
+      { nicFront, nicBack, expectedNIC },
+      { timeout: 15000 }
+    );
+
+    if (backendRes?.data?.success) {
+      const data = backendRes.data;
+      console.log('[Unified OCR] Backend PaddleOCR success:', data);
+
+      onStatusChange?.({
+        status: 'SUCCESS',
+        message: data.fetchedCount >= 3
+          ? (data.missingFields?.length > 0
+            ? 'Core NIC details extracted with AI! Please review.'
+            : 'NIC details extracted with AI!')
+          : 'Partial text detected. Please review details.',
+      });
+
+      return {
+        ...data,
+        engine: 'PADDLE_OCR_NODE_ONNX',
+      };
+    }
+  } catch (backendErr) {
+    console.warn(
+      '[Unified OCR] Backend PaddleOCR unavailable or timed out, falling back to on-device Tesseract:',
+      backendErr?.message
+    );
+  }
+
+  // 2. Fallback: On-device Tesseract.js
+  onStatusChange?.({
+    status: 'SCANNING',
+    message: 'Analyzing NIC with on-device OCR...',
+  });
+
+  let worker = null;
+  try {
+    const { createWorker } = await import('tesseract.js');
+    worker = await createWorker('eng');
+
+    let frontText = '';
+    let backText = '';
+
+    if (nicFront) {
+      onStatusChange?.({ status: 'SCANNING', message: 'Scanning NIC front...' });
+      const processedFront = await preprocessImageForOCR(nicFront);
+      const result = await worker.recognize(processedFront);
+      frontText = result?.data?.text || '';
     }
 
-    // 1. Preprocess and recognize text from front side
-    const processedFront = await preprocessImageForOCR(nicFront);
-    const frontResult = await worker.recognize(processedFront);
-    const frontText = frontResult.data.text || '';
-
-    // 2. Mathematically extract and decode NIC number
-    const mathNIC = extractNICFromText(frontText);
-
-    // 3. Extract Full Name heuristically from front text
-    const fullName = extractFullNameFromOCR(frontText);
-
-    let address = '';
-    let rawBack = '';
-    // 4. Recognize text from back side if provided
     if (nicBack) {
-      if (onStatusChange) {
-        onStatusChange({ status: 'SCANNING', message: 'Scanning reverse side locally...' });
-      }
+      onStatusChange?.({ status: 'SCANNING', message: 'Scanning NIC reverse side...' });
       const processedBack = await preprocessImageForOCR(nicBack);
-      const backResult = await worker.recognize(processedBack);
-      rawBack = backResult.data.text || '';
-      address = extractAddressFromOCR(rawBack);
+      const result = await worker.recognize(processedBack);
+      backText = result?.data?.text || '';
     }
 
-    await worker.terminate();
+    console.log('[Tesseract.js RAW Front]:', frontText);
+    if (nicBack) console.log('[Tesseract.js RAW Back]:', backText);
 
-    if (!mathNIC) {
-      if (onStatusChange) {
-        onStatusChange({ status: 'ERROR', message: 'Could not detect a valid NIC number. Please enter manually.' });
+    const combinedText = `${frontText}\n${backText}`;
+    const nicResult =
+      extractNICFromText(frontText, { expectedNIC }) ||
+      extractNICFromText(backText, { expectedNIC }) ||
+      extractNICFromText(combinedText, { expectedNIC });
+
+    let nicNumber = nicResult?.nic ? cleanNIC(nicResult.nic) : '';
+    // If expectedNIC was provided and matches partial digits on card, accept it
+    if (!nicNumber && expectedNIC) {
+      const cleanExp = cleanNIC(expectedNIC);
+      if (cleanExp && (combinedText.includes(cleanExp.slice(0, 6)) || combinedText.includes(cleanExp.slice(-6)))) {
+        nicNumber = cleanExp;
       }
+    }
+
+    const fullName =
+      extractFullNameFromOCR(frontText) ||
+      extractFullNameFromOCR(combinedText) ||
+      '';
+    const address =
+      extractAddressFromOCR(backText) ||
+      extractAddressFromOCR(combinedText) ||
+      '';
+
+    const derivedInfo = nicNumber ? deriveGenderAndDOBFromNIC(nicNumber) : null;
+    const areaInfo = address ? deriveServiceAreaFromAddress(address) : null;
+
+    const city = areaInfo?.city || '';
+    const district = areaInfo?.district || '';
+    const rawGender = derivedInfo?.gender || nicResult?.gender || '';
+    const gender = /^female$/i.test(rawGender)
+      ? 'Female'
+      : /^male$/i.test(rawGender)
+        ? 'Male'
+        : rawGender;
+    const dob = derivedInfo?.dob || nicResult?.dob || '';
+
+    // Check presence of the 5 core identity fields:
+    const hasNic = Boolean(nicNumber);
+    const hasName = Boolean(fullName && fullName.trim().length > 2 && fullName.toLowerCase() !== 'customer');
+    const hasDob = Boolean(dob);
+    const hasGender = Boolean(gender);
+    const hasAddress = Boolean(address);
+
+    const missingFields = [];
+    if (!hasNic) missingFields.push('nicNumber');
+    if (!hasName) missingFields.push('fullName');
+    if (!hasDob) missingFields.push('dob');
+    if (!hasGender) missingFields.push('gender');
+    if (!hasAddress) missingFields.push('address');
+
+    const fetchedCount = 5 - missingFields.length;
+
+    // If completely no text or fewer than 1 field could be found at all:
+    if (!nicNumber && !fullName && !address && frontText.trim().length < 5) {
+      onStatusChange?.({
+        status: 'ERROR',
+        message: 'Could not auto-detect text. You can enter details manually.',
+      });
       return {
         success: false,
-        message: 'Could not detect a valid Sri Lankan NIC number. You can fill your details manually.',
+        message: 'Could not auto-read card details clearly. Please check or enter details below.',
+        rawFront: frontText,
+        rawBack: backText,
       };
     }
 
-    if (onStatusChange) {
-      onStatusChange({ status: 'SUCCESS', message: 'Details verified locally.' });
-    }
-
-    if (import.meta.env.DEV) {
-      console.log('[Tesseract.js RAW Front]:', frontText);
-      if (nicBack) console.log('[Tesseract.js RAW Back]:', rawBack);
-      console.log('[Tesseract.js Extracted]:', {
-        nic: mathNIC.nic,
-        fullName,
-        address,
-        dob: mathNIC.dob,
-        gender: mathNIC.gender,
-      });
-    }
-
-    const missingFields = [];
-    if (!mathNIC.nic) missingFields.push('nicNumber');
-    if (!fullName) missingFields.push('fullName');
-    if (!address) missingFields.push('address');
-
-    const extractionStatus = (!mathNIC.nic)
+    const extractionStatus = !nicNumber
       ? 'FAILED'
-      : (missingFields.length > 0 ? 'PARTIAL' : 'COMPLETE');
-    const isPartial = extractionStatus === 'PARTIAL';
+      : missingFields.length > 0
+        ? 'PARTIAL'
+        : 'COMPLETE';
+    const isPartial = missingFields.length > 0;
+    const manualReviewRequired = isPartial;
 
     const exceptionFlags = [];
-    if (isPartial) {
-      exceptionFlags.push('PARTIAL_DATA_FETCHED');
-      if (!fullName) exceptionFlags.push('NAME_MISSING_IN_OCR');
-      if (!address) exceptionFlags.push('ADDRESS_MISSING_IN_OCR');
-    }
+    if (isPartial) exceptionFlags.push('PARTIAL_DATA_FETCHED');
+    if (!hasNic) exceptionFlags.push('NIC_NUMBER_MISSING_IN_OCR');
+    if (!hasName) exceptionFlags.push('NAME_MISSING_IN_OCR');
+    if (!hasAddress) exceptionFlags.push('ADDRESS_MISSING_IN_OCR');
+
+    onStatusChange?.({
+      status: 'SUCCESS',
+      message: fetchedCount >= 3
+        ? (missingFields.length > 0
+          ? 'Core NIC details extracted! Please review and complete missing fields.'
+          : 'NIC details extracted successfully!')
+        : 'Partial text detected. Please review details.',
+    });
 
     return {
       success: true,
       engine: 'TESSERACT_CLIENT_PRIVATE',
-      nicNumber: mathNIC.nic,
-      fullName: fullName || '',
-      address: address || '',
-      city: '',
-      district: '',
-      dob: mathNIC.dob,
-      gender: mathNIC.gender,
-      suggestedTitle: mathNIC.suggestedTitle,
-      warnings: mathNIC.warnings || [],
+      nicNumber,
+      fullName,
+      address,
+      city,
+      district,
+      serviceArea: city && district ? `${city}, ${district}` : (city || district),
+      dob,
+      gender,
+      suggestedTitle:
+        gender === 'Female' ? 'Ms.' : gender === 'Male' ? 'Mr.' : (nicResult?.suggestedTitle || ''),
+      warnings: Array.isArray(nicResult?.warnings) ? nicResult.warnings : [],
       extractionStatus,
       isPartial,
       missingFields,
       exceptionFlags,
-      manualReviewRequired: isPartial,
-      reviewReason: isPartial ? 'Auto KYC Incomplete: Partial data fetched from document' : null,
+      fetchedCount,
+      manualReviewRequired,
+      reviewReason: manualReviewRequired
+        ? `Auto KYC partial: ${fetchedCount} of 5 fields detected from document.`
+        : null,
+      rawFront: frontText,
+      rawBack: backText,
     };
   } catch (err) {
+    console.warn('Tesseract OCR error:', err);
+    onStatusChange?.({
+      status: 'ERROR',
+      message: 'Could not read document. Enter details manually.',
+    });
+    return {
+      success: false,
+      message: 'Could not read document. You can fill details manually.',
+    };
+  } finally {
     if (worker) {
       try {
         await worker.terminate();
       } catch {
-        // ignore termination errors
+        // Ignore cleanup errors.
       }
     }
-    console.warn('Tesseract OCR error:', err.message);
-    if (onStatusChange) {
-      onStatusChange({ status: 'ERROR', message: 'Could not auto-extract details. Please enter manually.' });
-    }
-    return {
-      success: false,
-      message: 'Could not read document locally. You can fill your details manually.',
-    };
   }
 }

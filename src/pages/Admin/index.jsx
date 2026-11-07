@@ -12,11 +12,14 @@ import ReportsAnalyticsPage from './pages/ReportsAnalyticsPage';
 import UserPrivilegesPage from './pages/UserPrivilegesPage';
 import UserManagementPage from './pages/UserManagementPage';
 import AuditLogsPage from './pages/AuditLogsPage';
+import SalesOfficerManagementPage from './pages/SalesOfficerManagementPage';
+import SalesOfficerDashboardPage from './pages/SalesOfficerDashboardPage';
+import LeadManagementPage from './pages/LeadManagementPage';
 import './admin.css';
 
 function getPageFromPath(pathname) {
   const segment = pathname.replace(/\/$/, '').split('/').pop();
-  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'audit-logs'];
+  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'];
   if (known.includes(segment)) {
     return segment === 'applications' ? 'forms' : segment;
   }
@@ -55,8 +58,13 @@ function AdminDashboardContent() {
   };
 
   // Render correct page view
+  // Sales Officers only have access to their own dashboard; every other admin
+  // page calls staff/admin APIs that answer 403 for them.
+  const isSalesOfficer = /^sales\s*officer$/i.test((admin.role || '').trim());
+  const effectivePage = isSalesOfficer ? 'so-dashboard' : activePage;
+
   const renderActivePage = () => {
-    switch (activePage) {
+    switch (effectivePage) {
       case 'dashboard':
         return <AdminDashboardPage />;
       case 'forms':
@@ -75,6 +83,12 @@ function AdminDashboardContent() {
         return <UserManagementPage />;
       case 'audit-logs':
         return <AuditLogsPage />;
+      case 'sales-officers':
+        return <SalesOfficerManagementPage />;
+      case 'so-dashboard':
+        return <SalesOfficerDashboardPage />;
+      case 'leads':
+        return <LeadManagementPage />;
       default:
         return <AdminDashboardPage />;
     }
@@ -82,7 +96,7 @@ function AdminDashboardContent() {
 
   return (
     <AdminLayout
-      activePage={activePage}
+      activePage={effectivePage}
       setActivePage={handleSetActivePage}
       onSelectForm={handleSelectForm}
       activeFormId={selectedFormId}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -80,6 +80,21 @@ const RequireAuth = ({ children }) => {
     );
   }
   return children;
+};
+
+/**
+ * Captures a Sales Officer QR token (?salesRef=) on whichever page the
+ * customer lands, so auth redirects or refreshes can't drop the attribution.
+ */
+const SalesRefCapture = () => {
+  const { search } = useLocation();
+  useEffect(() => {
+    const ref = new URLSearchParams(search).get('salesRef');
+    if (ref) {
+      try { sessionStorage.setItem('so_sales_ref', ref); } catch { /* storage unavailable */ }
+    }
+  }, [search]);
+  return null;
 };
 
 const AnimatedRoutes = () => {
@@ -376,6 +391,7 @@ function App() {
         <AdminAuthProvider>
           <SessionTimeoutHandler />
           <NavigationLayout>
+            <SalesRefCapture />
             <AnimatedRoutes />
           </NavigationLayout>
         </AdminAuthProvider>

@@ -74,6 +74,51 @@ export function Sparkline({ data, color = 'var(--blue)', height = 44, label }) {
   );
 }
 
+// 1 … 4 5 [6] 7 8 … 23 — never more than seven page buttons.
+function pageWindow(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = new Set([1, total, current - 1, current, current + 1]);
+  if (current <= 3) [2, 3, 4].forEach((p) => pages.add(p));
+  if (current >= total - 2) [total - 3, total - 2, total - 1].forEach((p) => pages.add(p));
+  const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
+  const out = [];
+  sorted.forEach((p, i) => {
+    if (i && p - sorted[i - 1] > 1) out.push(`gap-${p}`);
+    out.push(p);
+  });
+  return out;
+}
+
+// Numbered pagination shared by the admin tables. `info` is the text on the left.
+export function Pager({ page, totalPages, onChange, info, disabled = false, label = 'Pages' }) {
+  if (!totalPages || totalPages < 1) return null;
+  return (
+    <nav className="ax-pager" aria-label={label}>
+      <span className="ax-pager-info">{info ?? `Page ${page} of ${totalPages}`}</span>
+      {totalPages > 1 && (
+        <div className="ax-pager-buttons">
+          <button type="button" className="ax-pager-btn" disabled={disabled || page <= 1} onClick={() => onChange(page - 1)} aria-label="Previous page">‹</button>
+          {pageWindow(page, totalPages).map((item) => (typeof item === 'string' ? (
+            <span className="ax-pager-gap" key={item}>…</span>
+          ) : (
+            <button
+              type="button"
+              key={item}
+              className={`ax-pager-btn${item === page ? ' active' : ''}`}
+              aria-current={item === page ? 'page' : undefined}
+              disabled={disabled}
+              onClick={() => onChange(item)}
+            >
+              {item}
+            </button>
+          )))}
+          <button type="button" className="ax-pager-btn" disabled={disabled || page >= totalPages} onClick={() => onChange(page + 1)} aria-label="Next page">›</button>
+        </div>
+      )}
+    </nav>
+  );
+}
+
 // Relative "x ago" label for timestamps in tables.
 export function timeAgo(value) {
   if (!value) return '';

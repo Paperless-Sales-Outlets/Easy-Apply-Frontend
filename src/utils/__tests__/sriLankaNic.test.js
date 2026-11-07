@@ -254,6 +254,13 @@ describe('extractNICFromText', () => {
   test('skips a candidate that is the wrong length', () => {
     assert.equal(extractNICFromText('1234567890123456', opts), null);
   });
+
+  test('matches expectedNIC with 1-digit OCR confusion (e.g. 4445 vs 4449)', () => {
+    const res = extractNICFromText('ID: 200210104445', { ...opts, expectedNIC: '200210104449' });
+    assert.ok(res);
+    assert.equal(res.nic, '200210104449');
+    assert.equal(res.repaired, true);
+  });
 });
 
 describe('backwards compatibility', () => {
