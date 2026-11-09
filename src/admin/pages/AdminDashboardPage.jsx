@@ -374,7 +374,7 @@ export default function AdminDashboardPage() {
     if (silent) setRefreshing(true); else setLoading(true);
 
     try {
-      const res = await getApplications({ limit: 200, sortBy: 'createdAt', sortOrder: 'desc' });
+      const res = await getApplications({ limit: 200, sortBy: 'createdAt', sortOrder: 'desc', lite: true });
       const apps = (res.applications || []).map(normalizeApplication);
       setStats(deriveStatsFromApplications(apps));
       setTodayDistribution(deriveTodayDistribution(apps));
