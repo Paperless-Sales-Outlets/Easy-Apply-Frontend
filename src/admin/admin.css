@@ -8796,6 +8796,7 @@ select.um-input.valid {
 .lm-detail-modal.ax-modal { max-width: 900px; }
 
 .lmx-summary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.6rem; margin-bottom: 1.35rem; }
+.lmx-summary--draft { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 .lmx-summary-item {
   display: flex;
@@ -9155,6 +9156,7 @@ span.alog-caret { cursor: inherit; }
 @media (max-width: 1100px) {
   .rpt-chart-grid { grid-template-columns: 1fr; }
   .lmx-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lmx-summary--draft { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 820px) {
@@ -9640,3 +9642,16 @@ span.alog-caret { cursor: inherit; }
   border-top: 1px solid var(--line);
   background: #fbfcfe;
 }
+
+/* Global zebra striping for every admin table: white / light blue rows so
+   wide data sets stay easy to scan. Special-state rows are re-asserted below
+   so warnings, selections and audit group headers keep their own colours. */
+.admin-page table tbody tr:nth-child(odd) { background: #ffffff; }
+.admin-page table tbody tr:nth-child(even) { background: #eef4fd; }
+.admin-page table tbody tr:hover { background: #dbe8fb; }
+
+.admin-page table tbody tr.lm-row-blocked:not(:hover) { background: rgba(196, 55, 44, 0.035); }
+.admin-page .kycv-table tbody tr.selected:not(:hover) { background: #eaf2fd; }
+.admin-page table tbody tr.alog-day-row,
+.admin-page table tbody tr.alog-day-row:hover { background: transparent; }
+.admin-page table tbody tr.alog-row.is-open:not(:hover) { background: #f3f7fd; }
