@@ -10,7 +10,7 @@ import PaymentStep from '../PaymentStep';
 import { useTranslation } from 'react-i18next';
 import api, { clearSessionCart } from '../../../shared/utils/api';
 import { useVerifiedMobile } from '../../components/verification';
-import { getAuthUser } from '../../../shared/utils/authSession';
+import { getAuthUser, getVerifiedEmail } from '../../../shared/utils/authSession';
 import {
   getDraft,
   saveDraft,
@@ -346,6 +346,7 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
           const { formData: data, selectedProduct: product, stepIndex: index } = latest.current;
           const fields = { ...data };
           PHOTO_FIELDS.forEach((field) => delete fields[field]);
+          delete fields.consentsAccepted; // consents live in ConsentHub only, never in saved drafts
 
           formDirty.current = false;
           const res = await saveDraft({
@@ -928,6 +929,8 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
         serviceType: 'new-connection',
         // Pass the tracking token at the top level so the backend picks it up
         ...(salesRef ? { salesRef } : {}),
+        // The contact email, when it is the one verified at sign-in (sent on to ConsentHub with the consents)
+        verifiedEmail: formData.email && getVerifiedEmail() === String(formData.email).trim().toLowerCase() ? getVerifiedEmail() : '',
         formData: {
           ...formData,
           nic,
