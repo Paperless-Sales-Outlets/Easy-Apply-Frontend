@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatDate, formatDateTime } from '../utils/leadUtils';
+import { formatDateTime } from '../utils/leadUtils';
 import { getFormSections } from '../utils/formDataSchema';
 
 const ICON_ALERT = (
@@ -88,7 +88,7 @@ export default function DraftDetailModal({ draft, loading, error, onClose }) {
                 </div>
               </div>
 
-              <div className="lmx-summary">
+              <div className="lmx-summary lmx-summary--draft">
                 <div className="lmx-summary-item">
                   <span>Status</span>
                   <span className={`lm-pill lm-pill--${draft.isExpired ? 'bad' : 'info'}`}>
@@ -102,15 +102,11 @@ export default function DraftDetailModal({ draft, loading, error, onClose }) {
                 </div>
                 <div className="lmx-summary-item">
                   <span>Started</span>
-                  <strong>{formatDate(draft.createdAt)}</strong>
+                  <strong>{formatDateTime(draft.createdAt)}</strong>
                 </div>
                 <div className="lmx-summary-item">
                   <span>Last activity</span>
                   <strong>{formatDateTime(draft.updatedAt)}</strong>
-                </div>
-                <div className="lmx-summary-item">
-                  <span>{draft.isExpired ? 'Expired on' : 'Resume until'}</span>
-                  <strong>{formatDate(draft.isExpired ? draft.expiredAt : draft.resumeUntil)}</strong>
                 </div>
               </div>
 
