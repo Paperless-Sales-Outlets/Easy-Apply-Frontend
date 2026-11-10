@@ -89,10 +89,6 @@ const NAV_ICONS = {
   ),
 };
 
-// Modules not used in this portal any more — hidden from the sidebar only.
-// (User Privileges is managed from User Management → Privileges.)
-const HIDDEN_NAV_KEYS = new Set(['appointments', 'technician']);
-
 // Every sidebar entry, keyed by page. Module entries come from MODULE_ACCESS.
 const NAV_BY_KEY = {
   ...Object.fromEntries(MODULE_ACCESS.map((item) => [item.key, { ...item, icon: NAV_ICONS[item.key] }])),
@@ -114,7 +110,7 @@ const NAV_ITEMS = [
   ...Object.keys(NAV_BY_KEY).filter((key) => !NAV_ORDER.includes(key) && !NAV_LAST.includes(key)),
   ...NAV_LAST,
 ]
-  .filter((key) => NAV_BY_KEY[key] && !HIDDEN_NAV_KEYS.has(key))
+  .filter((key) => NAV_BY_KEY[key])
   .map((key) => NAV_BY_KEY[key]);
 
 const SHORT_FORM_LABELS = {

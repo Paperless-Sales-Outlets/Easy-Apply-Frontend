@@ -575,6 +575,7 @@
   padding: 1rem 1.25rem;
   display: grid;
   grid-template-columns: auto 1fr auto auto;
+  grid-template-areas: "time info meta tech";
   gap: 0.75rem 1.25rem;
   align-items: center;
   box-shadow: 0 1px 4px rgba(11,45,91,0.05);

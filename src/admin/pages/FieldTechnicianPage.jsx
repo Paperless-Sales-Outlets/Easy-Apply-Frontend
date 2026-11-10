@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
 import { getMyJobs, updateMyJobStatus } from '../services/adminService';
+import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
 import { SERVICE_LABELS } from '../utils/applicationUtils';
 
 /** A field technician's list of daily installation jobs. */
@@ -8,6 +8,7 @@ export default function FieldTechnicianPage() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const notice = useAdminNotice();
 
   useEffect(() => {
     setLoading(true);
@@ -21,9 +22,9 @@ export default function FieldTechnicianPage() {
     try {
       await updateMyJobStatus(jobId, newStatus);
       setJobs(prev => prev.map(job => (job.id === jobId ? { ...job, status: newStatus } : job)));
-      toast.success(`Job marked as ${newStatus}`);
+      notice.success(`Job marked as ${newStatus}.`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update status');
+      notice.error(err.response?.data?.message || 'Failed to update status');
     }
   };
 
@@ -43,6 +44,7 @@ export default function FieldTechnicianPage() {
       </div>
 
       {error && <div className="admin-error-banner">{error}</div>}
+      <AdminNotice notice={notice.notice} onDismiss={notice.dismiss} />
 
       <div className="tech-job-list">
         {loading ? (

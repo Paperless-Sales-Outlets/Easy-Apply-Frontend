@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import toast from 'react-hot-toast';
 import {
   getAppointments,
   getTechnicians,
   assignTechnician,
 } from '../services/adminService';
+import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
 import { SERVICE_LABELS } from '../utils/applicationUtils';
 
 const STATUS_COLORS = {
@@ -36,6 +36,7 @@ export default function AppointmentsCalendarPage() {
   const [technicians, setTechnicians] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const notice = useAdminNotice();
 
   const fetchAppointments = useCallback(async (date) => {
     setLoading(true);
@@ -76,9 +77,9 @@ export default function AppointmentsCalendarPage() {
             : apt
         )
       );
-      toast.success(techId ? 'Technician assigned' : 'Technician unassigned');
+      notice.success(techId ? 'Technician assigned.' : 'Technician unassigned.');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to assign technician');
+      notice.error(err.response?.data?.message || 'Failed to assign technician');
     }
   };
 
@@ -92,6 +93,7 @@ export default function AppointmentsCalendarPage() {
       </div>
 
       {error && <div className="admin-error-banner">{error}</div>}
+      <AdminNotice notice={notice.notice} onDismiss={notice.dismiss} />
 
       {/* ── Date Navigation ── */}
       <div className="apt-calendar-header card" style={{ padding: '1rem 1.25rem', backgroundColor: 'var(--surface)', border: '1px solid var(--line)', marginBottom: '1.5rem' }}>

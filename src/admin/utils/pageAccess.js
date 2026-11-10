@@ -4,7 +4,7 @@
 const ADMIN_ONLY_PAGES = new Set(['users', 'sales-officers', 'audit-logs', 'privileges']);
 
 // Where an account lands when the page it asked for is not available to it.
-const LANDING_PAGES = ['so-dashboard', 'dashboard', 'leads', 'kyc', 'forms', 'analytics', 'users'];
+const LANDING_PAGES = ['so-dashboard', 'dashboard', 'leads', 'kyc', 'forms', 'analytics', 'appointments', 'technician', 'users'];
 
 const roleIs = (account, pattern) => pattern.test(String(account?.role || '').trim());
 
