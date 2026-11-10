@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { MODULE_ACCESS } from '../data/dummyData';
 import { FORM_TYPES } from '../utils/applicationUtils';
+import { canOpenPage } from '../utils/pageAccess';
 import sltLogo from '../../assets/slt-logo.png';
 import PasskeyManagementModal from './PasskeyManagementModal';
 
@@ -95,12 +96,12 @@ const HIDDEN_NAV_KEYS = new Set(['appointments', 'technician']);
 // Every sidebar entry, keyed by page. Module entries come from MODULE_ACCESS.
 const NAV_BY_KEY = {
   ...Object.fromEntries(MODULE_ACCESS.map((item) => [item.key, { ...item, icon: NAV_ICONS[item.key] }])),
-  users: { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
+  users: { key: 'users', label: 'User Management', icon: NAV_ICONS.users },
   // Sales Officer Management — Admin can manage all officers + their QR codes
-  'sales-officers': { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'], roles: ['Admin'] },
-  'audit-logs': { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
+  'sales-officers': { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'] },
+  'audit-logs': { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'] },
   // Sales Officer personal dashboard — visible only to Sales Officer role
-  'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'], roles: ['Sales Officer'] },
+  'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'] },
 };
 
 // Sidebar order. A module that is not listed here (e.g. a new one) still shows,
@@ -131,10 +132,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [passkeyModalOpen, setPasskeyModalOpen] = useState(false);
 
-  // Match roles case-insensitively so 'Sales Officer' and 'sales officer' both work
-  const visibleNav = NAV_ITEMS.filter(item =>
-    item.roles.some(r => r.toLowerCase() === (admin?.role || 'Admin').toLowerCase())
-  );
+  const visibleNav = NAV_ITEMS.filter(item => canOpenPage(admin, item.key));
 
   const handleNavClick = (item) => {
     if (item.key === 'forms') {

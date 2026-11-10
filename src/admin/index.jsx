@@ -15,6 +15,7 @@ import AuditLogsPage from './pages/AuditLogsPage';
 import SalesOfficerManagementPage from './pages/SalesOfficerManagementPage';
 import SalesOfficerDashboardPage from './pages/SalesOfficerDashboardPage';
 import LeadManagementPage from './pages/LeadManagementPage';
+import { canOpenPage, landingPage } from './utils/pageAccess';
 import './admin.css';
 
 function getPageFromPath(pathname) {
@@ -57,11 +58,8 @@ function AdminDashboardContent() {
     handleSetActivePage('forms');
   };
 
-  // Render correct page view
-  // Sales Officers only have access to their own dashboard; every other admin
-  // page calls staff/admin APIs that answer 403 for them.
-  const isSalesOfficer = /^sales\s*officer$/i.test((admin.role || '').trim());
-  const effectivePage = isSalesOfficer ? 'so-dashboard' : activePage;
+  // A page this account has no privilege for falls back to its first allowed one.
+  const effectivePage = canOpenPage(admin, activePage) ? activePage : landingPage(admin);
 
   const renderActivePage = () => {
     switch (effectivePage) {
@@ -89,6 +87,14 @@ function AdminDashboardContent() {
         return <SalesOfficerDashboardPage />;
       case 'leads':
         return <LeadManagementPage />;
+      case null:
+        return (
+          <div className="admin-notice admin-notice-info" role="status">
+            <span className="admin-notice-text">
+              Your account has no modules assigned yet. Ask an administrator to update your role in User Management.
+            </span>
+          </div>
+        );
       default:
         return <AdminDashboardPage />;
     }
