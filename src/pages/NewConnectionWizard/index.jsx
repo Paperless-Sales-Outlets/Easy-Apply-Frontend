@@ -17,11 +17,7 @@ import {
   saveDraftPhoto,
   deleteDraft,
   hasDraftAccess,
-  isDraftExpiredError,
-  draftDaysLeft,
-  formatDraftDate,
   DRAFT_ACCESS_EVENT,
-  DRAFT_EXPIRY_WARNING_DAYS,
   NO_DRAFT_ACCESS,
   readLegacyDraft,
   clearLegacyDrafts,
@@ -119,13 +115,6 @@ const signatureComplete = (data) =>
 // Fields filled in automatically rather than by the customer, ignored when
 // deciding whether an old browser-saved draft holds any real progress.
 const AUTO_FILLED_FIELDS = ['mobileNumber', 'otherBroadbandPackage'];
-
-// Remembers which expired application the customer has already been told
-// about, so the "your previous application expired" notice shows only once.
-const EXPIRY_NOTICE_KEY = 'draftExpiryNoticeSeen';
-
-const expiredMessage = (expiredOn) =>
-  `Your saved application ${expiredOn ? `expired on ${formatDraftDate(expiredOn)}` : 'passed its 30-day limit'} and can no longer be continued. Please start a new application.`;
 
 const hasCustomerInput = (data) =>
   Object.keys(data || {}).some(
@@ -233,31 +222,16 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
   const photoInFlight = useRef(null);
   const wakeRetry = useRef(null);
 
-  // The saved draft being edited (none until the first save creates one) and
-  // the last moment it can be continued: 30 days from when it was started.
+  // The saved draft being edited (none until the first save creates one).
   const draftIdRef = useRef(null);
-  const resumeUntilRef = useRef(null);
-  const [resumeUntil, setResumeUntil] = useState(null);
-  // Server clock minus this device's clock, so the limit is judged by server time.
-  const clockOffset = useRef(0);
 
   const rememberDraft = (info, serverTime) => {
     if (info?.id) draftIdRef.current = info.id;
-    if (info?.resumeUntil) {
-      resumeUntilRef.current = info.resumeUntil;
-      setResumeUntil(info.resumeUntil);
-    }
-    if (serverTime) clockOffset.current = new Date(serverTime).getTime() - Date.now();
+    void serverTime;
   };
-
-  const isPastResumeLimit = () =>
-    Boolean(resumeUntilRef.current)
-    && Date.now() + clockOffset.current >= new Date(resumeUntilRef.current).getTime();
 
   const forgetDraft = () => {
     draftIdRef.current = null;
-    resumeUntilRef.current = null;
-    setResumeUntil(null);
   };
 
   // 'idle' | 'saving' | 'saved' | 'error', shown beside the buttons.
@@ -340,11 +314,6 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
         do {
           formSaveQueued.current = false;
           if (draftClosed.current) break;
-          if (isPastResumeLimit()) {
-            handleDraftExpired(resumeUntilRef.current);
-            break;
-          }
-
           const { formData: data, selectedProduct: product, stepIndex: index } = latest.current;
           const fields = { ...data };
           PHOTO_FIELDS.forEach((field) => delete fields[field]);
@@ -364,11 +333,6 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
           finishLegacyMove();
         } while (formSaveQueued.current);
       } catch (err) {
-        // Past the 30-day limit: can't be continued; start a fresh application.
-        if (isDraftExpiredError(err)) {
-          handleDraftExpired(err.response?.data?.expiredOn);
-          return;
-        }
         formDirty.current = true;
         formFailures.current += 1;
         console.warn('Could not save application progress:', err?.response?.data?.message || err.message);
@@ -404,10 +368,6 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
       try {
         let pending = photosPending();
         while (!draftClosed.current && pending.length > 0) {
-          if (isPastResumeLimit()) {
-            handleDraftExpired(resumeUntilRef.current);
-            break;
-          }
           const field = pending[0];
           const value = photoValue(field);
           try {
@@ -417,11 +377,6 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
             hasSaved.current = true;
             attempt = 0;
           } catch (err) {
-            // Past the 30-day limit: stop; a fresh application is started.
-            if (isDraftExpiredError(err)) {
-              handleDraftExpired(err.response?.data?.expiredOn);
-              break;
-            }
             console.warn(`Could not save ${field}:`, err?.response?.data?.message || err.message);
             // No valid token: stop; the sign-in prompt takes over.
             if (isAccessError(err)) break;
@@ -462,11 +417,10 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
     const restore = async () => {
       let draft = null;
       let fromLegacy = false;
-      let expiredInfo = null;
       let serverTime = null;
 
       try {
-        ({ draft, expired: expiredInfo, serverTime } = await getDraft());
+        ({ draft, serverTime } = await getDraft());
       } catch (err) {
         console.warn('Could not load saved application progress:', err?.response?.data?.message || err.message);
       }
@@ -557,15 +511,6 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
           navigate('/new-connection?step=location', { replace: true, state: location.state });
         }
 
-        // Their previous application passed its 30 days: say so, once.
-        if (expiredInfo?.id) {
-          let alreadyTold = false;
-          try { alreadyTold = localStorage.getItem(EXPIRY_NOTICE_KEY) === String(expiredInfo.id); } catch { /* ignore */ }
-          if (!alreadyTold) {
-            toast(expiredMessage(expiredInfo.expiredOn), { id: 'draft-expired', duration: 7000, icon: 'ℹ️' });
-            try { localStorage.setItem(EXPIRY_NOTICE_KEY, String(expiredInfo.id)); } catch { /* ignore */ }
-          }
-        }
       }
 
       setDraftRestored(true);
@@ -685,36 +630,6 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
       startFresh();
       toast.success('Application form reset.');
     }
-  };
-
-  // The application passed its 30-day limit while being worked on. It can no
-  // longer be continued (the server keeps it on record, marked expired), so
-  // start a fresh form; the next change the customer makes starts a new one.
-  const handleDraftExpired = (expiredOn) => {
-    if (draftClosed.current) return;
-    draftClosed.current = true;
-    if (formTimer.current) clearTimeout(formTimer.current);
-    if (formRetryTimer.current) clearTimeout(formRetryTimer.current);
-    formTimer.current = null;
-    formRetryTimer.current = null;
-    if (wakeRetry.current) wakeRetry.current();
-
-    userEdited.current = false;
-    formDirty.current = false;
-    formFailures.current = 0;
-    formFailed.current = false;
-    savedPhotos.current = {};
-    photoGaveUp.current = {};
-    hasSaved.current = false;
-    forgetDraft();
-    setSaveStatus('idle');
-    startFresh();
-    toast(expiredMessage(expiredOn), { id: 'draft-expired', duration: 7000, icon: 'ℹ️' });
-
-    // Saving resumes once any request still on its way has finished.
-    Promise.allSettled([formSaveInFlight.current, photoInFlight.current]).then(() => {
-      draftClosed.current = false;
-    });
   };
 
   useEffect(() => {
@@ -1170,13 +1085,6 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
               >
                 {saveStatus === 'saving' && 'Saving…'}
                 {saveStatus === 'saved' && '✓ All changes saved'}
-                {saveStatus === 'saved' && resumeUntil && (() => {
-                  const daysLeft = draftDaysLeft(resumeUntil, new Date(Date.now() + clockOffset.current));
-                  if (daysLeft !== null && daysLeft <= DRAFT_EXPIRY_WARNING_DAYS) {
-                    return ` · Expires ${daysLeft <= 1 ? 'within 24 hours' : `in ${daysLeft} days`} (${formatDraftDate(resumeUntil)})`;
-                  }
-                  return ` · Saved until ${formatDraftDate(resumeUntil)}`;
-                })()}
                 {saveStatus === 'error' && '⚠ Some changes aren’t saved yet'}
               </span>
             )}
