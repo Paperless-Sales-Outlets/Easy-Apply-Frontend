@@ -5,6 +5,7 @@ import {
   renderQrToCanvas,
   downloadBrandedQrPng,
   createOrGetOfficerQr,
+  getMyQr,
 } from '../services/salesOfficerService';
 
 const ICON_COPY = (
@@ -39,12 +40,17 @@ const ICON_LINK = (
 
 const initials = (name) => (name || '').split(' ').filter(Boolean).map((n) => n[0]).slice(0, 2).join('').toUpperCase() || '?';
 
-/** Shows a sales officer's referral QR code with download and regenerate options. */
+/**
+ * Shows a sales officer's referral QR code with download and regenerate options.
+ * With `ownQr`, the signed-in officer is viewing their own code, so it loads
+ * through their own endpoint and cannot be regenerated.
+ */
 export default function QrCodeModal({
   isOpen,
   onClose,
   officer,
   onOfficerUpdated,
+  ownQr = false,
 }) {
   const canvasRef = useRef(null);
   const [downloading, setDownloading] = useState(false);
@@ -52,25 +58,27 @@ export default function QrCodeModal({
   const [confirmRegenerate, setConfirmRegenerate] = useState(false);
   const [copied, setCopied] = useState(false);
   const [qrData, setQrData] = useState(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const qrNotice = useAdminNotice(4000);
 
   useEffect(() => {
     setConfirmRegenerate(false);
+    setLoadFailed(false);
     if (!isOpen || !officer) {
       setQrData(null);
       return;
     }
 
     // If officer already has QR data attached, use it
-    if (officer.qr?.hasQr && officer.qr?.qrUrl) {
+    if (officer.qr?.qrUrl) {
       setQrData(officer.qr);
     } else {
       // Otherwise fetch or generate it
       (async () => {
         try {
-          const res = await createOrGetOfficerQr(officer.employeeNumber || officer.id, {
-            regenerate: false,
-          });
+          const res = ownQr
+            ? await getMyQr()
+            : await createOrGetOfficerQr(officer.employeeNumber || officer.id, { regenerate: false });
           if (res.qr) {
             setQrData(res.qr);
             onOfficerUpdated?.({
@@ -80,6 +88,7 @@ export default function QrCodeModal({
           }
         } catch (err) {
           console.error('Failed to load QR code for officer:', err);
+          setLoadFailed(true);
           qrNotice.error(err.response?.data?.message || 'Could not load QR code');
         }
       })();
@@ -203,8 +212,8 @@ export default function QrCodeModal({
                 <canvas ref={canvasRef} className="qrm-qr-canvas" aria-label={`QR code for ${officerName}`} />
               ) : (
                 <div className="qrm-qr-placeholder">
-                  <span className="dash-skeleton" />
-                  <small>Preparing QR code…</small>
+                  {!loadFailed && <span className="dash-skeleton" />}
+                  <small>{loadFailed ? 'QR code could not be loaded. Close this and try again.' : 'Preparing QR code…'}</small>
                 </div>
               )}
             </div>
@@ -231,7 +240,7 @@ export default function QrCodeModal({
           <div className="qrm-link">
             <label htmlFor="qrm-link-input">{ICON_LINK} Tracking link</label>
             <div className="qrm-link-row">
-              <input id="qrm-link-input" type="text" readOnly value={trackingUrl} placeholder="Generating…" onFocus={(e) => e.target.select()} />
+              <input id="qrm-link-input" type="text" readOnly value={trackingUrl} placeholder={loadFailed ? 'Not available' : 'Generating…'} onFocus={(e) => e.target.select()} />
               <button type="button" className={`qrm-copy${copied ? ' is-copied' : ''}`} onClick={handleCopyLink} disabled={!trackingUrl}>
                 {copied ? ICON_CHECK : ICON_COPY}
                 {copied ? 'Copied' : 'Copy'}
@@ -253,16 +262,18 @@ export default function QrCodeModal({
           )}
         </div>
 
-        <div className="ax-modal-foot ax-modal-foot--split">
-          <button
-            type="button"
-            className="admin-btn ghost qrm-regen-btn"
-            onClick={() => setConfirmRegenerate(true)}
-            disabled={regenerating || confirmRegenerate || !trackingUrl}
-          >
-            <span className={regenerating ? 'qrm-spin' : ''}>{ICON_REFRESH}</span>
-            {regenerating ? 'Regenerating…' : 'Regenerate'}
-          </button>
+        <div className={`ax-modal-foot${ownQr ? '' : ' ax-modal-foot--split'}`}>
+          {!ownQr && (
+            <button
+              type="button"
+              className="admin-btn ghost qrm-regen-btn"
+              onClick={() => setConfirmRegenerate(true)}
+              disabled={regenerating || confirmRegenerate || !trackingUrl}
+            >
+              <span className={regenerating ? 'qrm-spin' : ''}>{ICON_REFRESH}</span>
+              {regenerating ? 'Regenerating…' : 'Regenerate'}
+            </button>
+          )}
           <div className="ax-modal-foot-group">
             <button type="button" className="admin-btn ghost" onClick={onClose} disabled={regenerating}>Close</button>
             <button type="button" className="admin-btn primary ax-btn-brand" onClick={handleDownload} disabled={downloading || !trackingUrl}>

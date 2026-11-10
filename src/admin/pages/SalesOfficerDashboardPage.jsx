@@ -845,6 +845,7 @@ export default function SalesOfficerDashboardPage() {
 
       {/* ── QR Code Preview Modal ── */}
       <QrCodeModal
+        ownQr
         isOpen={qrModalOpen}
         onClose={() => setQrModalOpen(false)}
         officer={{
