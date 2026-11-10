@@ -8553,6 +8553,7 @@ select.um-input.valid {
 .qrm-qr-caption { margin: 0 0 1rem; font-size: 0.87rem; line-height: 1.55; color: var(--text); }
 
 .qrm-qr-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+.qrm-qr-stats.is-single { grid-template-columns: minmax(0, 1fr); }
 .qrm-qr-stat { min-width: 0; padding: 0.6rem 0.7rem; border-radius: 12px; border: 1px solid #e3ebf6; background: #f5f8fc; }
 .qrm-qr-stat span { display: block; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .qrm-qr-stat strong { display: block; margin-top: 0.15rem; overflow: hidden; font-size: 0.88rem; color: var(--navy); white-space: nowrap; text-overflow: ellipsis; }

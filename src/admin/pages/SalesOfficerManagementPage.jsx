@@ -9,7 +9,7 @@ import {
 import QrCodeModal from '../components/QrCodeModal';
 import AddSalesOfficerModal from '../components/AddSalesOfficerModal';
 import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
-import { AnimatedNumber, timeAgo } from '../components/AdminVisuals';
+import { AnimatedNumber } from '../components/AdminVisuals';
 import { statusBadgeClass, statusLabel, formatDate, formatDateOnly } from '../utils/applicationUtils';
 
 const ICON_QR = (
@@ -28,12 +28,6 @@ const ICON_USERS = (
 const ICON_ACTIVE = (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
-  </svg>
-);
-
-const ICON_SCAN = (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10" />
   </svg>
 );
 
@@ -339,9 +333,9 @@ export default function SalesOfficerManagementPage() {
     const total = officers.length;
     const active = officers.filter((o) => o.isActive !== false).length;
     const withQr = officers.filter((o) => o.qr?.hasQr).length;
-    const totalScans = officers.reduce((sum, o) => sum + (o.qr?.scansCount || 0), 0);
-    const maxScans = officers.reduce((max, o) => Math.max(max, o.qr?.scansCount || 0), 0);
-    return { total, active, withQr, totalScans, maxScans };
+    const totalApplications = officers.reduce((sum, o) => sum + (o.applicationCount || 0), 0);
+    const maxApplications = officers.reduce((max, o) => Math.max(max, o.applicationCount || 0), 0);
+    return { total, active, withQr, totalApplications, maxApplications };
   }, [officers]);
 
   const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
@@ -350,7 +344,7 @@ export default function SalesOfficerManagementPage() {
     { key: 'total', cls: 'total', icon: ICON_USERS, label: 'Sales officers', value: metrics.total, foot: `${metrics.total - metrics.active} inactive` },
     { key: 'active', cls: 'active', icon: ICON_ACTIVE, label: 'Active accounts', value: metrics.active, meter: pct(metrics.active, metrics.total), foot: 'Ready for attribution' },
     { key: 'qr', cls: 'roles', icon: ICON_QR, label: 'QR codes generated', value: metrics.withQr, suffix: ` / ${metrics.total}`, meter: pct(metrics.withQr, metrics.total), foot: `${pct(metrics.withQr, metrics.total)}% coverage` },
-    { key: 'scans', cls: 'scans', icon: ICON_SCAN, label: 'Total QR scans', value: metrics.totalScans, foot: 'Across every officer code' },
+    { key: 'applications', cls: 'collected', icon: ICON_CHART, label: 'Applications credited', value: metrics.totalApplications, foot: 'Across every officer code' },
   ];
 
   const hasFilters = Boolean(searchQuery || statusFilter !== 'all' || qrFilter !== 'all');
@@ -604,7 +598,7 @@ export default function SalesOfficerManagementPage() {
                   <th>Employee no.</th>
                   <th>Account</th>
                   <th>QR code</th>
-                  <th>Scans</th>
+                  <th>Applications</th>
                   <th className="qrm-actions-head">Actions</th>
                 </tr>
               </thead>
@@ -612,7 +606,7 @@ export default function SalesOfficerManagementPage() {
                 {filteredOfficers.map((officer) => {
                   const empId = officer.employeeNumber || officer.employeeId || 'N/A';
                   const hasQr = officer.qr?.hasQr === true;
-                  const scans = officer.qr?.scansCount || 0;
+                  const applications = officer.applicationCount || 0;
                   const isBusy = generatingForId === officerKey(officer);
                   const active = officer.isActive !== false;
 
@@ -651,10 +645,10 @@ export default function SalesOfficerManagementPage() {
                         )}
                       </td>
                       <td>
-                        <div className="qrm-scans" title={officer.qr?.lastScannedAt ? `Last scanned ${timeAgo(officer.qr.lastScannedAt)}` : 'Never scanned'}>
-                          <span className={`qrm-scans-value${scans ? '' : ' is-zero'}`}>{scans}</span>
+                        <div className="qrm-scans" title={`${applications} application${applications === 1 ? '' : 's'} credited to this officer`}>
+                          <span className={`qrm-scans-value${applications ? '' : ' is-zero'}`}>{applications}</span>
                           <span className="qrm-scans-track" aria-hidden="true">
-                            <span style={{ width: `${metrics.maxScans ? Math.max(scans ? 6 : 0, (scans / metrics.maxScans) * 100) : 0}%` }} />
+                            <span style={{ width: `${metrics.maxApplications ? Math.max(applications ? 6 : 0, (applications / metrics.maxApplications) * 100) : 0}%` }} />
                           </span>
                         </div>
                       </td>

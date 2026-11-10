@@ -514,9 +514,6 @@ export default function SalesOfficerDashboardPage() {
               <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0b2d5b' }}>
                 ID: {officerEmployeeNumber}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600 }}>
-                {qrRecord?.scansCount || 0} customer scans
-              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '6px' }}>

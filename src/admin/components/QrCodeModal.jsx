@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import AdminNotice, { useAdminNotice } from './AdminNotice';
-import { timeAgo } from './AdminVisuals';
 import {
   renderQrToCanvas,
   downloadBrandedQrPng,
@@ -121,9 +120,6 @@ export default function QrCodeModal({
   const employeeNumber = officer.employeeNumber || officer.employeeId || 'N/A';
   const officerName = officer.name || 'Sales Officer';
   const trackingUrl = qrData?.qrUrl || '';
-  const scansCount = qrData?.scansCount || 0;
-  const lastScanned = qrData?.lastScannedAt ? timeAgo(qrData.lastScannedAt) : 'Never';
-  const lastScannedTitle = qrData?.lastScannedAt ? new Date(qrData.lastScannedAt).toLocaleString() : 'Not scanned yet';
   const issuedOn = qrData?.regeneratedAt || qrData?.createdAt;
 
   const handleCopyLink = async () => {
@@ -220,18 +216,10 @@ export default function QrCodeModal({
 
             <div className="qrm-qr-side">
               <p className="qrm-qr-caption">Customers who scan this code open the New Connection form, and their application is credited to {officerName.split(' ')[0]}.</p>
-              <div className="qrm-qr-stats">
-                <div className="qrm-qr-stat">
-                  <span>Scans</span>
-                  <strong>{scansCount}</strong>
-                </div>
-                <div className="qrm-qr-stat" title={lastScannedTitle}>
-                  <span>Last scan</span>
-                  <strong>{lastScanned}</strong>
-                </div>
+              <div className="qrm-qr-stats is-single">
                 <div className="qrm-qr-stat" title={issuedOn ? new Date(issuedOn).toLocaleString('en-GB') : undefined}>
                   <span>{qrData?.regeneratedAt ? 'Renewed' : 'Issued'}</span>
-                  <strong>{issuedOn ? new Date(issuedOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}</strong>
+                  <strong>{issuedOn ? new Date(issuedOn).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</strong>
                 </div>
               </div>
             </div>
