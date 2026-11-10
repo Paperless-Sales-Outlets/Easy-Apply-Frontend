@@ -674,6 +674,7 @@ export default function SalesOfficerDashboardPage() {
               <option value="approved">Approved</option>
               <option value="confirmed">Confirmed</option>
               <option value="rejected">Rejected</option>
+              <option value="flagged">Flagged</option>
             </select>
           </div>
         </div>
