@@ -100,18 +100,27 @@ const NAV_BY_KEY = {
   'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'] },
 };
 
-// Sidebar order. A module that is not listed here (e.g. a new one) still shows,
-// just before Audit Logs.
-const NAV_ORDER = ['dashboard', 'users', 'leads', 'sales-officers', 'kyc', 'forms', 'analytics'];
-const NAV_LAST = ['audit-logs', 'so-dashboard'];
+// Sidebar sections, in the order a customer's request moves through the portal.
+// A module that is not listed here (e.g. a new one) still shows, under "More".
+const NAV_SECTION_LAYOUT = [
+  { key: 'overview', label: 'Overview', items: ['so-dashboard', 'dashboard', 'analytics'] },
+  { key: 'applications', label: 'Applications', items: ['leads', 'kyc', 'forms'] },
+  { key: 'field', label: 'Field Service', items: ['appointments', 'technician'] },
+  { key: 'sales', label: 'Sales', items: ['sales-officers'] },
+  { key: 'administration', label: 'Administration', items: ['users', 'audit-logs'] },
+];
 
-const NAV_ITEMS = [
-  ...NAV_ORDER,
-  ...Object.keys(NAV_BY_KEY).filter((key) => !NAV_ORDER.includes(key) && !NAV_LAST.includes(key)),
-  ...NAV_LAST,
-]
-  .filter((key) => NAV_BY_KEY[key])
-  .map((key) => NAV_BY_KEY[key]);
+const LISTED_NAV_KEYS = new Set(NAV_SECTION_LAYOUT.flatMap((section) => section.items));
+const UNLISTED_NAV_KEYS = Object.keys(NAV_BY_KEY).filter((key) => !LISTED_NAV_KEYS.has(key));
+
+const NAV_SECTIONS = [
+  ...NAV_SECTION_LAYOUT.slice(0, -1),
+  ...(UNLISTED_NAV_KEYS.length ? [{ key: 'more', label: 'More', items: UNLISTED_NAV_KEYS }] : []),
+  NAV_SECTION_LAYOUT[NAV_SECTION_LAYOUT.length - 1],
+].map((section) => ({
+  ...section,
+  items: section.items.filter((key) => NAV_BY_KEY[key]).map((key) => NAV_BY_KEY[key]),
+}));
 
 const SHORT_FORM_LABELS = {
   'Customer Request Acceptance': 'Cust. Request',
@@ -128,7 +137,11 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [passkeyModalOpen, setPasskeyModalOpen] = useState(false);
 
-  const visibleNav = NAV_ITEMS.filter(item => canOpenPage(admin, item.key));
+  // Only the sections this account can open something in; a lone module needs no heading.
+  const visibleSections = NAV_SECTIONS
+    .map(section => ({ ...section, items: section.items.filter(item => canOpenPage(admin, item.key)) }))
+    .filter(section => section.items.length > 0);
+  const showSectionHeadings = visibleSections.reduce((count, section) => count + section.items.length, 0) > 1;
 
   const handleNavClick = (item) => {
     if (item.key === 'forms') {
@@ -199,31 +212,43 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
         </div>
 
         <nav className="admin-nav">
-          {visibleNav.map(item => (
-            <div className="admin-nav-group" key={item.key}>
-              <button
-                className={`admin-nav-item${activePage === item.key ? ' active' : ''}`}
-                onClick={() => handleNavClick(item)}
-              >
-                <span style={{ fontSize: '1rem' }}>{item.icon}</span>
-                {item.label}
-                {item.key === 'forms' && (
-                  <span className={`admin-nav-caret${openForms ? ' open' : ''}`}>▾</span>
-                )}
-              </button>
-              {item.key === 'forms' && openForms && (
-                <div className="admin-nav-submenu">
-                  {FORM_TYPES.map(form => (
-                    <button
-                      key={form.id}
-                      className={`admin-nav-submenu-item${activeFormId === form.id ? ' active' : ''}`}
-                      onClick={() => handleFormSelect(form.id)}
-                    >
-                      {shortFormLabel(form.label)}
-                    </button>
-                  ))}
-                </div>
+          {visibleSections.map(section => (
+            <div
+              className="admin-nav-section"
+              key={section.key}
+              role="group"
+              aria-labelledby={showSectionHeadings ? `admin-nav-heading-${section.key}` : undefined}
+            >
+              {showSectionHeadings && (
+                <div className="admin-nav-heading" id={`admin-nav-heading-${section.key}`}>{section.label}</div>
               )}
+              {section.items.map(item => (
+                <div className="admin-nav-group" key={item.key}>
+                  <button
+                    className={`admin-nav-item${activePage === item.key ? ' active' : ''}`}
+                    onClick={() => handleNavClick(item)}
+                  >
+                    <span style={{ fontSize: '1rem' }}>{item.icon}</span>
+                    {item.label}
+                    {item.key === 'forms' && (
+                      <span className={`admin-nav-caret${openForms ? ' open' : ''}`}>▾</span>
+                    )}
+                  </button>
+                  {item.key === 'forms' && openForms && (
+                    <div className="admin-nav-submenu">
+                      {FORM_TYPES.map(form => (
+                        <button
+                          key={form.id}
+                          className={`admin-nav-submenu-item${activeFormId === form.id ? ' active' : ''}`}
+                          onClick={() => handleFormSelect(form.id)}
+                        >
+                          {shortFormLabel(form.label)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           ))}
         </nav>
