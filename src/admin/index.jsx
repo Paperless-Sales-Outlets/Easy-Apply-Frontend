@@ -16,6 +16,7 @@ import SalesOfficerManagementPage from './pages/SalesOfficerManagementPage';
 import SalesOfficerDashboardPage from './pages/SalesOfficerDashboardPage';
 import LeadManagementPage from './pages/LeadManagementPage';
 import { canOpenPage, landingPage } from './utils/pageAccess';
+import { FORM_TYPES } from './utils/applicationUtils';
 import './admin.css';
 
 function getPageFromPath(pathname) {
@@ -33,7 +34,8 @@ function AdminDashboardContent() {
   const navigate = useNavigate();
 
   const [activePage, setActivePage] = useState(() => getPageFromPath(location.pathname));
-  const [selectedFormId, setSelectedFormId] = useState(null);
+  // With a single form type there is nothing to choose, so a refresh or a direct link opens it.
+  const [selectedFormId, setSelectedFormId] = useState(FORM_TYPES.length === 1 ? FORM_TYPES[0].id : null);
 
   useEffect(() => {
     const page = getPageFromPath(location.pathname);
@@ -105,7 +107,7 @@ function AdminDashboardContent() {
       activePage={effectivePage}
       setActivePage={handleSetActivePage}
       onSelectForm={handleSelectForm}
-      activeFormId={selectedFormId}
+      activeFormId={effectivePage === 'forms' ? selectedFormId : null}
     >
       {renderActivePage()}
     </AdminLayout>
