@@ -12,6 +12,12 @@ export const getApplications = async (params = {}) => {
   return response.data;
 };
 
+// GET /api/admin/applications/:id/documents — one application's full form data, including images
+export const getApplicationDocuments = async (id) => {
+  const response = await api.get(`/admin/applications/${id}/documents`);
+  return response.data;
+};
+
 // GET /api/admin/forms — pre-existing paginated forms API (fallback data source)
 export const getAdminForms = async (params = {}) => {
   const response = await api.get('/admin/forms', { params });

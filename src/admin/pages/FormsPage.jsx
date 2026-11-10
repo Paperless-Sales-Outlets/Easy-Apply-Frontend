@@ -63,6 +63,7 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
         limit: HISTORY_PAGE_SIZE,
         sortBy: 'createdAt',
         sortOrder: 'desc',
+        lite: true,
       };
       if (fromDate) params.startDate = fromDate;
       if (toDate) params.endDate = toDate;
