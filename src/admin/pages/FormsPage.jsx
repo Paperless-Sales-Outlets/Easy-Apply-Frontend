@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FiActivity, FiCheckCircle, FiCreditCard, FiEye, FiFileText, FiPhone, FiSearch } from 'react-icons/fi';
 import { getApplications, getDashboardStats } from '../services/adminService';
 import { FORM_TYPES, STATUS_LABELS, formatDateOnly, normalizeApplication, statusBadgeClass, statusLabel } from '../utils/applicationUtils';
@@ -41,9 +41,19 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
   const [detailApp, setDetailApp] = useState(null);
   const [expandedComments, setExpandedComments] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [status, setStatus] = useState('');
+  const latestRequest = useRef(0);
+
+  // Search once typing pauses.
+  useEffect(() => {
+    const id = setTimeout(() => setAppliedSearch(searchQuery.trim()), 350);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
 
   const fetchPage = useCallback(async (pageNum) => {
+    const requestId = latestRequest.current + 1;
+    latestRequest.current = requestId;
     setLoading(true);
     try {
       const params = {
@@ -56,35 +66,26 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
       if (fromDate) params.startDate = fromDate;
       if (toDate) params.endDate = toDate;
       if (status) params.status = status;
+      if (appliedSearch) params.search = appliedSearch;
 
       const res = await getApplications(params);
+      if (requestId !== latestRequest.current) return;
       setHistory((res.applications || []).map(normalizeApplication));
       setPagination(res.pagination || null);
     } catch {
+      if (requestId !== latestRequest.current) return;
       setHistory([]);
       setPagination(null);
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) setLoading(false);
     }
-  }, [formId, fromDate, toDate, status]);
+  }, [formId, fromDate, toDate, status, appliedSearch]);
 
   useEffect(() => {
     setPage(1);
     fetchPage(1);
   }, [formId, fetchPage]);
 
-  const matchesSearch = (app, query) => {
-    const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      String(app.referenceNumber || '').toLowerCase().includes(q)
-      || String(app.nic || '').toLowerCase().includes(q)
-      || String(app.phone || '').toLowerCase().includes(q)
-      || String(app.name || '').toLowerCase().includes(q)
-    );
-  };
-
-  const filteredHistory = history.filter(app => matchesSearch(app, searchQuery));
   const totalCount = pagination?.totalCount ?? history.length;
   const hasFilters = Boolean(fromDate || toDate || status || searchQuery);
 
@@ -119,8 +120,8 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
             <p>
               {loading
                 ? 'Loading…'
-                : searchQuery
-                  ? `${filteredHistory.length} match${filteredHistory.length === 1 ? '' : 'es'} on this page · ${totalCount} in total`
+                : appliedSearch
+                  ? `${totalCount} match${totalCount === 1 ? '' : 'es'}`
                   : `${totalCount} submission${totalCount === 1 ? '' : 's'}${fromDate || toDate ? ' in the selected range' : ''}`}
             </p>
           </div>
@@ -179,7 +180,7 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
           <div className="dash-table-skeleton">
             {Array.from({ length: 5 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
           </div>
-        ) : filteredHistory.length === 0 ? (
+        ) : history.length === 0 ? (
           <div className="um-empty-state">
             <span className="um-empty-icon"><FiFileText size={24} /></span>
             <h3>{hasFilters ? 'No matching submissions' : 'No submissions yet'}</h3>
@@ -200,7 +201,7 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
                 </tr>
               </thead>
               <tbody>
-                {filteredHistory.map(app => {
+                {history.map(app => {
                   const comment = app.notes || '';
                   const isExpanded = expandedComments[app.id];
                   const visibleText = comment.length > 90 && !isExpanded ? `${comment.slice(0, 90)}...` : comment;
