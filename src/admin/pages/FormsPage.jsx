@@ -379,7 +379,7 @@ export default function FormsPage({ initialFormId }) {
   const tiles = [
     { key: 'total', cls: 'total', icon: <FiFileText size={15} />, label: 'Total submissions', value: stats.total, foot: hasFilter ? 'In the selected range' : 'All time' },
     { key: 'completed', cls: 'active', icon: <FiCheckCircle size={15} />, label: 'Completed', value: stats.completed, foot: 'Approved or confirmed' },
-    { key: 'open', cls: 'open', icon: <FiActivity size={15} />, label: 'Still open', value: Math.max(0, stats.total - stats.completed), foot: 'Pending, flagged or rejected' },
+    { key: 'open', cls: 'open', icon: <FiActivity size={15} />, label: 'Not completed', value: Math.max(0, stats.total - stats.completed), foot: 'Pending, flagged or rejected' },
     { key: 'rate', cls: 'roles', icon: <FiActivity size={15} />, label: 'Completion rate', value: completionRate, suffix: '%', meter: completionRate, foot: hasFilter ? 'In the selected range' : 'Across this form type' },
   ];
 

@@ -528,7 +528,7 @@ export default function AdminDashboardPage() {
               ? 'Gathering today\'s activity…'
               : awaitingAction > 0
                 ? <><strong>{awaitingAction}</strong> application{awaitingAction === 1 ? ' is' : 's are'} waiting for action · <strong>{stats.todaySubmissions ?? 0}</strong> submitted today</>
-                : <>All caught up — no applications are waiting · <strong>{stats.todaySubmissions ?? 0}</strong> submitted today</>}
+                : <>No pending applications · <strong>{stats.todaySubmissions ?? 0}</strong> submitted today</>}
           </p>
 
           <div className="dash-pipeline">
@@ -616,7 +616,7 @@ export default function AdminDashboardPage() {
 
       {/* ── Operation Pie Charts ── */}
       <section className="dash-chart-grid">
-        {renderFormPieCard('Total Forms by Type', '9 tracked service forms', formTotalData, CARD_ICONS.donut)}
+        {renderFormPieCard('Total Forms by Type', 'All submissions, per form', formTotalData, CARD_ICONS.donut)}
         {renderFormPieCard('Completed Forms by Type', 'Approved or confirmed, per form', formCompletedData, CARD_ICONS.check)}
       </section>
 
@@ -691,8 +691,8 @@ export default function AdminDashboardPage() {
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><path d="m9 11 3 3L22 4" />
                 </svg>
               </span>
-              <h3>{dashboardSearch || statusFilter !== 'All' ? 'No matches' : 'Inbox zero'}</h3>
-              <p>{dashboardSearch || statusFilter !== 'All' ? 'No pending applications match your search or filter.' : 'Every application has been actioned. Nice work!'}</p>
+              <h3>{dashboardSearch || statusFilter !== 'All' ? 'No matches' : 'Nothing pending'}</h3>
+              <p>{dashboardSearch || statusFilter !== 'All' ? 'No pending applications match your search or filter.' : 'No pending applications are waiting right now.'}</p>
             </div>
           ) : (
             <div className="dash-table-wrap">
