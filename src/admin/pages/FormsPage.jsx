@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { FiActivity, FiCheckCircle, FiCreditCard, FiEye, FiFileText, FiPhone, FiSearch } from 'react-icons/fi';
+import { FiActivity, FiAlertTriangle, FiCheckCircle, FiCreditCard, FiEye, FiFileText, FiPhone, FiSearch } from 'react-icons/fi';
 import { getApplications, getDashboardStats } from '../services/adminService';
 import { FORM_TYPES, STATUS_LABELS, formatDateOnly, normalizeApplication, statusBadgeClass, statusLabel } from '../utils/applicationUtils';
 import { AnimatedNumber, Pager, timeAgo } from '../components/AdminVisuals';
@@ -33,11 +33,12 @@ function getInitials(name) {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateChange }) {
+function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateChange, onRetry }) {
   const [history, setHistory] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [detailApp, setDetailApp] = useState(null);
   const [expandedComments, setExpandedComments] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,10 +73,12 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
       if (requestId !== latestRequest.current) return;
       setHistory((res.applications || []).map(normalizeApplication));
       setPagination(res.pagination || null);
+      setLoadFailed(false);
     } catch {
       if (requestId !== latestRequest.current) return;
       setHistory([]);
       setPagination(null);
+      setLoadFailed(true);
     } finally {
       if (requestId === latestRequest.current) setLoading(false);
     }
@@ -104,6 +107,11 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
     fetchPage(pageNum);
   };
 
+  const retry = () => {
+    fetchPage(page);
+    onRetry();
+  };
+
   const clearFilters = () => {
     onFromDateChange('');
     onToDateChange('');
@@ -120,9 +128,11 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
             <p>
               {loading
                 ? 'Loading…'
-                : appliedSearch
-                  ? `${totalCount} match${totalCount === 1 ? '' : 'es'}`
-                  : `${totalCount} submission${totalCount === 1 ? '' : 's'}${fromDate || toDate ? ' in the selected range' : ''}`}
+                : loadFailed
+                  ? 'Not loaded'
+                  : appliedSearch
+                    ? `${totalCount} match${totalCount === 1 ? '' : 'es'}`
+                    : `${totalCount} submission${totalCount === 1 ? '' : 's'}${fromDate || toDate ? ' in the selected range' : ''}`}
             </p>
           </div>
           <div className="um-toolbar">
@@ -179,6 +189,13 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
         {loading ? (
           <div className="dash-table-skeleton">
             {Array.from({ length: 5 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
+          </div>
+        ) : loadFailed ? (
+          <div className="um-empty-state" role="alert">
+            <span className="um-empty-icon"><FiAlertTriangle size={24} /></span>
+            <h3>Could not load submissions</h3>
+            <p>Check your connection, then try again.</p>
+            <button type="button" className="admin-btn primary" style={{ marginTop: '0.75rem' }} onClick={retry}>Retry</button>
           </div>
         ) : history.length === 0 ? (
           <div className="um-empty-state">
@@ -304,6 +321,8 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
 export default function FormsPage({ initialFormId }) {
   const [stats, setStats] = useState({ total: 0, completed: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [statsFailed, setStatsFailed] = useState(false);
+  const [statsAttempt, setStatsAttempt] = useState(0);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
@@ -323,16 +342,19 @@ export default function FormsPage({ initialFormId }) {
         if (cancelled) return;
         const entry = (res.byServiceType || []).find(t => t.id === form.id);
         setStats({ total: entry?.total || 0, completed: entry?.completed || 0 });
+        setStatsFailed(false);
       })
       .catch(() => {
-        if (!cancelled) setStats({ total: 0, completed: 0 });
+        if (cancelled) return;
+        setStats({ total: 0, completed: 0 });
+        setStatsFailed(true);
       })
       .finally(() => {
         if (!cancelled) setStatsLoading(false);
       });
 
     return () => { cancelled = true; };
-  }, [form, fromDate, toDate]);
+  }, [form, fromDate, toDate, statsAttempt]);
 
   const hasFilter = Boolean(fromDate || toDate);
   const completionRate = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
@@ -383,7 +405,9 @@ export default function FormsPage({ initialFormId }) {
             <div className={`um-hero-tile ${tile.cls}`} key={tile.key} style={{ '--i': idx }}>
               <div className="um-hero-tile-head"><span className="um-hero-tile-icon">{tile.icon}</span>{tile.label}</div>
               <div className="um-hero-tile-value">
-                {statsLoading ? <span className="dash-skeleton um-hero-skeleton" /> : <><AnimatedNumber value={tile.value} />{tile.suffix}</>}
+                {statsLoading
+                  ? <span className="dash-skeleton um-hero-skeleton" />
+                  : statsFailed ? '—' : <><AnimatedNumber value={tile.value} />{tile.suffix}</>}
               </div>
               {tile.meter != null && (
                 <div className="um-hero-meter" aria-hidden="true"><span style={{ width: `${statsLoading ? 0 : tile.meter}%` }} /></div>
@@ -400,6 +424,7 @@ export default function FormsPage({ initialFormId }) {
         toDate={toDate}
         onFromDateChange={setFromDate}
         onToDateChange={setToDate}
+        onRetry={() => setStatsAttempt((attempt) => attempt + 1)}
       />
     </div>
   );
