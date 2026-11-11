@@ -626,9 +626,18 @@ export default function KycReviewPage() {
 
   const f = useMemo(() => ({ ...filters, search: deferredSearch }), [filters, deferredSearch]);
 
+  // Each tab counts every case it holds: the status chips refine within a tab, so a
+  // chosen status must not make the other tabs look empty.
   const viewCounts = useMemo(() => Object.fromEntries(
-    VIEWS.map((v) => [v.key, filterItems(items, { ...f, view: v.key }, tokens, haystacks, null).length])
+    VIEWS.map((v) => [v.key, filterItems(items, { ...f, view: v.key }, tokens, haystacks, 'status').length])
   ), [items, f, tokens, haystacks]);
+
+  // Switching tabs drops a status chip the new tab has no cases for.
+  const selectView = (view) => {
+    const keepStatus = filters.status === 'all'
+      || filterItems(items, { ...f, view }, tokens, haystacks, null).length > 0;
+    setFilter(keepStatus ? { view } : { view, status: 'all' });
+  };
 
   const statusCounts = useMemo(() => {
     const pool = filterItems(items, f, tokens, haystacks, 'status');
@@ -1468,7 +1477,7 @@ export default function KycReviewPage() {
                     aria-selected={filters.view === v.key}
                     title={v.hint}
                     className={`kycv-view${filters.view === v.key ? ' active' : ''}`}
-                    onClick={() => setFilter({ view: v.key })}
+                    onClick={() => selectView(v.key)}
                   >
                     {v.label}<span>{viewCounts[v.key]}</span>
                   </button>
