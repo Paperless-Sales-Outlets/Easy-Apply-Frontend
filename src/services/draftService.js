@@ -57,51 +57,20 @@ const forgetRejectedToken = (err) => {
   throw err;
 };
 
-// ── 30-day limit ────────────────────────────────────────────────────────────
-// A saved application can be continued for 30 days from when it was started
-// (`resumeUntil`, set by the server and never extended). After that it is
-// hidden from the customer; the server keeps it on record, marked expired.
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-// Within this many days of the limit, the reminder becomes more prominent.
-export const DRAFT_EXPIRY_WARNING_DAYS = 5;
-
-/** True when a save was refused because the application passed its 30 days. */
-export const isDraftExpiredError = (err) => err?.response?.status === 410;
-
-/**
- * Days left before `resumeUntil`, rounded up (1 = less than 24 hours left,
- * 0 = passed). Measured with the server's clock so a wrong clock on the
- * customer's device doesn't change the answer.
- */
-export const draftDaysLeft = (resumeUntil, serverTime) => {
-  if (!resumeUntil) return null;
-  const now = serverTime ? new Date(serverTime).getTime() : Date.now();
-  return Math.max(0, Math.ceil((new Date(resumeUntil).getTime() - now) / DAY_MS));
-};
-
-/** e.g. "16 Nov 2026" */
-export const formatDraftDate = (date) =>
-  date ? new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-
 /**
  * Full active draft, including photos.
- * Returns { draft, expired, serverTime }: `draft` is null when there is none;
- * `expired` ({ id, expiredOn }) describes the most recent application that
- * passed its 30 days, if any.
+ * Returns { draft, serverTime }; `draft` is null when there is none.
  */
 export const getDraft = async () => {
-  if (!draftToken()) return { draft: null, expired: null, serverTime: null };
+  if (!draftToken()) return { draft: null, serverTime: null };
   const res = await api.get(DRAFT_URL, withDraftToken()).catch(forgetRejectedToken);
   return {
     draft: res.data?.draft || null,
-    expired: res.data?.expired || null,
     serverTime: res.data?.serverTime || null,
   };
 };
 
-/** Step, package, last-saved time and 30-day limit only (no photos), or null. */
+/** Step, package and last-saved time only (no photos), or null. */
 export const getDraftSummary = async () => {
   if (!draftToken()) return null;
   const res = await api.get(DRAFT_URL, withDraftToken({ params: { summary: true } })).catch(forgetRejectedToken);
@@ -111,7 +80,7 @@ export const getDraftSummary = async () => {
 /**
  * Save the form fields, package and step. Kept small so it is quick; photos
  * go through saveDraftPhoto instead. `draftId` is the draft being edited (none
- * for a new one); a draft past its 30 days is refused (isDraftExpiredError).
+ * for a new one).
  */
 export const saveDraft = async ({ formData, selectedProduct, stepIndex, draftId }) => {
   if (!draftToken()) throw noDraftAccess();
