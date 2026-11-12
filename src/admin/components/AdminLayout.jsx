@@ -94,14 +94,14 @@ const NAV_BY_KEY = {
   'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'] },
 };
 
-// Sidebar sections, in the order a customer's request moves through the portal.
+// Sidebar sections, in the order set by the supervisor: the overview, the
+// admin's main tasks, the customer-facing operations, then field work.
 // A module that is not listed here (e.g. a new one) still shows, under "More".
 const NAV_SECTION_LAYOUT = [
-  { key: 'overview', label: 'Overview', items: ['so-dashboard', 'dashboard', 'analytics'] },
-  { key: 'applications', label: 'Applications', items: ['leads', 'kyc', 'forms'] },
+  { key: 'overview', label: 'Overview', items: ['dashboard', 'so-dashboard'] },
+  { key: 'administration', label: 'Administration', items: ['analytics', 'audit-logs', 'users'] },
+  { key: 'operations', label: 'Operations', items: ['sales-officers', 'kyc', 'leads', 'forms'] },
   { key: 'field', label: 'Field Service', items: ['appointments', 'technician'] },
-  { key: 'sales', label: 'Sales', items: ['sales-officers'] },
-  { key: 'administration', label: 'Administration', items: ['users', 'audit-logs'] },
 ];
 
 const LISTED_NAV_KEYS = new Set(NAV_SECTION_LAYOUT.flatMap((section) => section.items));
