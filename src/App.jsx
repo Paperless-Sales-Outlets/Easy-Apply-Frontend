@@ -99,6 +99,17 @@ const SalesRefCapture = () => {
   return null;
 };
 
+/** Every new page starts at the top, not wherever the previous one was scrolled. */
+const ScrollToTop = () => {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) return; // let in-page anchors do their own scrolling
+    // 'instant' overrides the site-wide smooth scrolling so it doesn't visibly glide up
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname, hash]);
+  return null;
+};
+
 const AnimatedRoutes = () => {
   const location = useLocation();
 
@@ -332,6 +343,8 @@ const NavigationLayout = ({ children }) => {
         flexDirection: 'column',
       }}
     >
+      {/* Site-wide notices (e.g. the unfinished-application banner) render here, above the sticky nav */}
+      <div id="top-notice-root" />
       <Navbar />
 
       <main
@@ -358,23 +371,23 @@ function App() {
         position="top-center"
         toastOptions={{
           style: {
-            borderRadius: '12px',
-            background: '#fff',
+            borderRadius: 'var(--radius-lg)',
+            background: 'var(--paper)',
             color: 'var(--text-primary)',
             fontWeight: 600,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            boxShadow: 'var(--shadow-md)',
             padding: '16px',
           },
           success: {
             iconTheme: {
               primary: 'var(--slt-green)',
-              secondary: '#fff',
+              secondary: 'var(--paper)',
             },
           },
           error: {
             iconTheme: {
               primary: 'var(--danger, #dc3545)',
-              secondary: '#fff',
+              secondary: 'var(--paper)',
             },
           },
         }}
@@ -386,6 +399,7 @@ function App() {
           <NavigationLayout>
             <SalesRefCapture />
             <Suspense fallback={null}>
+              <ScrollToTop />
               <AnimatedRoutes />
             </Suspense>
           </NavigationLayout>
