@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { getApplications, getAdminForms } from '../services/adminService';
+import { getApplications, getAdminForms, getDashboardStats } from '../services/adminService';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { AnimatedNumber, Sparkline, timeAgo } from '../components/AdminVisuals';
 import {
+  FORM_TYPES,
   formatDate,
   normalizeApplication,
   normalizeForm,
@@ -364,6 +365,9 @@ export default function AdminDashboardPage() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [now, setNow] = useState(new Date());
   const [lastUpdated, setLastUpdated] = useState(null);
+  // Trends, status counts and the oldest pending date counted by the server over
+  // every application; null when the figures had to be worked out here instead.
+  const [serverView, setServerView] = useState(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60000);
@@ -374,26 +378,49 @@ export default function AdminDashboardPage() {
     if (silent) setRefreshing(true); else setLoading(true);
 
     try {
-      const res = await getApplications({ limit: 200, sortBy: 'createdAt', sortOrder: 'desc', lite: true });
-      const apps = (res.applications || []).map(normalizeApplication);
-      setStats(deriveStatsFromApplications(apps));
-      setTodayDistribution(deriveTodayDistribution(apps));
-      setRecentApplications(apps);
+      // Every figure counted by the server over all applications, so nothing is
+      // lost once there are more than one page of them.
+      const res = await getDashboardStats({ include: 'dashboard' });
+      const figures = res.dashboard;
+      if (!figures) throw new Error('Dashboard figures missing');
+      const shownTypes = new Set(FORM_TYPES.map((t) => t.id));
+      setStats({ ...figures.kpis, byServiceType: (res.byServiceType || []).filter((f) => shownTypes.has(f.id)) });
+      setTodayDistribution(FORM_TYPES.map((t) => ({
+        id: t.id,
+        label: t.label,
+        submitted: figures.todayByServiceType?.[t.id]?.submitted || 0,
+        completed: figures.todayByServiceType?.[t.id]?.completed || 0,
+      })));
+      setRecentApplications(figures.pendingApplications || []);
+      setServerView({ trends: figures.trends, statusCounts: res.statusCounts || {}, oldestPendingAt: figures.oldestPendingAt });
       setDataSource('');
       setError('');
       setLastUpdated(new Date());
-    } catch (err) {
+    } catch {
+      // Fallback: work the figures out here from the newest applications, as before.
+      setServerView(null);
       try {
-        const { forms = [] } = await getAdminForms({ limit: 200 });
-        const normalized = forms.map(normalizeForm);
-        setStats(deriveStatsFromForms(forms));
-        setTodayDistribution(deriveTodayDistribution(normalized));
-        setRecentApplications(normalized);
-        setDataSource('forms');
+        const res = await getApplications({ limit: 200, sortBy: 'createdAt', sortOrder: 'desc', lite: true });
+        const apps = (res.applications || []).map(normalizeApplication);
+        setStats(deriveStatsFromApplications(apps));
+        setTodayDistribution(deriveTodayDistribution(apps));
+        setRecentApplications(apps);
+        setDataSource('');
         setError('');
         setLastUpdated(new Date());
-      } catch {
-        setError(err.response?.data?.message || 'Failed to load dashboard data');
+      } catch (err) {
+        try {
+          const { forms = [] } = await getAdminForms({ limit: 200 });
+          const normalized = forms.map(normalizeForm);
+          setStats(deriveStatsFromForms(forms));
+          setTodayDistribution(deriveTodayDistribution(normalized));
+          setRecentApplications(normalized);
+          setDataSource('forms');
+          setError('');
+          setLastUpdated(new Date());
+        } catch {
+          setError(err.response?.data?.message || 'Failed to load dashboard data');
+        }
       }
     } finally {
       setLoading(false);
@@ -464,24 +491,34 @@ export default function AdminDashboardPage() {
     .filter(app => statusFilter === 'All' || app.status === statusFilter);
 
   const kpiSeries = useMemo(
-    () => Object.fromEntries(Object.entries(KPI_TRENDS).map(([key, t]) => [key, dailySeries(recentApplications, t.pick)])),
-    [recentApplications]
+    () => Object.fromEntries(Object.entries(KPI_TRENDS).map(([key, t]) => [
+      key,
+      serverView?.trends?.[key] || dailySeries(recentApplications, t.pick),
+    ])),
+    [recentApplications, serverView]
   );
 
   // Oldest application still waiting for action (all of them, not just the 15 shown).
   const oldestPendingDays = useMemo(() => {
+    if (serverView) {
+      if (!serverView.oldestPendingAt) return null;
+      return Math.round((startOfDay(Date.now()) - startOfDay(serverView.oldestPendingAt)) / DAY_MS);
+    }
     const times = recentApplications
       .filter((app) => PENDING_STATUSES.includes(statusOf(app)) && app.submittedAt)
       .map((app) => startOfDay(app.submittedAt));
     if (!times.length) return null;
     return Math.round((startOfDay(Date.now()) - Math.min(...times)) / DAY_MS);
-  }, [recentApplications]);
+  }, [recentApplications, serverView]);
 
   const pipeline = useMemo(() => {
-    const counts = {};
-    recentApplications.forEach((app) => { counts[statusOf(app)] = (counts[statusOf(app)] || 0) + 1; });
+    let counts = serverView?.statusCounts;
+    if (!counts) {
+      counts = {};
+      recentApplications.forEach((app) => { counts[statusOf(app)] = (counts[statusOf(app)] || 0) + 1; });
+    }
     return PIPELINE.map((stage) => ({ ...stage, count: counts[stage.key] || 0 }));
-  }, [recentApplications]);
+  }, [recentApplications, serverView]);
   const pipelineTotal = pipeline.reduce((sum, stage) => sum + stage.count, 0);
   const awaitingAction = pipeline.filter((st) => PENDING_STATUSES.includes(st.key)).reduce((sum, st) => sum + st.count, 0);
 
