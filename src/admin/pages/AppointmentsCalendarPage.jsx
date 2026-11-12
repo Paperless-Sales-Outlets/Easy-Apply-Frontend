@@ -203,7 +203,8 @@ export default function AppointmentsCalendarPage() {
                     className="apt-tech-select"
                     value={apt.technicianId || ''}
                     onChange={(e) => handleAssignTechnician(apt.id, e.target.value)}
-                    disabled={techLoad !== 'ready'}
+                    disabled={techLoad !== 'ready' || apt.status === 'completed' || apt.status === 'cancelled'}
+                    title={apt.status === 'completed' || apt.status === 'cancelled' ? `This job is ${apt.status}, so its technician can't be changed.` : undefined}
                   >
                     <option value="">
                       {techLoad === 'loading' ? 'Loading technicians…' : techLoad === 'failed' ? 'Technicians unavailable' : '-- Unassigned --'}
