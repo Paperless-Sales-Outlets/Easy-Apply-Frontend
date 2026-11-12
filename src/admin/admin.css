@@ -9666,6 +9666,24 @@ span.alog-caret { cursor: inherit; }
   background: rgba(196, 55, 44, 0.08);
 }
 
+.passkey-item-delete:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* "Remove this passkey?" asked inside the row, instead of a browser popup */
+.passkey-item-confirm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.passkey-item-confirm span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--danger);
+}
+
 .admin-modal-footer {
   display: flex;
   justify-content: flex-end;
