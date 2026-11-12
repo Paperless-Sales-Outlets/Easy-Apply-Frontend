@@ -71,6 +71,11 @@ const NAV_ICONS = {
       <path d="M4 4h16v16H4z" /><path d="M8 8h8M8 12h8M8 16h5" />
     </svg>
   ),
+  branches: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21h18M5 21V7l7-4 7 4v14" /><path d="M9 21v-6h6v6M9 10h.01M15 10h.01" />
+    </svg>
+  ),
   'sales-officers': (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M17 17h.01M17 20h.01M20 17h.01M20 20h.01" strokeWidth="3" strokeLinecap="round" />
@@ -90,6 +95,7 @@ const NAV_BY_KEY = {
   // Sales Officer Management — Admin can manage all officers + their QR codes
   'sales-officers': { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'] },
   'audit-logs': { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'] },
+  branches: { key: 'branches', label: 'Branches', icon: NAV_ICONS.branches },
   // Sales Officer personal dashboard — visible only to Sales Officer role
   'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'] },
 };
@@ -99,7 +105,7 @@ const NAV_BY_KEY = {
 // A module that is not listed here (e.g. a new one) still shows, under "More".
 const NAV_SECTION_LAYOUT = [
   { key: 'overview', label: 'Overview', items: ['dashboard', 'so-dashboard'] },
-  { key: 'administration', label: 'Administration', items: ['analytics', 'audit-logs', 'users'] },
+  { key: 'administration', label: 'Administration', items: ['analytics', 'audit-logs', 'users', 'branches'] },
   { key: 'operations', label: 'Operations', items: ['sales-officers', 'kyc', 'leads', 'forms'] },
   { key: 'field', label: 'Field Service', items: ['appointments', 'technician'] },
 ];
@@ -289,7 +295,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Main Content ── */}
       <div className="admin-main">
         <div className="admin-topbar" />
-        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'users', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'].includes(activePage) ? ' admin-page-wide' : ''}`}>
+        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'users', 'branches', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'].includes(activePage) ? ' admin-page-wide' : ''}`}>
           {children}
         </div>
       </div>

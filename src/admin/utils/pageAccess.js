@@ -1,7 +1,7 @@
 // Which admin pages a signed-in account may open. A module page's key is also
 // the privilege that grants it; Admins can open every page.
 
-const ADMIN_ONLY_PAGES = new Set(['users', 'sales-officers', 'audit-logs']);
+const ADMIN_ONLY_PAGES = new Set(['users', 'branches', 'sales-officers', 'audit-logs']);
 
 // Where an account lands when the page it asked for is not available to it.
 const LANDING_PAGES = ['so-dashboard', 'dashboard', 'leads', 'kyc', 'forms', 'analytics', 'appointments', 'technician', 'users'];

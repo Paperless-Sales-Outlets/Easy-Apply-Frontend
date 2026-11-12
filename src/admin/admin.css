@@ -9708,3 +9708,41 @@ span.alog-caret { cursor: inherit; }
 .admin-page table tbody tr.alog-day-row,
 .admin-page table tbody tr.alog-day-row:hover { background: transparent; }
 .admin-page table tbody tr.alog-row.is-open:not(:hover) { background: #f3f7fd; }
+
+/* ── Branches (regions → provinces → RTOs → teleshops) ─────────────────────── */
+.br-banner { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.br-banner .admin-btn { flex-shrink: 0; }
+
+.br-name-cell { display: flex; align-items: center; gap: 0.65rem; min-width: 0; }
+.br-name-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(15, 87, 168, 0.08);
+  color: var(--blue);
+}
+
+.br-path { display: flex; flex-direction: column; min-width: 0; }
+.br-path span { font-weight: 600; color: var(--navy); }
+.br-path small { margin-top: 0.1rem; font-size: 0.74rem; color: var(--muted); }
+
+.br-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 100px;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: rgba(87, 181, 49, 0.12);
+  color: var(--green-deep);
+}
+.br-count.is-zero { background: #edf2f8; color: #a3b0c2; }
+
+.br-modal-icon { background: linear-gradient(135deg, #0f57a8, #0b2d5b); color: #fff; }

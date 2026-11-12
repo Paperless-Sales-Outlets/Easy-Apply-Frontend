@@ -10,6 +10,7 @@ import AppointmentsCalendarPage from './pages/AppointmentsCalendarPage';
 import FieldTechnicianPage from './pages/FieldTechnicianPage';
 import ReportsAnalyticsPage from './pages/ReportsAnalyticsPage';
 import UserManagementPage from './pages/UserManagementPage';
+import BranchesPage from './pages/BranchesPage';
 import AuditLogsPage from './pages/AuditLogsPage';
 import SalesOfficerManagementPage from './pages/SalesOfficerManagementPage';
 import SalesOfficerDashboardPage from './pages/SalesOfficerDashboardPage';
@@ -20,7 +21,7 @@ import './admin.css';
 
 function getPageFromPath(pathname) {
   const segment = pathname.replace(/\/$/, '').split('/').pop();
-  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'];
+  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'branches', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'];
   if (known.includes(segment)) {
     // Old links: /applications is Forms, /privileges is the Privileges tab of User Management.
     if (segment === 'applications') return 'forms';
@@ -82,6 +83,8 @@ function AdminDashboardContent() {
         return <ReportsAnalyticsPage />;
       case 'users':
         return <UserManagementPage key={usersTab} initialTab={usersTab} />;
+      case 'branches':
+        return <BranchesPage />;
       case 'audit-logs':
         return <AuditLogsPage />;
       case 'sales-officers':

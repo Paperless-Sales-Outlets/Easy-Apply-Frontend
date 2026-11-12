@@ -212,3 +212,29 @@ export const deletePrivilege = async (id) => {
   const response = await api.delete(`/admin/privileges/${id}`);
   return response.data;
 };
+
+// ── Branches: level is 'regions' | 'provinces' | 'rtos' | 'teleshops' ──
+
+// GET /api/admin/branches — every region, province, RTO and teleshop
+export const getBranches = async () => {
+  const response = await api.get('/admin/branches');
+  return response.data;
+};
+
+// POST /api/admin/branches/:level — { name, parentId } (no parent for a region)
+export const createBranch = async (level, data) => {
+  const response = await api.post(`/admin/branches/${level}`, data);
+  return response.data;
+};
+
+// PATCH /api/admin/branches/:level/:id — rename or move under another parent
+export const updateBranch = async (level, id, data) => {
+  const response = await api.patch(`/admin/branches/${level}/${id}`, data);
+  return response.data;
+};
+
+// DELETE /api/admin/branches/:level/:id — only when nothing sits under it
+export const deleteBranch = async (level, id) => {
+  const response = await api.delete(`/admin/branches/${level}/${id}`);
+  return response.data;
+};
