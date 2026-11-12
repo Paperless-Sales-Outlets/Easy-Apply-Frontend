@@ -1003,7 +1003,16 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
   };
 
   return (
-    <div className="card" style={{ padding: '2.5rem 2.75rem', width: '100%', margin: '0 auto', borderRadius: '24px', boxShadow: '0 12px 36px rgba(11, 45, 91, 0.08)' }}>
+    <div className="card" style={{ padding: '1.5rem 2.75rem 2.5rem', width: '100%', margin: '0 auto', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)' }}>
+      <button
+        type="button"
+        className="btn btn-tertiary wizard-top-back"
+        onClick={handleBackNavigation}
+        disabled={submitting}
+      >
+        <span aria-hidden="true">←</span> {stepIndex === 0 || step === 'location' ? 'Back to cart' : 'Back'}
+      </button>
+
       {/* Seven-step onboarding by default; six-step legacy navigation remains supported. */}
       <WizardStepper
         currentStep={activeDisplayStep}
@@ -1021,8 +1030,8 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
         <div
           style={{
             backgroundColor: '#f0f7ff',
-            border: '1.5px solid #bfdbfe',
-            borderRadius: '16px',
+            border: '1.5px solid var(--blue-200)',
+            borderRadius: 'var(--radius-lg)',
             padding: '1rem 1.35rem',
             marginBottom: '1.75rem',
             display: 'flex',
@@ -1033,13 +1042,13 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
           }}
         >
           <div>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0f57a8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Selected Package</span>
-            <h4 style={{ margin: '0.15rem 0 0 0', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0056a2', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Selected Package</span>
+            <h4 style={{ margin: '0.15rem 0 0 0', fontSize: '1.1rem', fontWeight: 700, color: '#131f33' }}>
               {selectedProduct.productName}
             </h4>
           </div>
-          <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.9rem', color: '#334155' }}>
-            <span>Monthly: <strong style={{ color: '#0f57a8' }}>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.9rem', color: '#26344b', textAlign: 'right' }}>
+            <span>Monthly: <strong style={{ color: '#0056a2' }}>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
             <span>Installation: <strong>Rs. {(selectedProduct.installationFee ?? 2500).toLocaleString()}</strong></span>
             {selectedProduct.quantity > 1 && <span>Qty: <strong>{selectedProduct.quantity}</strong></span>}
           </div>
@@ -1123,7 +1132,7 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
           </p>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1.5px solid #e2e8f0', paddingTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1.5px solid #dfe5ee', paddingTop: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <button
               type="button"
@@ -1137,7 +1146,7 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
                 fontWeight: 700,
                 fontSize: '0.92rem',
                 padding: '0.65rem 1.25rem',
-                borderRadius: '10px',
+                borderRadius: 'var(--radius)',
                 cursor: 'pointer',
               }}
             >
@@ -1151,7 +1160,7 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#94a3b8',
+                  color: 'var(--grey-400)',
                   fontSize: '0.78rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -1171,7 +1180,7 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
                 style={{
                   fontSize: '0.78rem',
                   fontWeight: 600,
-                  color: saveStatus === 'saved' ? '#15803d' : saveStatus === 'error' ? '#b45309' : '#64748b',
+                  color: saveStatus === 'saved' ? '#0f7a4d' : saveStatus === 'error' ? '#93560a' : '#52627a',
                 }}
               >
                 {saveStatus === 'saving' && 'Saving…'}
@@ -1201,10 +1210,10 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
                 className="btn btn-primary"
                 disabled={submitting || !draftRestored}
                 style={{
-                  fontWeight: 800,
+                  fontWeight: 700,
                   fontSize: '0.95rem',
                   padding: '0.7rem 1.5rem',
-                  borderRadius: '10px',
+                  borderRadius: 'var(--radius)',
                 }}
               >
                 {label}

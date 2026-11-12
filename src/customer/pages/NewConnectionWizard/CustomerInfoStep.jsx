@@ -458,7 +458,7 @@ export default function CustomerInfoStep({
       />
       {/* ── Location Option Selection Tiles for Existing Customer (Old vs New Location) ── */}
       <div style={{ marginBottom: '1.75rem' }}>
-        <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.85rem 0' }}>
+        <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#131f33', margin: '0 0 0.85rem 0' }}>
           Choose Service Installation Option
         </h4>
 
@@ -468,9 +468,9 @@ export default function CustomerInfoStep({
             <div
               onClick={() => setLocationType('current')}
               style={{
-                border: `2px solid ${locationType === 'current' ? '#0f57a8' : '#e2e8f0'}`,
+                border: `2px solid ${locationType === 'current' ? '#0056a2' : '#dfe5ee'}`,
                 backgroundColor: locationType === 'current' ? '#f0f7ff' : '#ffffff',
-                borderRadius: '14px',
+                borderRadius: 'var(--radius-lg)',
                 padding: '1.25rem',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
@@ -479,7 +479,7 @@ export default function CustomerInfoStep({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ fontWeight: 800, fontSize: '0.98rem', color: locationType === 'current' ? '#0f57a8' : '#1e293b', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.98rem', color: locationType === 'current' ? '#0056a2' : '#26344b', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                   <FiMapPin size={16} /> Old / Registered Service Location
                 </span>
                 <input
@@ -487,10 +487,10 @@ export default function CustomerInfoStep({
                   name="locationOption"
                   checked={locationType === 'current'}
                   onChange={() => setLocationType('current')}
-                  style={{ accentColor: '#0f57a8', width: '18px', height: '18px' }}
+                  style={{ accentColor: '#0056a2', width: '18px', height: '18px' }}
                 />
               </div>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', fontWeight: 600, lineHeight: 1.4 }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#3b4a61', fontWeight: 600, lineHeight: 1.4 }}>
                 {formatAddressString(knownProfile.registeredAddress)}
               </p>
             </div>
@@ -500,9 +500,9 @@ export default function CustomerInfoStep({
           <div
             onClick={() => setLocationType('new')}
             style={{
-              border: `2px solid ${locationType === 'new' ? '#0f57a8' : '#e2e8f0'}`,
+              border: `2px solid ${locationType === 'new' ? '#0056a2' : '#dfe5ee'}`,
               backgroundColor: locationType === 'new' ? '#f0f7ff' : '#ffffff',
-              borderRadius: '14px',
+              borderRadius: 'var(--radius-lg)',
               padding: '1.25rem',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
@@ -511,7 +511,7 @@ export default function CustomerInfoStep({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span style={{ fontWeight: 800, fontSize: '0.98rem', color: locationType === 'new' ? '#0f57a8' : '#1e293b', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <span style={{ fontWeight: 700, fontSize: '0.98rem', color: locationType === 'new' ? '#0056a2' : '#26344b', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                 <FiNavigation size={16} /> New Installation Location
               </span>
               <input
@@ -519,16 +519,16 @@ export default function CustomerInfoStep({
                 name="locationOption"
                 checked={locationType === 'new'}
                 onChange={() => setLocationType('new')}
-                style={{ accentColor: '#0f57a8', width: '18px', height: '18px' }}
+                style={{ accentColor: '#0056a2', width: '18px', height: '18px' }}
               />
             </div>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', fontWeight: 500, lineHeight: 1.4 }}>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#3b4a61', fontWeight: 500, lineHeight: 1.4 }}>
               Specify a new installation location, select area code, pick on map, or use current location.
             </p>
           </div>
         </div>
         {autoDetectedPill && (
-          <p role="status" style={{ marginTop: '0.6rem', color: '#166534', fontSize: '0.8rem', fontWeight: 600 }}>
+          <p role="status" style={{ marginTop: '0.6rem', color: '#0b5f3c', fontSize: '0.8rem', fontWeight: 600 }}>
             {autoDetectedPill}
           </p>
         )}
@@ -540,12 +540,12 @@ export default function CustomerInfoStep({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           style={{
-            backgroundColor: '#ffffff',
-            border: '1.5px solid #bfdbfe',
-            borderRadius: '16px',
+            backgroundColor: 'var(--paper)',
+            border: '1.5px solid var(--blue-200)',
+            borderRadius: 'var(--radius-lg)',
             padding: '1.25rem 1.5rem',
             marginBottom: '1.5rem',
-            boxShadow: '0 4px 15px rgba(0, 86, 179, 0.04)',
+            boxShadow: 'var(--shadow-md)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
@@ -554,22 +554,22 @@ export default function CustomerInfoStep({
                 width: '26px',
                 height: '26px',
                 borderRadius: '50%',
-                backgroundColor: '#dcfce7',
-                color: '#16a34a',
+                backgroundColor: 'var(--green-100)',
+                color: 'var(--green-700)',
                 display: 'grid',
                 placeItems: 'center',
               }}
             >
               <FiCheck size={15} />
             </div>
-            <span style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a' }}>
+            <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#131f33' }}>
               Service will be installed at your registered account address:
             </span>
           </div>
-          <p style={{ margin: '0 0 0.4rem 2.1rem', fontSize: '0.98rem', fontWeight: 700, color: '#0f57a8' }}>
+          <p style={{ margin: '0 0 0.4rem 2.1rem', fontSize: '0.98rem', fontWeight: 700, color: '#0056a2' }}>
             {formatAddressString(knownProfile.registeredAddress)}
           </p>
-          <p style={{ margin: '0 0 0 2.1rem', fontSize: '0.78rem', color: '#64748b' }}>
+          <p style={{ margin: '0 0 0 2.1rem', fontSize: '0.78rem', color: '#52627a' }}>
             To install at a different address, select &quot;New Installation Location&quot; above.
           </p>
         </motion.div>
@@ -582,12 +582,12 @@ export default function CustomerInfoStep({
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
           style={{
-            backgroundColor: '#ffffff',
-            border: '1.5px solid #bfdbfe',
+            backgroundColor: 'var(--paper)',
+            border: '1.5px solid var(--blue-200)',
             borderRadius: '18px',
             padding: '1.5rem',
             marginBottom: '1.5rem',
-            boxShadow: '0 4px 20px rgba(0, 86, 179, 0.04)',
+            boxShadow: 'var(--shadow-md)',
           }}
         >
           <div
@@ -605,7 +605,7 @@ export default function CustomerInfoStep({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  borderBottom: '1.5px solid #f1f5f9',
+                  borderBottom: '1.5px solid var(--grey-100)',
                   paddingBottom: '0.65rem',
                 }}
               >
@@ -613,9 +613,9 @@ export default function CustomerInfoStep({
                   style={{
                     width: '30px',
                     height: '30px',
-                    borderRadius: '8px',
-                    backgroundColor: '#eff6ff',
-                    color: '#0f57a8',
+                    borderRadius: 'var(--radius)',
+                    backgroundColor: 'var(--blue-50)',
+                    color: 'var(--blue-600)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -625,10 +625,10 @@ export default function CustomerInfoStep({
                   <FiHome size={16} />
                 </div>
                 <div>
-                  <h5 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
+                  <h5 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 700, color: '#131f33', lineHeight: 1.2 }}>
                     Physical Installation Address
                   </h5>
-                  <p style={{ margin: 0, fontSize: '0.76rem', color: '#64748b' }}>
+                  <p style={{ margin: 0, fontSize: '0.76rem', color: '#52627a' }}>
                     Premises details for technician dispatch, wiring &amp; billing
                   </p>
                 </div>
@@ -638,9 +638,9 @@ export default function CustomerInfoStep({
               <div>
                 <label
                   htmlFor="nc-address-line1"
-                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.35rem' }}
+                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#26344b', marginBottom: '0.35rem' }}
                 >
-                  Address Line 1 (House No. &amp; Street) <span style={{ color: '#dc2626' }}>*</span>
+                  Address Line 1 (House No. &amp; Street) <span style={{ color: '#b42318' }}>*</span>
                 </label>
                 <input
                   id="nc-address-line1"
@@ -654,10 +654,10 @@ export default function CustomerInfoStep({
                     width: '100%',
                     padding: '0.75rem 0.95rem',
                     fontSize: '0.92rem',
-                    borderRadius: '12px',
-                    border: '1.5px solid #cbd5e1',
-                    backgroundColor: '#ffffff',
-                    color: '#0f172a',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1.5px solid var(--grey-300)',
+                    backgroundColor: 'var(--paper)',
+                    color: 'var(--grey-900)',
                     fontWeight: 600,
                     outline: 'none',
                     boxSizing: 'border-box',
@@ -670,9 +670,9 @@ export default function CustomerInfoStep({
               <div>
                 <label
                   htmlFor="nc-address-line2"
-                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.35rem' }}
+                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#26344b', marginBottom: '0.35rem' }}
                 >
-                  Address Line 2 (Apartment, Unit, Floor) <span style={{ color: '#64748b', fontWeight: 500 }}>(Optional)</span>
+                  Address Line 2 (Apartment, Unit, Floor) <span style={{ color: '#52627a', fontWeight: 500 }}>(Optional)</span>
                 </label>
                 <input
                   id="nc-address-line2"
@@ -685,10 +685,10 @@ export default function CustomerInfoStep({
                     width: '100%',
                     padding: '0.75rem 0.95rem',
                     fontSize: '0.92rem',
-                    borderRadius: '12px',
-                    border: '1.5px solid #cbd5e1',
-                    backgroundColor: '#ffffff',
-                    color: '#0f172a',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1.5px solid var(--grey-300)',
+                    backgroundColor: 'var(--paper)',
+                    color: 'var(--grey-900)',
                     fontWeight: 600,
                     outline: 'none',
                     boxSizing: 'border-box',
@@ -701,9 +701,9 @@ export default function CustomerInfoStep({
               <div>
                 <label
                   htmlFor="nc-nearest-landmark"
-                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.35rem' }}
+                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#26344b', marginBottom: '0.35rem' }}
                 >
-                  Nearest Landmark <span style={{ color: '#64748b', fontWeight: 500 }}>(Optional)</span>
+                  Nearest Landmark <span style={{ color: '#52627a', fontWeight: 500 }}>(Optional)</span>
                 </label>
                 <input
                   id="nc-nearest-landmark"
@@ -716,10 +716,10 @@ export default function CustomerInfoStep({
                     width: '100%',
                     padding: '0.75rem 0.95rem',
                     fontSize: '0.92rem',
-                    borderRadius: '12px',
-                    border: '1.5px solid #cbd5e1',
-                    backgroundColor: '#ffffff',
-                    color: '#0f172a',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1.5px solid var(--grey-300)',
+                    backgroundColor: 'var(--paper)',
+                    color: 'var(--grey-900)',
                     fontWeight: 600,
                     outline: 'none',
                     boxSizing: 'border-box',
@@ -731,17 +731,17 @@ export default function CustomerInfoStep({
               {/* Formatted Address Live Preview Card */}
               <div
                 style={{
-                  backgroundColor: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
+                  backgroundColor: 'var(--grey-50)',
+                  border: '1px solid var(--grey-200)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '0.85rem 1rem',
                   marginTop: '0.2rem',
                 }}
               >
-                <div style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.5px', marginBottom: '0.3rem' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#52627a', letterSpacing: '0.5px', marginBottom: '0.3rem' }}>
                   Formatted Installation Address:
                 </div>
-                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f57a8', lineHeight: 1.4 }}>
+                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0056a2', lineHeight: 1.4 }}>
                   {formatAddressString(formData.installAddress) || formatAddressString(formData.address) || (formData.city ? `${formData.city}, Sri Lanka` : 'Fill address fields and select city on the right...')}
                 </div>
               </div>
@@ -754,7 +754,7 @@ export default function CustomerInfoStep({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  borderBottom: '1.5px solid #f1f5f9',
+                  borderBottom: '1.5px solid var(--grey-100)',
                   paddingBottom: '0.65rem',
                 }}
               >
@@ -762,9 +762,9 @@ export default function CustomerInfoStep({
                   style={{
                     width: '30px',
                     height: '30px',
-                    borderRadius: '8px',
-                    backgroundColor: '#eff6ff',
-                    color: '#0f57a8',
+                    borderRadius: 'var(--radius)',
+                    backgroundColor: 'var(--blue-50)',
+                    color: 'var(--blue-600)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -774,10 +774,10 @@ export default function CustomerInfoStep({
                   <FiCompass size={16} />
                 </div>
                 <div>
-                  <h5 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
+                  <h5 style={{ margin: 0, fontSize: '0.96rem', fontWeight: 700, color: '#131f33', lineHeight: 1.2 }}>
                     Service Area &amp; Map Location
                   </h5>
-                  <p style={{ margin: 0, fontSize: '0.76rem', color: '#64748b' }}>
+                  <p style={{ margin: 0, fontSize: '0.76rem', color: '#52627a' }}>
                     Verify regional Fibre loop feasibility &amp; LTE coverage
                   </p>
                 </div>
@@ -787,9 +787,9 @@ export default function CustomerInfoStep({
               <div>
                 <label
                   htmlFor="nc-city-select"
-                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.35rem' }}
+                  style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#26344b', marginBottom: '0.35rem' }}
                 >
-                  Select City / Region <span style={{ color: '#dc2626' }}>*</span>
+                  Select City / Region <span style={{ color: '#b42318' }}>*</span>
                 </label>
                 <select
                   id="nc-city-select"
@@ -800,10 +800,10 @@ export default function CustomerInfoStep({
                     width: '100%',
                     padding: '0.75rem 0.95rem',
                     fontSize: '0.92rem',
-                    borderRadius: '12px',
-                    border: '1.5px solid #cbd5e1',
-                    backgroundColor: '#ffffff',
-                    color: '#0f172a',
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1.5px solid var(--grey-300)',
+                    backgroundColor: 'var(--paper)',
+                    color: 'var(--grey-900)',
                     fontWeight: 600,
                     outline: 'none',
                     boxSizing: 'border-box',
@@ -823,15 +823,15 @@ export default function CustomerInfoStep({
                   const isFibreReq = /fibre|fiber|ftth/i.test(selectedProduct?.productName || selectedProduct?.name || selectedProduct?.category || '');
                   if (selectedCityData?.fibreAvailable === false && isFibreReq) {
                     return (
-                      <div style={{ marginTop: '0.45rem', padding: '0.45rem 0.75rem', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', fontSize: '0.78rem', color: '#c2410c', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <FiZap size={14} color="#ea580c" style={{ flexShrink: 0 }} />
+                      <div style={{ marginTop: '0.45rem', padding: '0.45rem 0.75rem', backgroundColor: '#fff8e8', border: '1px solid #f4d58f', borderRadius: 'var(--radius)', fontSize: '0.78rem', color: '#c2410c', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <FiZap size={14} color="#93560a" style={{ flexShrink: 0 }} />
                         <span>Demo coverage: Fibre unconfirmed in <strong>{selectedCityData.city}</strong>. OSS check will confirm.</span>
                       </div>
                     );
                   } else if (selectedCityData?.fibreAvailable && isFibreReq) {
                     return (
-                      <div style={{ marginTop: '0.45rem', padding: '0.45rem 0.75rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', fontSize: '0.78rem', color: '#15803d', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <FiCheck size={14} color="#16a34a" style={{ flexShrink: 0 }} />
+                      <div style={{ marginTop: '0.45rem', padding: '0.45rem 0.75rem', backgroundColor: '#f1faf1', border: '1px solid #c9ebc8', borderRadius: 'var(--radius)', fontSize: '0.78rem', color: '#0f7a4d', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <FiCheck size={14} color="#0f7a4d" style={{ flexShrink: 0 }} />
                         <span>Fibre loop available in <strong>{selectedCityData.city}</strong>. OSS feasibility check in next step.</span>
                       </div>
                     );
@@ -843,7 +843,7 @@ export default function CustomerInfoStep({
               {/* Single Unified Action Bar (NO DUPLICATE BUTTONS) */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.45rem', flexWrap: 'wrap', gap: '0.4rem' }}>
-                  <label style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', margin: 0 }}>
+                  <label style={{ fontSize: '0.84rem', fontWeight: 700, color: '#26344b', margin: 0 }}>
                     Pin Location on Map
                   </label>
                   <div style={{ display: 'flex', gap: '0.45rem' }}>
@@ -852,11 +852,11 @@ export default function CustomerInfoStep({
                       onClick={handleDirectGpsDetect}
                       disabled={detectingGps}
                       style={{
-                        backgroundColor: '#eff6ff',
-                        border: '1.5px solid #bfdbfe',
-                        color: '#0f57a8',
+                        backgroundColor: 'var(--blue-50)',
+                        border: '1.5px solid var(--blue-200)',
+                        color: 'var(--blue-600)',
                         padding: '0.3rem 0.65rem',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius)',
                         fontSize: '0.76rem',
                         fontWeight: 700,
                         cursor: 'pointer',
@@ -873,11 +873,11 @@ export default function CustomerInfoStep({
                       type="button"
                       onClick={() => setIsMapModalOpen(true)}
                       style={{
-                        backgroundColor: '#f0fdf4',
-                        border: '1.5px solid #bbf7d0',
-                        color: '#166534',
+                        backgroundColor: 'var(--green-50)',
+                        border: '1.5px solid var(--green-200)',
+                        color: 'var(--green-800)',
                         padding: '0.3rem 0.65rem',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius)',
                         fontSize: '0.76rem',
                         fontWeight: 700,
                         cursor: 'pointer',
@@ -897,23 +897,23 @@ export default function CustomerInfoStep({
                 {formData.latitude && formData.longitude ? (
                   <div
                     style={{
-                      backgroundColor: '#f0fdf4',
-                      border: '1.5px solid #86efac',
-                      borderRadius: '14px',
+                      backgroundColor: 'var(--green-50)',
+                      border: '1.5px solid var(--green-300)',
+                      borderRadius: 'var(--radius-lg)',
                       padding: '0.85rem',
-                      boxShadow: '0 2px 8px rgba(22, 163, 74, 0.05)',
+                      boxShadow: 'var(--shadow-sm)',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.65rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#dcfce7', color: '#16a34a', display: 'grid', placeItems: 'center' }}>
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#e2f4e3', color: '#0f7a4d', display: 'grid', placeItems: 'center' }}>
                           <FiCheck size={14} />
                         </div>
                         <div>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: '#166534', letterSpacing: '0.5px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#0b5f3c', letterSpacing: '0.5px' }}>
                             Exact GPS Coordinates Locked
                           </span>
-                          <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>
+                          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#131f33' }}>
                             {Number(formData.latitude).toFixed(5)}° N, {Number(formData.longitude).toFixed(5)}° E
                           </div>
                         </div>
@@ -923,12 +923,12 @@ export default function CustomerInfoStep({
                         type="button"
                         onClick={() => setIsMapModalOpen(true)}
                         style={{
-                          backgroundColor: '#ffffff',
-                          border: '1px solid #86efac',
-                          color: '#15803d',
+                          backgroundColor: 'var(--paper)',
+                          border: '1px solid var(--green-300)',
+                          color: 'var(--green-700)',
                           padding: '0.25rem 0.6rem',
-                          borderRadius: '8px',
-                          fontSize: '0.74rem',
+                          borderRadius: 'var(--radius)',
+                          fontSize: '0.75rem',
                           fontWeight: 700,
                           cursor: 'pointer',
                           display: 'inline-flex',
@@ -942,7 +942,7 @@ export default function CustomerInfoStep({
                     </div>
 
                     {/* Leaflet Mini Map Preview */}
-                    <div style={{ height: '170px', width: '100%', borderRadius: '10px', overflow: 'hidden', border: '1px solid #bbf7d0', position: 'relative' }}>
+                    <div style={{ height: '170px', width: '100%', borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid #c9ebc8', position: 'relative' }}>
                       <MapContainer
                         center={[formData.latitude, formData.longitude]}
                         zoom={15}
@@ -961,10 +961,10 @@ export default function CustomerInfoStep({
                           bottom: '6px',
                           left: '6px',
                           backgroundColor: 'rgba(15, 23, 42, 0.8)',
-                          color: '#ffffff',
+                          color: 'var(--paper)',
                           padding: '0.2rem 0.55rem',
-                          borderRadius: '6px',
-                          fontSize: '0.7rem',
+                          borderRadius: 'var(--radius-sm)',
+                          fontSize: '0.75rem',
                           fontWeight: 600,
                           zIndex: 1000,
                           backdropFilter: 'blur(4px)',
@@ -977,9 +977,9 @@ export default function CustomerInfoStep({
                 ) : (
                   <div
                     style={{
-                      backgroundColor: '#f8fafc',
-                      border: '1px dashed #cbd5e1',
-                      borderRadius: '12px',
+                      backgroundColor: 'var(--grey-50)',
+                      border: '1px dashed var(--grey-300)',
+                      borderRadius: 'var(--radius-lg)',
                       padding: '1.1rem 1rem',
                       display: 'flex',
                       flexDirection: 'column',
@@ -994,8 +994,8 @@ export default function CustomerInfoStep({
                         width: '36px',
                         height: '36px',
                         borderRadius: '50%',
-                        backgroundColor: '#eff6ff',
-                        color: '#0f57a8',
+                        backgroundColor: 'var(--blue-50)',
+                        color: 'var(--blue-600)',
                         display: 'grid',
                         placeItems: 'center',
                       }}
@@ -1003,10 +1003,10 @@ export default function CustomerInfoStep({
                       <FiMapPin size={18} />
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e293b' }}>
+                      <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#26344b' }}>
                         No Map Coordinates Pinned Yet
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', maxWidth: '300px', marginTop: '0.15rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#52627a', maxWidth: '300px', marginTop: '0.15rem' }}>
                         Pin your exact spot on the map or use GPS to verify Fibre loop availability in the next step.
                       </div>
                     </div>
@@ -1014,11 +1014,11 @@ export default function CustomerInfoStep({
                       type="button"
                       onClick={() => setIsMapModalOpen(true)}
                       style={{
-                        backgroundColor: '#0f57a8',
-                        color: '#ffffff',
+                        backgroundColor: 'var(--blue-600)',
+                        color: 'var(--paper)',
                         border: 'none',
                         padding: '0.45rem 0.95rem',
-                        borderRadius: '10px',
+                        borderRadius: 'var(--radius)',
                         fontSize: '0.8rem',
                         fontWeight: 700,
                         cursor: 'pointer',

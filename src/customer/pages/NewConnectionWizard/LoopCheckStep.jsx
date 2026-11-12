@@ -64,13 +64,13 @@ function AreaUnavailableModal({
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
             style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: 'var(--paper)',
               borderRadius: '24px',
               padding: '0',
               maxWidth: '580px',
               width: '100%',
-              boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.4)',
-              border: '1.5px solid #fed7aa',
+              boxShadow: 'var(--shadow-xl)',
+              border: '1.5px solid #f4d58f',
               overflow: 'hidden',
               maxHeight: '92vh',
               display: 'flex',
@@ -81,10 +81,10 @@ function AreaUnavailableModal({
             {/* Modal Header */}
             <div
               style={{
-                background: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
+                background: 'var(--amber-700)',
                 padding: '1.75rem 2rem 1.5rem',
                 position: 'relative',
-                color: '#ffffff',
+                color: 'var(--paper)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '0.75rem' }}>
@@ -92,7 +92,7 @@ function AreaUnavailableModal({
                   style={{
                     width: '52px',
                     height: '52px',
-                    borderRadius: '16px',
+                    borderRadius: 'var(--radius-lg)',
                     backgroundColor: 'rgba(255,255,255,0.2)',
                     display: 'grid',
                     placeItems: 'center',
@@ -108,8 +108,8 @@ function AreaUnavailableModal({
                       backgroundColor: 'rgba(255,255,255,0.25)',
                       padding: '0.2rem 0.6rem',
                       borderRadius: '9999px',
-                      fontSize: '0.74rem',
-                      fontWeight: 800,
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
                       letterSpacing: '0.4px',
                       textTransform: 'uppercase',
                       marginBottom: '0.25rem',
@@ -117,7 +117,7 @@ function AreaUnavailableModal({
                   >
                     Coverage Notice
                   </span>
-                  <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, lineHeight: 1.25 }}>
+                  <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 700, lineHeight: 1.25 }}>
                     Fibre Loop Not Available
                   </h2>
                 </div>
@@ -138,13 +138,13 @@ function AreaUnavailableModal({
                   <div
                     key={service.label}
                     style={{
-                      border: `1.5px solid ${service.available ? '#86efac' : '#fecaca'}`,
-                      backgroundColor: service.available ? '#f0fdf4' : '#fef2f2',
-                      borderRadius: '10px',
+                      border: `1.5px solid ${service.available ? '#9bd89a' : '#f5c2bd'}`,
+                      backgroundColor: service.available ? '#f1faf1' : '#fef3f2',
+                      borderRadius: 'var(--radius)',
                       padding: '0.75rem',
-                      color: service.available ? '#166534' : '#991b1b',
+                      color: service.available ? '#0b5f3c' : '#b42318',
                       fontSize: '0.82rem',
-                      fontWeight: 800,
+                      fontWeight: 700,
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
@@ -161,9 +161,9 @@ function AreaUnavailableModal({
               {/* Highlight Box: Choose LTE instead */}
               {lteAvailable && <div
                 style={{
-                  backgroundColor: '#fff7ed',
-                  border: '1.5px solid #fed7aa',
-                  borderRadius: '14px',
+                  backgroundColor: 'var(--amber-50)',
+                  border: '1.5px solid #f4d58f',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1rem 1.15rem',
                   marginBottom: '1.25rem',
                 }}
@@ -171,9 +171,9 @@ function AreaUnavailableModal({
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
                   <div
                     style={{
-                      backgroundColor: '#ea580c',
-                      color: '#ffffff',
-                      borderRadius: '8px',
+                      backgroundColor: 'var(--amber-700)',
+                      color: 'var(--paper)',
+                      borderRadius: 'var(--radius)',
                       width: '26px',
                       height: '26px',
                       display: 'grid',
@@ -185,7 +185,7 @@ function AreaUnavailableModal({
                     <FiWifi size={15} />
                   </div>
                   <div>
-                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.94rem', fontWeight: 800, color: '#9a3412' }}>
+                    <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.94rem', fontWeight: 700, color: '#93560a' }}>
                       LTE service is available at your location
                     </h4>
                     <p style={{ margin: 0, fontSize: '0.84rem', color: '#7c2d12', lineHeight: 1.45 }}>
@@ -202,19 +202,19 @@ function AreaUnavailableModal({
                     gap: '0.6rem',
                     marginTop: '0.85rem',
                     paddingTop: '0.75rem',
-                    borderTop: '1px solid #ffedd5',
+                    borderTop: '1px solid var(--amber-100)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: '#9a3412', fontWeight: 700 }}>
-                    <FiCheckCircle size={14} color="#ea580c" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: '#93560a', fontWeight: 700 }}>
+                    <FiCheckCircle size={14} color="#93560a" />
                     <span>Instant Plug &amp; Play</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: '#9a3412', fontWeight: 700 }}>
-                    <FiCheckCircle size={14} color="#ea580c" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: '#93560a', fontWeight: 700 }}>
+                    <FiCheckCircle size={14} color="#93560a" />
                     <span>No Cable Drilling</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: '#9a3412', fontWeight: 700 }}>
-                    <FiCheckCircle size={14} color="#ea580c" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: '#93560a', fontWeight: 700 }}>
+                    <FiCheckCircle size={14} color="#93560a" />
                     <span>Free Doorstep Delivery</span>
                   </div>
                 </div>
@@ -229,13 +229,13 @@ function AreaUnavailableModal({
                   onClick={() => window.open(import.meta.env.VITE_PACKAGE_SELECTION_PORTAL_URL || 'https://dpdlab1.slt.lk:703', '_blank', 'noopener,noreferrer')}
                   disabled={!lteAvailable}
                   style={{
-                    backgroundColor: lteAvailable ? '#ea580c' : '#cbd5e1',
-                    color: '#ffffff',
+                    backgroundColor: lteAvailable ? '#93560a' : '#c3ccd9',
+                    color: 'var(--paper)',
                     border: 'none',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-lg)',
                     padding: '0.95rem 1.4rem',
                     fontSize: '0.98rem',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     cursor: lteAvailable ? 'pointer' : 'not-allowed',
                     display: 'flex',
                     alignItems: 'center',
@@ -254,10 +254,10 @@ function AreaUnavailableModal({
                   type="button"
                   onClick={onDiscontinue || onGoBack}
                   style={{
-                    backgroundColor: '#ffffff',
-                    color: '#991b1b',
-                    border: '1.5px solid #fecaca',
-                    borderRadius: '12px',
+                    backgroundColor: 'var(--paper)',
+                    color: 'var(--red-700)',
+                    border: '1.5px solid var(--red-200)',
+                    borderRadius: 'var(--radius-lg)',
                     padding: '0.8rem 1.25rem',
                     fontSize: '0.9rem',
                     fontWeight: 700,
@@ -274,8 +274,8 @@ function AreaUnavailableModal({
               </div>
 
               {/* Support Hotline */}
-              <p style={{ margin: '1rem 0 0', fontSize: '0.78rem', color: '#94a3b8', textAlign: 'center', fontWeight: 500 }}>
-                Need technical assistance? Call SLTMobitel Support at <a href="tel:1212" style={{ color: '#0f57a8', fontWeight: 700, textDecoration: 'none' }}>1212</a>
+              <p style={{ margin: '1rem 0 0', fontSize: '0.78rem', color: '#94a1b5', textAlign: 'center', fontWeight: 500 }}>
+                Need technical assistance? Call SLTMobitel Support at <a href="tel:1212" style={{ color: '#0056a2', fontWeight: 700, textDecoration: 'none' }}>1212</a>
               </p>
             </div>
           </motion.div>
@@ -424,10 +424,10 @@ export default function LoopCheckStep({
       <div style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
-            <h3 style={{ color: '#0f172a', margin: '0 0 0.35rem 0', fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FiCpu color="#0f57a8" /> Fibre Loop Availability Check
+            <h3 style={{ color: '#131f33', margin: '0 0 0.35rem 0', fontSize: '1.45rem', fontWeight: 700, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FiCpu color="#0056a2" /> Fibre Loop Availability Check
             </h3>
-            <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>
+            <p style={{ color: '#52627a', margin: 0, fontSize: '0.9rem' }}>
               We check FTTH loop availability first. If there is no loop, available services such as LTE will be offered before you continue.
             </p>
           </div>
@@ -439,9 +439,9 @@ export default function LoopCheckStep({
       {/* ── Verified Installation Location Card with GPS Indicator ── */}
       <div
         style={{
-          backgroundColor: '#f8fafc',
-          border: '1.5px solid #e2e8f0',
-          borderRadius: '16px',
+          backgroundColor: 'var(--grey-50)',
+          border: '1.5px solid var(--grey-200)',
+          borderRadius: 'var(--radius-lg)',
           padding: '1.15rem 1.4rem',
           marginBottom: '1.75rem',
           display: 'flex',
@@ -449,7 +449,7 @@ export default function LoopCheckStep({
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '1rem',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', maxWidth: '680px' }}>
@@ -457,9 +457,9 @@ export default function LoopCheckStep({
             style={{
               width: '38px',
               height: '38px',
-              borderRadius: '10px',
-              backgroundColor: '#eff6ff',
-              color: '#0f57a8',
+              borderRadius: 'var(--radius)',
+              backgroundColor: 'var(--blue-50)',
+              color: 'var(--blue-600)',
               display: 'grid',
               placeItems: 'center',
               flexShrink: 0,
@@ -470,17 +470,17 @@ export default function LoopCheckStep({
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#64748b' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#52627a' }}>
                 Evaluated Service Address
               </span>
               {latitude && longitude ? (
                 <span
                   style={{
-                    backgroundColor: '#dcfce7',
-                    color: '#166534',
-                    border: '1px solid #bbf7d0',
-                    fontSize: '0.72rem',
-                    fontWeight: 800,
+                    backgroundColor: 'var(--green-100)',
+                    color: 'var(--green-800)',
+                    border: '1px solid var(--green-200)',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
                     padding: '0.15rem 0.5rem',
                     borderRadius: '9999px',
                     display: 'inline-flex',
@@ -493,9 +493,9 @@ export default function LoopCheckStep({
               ) : (
                 <span
                   style={{
-                    backgroundColor: '#f1f5f9',
-                    color: '#475569',
-                    fontSize: '0.72rem',
+                    backgroundColor: 'var(--grey-100)',
+                    color: 'var(--grey-700)',
+                    fontSize: '0.75rem',
                     fontWeight: 700,
                     padding: '0.15rem 0.5rem',
                     borderRadius: '9999px',
@@ -505,12 +505,12 @@ export default function LoopCheckStep({
                 </span>
               )}
             </div>
-            <div style={{ fontSize: '0.96rem', fontWeight: 700, color: '#0f172a', lineHeight: 1.35 }}>
+            <div style={{ fontSize: '0.96rem', fontWeight: 700, color: '#131f33', lineHeight: 1.35 }}>
               {address || city || 'Current Service Location'}
             </div>
             {ossData?.location?.servingExchange && (
-              <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginTop: '0.25rem' }}>
-                Serving Optical Node: <strong style={{ color: '#0f57a8' }}>{ossData.location.servingExchange.name}</strong> ({ossData.location.servingExchange.code})
+              <div style={{ fontSize: '0.8rem', color: '#52627a', fontWeight: 600, marginTop: '0.25rem' }}>
+                Serving Optical Node: <strong style={{ color: '#0056a2' }}>{ossData.location.servingExchange.name}</strong> ({ossData.location.servingExchange.code})
               </div>
             )}
           </div>
@@ -520,13 +520,13 @@ export default function LoopCheckStep({
           type="button"
           onClick={onGoBack}
           style={{
-            backgroundColor: '#ffffff',
-            border: '1px solid #cbd5e1',
-            borderRadius: '10px',
+            backgroundColor: 'var(--paper)',
+            border: '1px solid var(--grey-300)',
+            borderRadius: 'var(--radius)',
             padding: '0.5rem 0.9rem',
             fontSize: '0.82rem',
             fontWeight: 700,
-            color: '#334155',
+            color: 'var(--grey-800)',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
           }}
@@ -544,12 +544,12 @@ export default function LoopCheckStep({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: 'var(--paper)',
               borderRadius: '20px',
               padding: '3rem 2rem',
               textAlign: 'center',
-              border: '1.5px solid #e2e8f0',
-              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.03)',
+              border: '1.5px solid var(--grey-200)',
+              boxShadow: 'var(--shadow-lg)',
             }}
           >
             {/* Spinning Radar Animation */}
@@ -558,43 +558,43 @@ export default function LoopCheckStep({
                 width: '68px',
                 height: '68px',
                 borderRadius: '50%',
-                border: '3.5px solid #e2e8f0',
-                borderTopColor: '#0f57a8',
-                borderRightColor: '#0284c7',
+                border: '3.5px solid var(--grey-200)',
+                borderTopColor: 'var(--blue-600)',
+                borderRightColor: 'var(--blue-500)',
                 margin: '0 auto 1.5rem auto',
                 animation: 'oss-spin 0.9s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite',
               }}
             />
 
-            <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>
+            <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.3rem', fontWeight: 700, color: '#131f33' }}>
               Querying OSS Network Inventory...
             </h4>
-            <p style={{ margin: '0 auto 2rem auto', fontSize: '0.88rem', color: '#64748b', maxWidth: '480px' }}>
+            <p style={{ margin: '0 auto 2rem auto', fontSize: '0.88rem', color: '#52627a', maxWidth: '480px' }}>
               Validating distribution loop parameters, optical splitters, and cellular signal coverage.
             </p>
 
             {/* Step Check Progression */}
             <div style={{ maxWidth: '440px', margin: '0 auto', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: scanStep >= 1 ? '#0f57a8' : '#94a3b8', fontWeight: 700 }}>
-                <span style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: scanStep >= 1 ? '#dbeafe' : '#f1f5f9', display: 'grid', placeItems: 'center', fontSize: '0.75rem' }}>
-                  {scanStep > 1 ? <FiCheck color="#16a34a" /> : '1'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: scanStep >= 1 ? '#0056a2' : '#94a1b5', fontWeight: 700 }}>
+                <span style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: scanStep >= 1 ? '#e3effc' : '#eef2f7', display: 'grid', placeItems: 'center', fontSize: '0.75rem' }}>
+                  {scanStep > 1 ? <FiCheck color="#0f7a4d" /> : '1'}
                 </span>
                 <span>Connecting to Regional SLTMobitel OLT Core Exchange</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: scanStep >= 2 ? '#0f57a8' : '#94a3b8', fontWeight: 700 }}>
-                <span style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: scanStep >= 2 ? '#dbeafe' : '#f1f5f9', display: 'grid', placeItems: 'center', fontSize: '0.75rem' }}>
-                  {scanStep > 2 ? <FiCheck color="#16a34a" /> : '2'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: scanStep >= 2 ? '#0056a2' : '#94a1b5', fontWeight: 700 }}>
+                <span style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: scanStep >= 2 ? '#e3effc' : '#eef2f7', display: 'grid', placeItems: 'center', fontSize: '0.75rem' }}>
+                  {scanStep > 2 ? <FiCheck color="#0f7a4d" /> : '2'}
                 </span>
                 <span>Auditing Fibre Distribution Point (FDP) &amp; Port Capacity</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: scanStep >= 3 ? '#0f57a8' : '#94a3b8', fontWeight: 700 }}>
-                <span style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: scanStep >= 3 ? '#dbeafe' : '#f1f5f9', display: 'grid', placeItems: 'center', fontSize: '0.75rem' }}>
-                  {scanStep > 3 ? <FiCheck color="#16a34a" /> : '3'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: scanStep >= 3 ? '#0056a2' : '#94a1b5', fontWeight: 700 }}>
+                <span style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: scanStep >= 3 ? '#e3effc' : '#eef2f7', display: 'grid', placeItems: 'center', fontSize: '0.75rem' }}>
+                  {scanStep > 3 ? <FiCheck color="#0f7a4d" /> : '3'}
                 </span>
                 <span>Measuring Mobitel 4G LTE Base Station RF Signal Strength</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: scanStep >= 4 ? '#0f57a8' : '#94a3b8', fontWeight: 700 }}>
-                <span style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: scanStep >= 4 ? '#dbeafe' : '#f1f5f9', display: 'grid', placeItems: 'center', fontSize: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem', color: scanStep >= 4 ? '#0056a2' : '#94a1b5', fontWeight: 700 }}>
+                <span style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: scanStep >= 4 ? '#e3effc' : '#eef2f7', display: 'grid', placeItems: 'center', fontSize: '0.75rem' }}>
                   4
                 </span>
                 <span>Compiling Comprehensive Feasibility Qualification Report</span>
@@ -610,15 +610,15 @@ export default function LoopCheckStep({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={{
-              backgroundColor: '#fff7ed',
-              border: '1.5px solid #fed7aa',
-              borderRadius: '16px',
+              backgroundColor: 'var(--amber-50)',
+              border: '1.5px solid #f4d58f',
+              borderRadius: 'var(--radius-lg)',
               padding: '2rem',
               textAlign: 'center',
             }}
           >
             <FiAlertCircle size={32} color="#c2410c" />
-            <h4 style={{ margin: '0.75rem 0 0.4rem', color: '#9a3412' }}>Coverage Check Could Not Be Completed</h4>
+            <h4 style={{ margin: '0.75rem 0 0.4rem', color: '#93560a' }}>Coverage Check Could Not Be Completed</h4>
             <p style={{ margin: '0 0 1.25rem', color: '#7c2d12', fontSize: '0.9rem' }}>{checkError}</p>
             <button
               type="button"
@@ -640,15 +640,15 @@ export default function LoopCheckStep({
             {isReqFeasible && overallStatus !== 'UNAVAILABLE' ? (
               <div
                 style={{
-                  backgroundColor: '#f0fdf4',
-                  border: '1.5px solid #86efac',
-                  borderRadius: '16px',
+                  backgroundColor: 'var(--green-50)',
+                  border: '1.5px solid var(--green-300)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1.25rem 1.5rem',
                   marginBottom: '1.75rem',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '1rem',
-                  boxShadow: '0 4px 15px rgba(22, 163, 74, 0.06)',
+                  boxShadow: 'var(--shadow-md)',
                 }}
               >
                 <div
@@ -656,8 +656,8 @@ export default function LoopCheckStep({
                     width: '48px',
                     height: '48px',
                     borderRadius: '50%',
-                    backgroundColor: '#dcfce7',
-                    color: '#16a34a',
+                    backgroundColor: 'var(--green-100)',
+                    color: 'var(--green-700)',
                     display: 'grid',
                     placeItems: 'center',
                     flexShrink: 0,
@@ -666,10 +666,10 @@ export default function LoopCheckStep({
                   <FiCheckCircle size={28} />
                 </div>
                 <div>
-                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.15rem', fontWeight: 800, color: '#14532d' }}>
+                  <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '1.15rem', fontWeight: 700, color: '#14532d' }}>
                     Service Available at Your Location!
                   </h4>
-                  <p style={{ margin: 0, fontSize: '0.88rem', color: '#166534', fontWeight: 600 }}>
+                  <p style={{ margin: 0, fontSize: '0.88rem', color: '#0b5f3c', fontWeight: 600 }}>
                     {selectedProduct
                       ? `The coverage check reports that ${selectedProduct.productName || selectedProduct.name || 'your selected package'} may be available at this address, subject to final provider confirmation.`
                       : 'High-speed broadband network infrastructure is verified and available for your premises.'}
@@ -680,15 +680,15 @@ export default function LoopCheckStep({
               /* Requirement 4: Notify Customer when service is unavailable */
               <div
                 style={{
-                  backgroundColor: '#fffbeb',
-                  border: '1.5px solid #fcd34d',
-                  borderRadius: '16px',
+                  backgroundColor: 'var(--amber-50)',
+                  border: '1.5px solid var(--amber-200)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1.25rem 1.5rem',
                   marginBottom: '1.75rem',
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '1rem',
-                  boxShadow: '0 4px 15px rgba(217, 119, 6, 0.08)',
+                  boxShadow: 'var(--shadow-md)',
                 }}
               >
                 <div
@@ -696,8 +696,8 @@ export default function LoopCheckStep({
                     width: '48px',
                     height: '48px',
                     borderRadius: '50%',
-                    backgroundColor: '#fef3c7',
-                    color: '#d97706',
+                    backgroundColor: 'var(--amber-100)',
+                    color: 'var(--amber-700)',
                     display: 'grid',
                     placeItems: 'center',
                     flexShrink: 0,
@@ -708,14 +708,14 @@ export default function LoopCheckStep({
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <span style={{ backgroundColor: '#fef3c7', color: '#b45309', padding: '0.15rem 0.5rem', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                    <span style={{ backgroundColor: '#fdf0d5', color: '#93560a', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
                       OSS Feasibility Notice
                     </span>
                   </div>
-                  <h4 style={{ margin: '0 0 0.35rem 0', fontSize: '1.15rem', fontWeight: 800, color: '#78350f' }}>
+                  <h4 style={{ margin: '0 0 0.35rem 0', fontSize: '1.15rem', fontWeight: 700, color: '#78350f' }}>
                     Selected Service Unavailable at this Exact Address
                   </h4>
-                  <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.88rem', color: '#92400e', lineHeight: 1.45, fontWeight: 500 }}>
+                  <p style={{ margin: '0 0 0.85rem 0', fontSize: '0.88rem', color: '#93560a', lineHeight: 1.45, fontWeight: 500 }}>
                     {ossData?.requestedServiceMessage ||
                       'The nearest optical Fibre Distribution Point (FDP) has reached full capacity or is out of drop cable range.'}
                   </p>
@@ -726,13 +726,13 @@ export default function LoopCheckStep({
                       onClick={handleRegisterWaitlist}
                       disabled={waitlistRegistered}
                       style={{
-                        backgroundColor: waitlistRegistered ? '#dcfce7' : '#ffffff',
-                        border: `1.5px solid ${waitlistRegistered ? '#86efac' : '#d97706'}`,
-                        color: waitlistRegistered ? '#166534' : '#92400e',
+                        backgroundColor: waitlistRegistered ? '#e2f4e3' : '#ffffff',
+                        border: `1.5px solid ${waitlistRegistered ? '#9bd89a' : '#93560a'}`,
+                        color: waitlistRegistered ? '#0b5f3c' : '#93560a',
                         padding: '0.45rem 0.9rem',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius)',
                         fontSize: '0.82rem',
-                        fontWeight: 800,
+                        fontWeight: 700,
                         cursor: waitlistRegistered ? 'default' : 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -749,15 +749,15 @@ export default function LoopCheckStep({
               /* Completely unserviced area */
               <div
                 style={{
-                  backgroundColor: '#fef2f2',
-                  border: '1.5px solid #fca5a5',
-                  borderRadius: '16px',
+                  backgroundColor: 'var(--red-50)',
+                  border: '1.5px solid var(--red-200)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1.25rem 1.5rem',
                   marginBottom: '1.75rem',
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '1rem',
-                  boxShadow: '0 4px 15px rgba(220, 38, 38, 0.08)',
+                  boxShadow: 'var(--shadow-md)',
                 }}
               >
                 <div
@@ -765,8 +765,8 @@ export default function LoopCheckStep({
                     width: '48px',
                     height: '48px',
                     borderRadius: '50%',
-                    backgroundColor: '#fee2e2',
-                    color: '#dc2626',
+                    backgroundColor: 'var(--red-100)',
+                    color: 'var(--red-700)',
                     display: 'grid',
                     placeItems: 'center',
                     flexShrink: 0,
@@ -775,23 +775,23 @@ export default function LoopCheckStep({
                   <FiAlertCircle size={28} />
                 </div>
                 <div>
-                  <h4 style={{ margin: '0 0 0.35rem 0', fontSize: '1.15rem', fontWeight: 800, color: '#991b1b' }}>
+                  <h4 style={{ margin: '0 0 0.35rem 0', fontSize: '1.15rem', fontWeight: 700, color: '#b42318' }}>
                     Network Loop &amp; Wireless Coverage Unavailable
                   </h4>
-                  <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.88rem', color: '#b91c1c', lineHeight: 1.45 }}>
+                  <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.88rem', color: '#b42318', lineHeight: 1.45 }}>
                     Unfortunately, this address is located outside SLTMobitel's immediate distribution loop and cellular coverage boundaries.
                   </p>
                   <button
                     type="button"
                     onClick={() => setShowSurveyModal(true)}
                     style={{
-                      backgroundColor: '#dc2626',
-                      color: '#ffffff',
+                      backgroundColor: 'var(--red-700)',
+                      color: 'var(--paper)',
                       border: 'none',
                       padding: '0.45rem 0.9rem',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius)',
                       fontSize: '0.82rem',
-                      fontWeight: 800,
+                      fontWeight: 700,
                       cursor: 'pointer',
                     }}
                   >
@@ -806,11 +806,11 @@ export default function LoopCheckStep({
               {/* ── CARD 1: Fibre FDP Availability ── */}
               <div
                 style={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: '16px',
-                  border: `1.5px solid ${fibre.available ? '#bfdbfe' : '#e2e8f0'}`,
+                  backgroundColor: 'var(--paper)',
+                  borderRadius: 'var(--radius-lg)',
+                  border: `1.5px solid ${fibre.available ? '#c3dcf5' : '#dfe5ee'}`,
                   padding: '1.5rem',
-                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
+                  boxShadow: 'var(--shadow-md)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -823,9 +823,9 @@ export default function LoopCheckStep({
                         style={{
                           width: '40px',
                           height: '40px',
-                          borderRadius: '10px',
-                          backgroundColor: '#eff6ff',
-                          color: '#0f57a8',
+                          borderRadius: 'var(--radius)',
+                          backgroundColor: 'var(--blue-50)',
+                          color: 'var(--blue-600)',
                           display: 'grid',
                           placeItems: 'center',
                         }}
@@ -833,10 +833,10 @@ export default function LoopCheckStep({
                         <FiZap size={22} />
                       </div>
                       <div>
-                        <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+                        <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#131f33' }}>
                           Optical Fibre (FTTH)
                         </h4>
-                        <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                        <span style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 600 }}>
                           Fibre Distribution Point (FDP)
                         </span>
                       </div>
@@ -844,12 +844,12 @@ export default function LoopCheckStep({
 
                     <span
                       style={{
-                        backgroundColor: fibre.available ? '#dcfce7' : '#fee2e2',
-                        color: fibre.available ? '#166534' : '#991b1b',
+                        backgroundColor: fibre.available ? '#e2f4e3' : '#fde8e6',
+                        color: fibre.available ? '#0b5f3c' : '#b42318',
                         padding: '0.25rem 0.75rem',
                         borderRadius: '9999px',
                         fontSize: '0.78rem',
-                        fontWeight: 800,
+                        fontWeight: 700,
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '0.35rem',
@@ -863,8 +863,8 @@ export default function LoopCheckStep({
                   {/* FDP Technical Metrics */}
                   <div
                     style={{
-                      backgroundColor: '#f8fafc',
-                      borderRadius: '12px',
+                      backgroundColor: 'var(--grey-50)',
+                      borderRadius: 'var(--radius-lg)',
                       padding: '1rem',
                       marginBottom: '1rem',
                       display: 'flex',
@@ -873,24 +873,24 @@ export default function LoopCheckStep({
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                      <span style={{ color: '#64748b', fontWeight: 600 }}>FDP Terminal ID:</span>
-                      <strong style={{ color: '#0f172a', fontFamily: 'monospace', fontSize: '0.9rem' }}>{fibre.fdpId || 'Not reported'}</strong>
+                      <span style={{ color: '#52627a', fontWeight: 600 }}>FDP Terminal ID:</span>
+                      <strong style={{ color: '#131f33', fontFamily: 'monospace', fontSize: '0.9rem' }}>{fibre.fdpId || 'Not reported'}</strong>
                     </div>
 
                     {/* Distance Meter */}
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
-                        <span style={{ color: '#64748b', fontWeight: 600 }}>Distance to FDP:</span>
-                        <strong style={{ color: fibre.distanceMeters <= 350 ? '#15803d' : '#dc2626' }}>
+                        <span style={{ color: '#52627a', fontWeight: 600 }}>Distance to FDP:</span>
+                        <strong style={{ color: fibre.distanceMeters <= 350 ? '#0f7a4d' : '#b42318' }}>
                           {fibre.distanceMeters ?? 'Not reported'} meters (Max: 350m)
                         </strong>
                       </div>
-                      <div style={{ width: '100%', height: '6px', backgroundColor: '#e2e8f0', borderRadius: '9999px', overflow: 'hidden' }}>
+                      <div style={{ width: '100%', height: '6px', backgroundColor: '#dfe5ee', borderRadius: '9999px', overflow: 'hidden' }}>
                         <div
                           style={{
                             width: `${Math.min(100, ((Number(fibre.distanceMeters) || 0) / 350) * 100)}%`,
                             height: '100%',
-                            backgroundColor: fibre.distanceMeters <= 350 ? '#10b981' : '#ef4444',
+                            backgroundColor: fibre.distanceMeters <= 350 ? '#0f7a4d' : '#d92d20',
                             borderRadius: '9999px',
                           }}
                         />
@@ -900,8 +900,8 @@ export default function LoopCheckStep({
                     {/* Port Allocation Visualization */}
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
-                        <span style={{ color: '#64748b', fontWeight: 600 }}>Splitter Ports:</span>
-                        <strong style={{ color: '#0f172a' }}>
+                        <span style={{ color: '#52627a', fontWeight: 600 }}>Splitter Ports:</span>
+                        <strong style={{ color: '#131f33' }}>
                           {fibre.availablePorts ?? 0} Free / {fibre.totalPorts ?? 0} Total
                         </strong>
                       </div>
@@ -916,8 +916,8 @@ export default function LoopCheckStep({
                               style={{
                                 flex: 1,
                                 height: '10px',
-                                borderRadius: '4px',
-                                backgroundColor: isFree ? '#22c55e' : '#cbd5e1',
+                                borderRadius: 'var(--radius-sm)',
+                                backgroundColor: isFree ? '#22c55e' : '#c3ccd9',
                               }}
                             />
                           );
@@ -926,13 +926,13 @@ export default function LoopCheckStep({
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                      <span style={{ color: '#64748b', fontWeight: 600 }}>Max Fibre Speed:</span>
-                      <strong style={{ color: '#0f57a8' }}>{fibre.maxSpeed || 'Not reported'}</strong>
+                      <span style={{ color: '#52627a', fontWeight: 600 }}>Max Fibre Speed:</span>
+                      <strong style={{ color: '#0056a2' }}>{fibre.maxSpeed || 'Not reported'}</strong>
                     </div>
                   </div>
                 </div>
 
-                <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569', lineHeight: 1.4, fontStyle: 'italic' }}>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#3b4a61', lineHeight: 1.4, fontStyle: 'italic' }}>
                   {fibre.reason}
                 </p>
               </div>
@@ -940,11 +940,11 @@ export default function LoopCheckStep({
               {/* ── CARD 2: Mobitel 4G/LTE Coverage ── */}
               <div
                 style={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: '16px',
-                  border: `1.5px solid ${lte.available ? '#fed7aa' : '#e2e8f0'}`,
+                  backgroundColor: 'var(--paper)',
+                  borderRadius: 'var(--radius-lg)',
+                  border: `1.5px solid ${lte.available ? '#f4d58f' : '#dfe5ee'}`,
                   padding: '1.5rem',
-                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
+                  boxShadow: 'var(--shadow-md)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -957,9 +957,9 @@ export default function LoopCheckStep({
                         style={{
                           width: '40px',
                           height: '40px',
-                          borderRadius: '10px',
-                          backgroundColor: '#fff7ed',
-                          color: '#ea580c',
+                          borderRadius: 'var(--radius)',
+                          backgroundColor: 'var(--amber-50)',
+                          color: 'var(--amber-700)',
                           display: 'grid',
                           placeItems: 'center',
                         }}
@@ -967,10 +967,10 @@ export default function LoopCheckStep({
                         <FiRadio size={22} />
                       </div>
                       <div>
-                        <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+                        <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#131f33' }}>
                           Mobitel 4G / LTE Coverage
                         </h4>
-                        <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                        <span style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 600 }}>
                           Wireless Home Broadband
                         </span>
                       </div>
@@ -978,12 +978,12 @@ export default function LoopCheckStep({
 
                     <span
                       style={{
-                        backgroundColor: lte.available ? '#ffedd5' : '#fee2e2',
-                        color: lte.available ? '#c2410c' : '#991b1b',
+                        backgroundColor: lte.available ? '#fdf0d5' : '#fde8e6',
+                        color: lte.available ? '#c2410c' : '#b42318',
                         padding: '0.25rem 0.75rem',
                         borderRadius: '9999px',
                         fontSize: '0.78rem',
-                        fontWeight: 800,
+                        fontWeight: 700,
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '0.35rem',
@@ -997,8 +997,8 @@ export default function LoopCheckStep({
                   {/* LTE Technical Metrics */}
                   <div
                     style={{
-                      backgroundColor: '#f8fafc',
-                      borderRadius: '12px',
+                      backgroundColor: 'var(--grey-50)',
+                      borderRadius: 'var(--radius-lg)',
                       padding: '1rem',
                       marginBottom: '1rem',
                       display: 'flex',
@@ -1009,8 +1009,8 @@ export default function LoopCheckStep({
                     {/* Signal Strength Meter */}
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
-                        <span style={{ color: '#64748b', fontWeight: 600 }}>Cellular Signal (RSRP):</span>
-                        <strong style={{ color: '#ea580c' }}>
+                        <span style={{ color: '#52627a', fontWeight: 600 }}>Cellular Signal (RSRP):</span>
+                        <strong style={{ color: '#93560a' }}>
                           {lte.rsrp ?? 'Not reported'} dBm ({lte.signalPercent ?? 0}% Signal)
                         </strong>
                       </div>
@@ -1021,8 +1021,8 @@ export default function LoopCheckStep({
                             style={{
                               flex: 1,
                               height: `${(idx + 1) * 25}%`,
-                              borderRadius: '2px',
-                              backgroundColor: (lte.signalPercent ?? 0) >= step ? '#f97316' : '#cbd5e1',
+                              borderRadius: 'var(--radius-sm)',
+                              backgroundColor: (lte.signalPercent ?? 0) >= step ? '#f97316' : '#c3ccd9',
                             }}
                           />
                         ))}
@@ -1030,28 +1030,28 @@ export default function LoopCheckStep({
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                      <span style={{ color: '#64748b', fontWeight: 600 }}>Nearest Base Station:</span>
-                      <strong style={{ color: '#0f172a', fontSize: '0.85rem' }}>{lte.nearestTower || 'Not reported'}</strong>
+                      <span style={{ color: '#52627a', fontWeight: 600 }}>Nearest Base Station:</span>
+                      <strong style={{ color: '#131f33', fontSize: '0.85rem' }}>{lte.nearestTower || 'Not reported'}</strong>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                      <span style={{ color: '#64748b', fontWeight: 600 }}>Tower Distance:</span>
-                      <strong style={{ color: '#0f172a' }}>{lte.distanceKm ?? 'Not reported'} km</strong>
+                      <span style={{ color: '#52627a', fontWeight: 600 }}>Tower Distance:</span>
+                      <strong style={{ color: '#131f33' }}>{lte.distanceKm ?? 'Not reported'} km</strong>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                      <span style={{ color: '#64748b', fontWeight: 600 }}>Carrier Bands:</span>
-                      <strong style={{ color: '#0f172a', fontSize: '0.8rem' }}>{lte.carrierBands || 'Not reported'}</strong>
+                      <span style={{ color: '#52627a', fontWeight: 600 }}>Carrier Bands:</span>
+                      <strong style={{ color: '#131f33', fontSize: '0.8rem' }}>{lte.carrierBands || 'Not reported'}</strong>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem' }}>
-                      <span style={{ color: '#64748b', fontWeight: 600 }}>Provisioning ETA:</span>
-                      <strong style={{ color: '#16a34a' }}>{lte.provisioningEta || 'To be confirmed'}</strong>
+                      <span style={{ color: '#52627a', fontWeight: 600 }}>Provisioning ETA:</span>
+                      <strong style={{ color: '#0f7a4d' }}>{lte.provisioningEta || 'To be confirmed'}</strong>
                     </div>
                   </div>
                 </div>
 
-                <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569', lineHeight: 1.4, fontStyle: 'italic' }}>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#3b4a61', lineHeight: 1.4, fontStyle: 'italic' }}>
                   {lte.reason}
                 </p>
               </div>
@@ -1061,20 +1061,20 @@ export default function LoopCheckStep({
             {alternatives.length > 0 && !isReqFeasible && (
               <div
                 style={{
-                  backgroundColor: '#ffffff',
+                  backgroundColor: 'var(--paper)',
                   borderRadius: '18px',
-                  border: '2px solid #38bdf8',
+                  border: '2px solid var(--blue-400)',
                   padding: '1.75rem',
                   marginBottom: '2rem',
-                  boxShadow: '0 8px 30px rgba(14, 165, 233, 0.08)',
+                  boxShadow: 'var(--shadow-lg)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
                   <div>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1a6cbd', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Alternative Packages
                     </span>
-                    <h4 style={{ margin: '0.2rem 0 0 0', fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>
+                    <h4 style={{ margin: '0.2rem 0 0 0', fontSize: '1.2rem', fontWeight: 700, color: '#131f33' }}>
                       Choose another package if you want to continue
                     </h4>
                   </div>
@@ -1085,10 +1085,10 @@ export default function LoopCheckStep({
                     <div
                       key={alt._id}
                       style={{
-                        border: '1.5px solid #cbd5e1',
-                        borderRadius: '14px',
+                        border: '1.5px solid var(--grey-300)',
+                        borderRadius: 'var(--radius-lg)',
                         padding: '1.25rem',
-                        backgroundColor: '#f8fafc',
+                        backgroundColor: 'var(--grey-50)',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
@@ -1097,20 +1097,20 @@ export default function LoopCheckStep({
                     >
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                          <h5 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+                          <h5 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#131f33' }}>
                             {alt.name}
                           </h5>
-                          <span style={{ backgroundColor: '#fed7aa', color: '#9a3412', fontSize: '0.7rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '6px' }}>
+                          <span style={{ backgroundColor: '#f4d58f', color: '#93560a', fontSize: '0.75rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-sm)' }}>
                             {alt.speed}
                           </span>
                         </div>
 
-                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f57a8', marginBottom: '0.75rem' }}>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0056a2', marginBottom: '0.75rem' }}>
                           Rs. {alt.monthlyPrice?.toLocaleString()}{' '}
-                          <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>/month</span>
+                          <span style={{ fontSize: '0.78rem', color: '#52627a', fontWeight: 600 }}>/month</span>
                         </div>
 
-                        <ul style={{ margin: '0 0 1.25rem 0', paddingLeft: '1.1rem', fontSize: '0.8rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                        <ul style={{ margin: '0 0 1.25rem 0', paddingLeft: '1.1rem', fontSize: '0.8rem', color: '#3b4a61', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                           {alt.features?.slice(0, 3).map((f, i) => (
                             <li key={i}>{f}</li>
                           ))}
@@ -1121,19 +1121,19 @@ export default function LoopCheckStep({
                         type="button"
                         onClick={() => handleSwitchAlternative(alt)}
                         style={{
-                          backgroundColor: '#0f57a8',
-                          color: '#ffffff',
+                          backgroundColor: 'var(--blue-600)',
+                          color: 'var(--paper)',
                           border: 'none',
-                          borderRadius: '10px',
+                          borderRadius: 'var(--radius)',
                           padding: '0.65rem 1rem',
                           fontSize: '0.88rem',
-                          fontWeight: 800,
+                          fontWeight: 700,
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '0.4rem',
-                          boxShadow: '0 4px 12px rgba(15, 87, 168, 0.2)',
+                          boxShadow: 'var(--shadow-md)',
                         }}
                       >
                         <span>Choose this package &amp; continue</span>
@@ -1146,16 +1146,16 @@ export default function LoopCheckStep({
             )}
 
             {/* ── Bottom Action Bar ── */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderTop: '1px solid #dfe5ee', paddingTop: '1.5rem' }}>
               <button
                 type="button"
                 onClick={onGoBack}
                 style={{
-                  backgroundColor: '#f1f5f9',
-                  border: '1px solid #cbd5e1',
-                  color: '#334155',
+                  backgroundColor: 'var(--grey-100)',
+                  border: '1px solid var(--grey-300)',
+                  color: 'var(--grey-800)',
                   padding: '0.75rem 1.4rem',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-lg)',
                   fontWeight: 700,
                   fontSize: '0.9rem',
                   cursor: 'pointer',
@@ -1169,11 +1169,11 @@ export default function LoopCheckStep({
                   type="button"
                   onClick={() => executeOSSCheck()}
                   style={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #cbd5e1',
-                    color: '#0f57a8',
+                    backgroundColor: 'var(--paper)',
+                    border: '1px solid var(--grey-300)',
+                    color: 'var(--blue-600)',
                     padding: '0.75rem 1.15rem',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-lg)',
                     fontWeight: 700,
                     fontSize: '0.9rem',
                     cursor: 'pointer',
@@ -1192,18 +1192,18 @@ export default function LoopCheckStep({
                     type="button"
                     onClick={onAvailable}
                     style={{
-                      backgroundColor: '#16a34a',
-                      color: '#ffffff',
+                      backgroundColor: 'var(--green-700)',
+                      color: 'var(--paper)',
                       border: 'none',
                       padding: '0.85rem 1.85rem',
-                      borderRadius: '12px',
-                      fontWeight: 800,
+                      borderRadius: 'var(--radius-lg)',
+                      fontWeight: 700,
                       fontSize: '0.95rem',
                       cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '0.5rem',
-                      boxShadow: '0 4px 15px rgba(22, 163, 74, 0.25)',
+                      boxShadow: 'var(--shadow-md)',
                     }}
                   >
                     <span>Proceed to Identity Verification</span>
@@ -1214,11 +1214,11 @@ export default function LoopCheckStep({
                     type="button"
                     disabled
                     style={{
-                      backgroundColor: '#cbd5e1',
-                      color: '#64748b',
+                      backgroundColor: 'var(--grey-300)',
+                      color: 'var(--grey-600)',
                       border: 'none',
                       padding: '0.75rem 1.75rem',
-                      borderRadius: '12px',
+                      borderRadius: 'var(--radius-lg)',
                       fontWeight: 700,
                       fontSize: '0.95rem',
                       cursor: 'not-allowed',
@@ -1272,13 +1272,13 @@ export default function LoopCheckStep({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               style={{
-                backgroundColor: '#ffffff',
+                backgroundColor: 'var(--paper)',
                 borderRadius: '20px',
                 padding: '2rem',
                 maxWidth: '520px',
                 width: '100%',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)',
-                border: '1px solid #e2e8f0',
+                boxShadow: 'var(--shadow-xl)',
+                border: '1px solid var(--grey-200)',
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -1288,8 +1288,8 @@ export default function LoopCheckStep({
                     width: '56px',
                     height: '56px',
                     borderRadius: '50%',
-                    backgroundColor: '#fee2e2',
-                    color: '#dc2626',
+                    backgroundColor: 'var(--red-100)',
+                    color: 'var(--red-700)',
                     display: 'grid',
                     placeItems: 'center',
                     margin: '0 auto 1rem auto',
@@ -1297,18 +1297,18 @@ export default function LoopCheckStep({
                 >
                   <FiPhoneCall size={26} />
                 </div>
-                <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>
+                <h3 style={{ margin: '0 0 0.4rem 0', fontSize: '1.3rem', fontWeight: 700, color: '#131f33' }}>
                   SLTMobitel Regional Support
                 </h3>
-                <p style={{ margin: 0, fontSize: '0.88rem', color: '#64748b' }}>
+                <p style={{ margin: 0, fontSize: '0.88rem', color: '#52627a' }}>
                   Our network planning team can evaluate special off-grid or dedicated line connectivity.
                 </p>
               </div>
 
               <div
                 style={{
-                  backgroundColor: '#f8fafc',
-                  borderRadius: '12px',
+                  backgroundColor: 'var(--grey-50)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1rem',
                   marginBottom: '1.5rem',
                   display: 'flex',
@@ -1318,7 +1318,7 @@ export default function LoopCheckStep({
                 }}
               >
                 <div>
-                  <strong>Customer Helpline:</strong> <a href="tel:1212" style={{ color: '#0f57a8', fontWeight: 700 }}>1212 (Toll Free)</a>
+                  <strong>Customer Helpline:</strong> <a href="tel:1212" style={{ color: '#0056a2', fontWeight: 700 }}>1212 (Toll Free)</a>
                 </div>
                 <div>
                   <strong>Regional Center:</strong> {ossData?.location?.servingExchange?.name || 'Nearest Regional Teleshop'}
@@ -1336,12 +1336,12 @@ export default function LoopCheckStep({
                     toast('This demo does not submit a field survey request. Please contact SLTMobitel Support at 1212.');
                   }}
                   style={{
-                    backgroundColor: '#0f57a8',
-                    color: '#ffffff',
+                    backgroundColor: 'var(--blue-600)',
+                    color: 'var(--paper)',
                     border: 'none',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--radius)',
                     padding: '0.75rem',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     cursor: 'pointer',
                   }}
                 >
@@ -1351,10 +1351,10 @@ export default function LoopCheckStep({
                   type="button"
                   onClick={() => setShowSurveyModal(false)}
                   style={{
-                    backgroundColor: '#f1f5f9',
-                    color: '#475569',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '10px',
+                    backgroundColor: 'var(--grey-100)',
+                    color: 'var(--grey-700)',
+                    border: '1px solid var(--grey-300)',
+                    borderRadius: 'var(--radius)',
                     padding: '0.75rem',
                     fontWeight: 700,
                     cursor: 'pointer',

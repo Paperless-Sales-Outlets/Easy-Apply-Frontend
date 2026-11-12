@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { FiCreditCard, FiLock, FiShield, FiCheckCircle, FiSmartphone, FiFileText } from 'react-icons/fi';
+import { FiCreditCard, FiLock, FiShield, FiCheckCircle, FiSmartphone } from 'react-icons/fi';
 import SLTLoader from '../../../shared/components/SLTLoader';
 import api from '../../../shared/utils/api';
 import { loadPayHereSdk } from '../../../shared/utils/loadPayHereSdk';
@@ -362,7 +362,7 @@ export default function PaymentStep({
               <label className="form-label">Mobile Number</label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}>+94</span>
-                <input type="tel" className="form-control" style={{ paddingLeft: '3.5rem', fontSize: '1.1rem', letterSpacing: '2px' }} placeholder="7X XXX XXXX" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleMobileSubmit(e)} maxLength="10" />
+                <input type="tel" className="form-control" style={{ paddingLeft: '3.5rem', fontSize: '1.1rem', letterSpacing: '0.06em' }} placeholder="7X XXX XXXX" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleMobileSubmit(e)} maxLength="10" />
               </div>
               {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '0.5rem' }}>{error}</p>}
 
@@ -390,7 +390,7 @@ export default function PaymentStep({
                   border: '1.5px solid #fecdd3',
                   color: '#be123c',
                   padding: '0.85rem 1rem',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-lg)',
                   marginBottom: '1.25rem',
                   textAlign: 'center',
                   fontWeight: 600,
@@ -401,7 +401,7 @@ export default function PaymentStep({
                   <FiLock size={16} />
                   <span>Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.</span>
                 </div>
-                <div style={{ color: '#9f1239', fontWeight: 800, fontSize: '0.95rem' }}>
+                <div style={{ color: '#9f1239', fontWeight: 700, fontSize: '0.95rem' }}>
                   OTP verification locked. Try again in {formatTimer(lockoutIn)}
                 </div>
               </div>
@@ -410,7 +410,7 @@ export default function PaymentStep({
             {/* 5-Minute Expiry Countdown */}
             {!isLockedOut && !isOtpExpired && (
               <div style={{ marginBottom: '1.25rem', fontSize: '0.88rem' }}>
-                <span style={{ color: '#0369a1', fontWeight: 700 }}>
+                <span style={{ color: '#0a4b8c', fontWeight: 700 }}>
                   OTP expires in {formatTimer(expiresIn)}
                 </span>
               </div>
@@ -428,10 +428,10 @@ export default function PaymentStep({
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(i, e)}
                   style={{
-                    width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px',
-                    border: '1.5px solid #cbd5e1',
-                    background: '#ffffff',
-                    boxShadow: '0 4px 12px rgba(31, 38, 135, 0.05)'
+                    width: '48px', height: '56px', fontSize: '1.5rem', textAlign: 'center', borderRadius: 'var(--radius)',
+                    border: '1.5px solid var(--grey-300)',
+                    background: 'var(--paper)',
+                    boxShadow: 'var(--shadow-md)'
                   }}
                   disabled={isLoading || isLockedOut || isOtpExpired}
                 />
@@ -460,7 +460,7 @@ export default function PaymentStep({
                     style={{
                       border: 'none',
                       background: 'transparent',
-                      color: '#0056b3',
+                      color: 'var(--blue-600)',
                       fontWeight: 700,
                       cursor: 'pointer',
                     }}
@@ -484,92 +484,50 @@ export default function PaymentStep({
             <h3 style={{ color: 'var(--green-text)', marginBottom: '0.35rem', fontSize: '1.35rem' }}>Verification Complete</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.75rem', fontSize: '0.92rem' }}>Choose your preferred payment method to complete the connection request.</p>
 
-            {/* PayHere Gateway Banner & Badges */}
-            <div
-              style={{
-                backgroundColor: '#f8fafc',
-                border: '1.5px solid #e2e8f0',
-                borderRadius: '14px',
-                padding: '1.25rem',
-                marginBottom: '1.5rem',
-                textAlign: 'left',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <FiLock color="#0056b3" size={16} />
-                  <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0f172a' }}>PayHere Secured Gateway</span>
-                </div>
-                <span style={{ fontSize: '0.72rem', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: 800, padding: '0.2rem 0.55rem', borderRadius: '20px', textTransform: 'uppercase' }}>
-                  256-Bit SSL Encrypted
-                </span>
-              </div>
-
-              {/* Supported payment icons */}
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                {['VISA', 'MasterCard', 'AMEX', 'eZ Cash', 'mCash', 'FriMi', 'Genie'].map((brand) => (
-                  <span
-                    key={brand}
-                    style={{
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      backgroundColor: '#ffffff',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '6px',
-                      padding: '0.3rem 0.6rem',
-                      color: '#334155',
-                    }}
-                  >
-                    {brand}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 'var(--text-sm)', color: 'var(--grey-600)', textAlign: 'left', marginBottom: '1.5rem' }}>
+              <FiLock size={16} aria-hidden="true" style={{ flex: 'none', color: 'var(--blue-600)' }} />
+              <span>Secured by PayHere. Cards (Visa, MasterCard, AMEX) and eZ Cash, mCash, FriMi and Genie are accepted.</span>
+            </p>
 
             {/* Digital Receipt Breakdown */}
             <div
               style={{
-                padding: '1.75rem 1.5rem', borderRadius: '14px', textAlign: 'left', marginBottom: '1.75rem',
-                backgroundColor: '#ffffff',
-                boxShadow: '0 4px 20px rgba(0, 86, 179, 0.06)',
-                border: '1px solid #e2e8f0',
+                padding: '1.75rem 1.5rem', borderRadius: 'var(--radius-lg)', textAlign: 'left', marginBottom: '1.75rem',
+                backgroundColor: 'var(--paper)',
+                boxShadow: 'var(--shadow-md)',
+                border: '1px solid var(--grey-200)',
                 position: 'relative'
               }}
             >
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', backgroundColor: '#0056b3', borderRadius: '14px 14px 0 0' }} />
-
               <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'rgba(15, 87, 168, 0.1)', display: 'grid', placeItems: 'center', margin: '0 auto 0.4rem', color: 'var(--slt-blue)' }}>
-                  <FiFileText size={18} />
-                </div>
-                <h4 style={{ margin: 0, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '1.5px', fontSize: '0.85rem', fontWeight: 800 }}>Digital Order Receipt</h4>
+                <h4 style={{ margin: 0, color: '#131f33', fontSize: 'var(--text-lg)' }}>Order summary</h4>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: parsedFee > 0 ? 'none' : '1px dashed #cbd5e1', marginBottom: parsedFee > 0 ? '0.4rem' : '0.75rem' }}>
-                <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.92rem' }}>{amountLabel}</span>
-                <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>Rs. {formattedPending}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: parsedFee > 0 ? 'none' : '1px solid var(--grey-200)', marginBottom: parsedFee > 0 ? '0.4rem' : '0.75rem' }}>
+                <span style={{ color: '#52627a', fontWeight: 500, fontSize: '0.92rem' }}>{amountLabel}</span>
+                <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#131f33' }}>Rs. {formattedPending}</span>
               </div>
 
               {parsedFee > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: '1px dashed #cbd5e1', marginBottom: '0.75rem' }}>
-                  <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.92rem' }}>{feeLabel || 'Fee'}</span>
-                  <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a' }}>Rs. {formattedFee}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: '1px solid var(--grey-200)', marginBottom: '0.75rem' }}>
+                  <span style={{ color: '#52627a', fontWeight: 500, fontSize: '0.92rem' }}>{feeLabel || 'Fee'}</span>
+                  <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#131f33' }}>Rs. {formattedFee}</span>
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.85rem', borderBottom: '1px solid #f1f5f9', marginBottom: '0.85rem' }}>
-                <span style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.05rem' }}>Total Amount Due</span>
-                <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#0056b3' }}>Rs. {formattedAmount}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.85rem', borderBottom: '1px solid #eef2f7', marginBottom: '0.85rem' }}>
+                <span style={{ color: '#131f33', fontWeight: 700, fontSize: '1.05rem' }}>Total Amount Due</span>
+                <span style={{ fontWeight: 700, fontSize: '1.25rem', color: '#0056a2' }}>Rs. {formattedAmount}</span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b', fontWeight: 500, fontSize: '0.88rem' }}>Gateway Mode</span>
-                <span style={{ fontWeight: 700, color: '#059669', fontSize: '0.88rem' }}>PayHere Sandbox Verified</span>
+                <span style={{ color: '#52627a', fontWeight: 500, fontSize: '0.88rem' }}>Gateway Mode</span>
+                <span style={{ fontWeight: 700, color: '#0f7a4d', fontSize: '0.88rem' }}>PayHere Sandbox Verified</span>
               </div>
             </div>
 
             {statusState.message && (
-              <div style={{ padding: '0.85rem 1rem', borderRadius: '8px', marginBottom: '1.25rem', backgroundColor: statusState.type === 'error' ? '#fef2f2' : '#ecfdf5', color: statusState.type === 'error' ? '#dc2626' : '#059669', border: `1px solid ${statusState.type === 'error' ? '#fecaca' : '#a7f3d0'}`, fontSize: '0.92rem', fontWeight: 600 }}>
+              <div style={{ padding: '0.85rem 1rem', borderRadius: 'var(--radius)', marginBottom: '1.25rem', backgroundColor: statusState.type === 'error' ? '#fef3f2' : '#f1faf1', color: statusState.type === 'error' ? '#b42318' : '#0f7a4d', border: `1px solid ${statusState.type === 'error' ? '#f5c2bd' : '#c9ebc8'}`, fontSize: '0.92rem', fontWeight: 600 }}>
                 {statusState.message}
               </div>
             )}
@@ -582,14 +540,14 @@ export default function PaymentStep({
                 style={{
                   height: '52px',
                   fontSize: '1.05rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
                   gap: '0.65rem',
-                  backgroundColor: '#0056b3',
-                  borderRadius: '10px',
-                  boxShadow: '0 4px 14px rgba(0, 86, 179, 0.25)',
+                  backgroundColor: 'var(--blue-600)',
+                  borderRadius: 'var(--radius)',
+                  boxShadow: 'var(--shadow-md)',
                 }}
                 onClick={handlePayHerePayment}
               >
@@ -604,10 +562,10 @@ export default function PaymentStep({
                   height: '46px',
                   fontSize: '0.92rem',
                   fontWeight: 700,
-                  backgroundColor: '#f8fafc',
-                  color: '#334155',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: '10px',
+                  backgroundColor: 'var(--grey-50)',
+                  color: 'var(--grey-800)',
+                  border: '1.5px solid var(--grey-300)',
+                  borderRadius: 'var(--radius)',
                 }}
                 onClick={handleInstantConfirm}
               >
