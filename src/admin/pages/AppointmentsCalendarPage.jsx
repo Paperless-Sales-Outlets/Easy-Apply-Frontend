@@ -55,11 +55,16 @@ export default function AppointmentsCalendarPage() {
     fetchAppointments(selectedDate);
   }, [selectedDate, fetchAppointments]);
 
+  // 'loading' | 'ready' | 'failed' — an empty dropdown alone can't say which.
+  const [techLoad, setTechLoad] = useState('loading');
+  const [techAttempt, setTechAttempt] = useState(0);
+
   useEffect(() => {
+    setTechLoad('loading');
     getTechnicians()
-      .then(res => setTechnicians(res.technicians || []))
-      .catch(() => {});
-  }, []);
+      .then(res => { setTechnicians(res.technicians || []); setTechLoad('ready'); })
+      .catch(() => setTechLoad('failed'));
+  }, [techAttempt]);
 
   const handleDateChange = (daysOffset) => {
     const current = new Date(selectedDate);
@@ -93,6 +98,19 @@ export default function AppointmentsCalendarPage() {
       </div>
 
       {error && <div className="admin-error-banner">{error}</div>}
+      {techLoad === 'failed' && (
+        <div className="admin-error-banner apt-tech-banner" role="alert">
+          <span>Could not load the technician list, so jobs can't be assigned right now.</span>
+          <button type="button" className="admin-btn ghost" onClick={() => setTechAttempt((n) => n + 1)}>Retry</button>
+        </div>
+      )}
+      {techLoad === 'ready' && technicians.length === 0 && (
+        <div className="admin-notice admin-notice-info apt-tech-banner" role="status">
+          <span className="admin-notice-text">
+            No technicians yet. Give a role the My Jobs privilege in User Management, then assign that role to staff.
+          </span>
+        </div>
+      )}
       <AdminNotice notice={notice.notice} onDismiss={notice.dismiss} />
 
       {/* ── Date Navigation ── */}
@@ -185,8 +203,11 @@ export default function AppointmentsCalendarPage() {
                     className="apt-tech-select"
                     value={apt.technicianId || ''}
                     onChange={(e) => handleAssignTechnician(apt.id, e.target.value)}
+                    disabled={techLoad !== 'ready'}
                   >
-                    <option value="">-- Unassigned --</option>
+                    <option value="">
+                      {techLoad === 'loading' ? 'Loading technicians…' : techLoad === 'failed' ? 'Technicians unavailable' : '-- Unassigned --'}
+                    </option>
                     {technicians.map(tech => (
                       <option key={tech._id} value={tech._id}>
                         {tech.name}
