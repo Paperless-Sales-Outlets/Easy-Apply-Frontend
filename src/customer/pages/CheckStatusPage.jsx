@@ -3,7 +3,6 @@ import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  FiSearch,
   FiCheck,
   FiCheckCircle,
   FiClock,
@@ -121,7 +120,7 @@ export default function CheckStatusPage() {
     <div
       style={{
         minHeight: '85vh',
-        backgroundColor: '#f8fafc',
+        backgroundColor: 'var(--grey-50)',
         padding: '2.5rem 1rem',
         display: 'flex',
         justifyContent: 'center',
@@ -136,45 +135,24 @@ export default function CheckStatusPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '16px',
-            boxShadow: '0 20px 50px rgba(0, 86, 179, 0.07)',
-            border: '1px solid #e2e8f0',
+            backgroundColor: 'var(--paper)',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-xl)',
+            border: '1px solid var(--grey-200)',
             overflow: 'hidden',
           }}
         >
           {/* Top Blue Accent Gradient Bar */}
-          <div style={{ height: '6px', background: 'linear-gradient(90deg, #0056b3 0%, #003b73 50%, #10b981 100%)' }} />
+          <div style={{ height: '6px', background: 'var(--blue-600)' }} />
 
           <div style={{ padding: '2.25rem 2.25rem 1.75rem 2.25rem' }}>
             {/* Header Badge & Title */}
             <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  fontSize: '0.78rem',
-                  fontWeight: 900,
-                  color: '#0056b3',
-                  backgroundColor: '#eff6ff',
-                  padding: '0.35rem 0.9rem',
-                  borderRadius: '9999px',
-                  border: '1px solid #bfdbfe',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  marginBottom: '0.75rem',
-                }}
-              >
-                <FiSearch size={14} />
-                Real-Time Application Status
-              </span>
-
-              <h1 style={{ fontSize: '1.9rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.5rem 0', letterSpacing: '-0.02em' }}>
+              <h1 style={{ fontSize: 'var(--text-3xl)', margin: '0 0 0.5rem 0' }}>
                 Check Application Status
               </h1>
 
-              <p style={{ fontSize: '0.94rem', color: '#64748b', margin: 0, fontWeight: 600 }}>
+              <p style={{ fontSize: 'var(--text-base)', color: 'var(--grey-600)', margin: 0 }}>
                 Track live status updates and timeline for your SLTMobitel request.
               </p>
             </div>
@@ -193,14 +171,12 @@ export default function CheckStatusPage() {
                     style={{
                       width: '100%',
                       padding: '0.9rem 2.75rem 0.9rem 1.15rem',
-                      borderRadius: '16px',
-                      border: '1.5px solid #cbd5e1',
+                      borderRadius: 'var(--radius)',
+                      border: '1px solid var(--grey-300)',
                       fontSize: '1rem',
-                      fontWeight: 800,
-                      color: '#0f172a',
+                      fontWeight: 600,
+                      color: 'var(--grey-900)',
                       outline: 'none',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                      transition: 'all 0.2s ease',
                       boxSizing: 'border-box',
                     }}
                   />
@@ -215,7 +191,7 @@ export default function CheckStatusPage() {
                         transform: 'translateY(-50%)',
                         background: 'none',
                         border: 'none',
-                        color: '#475569',
+                        color: 'var(--grey-700)',
                         cursor: 'pointer',
                         padding: '4px',
                         display: 'flex',
@@ -226,26 +202,7 @@ export default function CheckStatusPage() {
                   )}
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isLoading || !reference.trim()}
-                  style={{
-                    padding: '0.9rem 2rem',
-                    borderRadius: '16px',
-                    background: isLoading || !reference.trim() ? '#e2e8f0' : 'var(--brand-gradient-soft)',
-                    color: isLoading || !reference.trim() ? '#475569' : '#ffffff',
-                    border: 'none',
-                    fontWeight: 800,
-                    fontSize: '0.95rem',
-                    cursor: isLoading || !reference.trim() ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    boxShadow: isLoading || !reference.trim() ? 'none' : '0 4px 16px rgba(0, 86, 179, 0.3)',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
+                <button type="submit" className="btn btn-primary" disabled={isLoading || !reference.trim()}>
                   {isLoading ? (
                     <>
                       <FiRefreshCw className="spin" size={18} />
@@ -277,49 +234,49 @@ export default function CheckStatusPage() {
                 /* NOT FOUND CARD */
                 <div
                   style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '16px',
+                    backgroundColor: 'var(--paper)',
+                    borderRadius: 'var(--radius-lg)',
                     padding: '2rem',
-                    border: '1.5px solid #fecaca',
-                    boxShadow: '0 8px 30px rgba(220, 38, 38, 0.05)',
+                    border: '1.5px solid var(--red-200)',
+                    boxShadow: 'var(--shadow-lg)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#dc2626', marginBottom: '1rem' }}>
-                    <div style={{ backgroundColor: '#fef2f2', padding: '0.65rem', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#b42318', marginBottom: '1rem' }}>
+                    <div style={{ backgroundColor: '#fef3f2', padding: '0.65rem', borderRadius: 'var(--radius-lg)' }}>
                       <FiAlertCircle size={28} />
                     </div>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 900, color: '#991b1b' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: '#b42318' }}>
                         No Record Found
                       </h3>
-                      <span style={{ fontSize: '0.84rem', color: '#b91c1c', fontWeight: 600 }}>
+                      <span style={{ fontSize: '0.84rem', color: '#b42318', fontWeight: 600 }}>
                         Reference ID: <strong>{result.referenceNumber}</strong>
                       </span>
                     </div>
                   </div>
 
-                  <p style={{ color: '#475569', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  <p style={{ color: '#3b4a61', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
                     {result.message} Please make sure you typed the exact reference code from your SMS acknowledgement or application confirmation slip.
                   </p>
 
-                  <div style={{ backgroundColor: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.84rem', color: '#64748b' }}>
+                  <div style={{ backgroundColor: '#f6f8fb', padding: '1rem 1.25rem', borderRadius: 'var(--radius-lg)', border: '1px solid #dfe5ee', fontSize: '0.84rem', color: '#52627a' }}>
                     <strong>Need Help?</strong> Contact SLTMobitel Customer Care at <strong>1212</strong> or visit your nearest SLT Teleshop for assistance.
                   </div>
                 </div>
               ) : (
                 <>
                   {/* Tracking Step Banner */}
-                  <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '1.25rem 1.5rem', border: '1px solid #e2e8f0', marginBottom: '1.25rem', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)' }}>
+                  <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', padding: '1.25rem 1.5rem', border: '1px solid #dfe5ee', marginBottom: '1.25rem', boxShadow: 'var(--shadow-md)' }}>
                     <WizardStepper currentStep={7} />
                   </div>
 
                   {/* SUCCESSFUL RESULT CARD */}
                   <div
                     style={{
-                      backgroundColor: '#ffffff',
-                      borderRadius: '16px',
-                      border: '1px solid #e2e8f0',
-                      boxShadow: '0 12px 35px rgba(0, 0, 0, 0.06)',
+                      backgroundColor: 'var(--paper)',
+                      borderRadius: 'var(--radius-lg)',
+                      border: '1px solid var(--grey-200)',
+                      boxShadow: 'var(--shadow-lg)',
                       overflow: 'hidden',
                     }}
                   >
@@ -327,8 +284,8 @@ export default function CheckStatusPage() {
                   <div
                     style={{
                       padding: '1.5rem 2rem',
-                      backgroundColor: '#f8fafc',
-                      borderBottom: '1px solid #e2e8f0',
+                      backgroundColor: 'var(--grey-50)',
+                      borderBottom: '1px solid var(--grey-200)',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
@@ -338,7 +295,7 @@ export default function CheckStatusPage() {
                   >
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.25rem' }}>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', color: '#64748b', letterSpacing: '1px' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#52627a', letterSpacing: '0.06em' }}>
                           Reference Number
                         </span>
                         <button
@@ -347,9 +304,9 @@ export default function CheckStatusPage() {
                           style={{
                             background: 'none',
                             border: 'none',
-                            color: '#0056b3',
+                            color: 'var(--blue-600)',
                             fontSize: '0.75rem',
-                            fontWeight: 800,
+                            fontWeight: 700,
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -361,7 +318,7 @@ export default function CheckStatusPage() {
                         </button>
                       </div>
 
-                      <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0056b3', letterSpacing: '0.5px' }}>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0056a2', letterSpacing: '0.5px' }}>
                         {result.referenceNumber}
                       </div>
                     </div>
@@ -369,16 +326,16 @@ export default function CheckStatusPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <span
                         style={{
-                          backgroundColor: '#dcfce7',
-                          color: '#15803d',
+                          backgroundColor: 'var(--green-100)',
+                          color: 'var(--green-700)',
                           padding: '0.45rem 1rem',
                           borderRadius: '9999px',
-                          fontWeight: 800,
+                          fontWeight: 700,
                           fontSize: '0.88rem',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.4rem',
-                          boxShadow: '0 2px 8px rgba(22, 163, 74, 0.15)',
+                          boxShadow: 'var(--shadow-sm)',
                         }}
                       >
                         <FiCheckCircle size={17} />
@@ -396,44 +353,44 @@ export default function CheckStatusPage() {
                         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                         gap: '1.25rem',
                         marginBottom: '1.75rem',
-                        backgroundColor: '#f0f9ff',
+                        backgroundColor: 'var(--blue-50)',
                         padding: '1.25rem 1.5rem',
-                        borderRadius: '16px',
-                        border: '1px solid #bae6fd',
+                        borderRadius: 'var(--radius-lg)',
+                        border: '1px solid var(--blue-200)',
                       }}
                     >
                       <div>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#0a4b8c', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
                           Application Type
                         </span>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#131f33' }}>
                           {getServiceTypeLabel(result.serviceType)}
                         </span>
                       </div>
 
                       <div>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#0a4b8c', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
                           Registered Phone
                         </span>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#131f33' }}>
                           {result.telephone}
                         </span>
                       </div>
 
                       <div>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#0a4b8c', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
                           Submission Date
                         </span>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#131f33' }}>
                           {result.createdAt}
                         </span>
                       </div>
 
                       <div>
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#0369a1', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#0a4b8c', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.2rem' }}>
                           Estimated SLA
                         </span>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#047857' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f7a4d' }}>
                           24 – 48 Hours
                         </span>
                       </div>
@@ -441,55 +398,55 @@ export default function CheckStatusPage() {
 
                     {/* Progress Stepper Timeline */}
                     <div style={{ marginBottom: '1.75rem' }}>
-                      <h4 style={{ margin: '0 0 1rem 0', color: '#0f172a', fontSize: '1rem', fontWeight: 800 }}>
+                      <h4 style={{ margin: '0 0 1rem 0', color: '#131f33', fontSize: '1rem', fontWeight: 700 }}>
                         Live Application Progress
                       </h4>
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {/* Step 1 */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ backgroundColor: '#047857', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                          <div style={{ backgroundColor: '#0f7a4d', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                             <FiCheck size={14} />
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.92rem' }}>Application Submitted & Received</div>
-                            <div style={{ fontSize: '0.78rem', color: '#64748b' }}>Reference ID generated and logged in database</div>
+                            <div style={{ fontWeight: 700, color: '#131f33', fontSize: '0.92rem' }}>Application Submitted & Received</div>
+                            <div style={{ fontSize: '0.78rem', color: '#52627a' }}>Reference ID generated and logged in database</div>
                           </div>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 800, backgroundColor: '#dcfce7', color: '#15803d', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, backgroundColor: '#e2f4e3', color: '#0f7a4d', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
                             Completed
                           </span>
                         </div>
 
                         {/* Step 2 */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ backgroundColor: result.feedback || result.status === 'completed' ? '#047857' : '#0284c7', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                          <div style={{ backgroundColor: result.feedback || result.status === 'completed' ? '#0f7a4d' : '#1a6cbd', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                             {result.feedback || result.status === 'completed' ? <FiCheck size={14} /> : <FiClock size={14} />}
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.92rem' }}>Technical Feasibility & Document Review</div>
-                            <div style={{ fontSize: '0.78rem', color: '#64748b' }}>Verifying DP feasibility and uploaded credentials</div>
+                            <div style={{ fontWeight: 700, color: '#131f33', fontSize: '0.92rem' }}>Technical Feasibility & Document Review</div>
+                            <div style={{ fontSize: '0.78rem', color: '#52627a' }}>Verifying DP feasibility and uploaded credentials</div>
                           </div>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 800, backgroundColor: result.feedback || result.status === 'completed' ? '#dcfce7' : '#e0f2fe', color: result.feedback || result.status === 'completed' ? '#15803d' : '#0369a1', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, backgroundColor: result.feedback || result.status === 'completed' ? '#e2f4e3' : '#e3effc', color: result.feedback || result.status === 'completed' ? '#0f7a4d' : '#0a4b8c', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
                             {result.feedback || result.status === 'completed' ? 'Completed' : 'In Progress'}
                           </span>
                         </div>
 
                         {/* Step 3 */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ backgroundColor: result.feedback || result.status === 'completed' ? '#047857' : '#cbd5e1', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                          <div style={{ backgroundColor: result.feedback || result.status === 'completed' ? '#0f7a4d' : '#c3ccd9', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                             {result.feedback || result.status === 'completed' ? <FiCheck size={14} /> : '3'}
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 800, color: result.feedback || result.status === 'completed' ? '#0f172a' : '#64748b', fontSize: '0.92rem' }}>
+                            <div style={{ fontWeight: 700, color: result.feedback || result.status === 'completed' ? '#131f33' : '#52627a', fontSize: '0.92rem' }}>
                               Field Technician Dispatch & Line Installation
                             </div>
-                            <div style={{ fontSize: '0.78rem', color: result.feedback || result.status === 'completed' ? '#047857' : '#94a3b8', fontWeight: 600 }}>
+                            <div style={{ fontSize: '0.78rem', color: result.feedback || result.status === 'completed' ? '#0f7a4d' : '#94a1b5', fontWeight: 600 }}>
                               {result.feedback || result.status === 'completed'
                                 ? 'Technician assigned & physical line installation completed'
                                 : 'Assigned by regional technical office for physical cabling & setup'}
                             </div>
                           </div>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 800, backgroundColor: result.feedback || result.status === 'completed' ? '#dcfce7' : '#f1f5f9', color: result.feedback || result.status === 'completed' ? '#15803d' : '#64748b', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, backgroundColor: result.feedback || result.status === 'completed' ? '#e2f4e3' : '#eef2f7', color: result.feedback || result.status === 'completed' ? '#0f7a4d' : '#52627a', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
                             {result.feedback || result.status === 'completed' ? 'Completed' : 'Pending'}
                           </span>
                         </div>
@@ -497,16 +454,16 @@ export default function CheckStatusPage() {
 
                         {/* Step 4 */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ backgroundColor: result.feedback ? '#047857' : '#cbd5e1', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                          <div style={{ backgroundColor: result.feedback ? '#0f7a4d' : '#c3ccd9', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}>
                             {result.feedback ? <FiCheck size={14} /> : '4'}
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 700, color: result.feedback ? '#0f172a' : '#64748b', fontSize: '0.92rem' }}>Final Line Activation & Speed Test</div>
-                            <div style={{ fontSize: '0.78rem', color: result.feedback ? '#047857' : '#94a3b8' }}>
+                            <div style={{ fontWeight: 700, color: result.feedback ? '#131f33' : '#52627a', fontSize: '0.92rem' }}>Final Line Activation & Speed Test</div>
+                            <div style={{ fontSize: '0.78rem', color: result.feedback ? '#0f7a4d' : '#94a1b5' }}>
                               {result.feedback ? 'Verified 104.2 Mbps • Connection Live' : 'Technician verification & sign-off required'}
                             </div>
                           </div>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, backgroundColor: result.feedback ? '#dcfce7' : '#f1f5f9', color: result.feedback ? '#15803d' : '#64748b', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, backgroundColor: result.feedback ? '#e2f4e3' : '#eef2f7', color: result.feedback ? '#0f7a4d' : '#52627a', padding: '0.2rem 0.65rem', borderRadius: '9999px' }}>
                             {result.feedback ? 'Active' : 'Pending'}
                           </span>
                         </div>
@@ -521,9 +478,9 @@ export default function CheckStatusPage() {
                       <div
                         style={{
 
-                          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(0, 86, 179, 0.05) 100%)',
+                          background: 'var(--green-50)',
                           border: '1.5px solid rgba(16, 185, 129, 0.35)',
-                          borderRadius: '16px',
+                          borderRadius: 'var(--radius-lg)',
                           padding: '1.25rem 1.35rem',
                           display: 'flex',
                           justifyContent: 'space-between',
@@ -537,28 +494,28 @@ export default function CheckStatusPage() {
                             style={{
                               width: '42px',
                               height: '42px',
-                              borderRadius: '12px',
-                              background: '#10b981',
-                              color: '#ffffff',
+                              borderRadius: 'var(--radius-lg)',
+                              background: 'var(--green-700)',
+                              color: 'var(--paper)',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               flexShrink: 0,
-                              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                              boxShadow: 'var(--shadow-md)',
                             }}
                           >
-                            <FiStar size={20} fill={result.feedback ? '#fff' : 'none'} />
+                            <FiStar size={20} fill={result.feedback ? '#ffffff' : 'none'} />
                           </div>
                           <div>
-                            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#131f33', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                               <span>Technician Verification & Sign-Off</span>
                               {result.feedback && (
-                                <span style={{ fontSize: '0.72rem', color: '#15803d', background: '#dcfce7', border: '1px solid #bbf7d0', padding: '0.15rem 0.55rem', borderRadius: '9999px', fontWeight: 800 }}>
+                                <span style={{ fontSize: '0.75rem', color: '#0f7a4d', background: '#e2f4e3', border: '1px solid #c9ebc8', padding: '0.15rem 0.55rem', borderRadius: '9999px', fontWeight: 700 }}>
                                   ● {result.feedback.rating || 5}★ Verified & Active
                                 </span>
                               )}
                             </div>
-                            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>
+                            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#52627a', fontWeight: 600 }}>
                               {result.feedback
                                 ? 'Optical link synced, speed test verified (104.2 Mbps), and sign-off complete.'
                                 : 'Completed wiring? Verify your speed test diagnostics & rate technician service.'}
@@ -571,11 +528,11 @@ export default function CheckStatusPage() {
                           onClick={() => setShowReviewModal(true)}
                           style={{
                             padding: '0.65rem 1.25rem',
-                            borderRadius: '12px',
+                            borderRadius: 'var(--radius-lg)',
                             background: result.feedback ? '#ffffff' : 'var(--brand-gradient-soft)',
-                            color: result.feedback ? '#0056b3' : '#ffffff',
+                            color: result.feedback ? '#0056a2' : '#ffffff',
                             border: result.feedback ? '1.5px solid rgba(0, 86, 179, 0.3)' : 'none',
-                            fontWeight: 800,
+                            fontWeight: 700,
                             fontSize: '0.85rem',
                             cursor: 'pointer',
                             display: 'inline-flex',
@@ -585,7 +542,7 @@ export default function CheckStatusPage() {
                             transition: 'all 0.15s ease',
                           }}
                         >
-                          <FiStar size={15} fill={result.feedback ? '#fbbf24' : '#fff'} />
+                          <FiStar size={15} fill={result.feedback ? '#f4d58f' : '#ffffff'} />
                           <span>{result.feedback ? 'View Activation Details' : 'Verify Speed Test & Sign-Off'}</span>
                         </button>
                       </div>
@@ -598,10 +555,10 @@ export default function CheckStatusPage() {
                         style={{
                           marginBottom: '1.25rem',
                           padding: '1rem 1.15rem',
-                          borderRadius: '12px',
-                          backgroundColor: '#f8fafc',
-                          border: '1px solid #e2e8f0',
-                          color: '#475569',
+                          borderRadius: 'var(--radius-lg)',
+                          backgroundColor: 'var(--grey-50)',
+                          border: '1px solid var(--grey-200)',
+                          color: 'var(--grey-700)',
                           fontSize: '0.9rem',
                           lineHeight: 1.6,
                           fontWeight: 600,
@@ -617,15 +574,15 @@ export default function CheckStatusPage() {
                         style={{
                           marginBottom: '1.25rem',
                           padding: '1rem 1.15rem',
-                          borderRadius: '12px',
-                          backgroundColor: '#fff7ed',
-                          border: '1px solid #fed7aa',
+                          borderRadius: 'var(--radius-lg)',
+                          backgroundColor: 'var(--amber-50)',
+                          border: '1px solid #f4d58f',
                         }}
                       >
                         <div
                           style={{
                             fontSize: '0.75rem',
-                            fontWeight: 900,
+                            fontWeight: 700,
                             textTransform: 'uppercase',
                             letterSpacing: '0.05em',
                             color: '#c2410c',
@@ -654,7 +611,7 @@ export default function CheckStatusPage() {
                         style={{
                           marginBottom: '1.25rem',
                           fontSize: '0.82rem',
-                          color: '#64748b',
+                          color: 'var(--grey-600)',
                           lineHeight: 1.6,
                         }}
                       >
@@ -693,7 +650,7 @@ export default function CheckStatusPage() {
                     <div
                       style={{
                         paddingTop: '1.25rem',
-                        borderTop: '1px solid #e2e8f0',
+                        borderTop: '1px solid var(--grey-200)',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
@@ -701,8 +658,8 @@ export default function CheckStatusPage() {
                         gap: '0.85rem',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', color: '#475569', fontWeight: 600 }}>
-                        <FiPhoneCall size={15} style={{ color: '#0056b3' }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', color: '#3b4a61', fontWeight: 600 }}>
+                        <FiPhoneCall size={15} style={{ color: '#0056a2' }} />
                         <span>Helpline: <strong>1212</strong> (Toll Free)</span>
                       </div>
 
@@ -710,13 +667,13 @@ export default function CheckStatusPage() {
                         type="button"
                         onClick={() => navigate('/')}
                         style={{
-                          backgroundColor: '#ffffff',
-                          border: '1.5px solid #cbd5e1',
-                          borderRadius: '12px',
+                          backgroundColor: 'var(--paper)',
+                          border: '1.5px solid var(--grey-300)',
+                          borderRadius: 'var(--radius-lg)',
                           padding: '0.55rem 1.25rem',
-                          color: '#334155',
+                          color: 'var(--grey-800)',
                           fontSize: '0.85rem',
-                          fontWeight: 800,
+                          fontWeight: 700,
                           cursor: 'pointer',
                         }}
                       >

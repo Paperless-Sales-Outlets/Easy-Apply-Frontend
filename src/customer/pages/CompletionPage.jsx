@@ -21,302 +21,68 @@ import { clearSessionCart } from '../../shared/utils/api';
    a separate CSS file dependency.
 ───────────────────────────────────────────── */
 const STYLES = `
-  .cp-wrapper {
-    min-height: 82vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: clamp(1rem, 4vw, 2.5rem) clamp(0.75rem, 4vw, 1.5rem);
-    background-color: #f8fafc;
-    box-sizing: border-box;
-  }
+  .cp-wrapper { min-height: 82vh; display: flex; align-items: center; justify-content: center;
+    padding: var(--s5) var(--page-gutter); background: var(--grey-50); }
+  .cp-card-stack { width: 100%; max-width: 680px; display: flex; flex-direction: column; gap: var(--s5); }
 
-  .cp-card-stack {
-    width: 100%;
-    max-width: min(720px, 100%);
-    display: flex;
-    flex-direction: column;
-    gap: clamp(1rem, 3vw, 1.75rem);
-  }
+  .cp-ticket { background: #fff; border: 1px solid var(--grey-200); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md); overflow: hidden; }
+  .cp-accent-bar { height: 4px; background: var(--green-500); }
 
-  /* ── Ticket card ── */
-  .cp-ticket {
-    background: #ffffff;
-    border-radius: clamp(12px, 3vw, 24px);
-    box-shadow: 0 20px 50px rgba(0,86,179,0.08);
-    border: 1px solid #e2e8f0;
-    overflow: hidden;
-    position: relative;
-  }
+  .cp-hero { padding: var(--s6) var(--s5) var(--s4); text-align: center; }
+  .cp-check-circle { width: 64px; height: 64px; margin: 0 auto var(--s4); background: var(--green-100);
+    color: var(--green-700); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .cp-hero h2 { font-size: var(--text-2xl); margin: 0 0 var(--s2); }
+  .cp-hero p { color: var(--grey-600); margin: 0; font-size: var(--text-base); }
 
-  .cp-accent-bar {
-    height: 6px;
-    background: linear-gradient(90deg, #10b981 0%, #0056b3 100%);
-  }
+  .cp-perforation { border-top: 1px solid var(--grey-200); margin: var(--s2) var(--s5); }
+  .cp-perforation-dot, .cp-perforation-line { display: none; }
 
-  /* ── Hero section ── */
-  .cp-hero {
-    padding: clamp(1.5rem, 5vw, 2.5rem) clamp(1rem, 5vw, 2rem) clamp(1rem, 3vw, 1.5rem);
-    text-align: center;
-  }
+  .cp-body { padding: var(--s4) var(--s5) var(--s6); }
 
-  .cp-check-circle {
-    width: clamp(56px, 12vw, 76px);
-    height: clamp(56px, 12vw, 76px);
-    margin: 0 auto clamp(0.75rem, 3vw, 1.25rem) auto;
-    background-color: #dcfce7;
-    color: #16a34a;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 24px rgba(22,163,74,0.2);
-  }
+  .cp-ref-badge { background: var(--blue-50); border-radius: var(--radius); padding: var(--s4) var(--s5);
+    margin-bottom: var(--s5); text-align: center; }
+  .cp-ref-label { font-size: var(--text-xs); color: var(--grey-600); margin: 0 0 var(--s1);
+    text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .cp-ref-row { display: flex; align-items: center; justify-content: center; gap: var(--s3); flex-wrap: wrap; }
+  .cp-ref-number { font-family: var(--font-head); font-size: var(--text-3xl); font-weight: 700;
+    font-variant-numeric: lining-nums; color: var(--blue-700); word-break: break-all; }
+  .cp-copy-btn { background: #fff; border: 1px solid var(--grey-300); border-radius: var(--radius);
+    min-height: 40px; padding: 0 var(--s3); color: var(--blue-600); font-size: var(--text-sm); font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: var(--s2); white-space: nowrap; }
+  .cp-copy-btn:hover { background: var(--blue-50); }
+  .cp-copy-btn.copied { background: var(--green-100); border-color: var(--green-300); color: var(--green-800); }
+  .cp-copied-msg { color: var(--green-700); font-size: var(--text-sm); margin: var(--s2) 0 0; font-weight: 600; }
 
-  .cp-hero h2 {
-    margin: 0 0 0.5rem 0;
-    color: #0f172a;
-    font-size: clamp(1.3rem, 5vw, 1.8rem);
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-  }
+  .cp-timeline { margin-bottom: var(--s4); }
+  .cp-timeline-title { font-size: var(--text-xs); font-weight: 600; color: var(--grey-600);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--s3); }
+  .cp-timeline-list { display: flex; flex-direction: column; gap: var(--s3); }
+  .cp-timeline-item { display: flex; align-items: center; gap: var(--s3); font-size: var(--text-base); }
+  .cp-timeline-dot { border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center;
+    justify-content: center; font-size: var(--text-xs); font-weight: 700; flex-shrink: 0; color: #fff; }
+  .cp-timeline-label { flex: 1; font-weight: 600; color: var(--grey-900); min-width: 0; }
+  .cp-timeline-label.muted { font-weight: 500; color: var(--grey-600); }
+  .cp-badge { font-size: var(--text-xs); font-weight: 600; padding: 2px var(--s2);
+    border-radius: var(--radius-sm); white-space: nowrap; flex-shrink: 0; }
 
-  .cp-hero p {
-    color: #64748b;
-    margin: 0;
-    font-size: clamp(0.85rem, 3vw, 0.98rem);
-    font-weight: 600;
-    line-height: 1.5;
-  }
+  .cp-helpline { display: flex; align-items: center; justify-content: center; gap: var(--s2);
+    font-size: var(--text-sm); color: var(--grey-600); text-align: center; flex-wrap: wrap; }
 
-  /* ── Ticket perforation ── */
-  .cp-perforation {
-    position: relative;
-    display: flex;
-    align-items: center;
-    margin: 0.5rem 0;
-  }
-  .cp-perforation-dot {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: #f8fafc;
-    position: absolute;
-    z-index: 10;
-    flex-shrink: 0;
-  }
-  .cp-perforation-line {
-    flex: 1;
-    border-top: 2px dashed #cbd5e1;
-    margin: 0 16px;
-  }
+  .cp-actions { display: flex; flex-direction: column; gap: var(--s3); }
+  .cp-btn-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: var(--s3); }
+  .cp-btn { min-height: var(--control-h); padding: 0 var(--s5); border-radius: var(--radius);
+    font-size: var(--text-base); font-weight: 600; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: var(--s2); width: 100%; border: 1px solid transparent; }
+  .cp-btn-primary { background: var(--blue-600); color: #fff; }
+  .cp-btn-primary:hover { background: var(--blue-700); }
+  .cp-btn-secondary { background: #fff; border-color: var(--grey-300); color: var(--blue-600); }
+  .cp-btn-secondary:hover { background: var(--blue-50); }
+  .cp-btn-ghost { background: transparent; color: var(--blue-600); }
+  .cp-btn-ghost:hover { background: var(--blue-50); }
 
-  /* ── Ticket body ── */
-  .cp-body {
-    padding: clamp(1rem, 4vw, 1.5rem) clamp(1rem, 5vw, 2rem) clamp(1.25rem, 5vw, 2.25rem);
-  }
-
-  /* ── Reference badge ── */
-  .cp-ref-badge {
-    background-color: #f0f9ff;
-    border: 1.5px dashed #0284c7;
-    border-radius: clamp(10px, 3vw, 16px);
-    padding: clamp(0.85rem, 3vw, 1.25rem) clamp(0.75rem, 4vw, 1.5rem);
-    margin-bottom: clamp(1rem, 4vw, 1.75rem);
-    text-align: center;
-  }
-
-  .cp-ref-label {
-    font-size: clamp(0.65rem, 2vw, 0.75rem);
-    color: #0284c7;
-    margin: 0 0 0.4rem 0;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 900;
-  }
-
-  .cp-ref-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(0.4rem, 2vw, 0.75rem);
-    flex-wrap: wrap;
-  }
-
-  .cp-ref-number {
-    font-size: clamp(1.1rem, 5vw, 1.65rem);
-    font-weight: 900;
-    color: #0056b3;
-    letter-spacing: 1px;
-    word-break: break-all;
-  }
-
-  .cp-copy-btn {
-    background-color: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 0.4rem 0.75rem;
-    color: #0056b3;
-    font-size: clamp(0.72rem, 2.5vw, 0.8rem);
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    transition: all 0.15s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .cp-copy-btn.copied {
-    background-color: #dcfce7;
-    border-color: #86efac;
-    color: #15803d;
-  }
-
-  .cp-copied-msg {
-    color: #16a34a;
-    font-size: 0.78rem;
-    margin: 0.4rem 0 0 0;
-    font-weight: 800;
-  }
-
-  /* ── Timeline ── */
-  .cp-timeline {
-    background-color: #f8fafc;
-    border-radius: clamp(10px, 3vw, 16px);
-    padding: clamp(0.85rem, 3vw, 1.25rem) clamp(0.75rem, 4vw, 1.5rem);
-    border: 1px solid #e2e8f0;
-    margin-bottom: clamp(0.85rem, 3vw, 1.25rem);
-  }
-
-  .cp-timeline-title {
-    font-size: clamp(0.7rem, 2.5vw, 0.8rem);
-    font-weight: 800;
-    color: #475569;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: clamp(0.6rem, 2vw, 0.85rem);
-  }
-
-  .cp-timeline-list {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(0.6rem, 2vw, 0.85rem);
-  }
-
-  .cp-timeline-item {
-    display: flex;
-    align-items: center;
-    gap: clamp(0.5rem, 2vw, 0.75rem);
-    font-size: clamp(0.8rem, 3vw, 0.88rem);
-  }
-
-  .cp-timeline-dot {
-    border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 900;
-    flex-shrink: 0;
-    color: #ffffff;
-  }
-
-  .cp-timeline-label {
-    flex: 1;
-    font-weight: 700;
-    color: #0f172a;
-    min-width: 0;
-  }
-  .cp-timeline-label.muted {
-    font-weight: 600;
-    color: #64748b;
-  }
-
-  .cp-badge {
-    font-size: clamp(0.65rem, 2vw, 0.75rem);
-    font-weight: 800;
-    padding: 0.15rem 0.55rem;
-    border-radius: 9999px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  /* ── Helpline ── */
-  .cp-helpline {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    font-size: clamp(0.75rem, 2.5vw, 0.82rem);
-    color: #475569;
-    font-weight: 600;
-    text-align: center;
-    flex-wrap: wrap;
-  }
-
-  /* ── Action buttons ── */
-  .cp-actions {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(0.65rem, 2vw, 0.85rem);
-  }
-
-  .cp-btn-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
-    gap: clamp(0.65rem, 2vw, 0.85rem);
-  }
-
-  .cp-btn {
-    padding: clamp(0.7rem, 3vw, 0.85rem) clamp(0.85rem, 3vw, 1.25rem);
-    border-radius: clamp(8px, 2vw, 12px);
-    font-size: clamp(0.82rem, 3vw, 0.92rem);
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
-    width: 100%;
-    box-sizing: border-box;
-    border: none;
-    transition: opacity 0.15s ease;
-  }
-  .cp-btn:active { opacity: 0.82; }
-
-  .cp-btn-primary {
-    background: var(--brand-gradient-soft);
-    color: #ffffff;
-    box-shadow: 0 4px 16px rgba(0,86,179,0.3);
-  }
-
-  .cp-btn-secondary {
-    background-color: #eff6ff;
-    border: 1.5px solid #0284c7 !important;
-    color: #0369a1;
-  }
-
-  .cp-btn-ghost {
-    background-color: #ffffff;
-    border: 1px solid #cbd5e1 !important;
-    color: #334155;
-  }
-
-  /* ── Very small screens (< 360px wide) ── */
   @media (max-width: 360px) {
     .cp-ref-row { flex-direction: column; }
-    .cp-copy-btn { align-self: center; }
-  }
-
-  /* ── Landscape phones (short viewport height) ── */
-  @media (max-height: 500px) and (orientation: landscape) {
-    .cp-wrapper { align-items: flex-start; padding-top: 0.75rem; }
-    .cp-hero { padding-top: 1rem; padding-bottom: 0.75rem; }
-    .cp-check-circle { width: 48px; height: 48px; }
   }
 `;
 
@@ -381,29 +147,29 @@ export default function CompletionPage() {
         <title>SLTMobitel EasyApply - Application ${referenceNumber}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1e293b; background: #fff; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0056b3; padding-bottom: 20px; margin-bottom: 30px; flex-wrap: wrap; gap: 8px; }
-          .logo { font-size: 24px; font-weight: bold; color: #0056b3; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #26344b; background: #ffffff; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0056a2; padding-bottom: 20px; margin-bottom: 30px; flex-wrap: wrap; gap: 8px; }
+          .logo { font-size: 24px; font-weight: bold; color: #0056a2; }
           .logo span { color: #22c55e; }
           .title { font-size: 20px; font-weight: 700; color: #1e3a8a; margin-bottom: 10px; }
-          .ref-box { background: #f0f9ff; border: 2px dashed #0284c7; border-radius: 12px; padding: 20px; text-align: center; margin: 25px 0; }
-          .ref-label { font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
-          .ref-val { font-size: 28px; font-weight: 900; color: #0056b3; margin-top: 5px; word-break: break-all; }
+          .ref-box { background: #f1f7fd; border: 2px dashed #1a6cbd; border-radius: 12px; padding: 20px; text-align: center; margin: 25px 0; }
+          .ref-label { font-size: 13px; color: #52627a; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+          .ref-val { font-size: 28px; font-weight: 700; color: #0056a2; margin-top: 5px; word-break: break-all; }
           .info-table { width: 100%; border-collapse: collapse; margin: 25px 0; }
-          .info-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
-          .info-table td.label { font-weight: 700; color: #475569; width: 40%; }
-          .notice { background: #f8fafc; border-left: 4px solid #0056b3; padding: 15px; font-size: 13px; color: #475569; margin-top: 30px; border-radius: 6px; }
-          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+          .info-table td { padding: 12px; border-bottom: 1px solid #dfe5ee; font-size: 14px; }
+          .info-table td.label { font-weight: 700; color: #3b4a61; width: 40%; }
+          .notice { background: #f6f8fb; border-left: 4px solid #0056a2; padding: 15px; font-size: 13px; color: #3b4a61; margin-top: 30px; border-radius: 6px; }
+          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #94a1b5; border-top: 1px solid #dfe5ee; padding-top: 20px; }
           @media print { body { padding: 0; } }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="logo">SLT<span>MOBITEL</span> EasyApply</div>
-          <div style="font-size: 13px; color: #64748b;">Official Application Acknowledgement</div>
+          <div style="font-size: 13px; color: #52627a;">Official Application Acknowledgement</div>
         </div>
         <div class="title">Application Submission Summary</div>
-        <p style="color: #64748b; font-size: 14px;">Thank you for submitting your application via SLTMobitel EasyApply. Keep this document for your records.</p>
+        <p style="color: #52627a; font-size: 14px;">Thank you for submitting your application via SLTMobitel EasyApply. Keep this document for your records.</p>
         <div class="ref-box">
           <div class="ref-label">Application Reference Number</div>
           <div class="ref-val">${referenceNumber}</div>
@@ -413,7 +179,7 @@ export default function CompletionPage() {
           <tr><td class="label">Submission Date &amp; Time</td><td>${todayStr}</td></tr>
           <tr><td class="label">Application Message</td><td>${message}</td></tr>
           <tr><td class="label">Estimated Processing Time</td><td>24 – 48 Hours</td></tr>
-          <tr><td class="label">Application Status</td><td><strong style="color: #10b981;">Submitted / Under Review</strong></td></tr>
+          <tr><td class="label">Application Status</td><td><strong style="color: #0f7a4d;">Submitted / Under Review</strong></td></tr>
         </table>
         <div class="notice">
           <strong>Important Information:</strong><br/>
@@ -474,9 +240,9 @@ export default function CompletionPage() {
 
           {/* Ticket perforation */}
           <div className="cp-perforation">
-            <div className="cp-perforation-dot" style={{ left: '-12px', borderRight: '1px solid #cbd5e1' }} />
+            <div className="cp-perforation-dot" style={{ left: '-12px', borderRight: '1px solid #c3ccd9' }} />
             <div className="cp-perforation-line" />
-            <div className="cp-perforation-dot" style={{ right: '-12px', borderLeft: '1px solid #cbd5e1' }} />
+            <div className="cp-perforation-dot" style={{ right: '-12px', borderLeft: '1px solid #c3ccd9' }} />
           </div>
 
           {/* Ticket body */}
@@ -521,36 +287,36 @@ export default function CompletionPage() {
               <div className="cp-timeline-list">
                 {/* Step 1 — Done */}
                 <div className="cp-timeline-item">
-                  <div className="cp-timeline-dot" style={{ backgroundColor: '#10b981' }}>
+                  <div className="cp-timeline-dot" style={{ backgroundColor: '#0f7a4d' }}>
                     <FiCheck size={13} />
                   </div>
                   <div className="cp-timeline-label">Application Logged &amp; Received</div>
-                  <span className="cp-badge" style={{ color: '#15803d', backgroundColor: '#dcfce7' }}>Done</span>
+                  <span className="cp-badge" style={{ color: '#0f7a4d', backgroundColor: '#e2f4e3' }}>Done</span>
                 </div>
 
                 {/* Step 2 — In progress */}
                 <div className="cp-timeline-item">
-                  <div className="cp-timeline-dot" style={{ backgroundColor: '#0284c7' }}>
+                  <div className="cp-timeline-dot" style={{ backgroundColor: '#1a6cbd' }}>
                     <FiClock size={13} />
                   </div>
                   <div className="cp-timeline-label">Technical Verification &amp; Dispatch</div>
-                  <span className="cp-badge" style={{ color: '#0369a1', backgroundColor: '#e0f2fe' }}>24 - 48 Hours</span>
+                  <span className="cp-badge" style={{ color: '#0a4b8c', backgroundColor: '#e3effc' }}>24 - 48 Hours</span>
                 </div>
 
                 {/* Step 3 — Pending */}
                 <div className="cp-timeline-item">
-                  <div className="cp-timeline-dot" style={{ backgroundColor: '#cbd5e1' }}>
+                  <div className="cp-timeline-dot" style={{ backgroundColor: '#c3ccd9' }}>
                     <FiCheckCircle size={13} />
                   </div>
                   <div className="cp-timeline-label muted">SMS Notification &amp; Line Activation</div>
-                  <span className="cp-badge" style={{ color: '#64748b', backgroundColor: '#f1f5f9' }}>Pending</span>
+                  <span className="cp-badge" style={{ color: '#52627a', backgroundColor: '#eef2f7' }}>Pending</span>
                 </div>
               </div>
             </div>
 
             {/* Helpline notice */}
             <div className="cp-helpline">
-              <FiPhoneCall size={14} style={{ color: '#0056b3', flexShrink: 0 }} />
+              <FiPhoneCall size={14} style={{ color: '#0056a2', flexShrink: 0 }} />
               <span>Need help? Contact SLTMobitel Customer Helpline at <strong>1212</strong></span>
             </div>
           </div>
@@ -568,11 +334,11 @@ export default function CompletionPage() {
             type="button"
             className="cp-btn cp-btn-primary"
             style={{
-              background: 'linear-gradient(90deg, #0056b3 0%, #0077ee 100%)',
-              boxShadow: '0 6px 20px rgba(0,86,179,0.3)',
+              background: 'var(--blue-600)',
+              boxShadow: 'var(--shadow-md)',
               padding: '0.9rem 1.25rem',
               fontSize: '0.98rem',
-              fontWeight: 900,
+              fontWeight: 700,
             }}
             onClick={handleTrackStatus}
           >

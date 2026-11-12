@@ -124,7 +124,7 @@ export default function ProductDetailPage() {
         <nav
           style={{
             fontSize: '0.85rem',
-            color: '#64748b',
+            color: 'var(--grey-600)',
             marginBottom: '1.5rem',
             display: 'flex',
             gap: '0.5rem',
@@ -134,7 +134,7 @@ export default function ProductDetailPage() {
           <Link
             to="/"
             style={{
-              color: '#64748b',
+              color: 'var(--grey-600)',
               textDecoration: 'none',
             }}
           >
@@ -146,7 +146,7 @@ export default function ProductDetailPage() {
           <Link
             to="/new-connection/products"
             style={{
-              color: '#64748b',
+              color: 'var(--grey-600)',
               textDecoration: 'none',
             }}
           >
@@ -157,7 +157,7 @@ export default function ProductDetailPage() {
 
           <span
             style={{
-              color: '#0056b3',
+              color: 'var(--blue-600)',
               fontWeight: 600,
             }}
           >
@@ -171,11 +171,11 @@ export default function ProductDetailPage() {
         {loading ? (
           <div
             style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '16px',
+              backgroundColor: 'var(--paper)',
+              borderRadius: 'var(--radius-lg)',
               padding: '3rem',
               textAlign: 'center',
-              color: '#64748b',
+              color: 'var(--grey-600)',
             }}
           >
             Loading product details...
@@ -183,11 +183,11 @@ export default function ProductDetailPage() {
         ) : !product ? (
           <div
             style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '16px',
+              backgroundColor: 'var(--paper)',
+              borderRadius: 'var(--radius-lg)',
               padding: '3rem',
               textAlign: 'center',
-              color: '#991b1b',
+              color: 'var(--red-700)',
             }}
           >
             Product not found.{' '}
