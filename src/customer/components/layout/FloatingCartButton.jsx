@@ -54,15 +54,15 @@ export default function FloatingCartButton() {
         display: 'flex',
         alignItems: 'center',
         gap: '0.75rem',
-        backgroundColor: '#0f172a',
-        color: '#ffffff',
+        backgroundColor: 'var(--grey-900)',
+        color: 'var(--paper)',
         border: 'none',
         borderRadius: '9999px',
         padding: '1.15rem 2rem',
         fontSize: '1.1rem',
         fontWeight: 700,
         cursor: 'pointer',
-        boxShadow: '0 14px 32px rgba(15, 23, 42, 0.35)',
+        boxShadow: 'var(--shadow-lg)',
       }}
     >
       <FiShoppingCart size={22} />

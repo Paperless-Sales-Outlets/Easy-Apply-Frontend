@@ -21,15 +21,15 @@ import { FaHeart } from 'react-icons/fa';
 // Matches ProductCard: four depths of the SLT identity by product family,
 // so a product looks the same in the grid and on its detail panel.
 const CATEGORY_HERO_GRADIENTS = {
-  Broadband: 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)',
-  Fibre: 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)',
-  LTE: 'linear-gradient(135deg, #0b4a91 0%, #00305e 100%)',
-  Voice: 'linear-gradient(135deg, #00566b 0%, #012f3d 100%)',
-  'PEO TV': 'linear-gradient(135deg, #004d38 0%, #01291e 100%)',
-  PEOTV: 'linear-gradient(135deg, #004d38 0%, #01291e 100%)',
+  Broadband: 'var(--blue-800)',
+  Fibre: 'var(--blue-800)',
+  LTE: 'var(--blue-700)',
+  Voice: '#00566b',
+  'PEO TV': 'var(--blue-900)',
+  PEOTV: 'var(--blue-900)',
 };
 
-const DEFAULT_HERO_GRADIENT = 'linear-gradient(135deg, #003b73 0%, #001f3f 100%)';
+const DEFAULT_HERO_GRADIENT = 'var(--blue-800)';
 
 /** Side panel with the selected product's details. */
 export default function ProductDetailsPanel({
@@ -101,10 +101,10 @@ export default function ProductDetailsPanel({
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
         style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '16px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-          border: '1px solid #e2e8f0',
+          backgroundColor: 'var(--paper)',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-xl)',
+          border: '1px solid var(--grey-200)',
           padding: '2rem',
           maxWidth: '840px',
           width: '100%',
@@ -123,15 +123,15 @@ export default function ProductDetailsPanel({
           <div
             style={{
               background: heroGradient,
-              borderRadius: '16px',
+              borderRadius: 'var(--radius-lg)',
               padding: '1.5rem',
-              color: '#ffffff',
+              color: 'var(--paper)',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
               position: 'relative',
               minHeight: '300px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+              boxShadow: 'var(--shadow-lg)',
             }}
           >
             {/* Top Bar inside Hero Visual */}
@@ -140,10 +140,10 @@ export default function ProductDetailsPanel({
                 {popular && (
                   <span
                     style={{
-                      backgroundColor: '#10b981',
-                      color: '#ffffff',
-                      fontSize: '0.7rem',
-                      fontWeight: 800,
+                      backgroundColor: 'var(--green-700)',
+                      color: 'var(--paper)',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
                       padding: '0.25rem 0.65rem',
                       borderRadius: '9999px',
                       textTransform: 'uppercase',
@@ -156,10 +156,10 @@ export default function ProductDetailsPanel({
                 catLower.includes('voice') && (
                   <span
                     style={{
-                      backgroundColor: '#0284c7',
-                      color: '#ffffff',
-                      fontSize: '0.7rem',
-                      fontWeight: 800,
+                      backgroundColor: 'var(--blue-500)',
+                      color: 'var(--paper)',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
                       padding: '0.25rem 0.65rem',
                       borderRadius: '9999px',
                     }}
@@ -183,7 +183,7 @@ export default function ProductDetailsPanel({
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    color: isFavorite ? '#ef4444' : '#ffffff',
+                    color: isFavorite ? '#d92d20' : '#ffffff',
                   }}
                 >
                   {isFavorite ? <FaHeart size={18} /> : <FiHeart size={18} />}
@@ -193,7 +193,7 @@ export default function ProductDetailsPanel({
 
             {/* Hero Title & Graphics */}
             <div style={{ margin: '1.5rem 0', textAlign: 'center' }}>
-              <div style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.4rem', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+              <div style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.4rem', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
                 {bannerUrl ? (
                   <img
                     src={bannerUrl}
@@ -204,7 +204,7 @@ export default function ProductDetailsPanel({
                   catLower.includes('voice') ? <FiPhone size={44} /> : catLower.includes('peo') ? <FiTv size={44} /> : <FiGlobe size={44} />
                 )}
               </div>
-              <div style={{ fontSize: '1.4rem', fontWeight: 900, marginTop: '0.75rem' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: 700, marginTop: '0.75rem' }}>
                 {name}
               </div>
               <div style={{ fontSize: '0.85rem', opacity: 0.85, fontWeight: 600, marginTop: '0.25rem' }}>
@@ -220,26 +220,26 @@ export default function ProductDetailsPanel({
                 gap: '0.35rem',
                 backgroundColor: 'rgba(255, 255, 255, 0.18)',
                 backdropFilter: 'blur(8px)',
-                borderRadius: '12px',
+                borderRadius: 'var(--radius-lg)',
                 padding: '0.65rem 0.35rem',
                 textAlign: 'center',
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <FiActivity size={16} />
-                <span style={{ fontSize: '0.62rem', marginTop: '0.2rem', fontWeight: 700 }}>High Quality</span>
+                <span style={{ fontSize: '0.75rem', marginTop: '0.2rem', fontWeight: 700 }}>High Quality</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <FiDatabase size={16} />
-                <span style={{ fontSize: '0.62rem', marginTop: '0.2rem', fontWeight: 700 }}>Unlimited</span>
+                <span style={{ fontSize: '0.75rem', marginTop: '0.2rem', fontWeight: 700 }}>Unlimited</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <FiShield size={16} />
-                <span style={{ fontSize: '0.62rem', marginTop: '0.2rem', fontWeight: 700 }}>SLT Verified</span>
+                <span style={{ fontSize: '0.75rem', marginTop: '0.2rem', fontWeight: 700 }}>SLT Verified</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <FiClock size={16} />
-                <span style={{ fontSize: '0.62rem', marginTop: '0.2rem', fontWeight: 700 }}>24/7 Support</span>
+                <span style={{ fontSize: '0.75rem', marginTop: '0.2rem', fontWeight: 700 }}>24/7 Support</span>
               </div>
             </div>
           </div>
@@ -248,14 +248,14 @@ export default function ProductDetailsPanel({
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.25rem 0' }}>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#131f33', margin: '0 0 0.25rem 0' }}>
                   {name}
                 </h2>
                 {onClose && (
                   <button
                     onClick={onClose}
                     style={{
-                      background: '#f1f5f9',
+                      background: 'var(--grey-100)',
                       border: 'none',
                       borderRadius: '50%',
                       width: '32px',
@@ -264,7 +264,7 @@ export default function ProductDetailsPanel({
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      color: '#64748b',
+                      color: 'var(--grey-600)',
                       flexShrink: 0,
                     }}
                   >
@@ -273,19 +273,19 @@ export default function ProductDetailsPanel({
                 )}
               </div>
 
-              <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1.25rem', fontWeight: 600 }}>
+              <p style={{ fontSize: '0.875rem', color: '#52627a', marginBottom: '1.25rem', fontWeight: 600 }}>
                 {description || `Official SLTMobitel ${category} connection package with premium features and 24/7 support.`}
               </p>
 
               {/* Pricing Box */}
-              <div style={{ backgroundColor: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '12px', marginBottom: '1.25rem', border: '1px solid #e2e8f0' }}>
+              <div style={{ backgroundColor: '#f6f8fb', padding: '1rem 1.25rem', borderRadius: 'var(--radius-lg)', marginBottom: '1.25rem', border: '1px solid #dfe5ee' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-                  <span style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0056b3' }}>
+                  <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0056a2' }}>
                     Rs. {monthlyPrice ? monthlyPrice.toLocaleString() : '0'}
                   </span>
-                  <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 700 }}>/month</span>
+                  <span style={{ fontSize: '0.9rem', color: '#52627a', fontWeight: 700 }}>/month</span>
                 </div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.2rem', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.8rem', color: '#52627a', marginTop: '0.2rem', fontWeight: 600 }}>
                   Installation Fee: Rs. {installationFee ? installationFee.toLocaleString() : '1,500'} (One-time)
                 </div>
               </div>
@@ -301,8 +301,8 @@ export default function ProductDetailsPanel({
                       '24/7 SLT Customer Support',
                     ]
                 ).map((feat, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.88rem', color: '#1e293b', fontWeight: 700 }}>
-                    <div style={{ backgroundColor: '#dcfce7', color: '#0f7a4d', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.88rem', color: '#26344b', fontWeight: 700 }}>
+                    <div style={{ backgroundColor: '#e2f4e3', color: '#0f7a4d', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <FiCheck size={12} aria-hidden="true" />
                     </div>
                     <span>{feat}</span>
@@ -321,18 +321,18 @@ export default function ProductDetailsPanel({
                 style={{
                   flex: 1,
                   padding: '0.85rem 1.25rem',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-lg)',
                   border: 'none',
                   background: 'var(--brand-gradient-soft)',
-                  color: '#ffffff',
+                  color: 'var(--paper)',
                   fontSize: '0.92rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.55rem',
-                  boxShadow: '0 4px 16px rgba(0, 86, 179, 0.3)',
+                  boxShadow: 'var(--shadow-md)',
                 }}
               >
                 <FiShoppingCart size={18} />
@@ -343,12 +343,12 @@ export default function ProductDetailsPanel({
                 onClick={onClose}
                 style={{
                   padding: '0.85rem 1.5rem',
-                  borderRadius: '12px',
-                  border: '1px solid #cbd5e1',
-                  backgroundColor: '#ffffff',
-                  color: '#475569',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1px solid var(--grey-300)',
+                  backgroundColor: 'var(--paper)',
+                  color: 'var(--grey-700)',
                   fontSize: '0.92rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   cursor: 'pointer',
                 }}
               >
@@ -358,11 +358,11 @@ export default function ProductDetailsPanel({
           </div>
         </div>
 
-        <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: 0 }} />
+        <hr style={{ border: 'none', borderTop: '1px solid #eef2f7', margin: 0 }} />
 
         {/* Tabbed Detailed Specifications */}
         <div>
-          <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', gap: '1.5rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', borderBottom: '2px solid #dfe5ee', gap: '1.5rem', marginBottom: '1rem' }}>
             {['Overview', 'Speed & Usage', "What's Included", 'Terms & Conditions'].map((tab) => {
               const isActive = activeTab === tab;
               return (
@@ -373,9 +373,9 @@ export default function ProductDetailsPanel({
                     padding: '0.65rem 0',
                     border: 'none',
                     background: 'none',
-                    borderBottom: isActive ? '3px solid #0056b3' : '3px solid transparent',
+                    borderBottom: isActive ? '3px solid #0056a2' : '3px solid transparent',
                     marginBottom: '-2px',
-                    color: isActive ? '#0056b3' : '#64748b',
+                    color: isActive ? '#0056a2' : '#52627a',
                     fontSize: '0.9rem',
                     fontWeight: isActive ? 800 : 600,
                     cursor: 'pointer',
@@ -390,40 +390,40 @@ export default function ProductDetailsPanel({
           {/* Tab Contents */}
           {activeTab === 'Overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <p style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+              <p style={{ fontSize: '0.88rem', color: '#3b4a61', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
                 Experience premium connection quality with {name}. Designed specifically for SLTMobitel customers requiring ultra-reliable service for home and enterprise applications.
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.85rem' }}>
-                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
-                  <FiTv style={{ color: '#0056b3', fontSize: '1.3rem' }} />
+                <div style={{ backgroundColor: '#f6f8fb', padding: '0.85rem', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #dfe5ee' }}>
+                  <FiTv style={{ color: '#0056a2', fontSize: '1.3rem' }} />
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Service Type</div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>{category}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 700 }}>Service Type</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#131f33' }}>{category}</div>
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
-                  <FiWifi style={{ color: '#0056b3', fontSize: '1.3rem' }} />
+                <div style={{ backgroundColor: '#f6f8fb', padding: '0.85rem', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #dfe5ee' }}>
+                  <FiWifi style={{ color: '#0056a2', fontSize: '1.3rem' }} />
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Quality</div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>Premium HD</div>
+                    <div style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 700 }}>Quality</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#131f33' }}>Premium HD</div>
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
-                  <FiSmartphone style={{ color: '#0056b3', fontSize: '1.3rem' }} />
+                <div style={{ backgroundColor: '#f6f8fb', padding: '0.85rem', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #dfe5ee' }}>
+                  <FiSmartphone style={{ color: '#0056a2', fontSize: '1.3rem' }} />
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Activation</div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>24 - 48 Hours</div>
+                    <div style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 700 }}>Activation</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#131f33' }}>24 - 48 Hours</div>
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#f8fafc', padding: '0.85rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #e2e8f0' }}>
-                  <FiFileText style={{ color: '#0056b3', fontSize: '1.3rem' }} />
+                <div style={{ backgroundColor: '#f6f8fb', padding: '0.85rem', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', gap: '0.65rem', border: '1px solid #dfe5ee' }}>
+                  <FiFileText style={{ color: '#0056a2', fontSize: '1.3rem' }} />
                   <div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>Contract</div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0f172a' }}>12 Months</div>
+                    <div style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 700 }}>Contract</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#131f33' }}>12 Months</div>
                   </div>
                 </div>
               </div>
@@ -431,7 +431,7 @@ export default function ProductDetailsPanel({
           )}
 
           {activeTab === 'Speed & Usage' && (
-            <div style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.7, fontWeight: 500 }}>
+            <div style={{ fontSize: '0.88rem', color: '#3b4a61', lineHeight: 1.7, fontWeight: 500 }}>
               <p style={{ margin: '0 0 0.4rem 0' }}><strong>Category:</strong> {category}</p>
               <p style={{ margin: '0 0 0.4rem 0' }}><strong>Usage Allowance:</strong> Truly Unlimited Anytime Data / Calls</p>
               <p style={{ margin: 0 }}><strong>Quality Standard:</strong> SLTMobitel High-Speed Optical / Voice Network</p>
@@ -439,7 +439,7 @@ export default function ProductDetailsPanel({
           )}
 
           {activeTab === "What's Included" && (
-            <div style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.7, fontWeight: 500 }}>
+            <div style={{ fontSize: '0.88rem', color: '#3b4a61', lineHeight: 1.7, fontWeight: 500 }}>
               <p style={{ margin: '0 0 0.4rem 0' }}><FiCheck size={13} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: '0.3rem' }} />Official SLTMobitel line registration &amp; digital provisioning.</p>
               <p style={{ margin: '0 0 0.4rem 0' }}><FiCheck size={13} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: '0.3rem' }} />Standard wiring &amp; installation cable connection.</p>
               <p style={{ margin: 0 }}><FiCheck size={13} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: '0.3rem' }} />24/7 dedicated SLTMobitel customer helpline access.</p>
@@ -447,7 +447,7 @@ export default function ProductDetailsPanel({
           )}
 
           {activeTab === 'Terms & Conditions' && (
-            <div style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.7, fontWeight: 500 }}>
+            <div style={{ fontSize: '0.88rem', color: '#3b4a61', lineHeight: 1.7, fontWeight: 500 }}>
               <p style={{ margin: '0 0 0.4rem 0' }}>• Minimum 12-month standard service agreement applies.</p>
               <p style={{ margin: '0 0 0.4rem 0' }}>• Displayed monthly charges are inclusive of government telecommunication levies.</p>
               <p style={{ margin: 0 }}>• Subject to technical feasibility & coverage check at delivery address.</p>

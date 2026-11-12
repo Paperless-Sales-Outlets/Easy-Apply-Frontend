@@ -135,8 +135,8 @@ export default function DigitalSignatureCanvas({
       <div
         style={{
           border: `2px dashed ${error ? 'var(--danger, #dc3545)' : 'var(--border-color, #ccc)'}`,
-          borderRadius: '8px',
-          backgroundColor: 'var(--surface-color, #ffffff)',
+          borderRadius: 'var(--radius)',
+          backgroundColor: 'var(--surface-color, var(--paper))',
           position: 'relative',
           padding: '0.5rem',
           maxWidth: '500px',
@@ -159,8 +159,8 @@ export default function DigitalSignatureCanvas({
             height: '160px',
             touchAction: 'none',
             cursor: 'crosshair',
-            backgroundColor: '#ffffff',
-            borderRadius: '8px',
+            backgroundColor: 'var(--paper)',
+            borderRadius: 'var(--radius)',
           }}
         />
 

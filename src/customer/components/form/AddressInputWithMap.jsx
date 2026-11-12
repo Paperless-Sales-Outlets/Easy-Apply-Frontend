@@ -217,12 +217,12 @@ export default function AddressInputWithMap({
             width: '100%',
             padding: '0.45rem 0.75rem',
             fontSize: '0.9rem',
-            border: '1px solid var(--line, #d9e2ef)',
+            border: '1px solid var(--line, var(--grey-200))',
             borderRadius: 'var(--radius, 12px) var(--radius, 12px) 0 0',
             outline: 'none',
             fontFamily: 'inherit',
             marginBottom: '-1px',
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--paper)',
             color: 'var(--text, #16233a)',
           }}
           aria-label="Search address with autocomplete"
@@ -246,9 +246,9 @@ export default function AddressInputWithMap({
             width: '100%',
             resize: 'vertical',
             borderRadius: disabled || readOnly ? 'var(--radius, 12px)' : '0 0 var(--radius, 12px) var(--radius, 12px)',
-            backgroundColor: disabled || readOnly ? '#f8fafc' : undefined,
+            backgroundColor: disabled || readOnly ? '#f6f8fb' : undefined,
             cursor: disabled || readOnly ? 'not-allowed' : undefined,
-            color: disabled || readOnly ? '#334155' : undefined,
+            color: disabled || readOnly ? '#26344b' : undefined,
           }}
         />
       </div>
@@ -263,7 +263,7 @@ export default function AddressInputWithMap({
             style={actionButtonStyle}
             title="Auto-detect current location"
           >
-            <FiNavigation style={{ color: '#0284c7', fontSize: '0.95rem' }} />
+            <FiNavigation style={{ color: '#1a6cbd', fontSize: '0.95rem' }} />
             {isDetectingLocation ? 'Detecting...' : 'Detect My Location (GPS)'}
           </button>
 
@@ -273,7 +273,7 @@ export default function AddressInputWithMap({
             style={actionButtonStyle}
             title="Open interactive map to select address"
           >
-            <FiMapPin style={{ color: '#16a34a', fontSize: '0.95rem' }} />
+            <FiMapPin style={{ color: '#0f7a4d', fontSize: '0.95rem' }} />
             Pick on Map
           </button>
 
@@ -283,11 +283,11 @@ export default function AddressInputWithMap({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.35rem',
-                backgroundColor: '#eff6ff',
-                color: '#1d4ed8',
-                border: '1px solid #bfdbfe',
+                backgroundColor: 'var(--blue-50)',
+                color: 'var(--blue-600)',
+                border: '1px solid var(--blue-200)',
                 padding: '0.3rem 0.65rem',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius)',
                 fontSize: '0.78rem',
                 fontWeight: 700,
               }}
@@ -330,20 +330,20 @@ const actionButtonStyle = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: '0.4rem',
-  backgroundColor: '#f8fafc',
-  border: '1px solid #cbd5e1',
-  borderRadius: '8px',
+  backgroundColor: 'var(--grey-50)',
+  border: '1px solid var(--grey-300)',
+  borderRadius: 'var(--radius)',
   padding: '0.35rem 0.75rem',
   fontSize: '0.8rem',
   fontWeight: 500,
-  color: '#334155',
+  color: 'var(--grey-800)',
   cursor: 'pointer',
   transition: 'all 0.15s ease-in-out',
 };
 
 const statusMessageStyle = {
   fontSize: '0.75rem',
-  color: '#0284c7',
+  color: 'var(--blue-500)',
   fontWeight: 500,
   marginLeft: 'auto',
 };

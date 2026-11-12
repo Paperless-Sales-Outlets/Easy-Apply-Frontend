@@ -16,12 +16,12 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
     <>
       <div
         style={{
-          backgroundColor: '#f0fdf4',
-          border: '1.5px solid #86efac',
-          borderRadius: '16px',
+          backgroundColor: 'var(--green-50)',
+          border: '1.5px solid var(--green-300)',
+          borderRadius: 'var(--radius-lg)',
           padding: '1.25rem 1.5rem',
           marginBottom: '1.5rem',
-          boxShadow: '0 4px 15px rgba(16,185,129,0.08)',
+          boxShadow: 'var(--shadow-md)',
         }}
       >
         <div
@@ -30,7 +30,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
             justifyContent: 'space-between',
             alignItems: 'center',
             marginBottom: '1rem',
-            borderBottom: '1px solid #bbf7d0',
+            borderBottom: '1px solid var(--green-200)',
             paddingBottom: '0.65rem',
             flexWrap: 'wrap',
             gap: '0.5rem',
@@ -39,8 +39,8 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
             <div
               style={{
-                backgroundColor: '#16a34a',
-                color: '#ffffff',
+                backgroundColor: 'var(--green-700)',
+                color: 'var(--paper)',
                 borderRadius: '50%',
                 width: '22px',
                 height: '22px',
@@ -48,12 +48,12 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '0.75rem',
-                fontWeight: 900,
+                fontWeight: 700,
               }}
             >
               <FiCheck size={13} aria-hidden="true" />
             </div>
-            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#14532d' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#14532d' }}>
               Customer Information Verified
             </span>
           </div>
@@ -65,9 +65,9 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#0056b3',
+                color: 'var(--blue-600)',
                 fontSize: '0.82rem',
-                fontWeight: 800,
+                fontWeight: 700,
                 cursor: 'pointer',
                 textDecoration: 'underline',
               }}
@@ -86,37 +86,37 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
           }}
         >
           <div>
-            <div style={{ fontSize: '0.72rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            <div style={{ fontSize: '0.75rem', color: '#3b4a61', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Customer Name
             </div>
-            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>
+            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#131f33', marginTop: '0.15rem' }}>
               {customerData.fullName || customerData.customerName || '—'}
             </div>
           </div>
 
           <div>
-            <div style={{ fontSize: '0.72rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            <div style={{ fontSize: '0.75rem', color: '#3b4a61', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Registered Address
             </div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#334155', marginTop: '0.15rem' }}>
+            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#26344b', marginTop: '0.15rem' }}>
               {customerData.address || '—'}
             </div>
           </div>
 
           <div>
-            <div style={{ fontSize: '0.72rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            <div style={{ fontSize: '0.75rem', color: '#3b4a61', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Telephone Number
             </div>
-            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>
+            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#131f33', marginTop: '0.15rem' }}>
               {customerData.telephone || customerData.phoneNumber || '—'}
             </div>
           </div>
 
           <div>
-            <div style={{ fontSize: '0.72rem', color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            <div style={{ fontSize: '0.75rem', color: '#3b4a61', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Current Package
             </div>
-            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>
+            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#131f33', marginTop: '0.15rem' }}>
               {customerData.package || customerData.packageName || '—'}
             </div>
           </div>
@@ -149,7 +149,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
                 border: '1px solid rgba(255, 255, 255, 0.8)',
-                borderRadius: '16px',
+                borderRadius: 'var(--radius-lg)',
                 padding: '2.5rem 2rem',
                 width: '90%',
                 maxWidth: '450px',
@@ -168,7 +168,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
                   background: 'none',
                   border: 'none',
                   fontSize: '1.5rem',
-                  color: '#64748b',
+                  color: 'var(--grey-600)',
                   cursor: 'pointer',
                   padding: '0.2rem',
                 }}
@@ -182,7 +182,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
                     width: '64px',
                     height: '64px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, rgba(0, 174, 239, 0.15), rgba(77, 184, 72, 0.15))',
+                    background: 'var(--blue-100)',
                     color: 'var(--slt-blue)',
                     display: 'grid',
                     placeItems: 'center',
@@ -202,7 +202,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
                 {accountsList.map((conn, idx) => (
                   <motion.div
                     key={idx}
-                    whileHover={{ scale: 1.02, background: 'rgba(255, 255, 255, 0.9)', boxShadow: '0 8px 24px rgba(0, 174, 239, 0.12)' }}
+                    whileHover={{ scale: 1.02, background: 'rgba(255, 255, 255, 0.9)', boxShadow: 'var(--shadow-lg)' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       switchAccount(conn);
@@ -217,7 +217,7 @@ export default function ExistingCustomerSummaryBox({ customerData, customerExist
                       padding: '1.25rem',
                       background: 'rgba(255, 255, 255, 0.5)',
                       border: '1px solid rgba(255, 255, 255, 0.8)',
-                      borderRadius: '16px',
+                      borderRadius: 'var(--radius-lg)',
                       cursor: 'pointer',
                       transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                       display: 'flex',

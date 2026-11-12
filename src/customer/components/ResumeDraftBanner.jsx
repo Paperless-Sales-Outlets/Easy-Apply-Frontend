@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import { FiClock, FiArrowRight, FiAlertCircle } from 'react-icons/fi';
 import {
@@ -13,12 +14,6 @@ import {
 } from '../services/draftService';
 import DraftSignInNotice from './DraftSignInNotice';
 
-// Matches the stepper shown inside the New Connection wizard. The wizard's
-// first two internal steps (location + coverage check) share step 1.
-const STEP_LABELS = ['Service Location', 'Identity & KYC', 'Digital Signature', 'Payment', 'Review & Submit'];
-
-const stepNumber = (stepIndex) => Math.min(Math.max(Number(stepIndex) || 0, 1), STEP_LABELS.length);
-
 const lastSavedText = (updatedAt) => {
   if (!updatedAt) return '';
   const minutes = Math.round((Date.now() - new Date(updatedAt).getTime()) / 60000);
@@ -30,10 +25,16 @@ const lastSavedText = (updatedAt) => {
   return `${days} day${days === 1 ? '' : 's'} ago`;
 };
 
+// Render into the slot above the nav bar so the banner spans the full width of the page.
+const aboveNav = (node) => {
+  const slot = typeof document !== 'undefined' ? document.getElementById('top-notice-root') : null;
+  return slot ? createPortal(node, slot) : node;
+};
+
 // Calm blue normally; amber in the last few days before the 30-day limit.
 const THEMES = {
-  normal: { background: '#f0f7ff', border: '#bfdbfe', icon: '#0f57a8', accent: '#0f57a8' },
-  warning: { background: '#fffbeb', border: '#fcd34d', icon: '#b45309', accent: '#b45309' },
+  normal: { background: '#f0f7ff', border: '#c3dcf5', icon: '#0056a2', accent: '#0056a2' },
+  warning: { background: '#fff8e8', border: '#f4d58f', icon: '#93560a', accent: '#93560a' },
 };
 
 /**
@@ -74,7 +75,7 @@ export default function ResumeDraftBanner() {
   }, [access]);
 
   if (!access) {
-    return (
+    return aboveNav(
       <div style={{ backgroundColor: 'var(--page-bg)' }}>
         <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem 0 1.5rem' }}>
           <DraftSignInNotice message="Please sign in again to see any unfinished New Connection application and keep your progress saved." />
@@ -89,8 +90,6 @@ export default function ResumeDraftBanner() {
   const daysLeft = draftDaysLeft(draft.resumeUntil, draft.serverTime);
   if (daysLeft === 0) return null;
 
-  const current = stepNumber(draft.stepIndex);
-  const productName = draft.selectedProduct?.productName;
   const savedUntil = formatDraftDate(draft.resumeUntil);
   const closeToLimit = daysLeft !== null && daysLeft <= DRAFT_EXPIRY_WARNING_DAYS;
   const theme = closeToLimit ? THEMES.warning : THEMES.normal;
@@ -117,17 +116,22 @@ export default function ResumeDraftBanner() {
     }
   };
 
-  return (
+  return aboveNav(
     <div style={{ backgroundColor: 'var(--page-bg)' }}>
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem 0 1.5rem' }}>
+      {/* Full-width band right under the nav bar; the content inside lines up with the page */}
+      <div
+        role="region"
+        aria-label="Unfinished application"
+        style={{
+          backgroundColor: theme.background,
+          borderBottom: `1px solid ${theme.border}`,
+        }}
+      >
         <div
-          role="region"
-          aria-label="Unfinished application"
           style={{
-            backgroundColor: theme.background,
-            border: `1.5px solid ${theme.border}`,
-            borderRadius: '16px',
-            padding: '1rem 1.35rem',
+            maxWidth: 'var(--page-max)',
+            margin: '0 auto',
+            padding: '1rem var(--page-gutter)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -142,8 +146,8 @@ export default function ResumeDraftBanner() {
                 width: '42px',
                 height: '42px',
                 flexShrink: 0,
-                borderRadius: '12px',
-                backgroundColor: '#ffffff',
+                borderRadius: 'var(--radius-lg)',
+                backgroundColor: 'var(--paper)',
                 color: theme.icon,
                 display: 'flex',
                 alignItems: 'center',
@@ -153,22 +157,21 @@ export default function ResumeDraftBanner() {
               {closeToLimit ? <FiAlertCircle size={20} /> : <FiClock size={20} />}
             </div>
             <div style={{ minWidth: 0 }}>
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>
-                You have an unfinished New Connection application
-              </h3>
-              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.86rem', color: '#475569' }}>
-                {productName && <><strong style={{ color: '#0f57a8' }}>{productName}</strong> · </>}
-                Step {current} of {STEP_LABELS.length}: {STEP_LABELS[current - 1]}
-                {draft.updatedAt && <> · Last saved {lastSavedText(draft.updatedAt)}</>}
-              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0.15rem 0.75rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--grey-900)' }}>
+                  You have an unfinished New Connection application
+                </h3>
+                {draft.updatedAt && (
+                  <span style={{ fontSize: '0.86rem', color: 'var(--grey-700)', whiteSpace: 'nowrap' }}>
+                    Last saved {lastSavedText(draft.updatedAt)}
+                  </span>
+                )}
+              </div>
               {deadline && (
                 <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.84rem', fontWeight: 700, color: theme.accent }}>
                   {deadline}
                 </p>
               )}
-              <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.76rem', color: '#64748b' }}>
-                For your security, unfinished applications are kept for 30 days from the day you start them.
-              </p>
             </div>
           </div>
 
@@ -180,7 +183,7 @@ export default function ResumeDraftBanner() {
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#64748b',
+                color: 'var(--grey-600)',
                 fontSize: '0.85rem',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -199,10 +202,10 @@ export default function ResumeDraftBanner() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.45rem',
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '0.92rem',
                 padding: '0.65rem 1.25rem',
-                borderRadius: '10px',
+                borderRadius: 'var(--radius)',
               }}
             >
               Continue application <FiArrowRight size={16} aria-hidden="true" />
