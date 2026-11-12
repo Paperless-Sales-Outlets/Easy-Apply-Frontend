@@ -634,6 +634,11 @@
   color: var(--muted);
 }
 
+/* A booked slot: its name over the time range */
+.apt-time-block.is-slot { min-width: 96px; gap: 0.2rem; text-align: center; }
+.apt-time-block.is-slot .apt-time-hour { font-size: 0.92rem; }
+.apt-time-block.is-slot .apt-time-min { font-size: 0.68rem; white-space: nowrap; }
+
 .apt-info {
   min-width: 0;
   grid-area: info;

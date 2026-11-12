@@ -9,6 +9,18 @@ export const SERVICE_LABELS = Object.fromEntries(
   FORM_TYPES.map((f) => [f.id, f.label])
 );
 
+/**
+ * Splits a booked installation slot such as "Morning (08.30 AM – 12.00 PM)" into
+ * its name and time range. Returns null when no slot was recorded.
+ */
+export function splitTimeSlot(slot) {
+  const text = String(slot || '').trim();
+  if (!text) return null;
+  const match = text.match(/^(.*?)\s*\((.*)\)\s*$/);
+  if (!match) return { name: text, range: '' };
+  return { name: match[1].trim(), range: match[2].trim().replace(/\s+[-–]\s+/, ' – ') };
+}
+
 export const STATUS_LABELS = {
   pending: 'Pending',
   'pending payment': 'Pending Payment',

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getMyJobs, updateMyJobStatus } from '../services/adminService';
 import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
-import { SERVICE_LABELS } from '../utils/applicationUtils';
+import { SERVICE_LABELS, splitTimeSlot } from '../utils/applicationUtils';
 
 /** A field technician's list of daily installation jobs. */
 export default function FieldTechnicianPage() {
@@ -59,10 +59,11 @@ export default function FieldTechnicianPage() {
         ) : (
           jobs.map((job, idx) => {
             const timeObj = new Date(job.scheduledAt);
-            const timeStr = timeObj.toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-            });
+            // The customer books a slot; the stored time is only the day.
+            const slot = splitTimeSlot(job.timeSlot);
+            const timeStr = slot
+              ? [slot.name, slot.range].filter(Boolean).join(' · ')
+              : timeObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
             const dateStr = timeObj.toLocaleDateString('en-GB', {
               day: 'numeric',
               month: 'short',

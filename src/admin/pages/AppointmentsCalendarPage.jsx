@@ -5,7 +5,7 @@ import {
   assignTechnician,
 } from '../services/adminService';
 import AdminNotice, { useAdminNotice } from '../components/AdminNotice';
-import { SERVICE_LABELS } from '../utils/applicationUtils';
+import { SERVICE_LABELS, splitTimeSlot } from '../utils/applicationUtils';
 
 const STATUS_COLORS = {
   scheduled: 'var(--blue)',
@@ -132,14 +132,23 @@ export default function AppointmentsCalendarPage() {
             const timeObj = new Date(apt.scheduledAt);
             const hour = timeObj.getHours().toString().padStart(2, '0');
             const min = timeObj.getMinutes().toString().padStart(2, '0');
+            // The customer books a slot; the stored time is only the day.
+            const slot = splitTimeSlot(apt.timeSlot);
 
             return (
               <div className="apt-card" key={apt.id}>
                 {/* Time block */}
-                <div className="apt-time-block">
-                  <span className="apt-time-hour">{hour}:{min}</span>
-                  <span className="apt-time-min">HRS</span>
-                </div>
+                {slot ? (
+                  <div className="apt-time-block is-slot" title={apt.timeSlot}>
+                    <span className="apt-time-hour">{slot.name}</span>
+                    {slot.range && <span className="apt-time-min">{slot.range}</span>}
+                  </div>
+                ) : (
+                  <div className="apt-time-block">
+                    <span className="apt-time-hour">{hour}:{min}</span>
+                    <span className="apt-time-min">HRS</span>
+                  </div>
+                )}
 
                 {/* Info */}
                 <div className="apt-info">
