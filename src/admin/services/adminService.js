@@ -129,12 +129,6 @@ export const createAppointment = async (data) => {
   return response.data;
 };
 
-// GET /api/auth/users — list all users (admin only)
-export const getUsers = async () => {
-  const response = await api.get('/auth/users');
-  return response.data;
-};
-
 // GET /api/admin/users — list Manager/SalesOfficer/CustomerCareOfficer/Admin accounts
 export const getAdminUsers = async () => {
   const response = await api.get('/admin/users');

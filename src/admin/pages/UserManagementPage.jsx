@@ -265,10 +265,10 @@ function AvatarStack({ members, roles, max = 4 }) {
 }
 
 /** Manage admin and staff user accounts. */
-export default function UserManagementPage() {
+export default function UserManagementPage({ initialTab = 'team' }) {
   const { admin } = useAdminAuth();
   const notice = useAdminNotice();
-  const [activeTab, setActiveTab] = useState('team');
+  const [activeTab, setActiveTab] = useState(() => (TABS.some((t) => t.key === initialTab) ? initialTab : 'team'));
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
