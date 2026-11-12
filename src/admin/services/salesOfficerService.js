@@ -81,15 +81,6 @@ export const createSalesOfficer = async (data) => {
 };
 
 /**
- * GET /api/admin/sales-officers/:employeeId
- * Retrieves detailed info for an officer by Employee Number (e.g. '095756').
- */
-export const getSalesOfficerByEmployeeId = async (employeeId) => {
-  const response = await api.get(`/admin/sales-officers/${encodeURIComponent(employeeId)}`);
-  return localizeQrUrls(response.data);
-};
-
-/**
  * POST /api/admin/sales-officers/:employeeId/qr
  * Generates or regenerates a unique QR tracking code for a sales officer.
  * Duplicate records are prevented by the backend.
@@ -99,15 +90,6 @@ export const createOrGetOfficerQr = async (employeeId, { regenerate = false } = 
     `/admin/sales-officers/${encodeURIComponent(employeeId)}/qr`,
     { regenerate }
   );
-  return localizeQrUrls(response.data);
-};
-
-/**
- * GET /api/admin/sales-officers/:employeeId/qr
- * Retrieves an existing QR tracking record and metadata.
- */
-export const getOfficerQr = async (employeeId) => {
-  const response = await api.get(`/admin/sales-officers/${encodeURIComponent(employeeId)}/qr`);
   return localizeQrUrls(response.data);
 };
 
@@ -166,17 +148,6 @@ export const getMyQr = async () => {
   return localizeQrUrls(response.data);
 };
 
-// ── Public Tracking Endpoint ──────────────────────────────────────────────
-
-/**
- * GET /api/sales-tracking/:token
- * Validates a sales tracking token and updates scan telemetry.
- */
-export const resolveTrackingToken = async (token) => {
-  const response = await api.get(`/sales-tracking/${encodeURIComponent(token)}`);
-  return response.data;
-};
-
 // ── QR Code Utilities ─────────────────────────────────────────────────────
 
 /**
@@ -195,23 +166,6 @@ export const renderQrToCanvas = async (canvas, text, options = {}) => {
     ...options,
   };
   return QRCode.toCanvas(canvas, text, mergedOptions);
-};
-
-/**
- * Generate a PNG Data URL for a given tracking URL.
- */
-export const generateQrDataUrl = async (text, options = {}) => {
-  if (!text) return '';
-  return QRCode.toDataURL(text, {
-    width: 400,
-    margin: 2,
-    color: {
-      dark: '#0b2d5b',
-      light: '#ffffff',
-    },
-    errorCorrectionLevel: 'H',
-    ...options,
-  });
 };
 
 /**
