@@ -552,7 +552,7 @@ export default function BranchesPage() {
             <div className="admin-modal-body">
               <p>
                 {pendingChild && pendingDelete.item.childCount > 0
-                  ? <><strong>{pendingDelete.item.name}</strong> still has {pendingDelete.item.childCount} {pendingDelete.item.childCount === 1 ? noun(pendingChild.label) : nounPlural(pendingChild)} under it. Move them to another {noun(LEVEL[pendingDelete.level].label)} or delete them first.</>
+                  ? <><strong>{pendingDelete.item.name}</strong> still has {pendingDelete.item.childCount} {pendingDelete.item.childCount === 1 ? noun(pendingChild.label) : nounPlural(pendingChild)} under it. Move {pendingDelete.item.childCount === 1 ? 'it' : 'them'} to another {noun(LEVEL[pendingDelete.level].label)} or delete {pendingDelete.item.childCount === 1 ? 'it' : 'them'} first.</>
                   : <>Are you sure you want to permanently delete <strong>{pendingDelete.item.name}</strong>? This cannot be undone.</>}
               </p>
             </div>
