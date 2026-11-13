@@ -10,6 +10,7 @@ const svg = (paths, strokeWidth = 2.2) => (
 
 const ACTION_META = {
   LOGIN: { label: 'Sign in', cls: 'audit-action-login', icon: svg(<><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><path d="m10 17 5-5-5-5" /><path d="M15 12H3" /></>) },
+  LOGIN_LOCKED: { label: 'Sign-in locked', cls: 'audit-action-delete', icon: svg(<><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>) },
   LOGOUT: { label: 'Sign out', cls: 'audit-action-logout', icon: svg(<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></>) },
   CREATE: { label: 'Created', cls: 'audit-action-create', icon: svg(<><path d="M12 5v14M5 12h14" /></>, 2.6) },
   UPDATE: { label: 'Updated', cls: 'audit-action-update', icon: svg(<><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></>) },
