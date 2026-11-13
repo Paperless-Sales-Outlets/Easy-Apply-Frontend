@@ -9,7 +9,8 @@ import {
 } from '../utils/applicationUtils';
 import AuthImage from './AuthImage';
 import AdminNotice, { useAdminNotice } from './AdminNotice';
-import { updateApplicationStatus } from '../services/adminService';
+import { getApplicationDocuments, updateApplicationStatus } from '../services/adminService';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import { getFormSections } from '../utils/formDataSchema';
 
 const DOC_LABELS = {
@@ -92,7 +93,17 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
   const [localNotes, setLocalNotes] = useState('');
   const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
+  const [fullFormData, setFullFormData] = useState(null);
+  const [docsFailed, setDocsFailed] = useState(false);
+  const [docsAttempt, setDocsAttempt] = useState(0);
   const notice = useAdminNotice(4000);
+  const { admin } = useAdminAuth();
+  const applicationId = application?.id;
+
+  // Deciding an application is a KYC decision: Admins and KYC reviewers only,
+  // and a confirmed application is locked (the backend enforces both).
+  const canDecide = String(admin?.role || '').toLowerCase() === 'admin' || (admin?.permissions || []).includes('kyc');
+  const isLocked = String(localStatus).toLowerCase() === 'confirmed';
 
   useEffect(() => {
     if (application) {
@@ -104,6 +115,26 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
       setBusy(false);
     }
   }, [application]);
+
+  useEffect(() => {
+    setFullFormData(null);
+    setDocsFailed(false);
+  }, [applicationId]);
+
+  // The list has no images, so fetch them the first time Documents is opened.
+  useEffect(() => {
+    if (activeTab !== 'documents' || !applicationId || fullFormData) return undefined;
+    let cancelled = false;
+    setDocsFailed(false);
+    getApplicationDocuments(applicationId)
+      .then((res) => {
+        if (!cancelled) setFullFormData(res.formData || {});
+      })
+      .catch(() => {
+        if (!cancelled) setDocsFailed(true);
+      });
+    return () => { cancelled = true; };
+  }, [activeTab, applicationId, fullFormData, docsAttempt]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -125,7 +156,10 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
     () => getFormSections(application?.serviceType, application?.formData),
     [application],
   );
-  const docs = useMemo(() => collectDocuments(application?.formData), [application]);
+  const docs = useMemo(
+    () => collectDocuments(fullFormData || application?.formData),
+    [application, fullFormData],
+  );
 
   if (!application) return null;
 
@@ -286,8 +320,11 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
               <section className="adm-verify">
                 <h4 className="adm-section-title">Verification &amp; Actions</h4>
                 <p className="adm-verify-hint">
-                  Review the customer details above, then approve, reject or flag the application.
-                  A comment is saved with the decision.
+                  {!canDecide
+                    ? 'Approving, rejecting or flagging needs the KYC Review privilege. You can still add a comment to the file.'
+                    : isLocked
+                      ? 'This application is confirmed (payment / appointment completed), so its status can no longer be changed. You can still add a comment.'
+                      : 'Review the customer details above, then approve, reject or flag the application. A comment is saved with the decision.'}
                 </p>
                 <label className="adm-comment-field">
                   <span>Admin comment</span>
@@ -302,30 +339,34 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
                   <p className="adm-comment-author">Last updated by {actionerName}</p>
                 )}
                 <div className="adm-verify-actions">
-                  <button
-                    type="button"
-                    className="adm-action approve"
-                    disabled={busy || localStatus === 'approved'}
-                    onClick={() => runStatus('approved')}
-                  >
-                    <FiCheck size={15} /> Approve
-                  </button>
-                  <button
-                    type="button"
-                    className="adm-action reject"
-                    disabled={busy || localStatus === 'rejected'}
-                    onClick={() => runStatus('rejected')}
-                  >
-                    <FiX size={15} /> Reject
-                  </button>
-                  <button
-                    type="button"
-                    className="adm-action flag"
-                    disabled={busy || localStatus === 'flagged'}
-                    onClick={() => runStatus('flagged')}
-                  >
-                    <FiFlag size={15} /> Flag
-                  </button>
+                  {canDecide && (
+                    <>
+                      <button
+                        type="button"
+                        className="adm-action approve"
+                        disabled={busy || isLocked || localStatus === 'approved'}
+                        onClick={() => runStatus('approved')}
+                      >
+                        <FiCheck size={15} /> Approve
+                      </button>
+                      <button
+                        type="button"
+                        className="adm-action reject"
+                        disabled={busy || isLocked || localStatus === 'rejected'}
+                        onClick={() => runStatus('rejected')}
+                      >
+                        <FiX size={15} /> Reject
+                      </button>
+                      <button
+                        type="button"
+                        className="adm-action flag"
+                        disabled={busy || isLocked || localStatus === 'flagged'}
+                        onClick={() => runStatus('flagged')}
+                      >
+                        <FiFlag size={15} /> Flag
+                      </button>
+                    </>
+                  )}
                   <button
                     type="button"
                     className="adm-action ghost"
@@ -344,7 +385,14 @@ export default function ApplicationDetailModal({ application, onClose, onUpdated
 
           {activeTab === 'documents' && (
             <div>
-              {docs.length === 0 ? (
+              {docsFailed ? (
+                <div className="admin-modal-empty" role="alert">
+                  <p>Could not load the documents. Check your connection, then try again.</p>
+                  <button type="button" className="admin-btn primary" onClick={() => setDocsAttempt((attempt) => attempt + 1)}>Retry</button>
+                </div>
+              ) : !fullFormData ? (
+                <p className="admin-modal-empty" role="status">Loading documents…</p>
+              ) : docs.length === 0 ? (
                 <p className="admin-modal-empty">No documents attached.</p>
               ) : (
                 <div className="admin-doc-grid">

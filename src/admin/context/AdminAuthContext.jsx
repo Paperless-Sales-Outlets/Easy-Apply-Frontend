@@ -330,6 +330,8 @@ export function AdminAuthProvider({ children }) {
         name: user.name,
         email: user.email,
         role: user.role,
+        employeeNumber: user.employeeNumber || user.employeeId || '',
+        permissions: user.permissions || [],
       };
 
       setAdmin(session);

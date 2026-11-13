@@ -26,6 +26,9 @@ export default function PasskeyManagementModal({ isOpen, onClose }) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+  // The passkey whose row is asking "Remove this passkey?", and the one being removed.
+  const [confirmingId, setConfirmingId] = useState(null);
+  const [removingId, setRemovingId] = useState(null);
 
   const supported = isPasskeySupported();
 
@@ -48,6 +51,7 @@ export default function PasskeyManagementModal({ isOpen, onClose }) {
       setShowAddForm(false);
       setStatusMessage(null);
       setErrorMessage(null);
+      setConfirmingId(null);
     }
   }, [isOpen, fetchPasskeys]);
 
@@ -73,20 +77,20 @@ export default function PasskeyManagementModal({ isOpen, onClose }) {
     }
   };
 
+  // Runs after the row's own "Remove this passkey?" confirmation.
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to remove the passkey "${name || 'Device'}"?`)) {
-      return;
-    }
-
+    setErrorMessage(null);
+    setStatusMessage(null);
+    setRemovingId(id);
     try {
-      setLoading(true);
       await deletePasskey(id);
       setStatusMessage(`Passkey "${name || 'Device'}" removed.`);
+      setConfirmingId(null);
       await fetchPasskeys();
     } catch (err) {
       setErrorMessage(err.response?.data?.message || err.message || 'Failed to remove passkey.');
     } finally {
-      setLoading(false);
+      setRemovingId(null);
     }
   };
 
@@ -223,15 +227,40 @@ export default function PasskeyManagementModal({ isOpen, onClose }) {
                         {pk.lastUsedAt && ` · Used ${new Date(pk.lastUsedAt).toLocaleDateString()}`}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      className="passkey-item-delete"
-                      onClick={() => handleDelete(pk._id, pk.deviceName)}
-                      title="Remove passkey"
-                      aria-label={`Remove passkey ${pk.deviceName}`}
-                    >
-                      <FiTrash2 size={15} />
-                    </button>
+                    {confirmingId === pk._id ? (
+                      <div className="passkey-item-confirm" role="group" aria-label={`Remove passkey ${pk.deviceName || 'Passkey Device'}`}>
+                        <span>Remove this passkey?</span>
+                        <button
+                          type="button"
+                          className="admin-btn ghost"
+                          onClick={() => setConfirmingId(null)}
+                          disabled={removingId === pk._id}
+                          autoFocus
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-btn danger"
+                          onClick={() => handleDelete(pk._id, pk.deviceName)}
+                          disabled={removingId === pk._id}
+                          aria-busy={removingId === pk._id}
+                        >
+                          {removingId === pk._id ? 'Removing…' : 'Remove'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="passkey-item-delete"
+                        onClick={() => setConfirmingId(pk._id)}
+                        disabled={removingId !== null}
+                        title="Remove passkey"
+                        aria-label={`Remove passkey ${pk.deviceName || 'Passkey Device'}`}
+                      >
+                        <FiTrash2 size={15} />
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

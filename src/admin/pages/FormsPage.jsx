@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { FiActivity, FiCheckCircle, FiCreditCard, FiEye, FiFileText, FiPhone, FiSearch } from 'react-icons/fi';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FiActivity, FiAlertTriangle, FiCheckCircle, FiCreditCard, FiEye, FiFileText, FiPhone, FiSearch } from 'react-icons/fi';
 import { getApplications, getDashboardStats } from '../services/adminService';
 import { FORM_TYPES, STATUS_LABELS, formatDateOnly, normalizeApplication, statusBadgeClass, statusLabel } from '../utils/applicationUtils';
 import { AnimatedNumber, Pager, timeAgo } from '../components/AdminVisuals';
@@ -33,17 +33,28 @@ function getInitials(name) {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateChange }) {
+function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateChange, onRetry }) {
   const [history, setHistory] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [detailApp, setDetailApp] = useState(null);
   const [expandedComments, setExpandedComments] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [status, setStatus] = useState('');
+  const latestRequest = useRef(0);
+
+  // Search once typing pauses.
+  useEffect(() => {
+    const id = setTimeout(() => setAppliedSearch(searchQuery.trim()), 350);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
 
   const fetchPage = useCallback(async (pageNum) => {
+    const requestId = latestRequest.current + 1;
+    latestRequest.current = requestId;
     setLoading(true);
     try {
       const params = {
@@ -52,39 +63,33 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
         limit: HISTORY_PAGE_SIZE,
         sortBy: 'createdAt',
         sortOrder: 'desc',
+        lite: true,
       };
       if (fromDate) params.startDate = fromDate;
       if (toDate) params.endDate = toDate;
       if (status) params.status = status;
+      if (appliedSearch) params.search = appliedSearch;
 
       const res = await getApplications(params);
+      if (requestId !== latestRequest.current) return;
       setHistory((res.applications || []).map(normalizeApplication));
       setPagination(res.pagination || null);
+      setLoadFailed(false);
     } catch {
+      if (requestId !== latestRequest.current) return;
       setHistory([]);
       setPagination(null);
+      setLoadFailed(true);
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) setLoading(false);
     }
-  }, [formId, fromDate, toDate, status]);
+  }, [formId, fromDate, toDate, status, appliedSearch]);
 
   useEffect(() => {
     setPage(1);
     fetchPage(1);
   }, [formId, fetchPage]);
 
-  const matchesSearch = (app, query) => {
-    const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      String(app.referenceNumber || '').toLowerCase().includes(q)
-      || String(app.nic || '').toLowerCase().includes(q)
-      || String(app.phone || '').toLowerCase().includes(q)
-      || String(app.name || '').toLowerCase().includes(q)
-    );
-  };
-
-  const filteredHistory = history.filter(app => matchesSearch(app, searchQuery));
   const totalCount = pagination?.totalCount ?? history.length;
   const hasFilters = Boolean(fromDate || toDate || status || searchQuery);
 
@@ -103,6 +108,11 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
     fetchPage(pageNum);
   };
 
+  const retry = () => {
+    fetchPage(page);
+    onRetry();
+  };
+
   const clearFilters = () => {
     onFromDateChange('');
     onToDateChange('');
@@ -119,9 +129,11 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
             <p>
               {loading
                 ? 'Loading…'
-                : searchQuery
-                  ? `${filteredHistory.length} match${filteredHistory.length === 1 ? '' : 'es'} on this page · ${totalCount} in total`
-                  : `${totalCount} submission${totalCount === 1 ? '' : 's'}${fromDate || toDate ? ' in the selected range' : ''}`}
+                : loadFailed
+                  ? 'Not loaded'
+                  : appliedSearch
+                    ? `${totalCount} match${totalCount === 1 ? '' : 'es'}`
+                    : `${totalCount} submission${totalCount === 1 ? '' : 's'}${fromDate || toDate ? ' in the selected range' : ''}`}
             </p>
           </div>
           <div className="um-toolbar">
@@ -179,7 +191,14 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
           <div className="dash-table-skeleton">
             {Array.from({ length: 5 }).map((_, i) => <div className="dash-skeleton dash-skeleton-row" key={i} />)}
           </div>
-        ) : filteredHistory.length === 0 ? (
+        ) : loadFailed ? (
+          <div className="um-empty-state" role="alert">
+            <span className="um-empty-icon"><FiAlertTriangle size={24} /></span>
+            <h3>Could not load submissions</h3>
+            <p>Check your connection, then try again.</p>
+            <button type="button" className="admin-btn primary" style={{ marginTop: '0.75rem' }} onClick={retry}>Retry</button>
+          </div>
+        ) : history.length === 0 ? (
           <div className="um-empty-state">
             <span className="um-empty-icon"><FiFileText size={24} /></span>
             <h3>{hasFilters ? 'No matching submissions' : 'No submissions yet'}</h3>
@@ -200,7 +219,7 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
                 </tr>
               </thead>
               <tbody>
-                {filteredHistory.map(app => {
+                {history.map(app => {
                   const comment = app.notes || '';
                   const isExpanded = expandedComments[app.id];
                   const visibleText = comment.length > 90 && !isExpanded ? `${comment.slice(0, 90)}...` : comment;
@@ -303,6 +322,8 @@ function RecentHistory({ formId, fromDate, toDate, onFromDateChange, onToDateCha
 export default function FormsPage({ initialFormId }) {
   const [stats, setStats] = useState({ total: 0, completed: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [statsFailed, setStatsFailed] = useState(false);
+  const [statsAttempt, setStatsAttempt] = useState(0);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
@@ -322,16 +343,19 @@ export default function FormsPage({ initialFormId }) {
         if (cancelled) return;
         const entry = (res.byServiceType || []).find(t => t.id === form.id);
         setStats({ total: entry?.total || 0, completed: entry?.completed || 0 });
+        setStatsFailed(false);
       })
       .catch(() => {
-        if (!cancelled) setStats({ total: 0, completed: 0 });
+        if (cancelled) return;
+        setStats({ total: 0, completed: 0 });
+        setStatsFailed(true);
       })
       .finally(() => {
         if (!cancelled) setStatsLoading(false);
       });
 
     return () => { cancelled = true; };
-  }, [form, fromDate, toDate]);
+  }, [form, fromDate, toDate, statsAttempt]);
 
   const hasFilter = Boolean(fromDate || toDate);
   const completionRate = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
@@ -356,7 +380,7 @@ export default function FormsPage({ initialFormId }) {
   const tiles = [
     { key: 'total', cls: 'total', icon: <FiFileText size={15} />, label: 'Total submissions', value: stats.total, foot: hasFilter ? 'In the selected range' : 'All time' },
     { key: 'completed', cls: 'active', icon: <FiCheckCircle size={15} />, label: 'Completed', value: stats.completed, foot: 'Approved or confirmed' },
-    { key: 'open', cls: 'open', icon: <FiActivity size={15} />, label: 'Still open', value: Math.max(0, stats.total - stats.completed), foot: 'Pending, flagged or rejected' },
+    { key: 'open', cls: 'open', icon: <FiActivity size={15} />, label: 'Not completed', value: Math.max(0, stats.total - stats.completed), foot: 'Pending, flagged or rejected' },
     { key: 'rate', cls: 'roles', icon: <FiActivity size={15} />, label: 'Completion rate', value: completionRate, suffix: '%', meter: completionRate, foot: hasFilter ? 'In the selected range' : 'Across this form type' },
   ];
 
@@ -382,7 +406,9 @@ export default function FormsPage({ initialFormId }) {
             <div className={`um-hero-tile ${tile.cls}`} key={tile.key} style={{ '--i': idx }}>
               <div className="um-hero-tile-head"><span className="um-hero-tile-icon">{tile.icon}</span>{tile.label}</div>
               <div className="um-hero-tile-value">
-                {statsLoading ? <span className="dash-skeleton um-hero-skeleton" /> : <><AnimatedNumber value={tile.value} />{tile.suffix}</>}
+                {statsLoading
+                  ? <span className="dash-skeleton um-hero-skeleton" />
+                  : statsFailed ? '—' : <><AnimatedNumber value={tile.value} />{tile.suffix}</>}
               </div>
               {tile.meter != null && (
                 <div className="um-hero-meter" aria-hidden="true"><span style={{ width: `${statsLoading ? 0 : tile.meter}%` }} /></div>
@@ -399,6 +425,7 @@ export default function FormsPage({ initialFormId }) {
         toDate={toDate}
         onFromDateChange={setFromDate}
         onToDateChange={setToDate}
+        onRetry={() => setStatsAttempt((attempt) => attempt + 1)}
       />
     </div>
   );

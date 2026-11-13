@@ -12,6 +12,12 @@ export const getApplications = async (params = {}) => {
   return response.data;
 };
 
+// GET /api/admin/applications/:id/documents — one application's full form data, including images
+export const getApplicationDocuments = async (id) => {
+  const response = await api.get(`/admin/applications/${id}/documents`);
+  return response.data;
+};
+
 // GET /api/admin/forms — pre-existing paginated forms API (fallback data source)
 export const getAdminForms = async (params = {}) => {
   const response = await api.get('/admin/forms', { params });
@@ -81,12 +87,6 @@ export const getApplicationReports = async (params = {}) => {
   return response.data;
 };
 
-// PATCH /api/admin/applications/:id/office-fields — update CR Number, Amount Paid, Staff Signature, Appointment Date
-export const updateOfficeFields = async (id, fields) => {
-  const response = await api.patch(`/admin/applications/${id}/office-fields`, fields);
-  return response.data;
-};
-
 // GET /api/admin/appointments — list appointments (filterable by date, technician, status)
 export const getAppointments = async (params = {}) => {
   const response = await api.get('/admin/appointments', { params });
@@ -114,18 +114,6 @@ export const getMyJobs = async () => {
 // PATCH /api/field/appointments/:id/status — update job status (field technician)
 export const updateMyJobStatus = async (id, status) => {
   const response = await api.patch(`/field/appointments/${id}/status`, { status });
-  return response.data;
-};
-
-// POST /api/admin/appointments — create an appointment from an application
-export const createAppointment = async (data) => {
-  const response = await api.post('/admin/appointments', data);
-  return response.data;
-};
-
-// GET /api/auth/users — list all users (admin only)
-export const getUsers = async () => {
-  const response = await api.get('/auth/users');
   return response.data;
 };
 
@@ -189,58 +177,21 @@ export const getAuditLogs = async (params = {}) => {
   return response.data;
 };
 
-// GET /api/admin/leads/check-catalog — the serviceability criteria a new
-// connection has to clear, with the thresholds a survey is measured against
-export const getLeadCheckCatalog = async () => {
-  const response = await api.get('/admin/leads/check-catalog');
+// GET /api/admin/leads/drafts/stats — unfinished application summary
+export const getDraftLeadStats = async () => {
+  const response = await api.get('/admin/leads/drafts/stats');
   return response.data;
 };
 
-// GET /api/admin/leads/stats — summary counts + what is blocking leads
-export const getLeadStats = async () => {
-  const response = await api.get('/admin/leads/stats');
+// GET /api/admin/leads/drafts — paginated abandoned application drafts
+export const getDraftLeads = async (params = {}) => {
+  const response = await api.get('/admin/leads/drafts', { params });
   return response.data;
 };
 
-// GET /api/admin/leads — paginated, filterable lead list
-export const getLeads = async (params = {}) => {
-  const response = await api.get('/admin/leads', { params });
-  return response.data;
-};
-
-// GET /api/admin/leads/:id — one lead with its full survey record
-export const getLeadById = async (id) => {
-  const response = await api.get(`/admin/leads/${id}`);
-  return response.data;
-};
-
-// POST /api/admin/leads — capture a new lead and open its checklist
-export const createLead = async (data) => {
-  const response = await api.post('/admin/leads', data);
-  return response.data;
-};
-
-// PATCH /api/admin/leads/:id — update details, status, assignment or notes
-export const updateLead = async (id, data) => {
-  const response = await api.patch(`/admin/leads/${id}`, data);
-  return response.data;
-};
-
-// PATCH /api/admin/leads/:id/checks — record the site survey results
-export const updateLeadChecks = async (id, checks) => {
-  const response = await api.patch(`/admin/leads/${id}/checks`, { checks });
-  return response.data;
-};
-
-// PATCH /api/admin/leads/:id/resolve — decide what happens to a blocked lead
-export const resolveLead = async (id, data) => {
-  const response = await api.patch(`/admin/leads/${id}/resolve`, data);
-  return response.data;
-};
-
-// DELETE /api/admin/leads/:id — remove a lead
-export const deleteLead = async (id) => {
-  const response = await api.delete(`/admin/leads/${id}`);
+// GET /api/admin/leads/drafts/:id — one draft with its captured form and photos
+export const getDraftLeadById = async (id) => {
+  const response = await api.get(`/admin/leads/drafts/${id}`);
   return response.data;
 };
 
@@ -259,5 +210,31 @@ export const updatePrivilege = async (id, data) => {
 // DELETE /api/admin/privileges/:id — remove a custom privilege that nothing uses
 export const deletePrivilege = async (id) => {
   const response = await api.delete(`/admin/privileges/${id}`);
+  return response.data;
+};
+
+// ── Branches: level is 'regions' | 'provinces' | 'rtos' | 'teleshops' ──
+
+// GET /api/admin/branches — every region, province, RTO and teleshop
+export const getBranches = async () => {
+  const response = await api.get('/admin/branches');
+  return response.data;
+};
+
+// POST /api/admin/branches/:level — { name, parentId } (no parent for a region)
+export const createBranch = async (level, data) => {
+  const response = await api.post(`/admin/branches/${level}`, data);
+  return response.data;
+};
+
+// PATCH /api/admin/branches/:level/:id — rename or move under another parent
+export const updateBranch = async (level, id, data) => {
+  const response = await api.patch(`/admin/branches/${level}/${id}`, data);
+  return response.data;
+};
+
+// DELETE /api/admin/branches/:level/:id — only when nothing sits under it
+export const deleteBranch = async (level, id) => {
+  const response = await api.delete(`/admin/branches/${level}/${id}`);
   return response.data;
 };

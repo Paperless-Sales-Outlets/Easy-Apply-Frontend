@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { MODULE_ACCESS } from '../data/dummyData';
 import { FORM_TYPES } from '../utils/applicationUtils';
+import { canOpenPage } from '../utils/pageAccess';
 import sltLogo from '../../assets/slt-logo.png';
 import PasskeyManagementModal from './PasskeyManagementModal';
 
@@ -58,12 +59,6 @@ const NAV_ICONS = {
       <path d="M3 12h4l3 8 4-16 3 8h4" />
     </svg>
   ),
-  privileges: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  ),
   users: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -74,6 +69,11 @@ const NAV_ICONS = {
   'audit-logs': (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 4h16v16H4z" /><path d="M8 8h8M8 12h8M8 16h5" />
+    </svg>
+  ),
+  branches: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21h18M5 21V7l7-4 7 4v14" /><path d="M9 21v-6h6v6M9 10h.01M15 10h.01" />
     </svg>
   ),
   'sales-officers': (
@@ -88,33 +88,39 @@ const NAV_ICONS = {
   ),
 };
 
-// Modules not used in this portal any more — hidden from the sidebar only.
-// (User Privileges is managed from User Management → Privileges.)
-const HIDDEN_NAV_KEYS = new Set(['appointments', 'technician']);
-
 // Every sidebar entry, keyed by page. Module entries come from MODULE_ACCESS.
 const NAV_BY_KEY = {
   ...Object.fromEntries(MODULE_ACCESS.map((item) => [item.key, { ...item, icon: NAV_ICONS[item.key] }])),
-  users: { key: 'users', label: 'User Management', icon: NAV_ICONS.users, roles: ['Admin'] },
+  users: { key: 'users', label: 'User Management', icon: NAV_ICONS.users },
   // Sales Officer Management — Admin can manage all officers + their QR codes
-  'sales-officers': { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'], roles: ['Admin'] },
-  'audit-logs': { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'], roles: ['Admin'] },
+  'sales-officers': { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'] },
+  'audit-logs': { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'] },
+  branches: { key: 'branches', label: 'Branches', icon: NAV_ICONS.branches },
   // Sales Officer personal dashboard — visible only to Sales Officer role
-  'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'], roles: ['Sales Officer'] },
+  'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'] },
 };
 
-// Sidebar order. A module that is not listed here (e.g. a new one) still shows,
-// just before Audit Logs.
-const NAV_ORDER = ['dashboard', 'users', 'leads', 'sales-officers', 'kyc', 'forms', 'analytics'];
-const NAV_LAST = ['audit-logs', 'so-dashboard'];
+// Sidebar sections, in the order set by the supervisor: the overview, the
+// admin's main tasks, the customer-facing operations, then field work.
+// A module that is not listed here (e.g. a new one) still shows, under "More".
+const NAV_SECTION_LAYOUT = [
+  { key: 'overview', label: 'Overview', items: ['dashboard', 'so-dashboard'] },
+  { key: 'administration', label: 'Administration', items: ['analytics', 'audit-logs', 'users', 'branches'] },
+  { key: 'operations', label: 'Operations', items: ['sales-officers', 'kyc', 'leads', 'forms'] },
+  { key: 'field', label: 'Field Service', items: ['appointments', 'technician'] },
+];
 
-const NAV_ITEMS = [
-  ...NAV_ORDER,
-  ...Object.keys(NAV_BY_KEY).filter((key) => !NAV_ORDER.includes(key) && !NAV_LAST.includes(key)),
-  ...NAV_LAST,
-]
-  .filter((key) => NAV_BY_KEY[key] && !HIDDEN_NAV_KEYS.has(key))
-  .map((key) => NAV_BY_KEY[key]);
+const LISTED_NAV_KEYS = new Set(NAV_SECTION_LAYOUT.flatMap((section) => section.items));
+const UNLISTED_NAV_KEYS = Object.keys(NAV_BY_KEY).filter((key) => !LISTED_NAV_KEYS.has(key));
+
+const NAV_SECTIONS = [
+  ...NAV_SECTION_LAYOUT.slice(0, -1),
+  ...(UNLISTED_NAV_KEYS.length ? [{ key: 'more', label: 'More', items: UNLISTED_NAV_KEYS }] : []),
+  NAV_SECTION_LAYOUT[NAV_SECTION_LAYOUT.length - 1],
+].map((section) => ({
+  ...section,
+  items: section.items.filter((key) => NAV_BY_KEY[key]).map((key) => NAV_BY_KEY[key]),
+}));
 
 const SHORT_FORM_LABELS = {
   'Customer Request Acceptance': 'Cust. Request',
@@ -131,10 +137,11 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [passkeyModalOpen, setPasskeyModalOpen] = useState(false);
 
-  // Match roles case-insensitively so 'Sales Officer' and 'sales officer' both work
-  const visibleNav = NAV_ITEMS.filter(item =>
-    item.roles.some(r => r.toLowerCase() === (admin?.role || 'Admin').toLowerCase())
-  );
+  // Only the sections this account can open something in; a lone module needs no heading.
+  const visibleSections = NAV_SECTIONS
+    .map(section => ({ ...section, items: section.items.filter(item => canOpenPage(admin, item.key)) }))
+    .filter(section => section.items.length > 0);
+  const showSectionHeadings = visibleSections.reduce((count, section) => count + section.items.length, 0) > 1;
 
   const handleNavClick = (item) => {
     if (item.key === 'forms') {
@@ -205,31 +212,43 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
         </div>
 
         <nav className="admin-nav">
-          {visibleNav.map(item => (
-            <div className="admin-nav-group" key={item.key}>
-              <button
-                className={`admin-nav-item${activePage === item.key ? ' active' : ''}`}
-                onClick={() => handleNavClick(item)}
-              >
-                <span style={{ fontSize: '1rem' }}>{item.icon}</span>
-                {item.label}
-                {item.key === 'forms' && (
-                  <span className={`admin-nav-caret${openForms ? ' open' : ''}`}>▾</span>
-                )}
-              </button>
-              {item.key === 'forms' && openForms && (
-                <div className="admin-nav-submenu">
-                  {FORM_TYPES.map(form => (
-                    <button
-                      key={form.id}
-                      className={`admin-nav-submenu-item${activeFormId === form.id ? ' active' : ''}`}
-                      onClick={() => handleFormSelect(form.id)}
-                    >
-                      {shortFormLabel(form.label)}
-                    </button>
-                  ))}
-                </div>
+          {visibleSections.map(section => (
+            <div
+              className="admin-nav-section"
+              key={section.key}
+              role="group"
+              aria-labelledby={showSectionHeadings ? `admin-nav-heading-${section.key}` : undefined}
+            >
+              {showSectionHeadings && (
+                <div className="admin-nav-heading" id={`admin-nav-heading-${section.key}`}>{section.label}</div>
               )}
+              {section.items.map(item => (
+                <div className="admin-nav-group" key={item.key}>
+                  <button
+                    className={`admin-nav-item${activePage === item.key ? ' active' : ''}`}
+                    onClick={() => handleNavClick(item)}
+                  >
+                    <span style={{ fontSize: '1rem' }}>{item.icon}</span>
+                    {item.label}
+                    {item.key === 'forms' && (
+                      <span className={`admin-nav-caret${openForms ? ' open' : ''}`}>▾</span>
+                    )}
+                  </button>
+                  {item.key === 'forms' && openForms && (
+                    <div className="admin-nav-submenu">
+                      {FORM_TYPES.map(form => (
+                        <button
+                          key={form.id}
+                          className={`admin-nav-submenu-item${activeFormId === form.id ? ' active' : ''}`}
+                          onClick={() => handleFormSelect(form.id)}
+                        >
+                          {shortFormLabel(form.label)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           ))}
         </nav>
@@ -276,7 +295,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
       {/* ── Main Content ── */}
       <div className="admin-main">
         <div className="admin-topbar" />
-        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'].includes(activePage) ? ' admin-page-wide' : ''}`}>
+        <div className={`admin-page${['dashboard', 'forms', 'analytics', 'kyc', 'appointments', 'technician', 'users', 'branches', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'].includes(activePage) ? ' admin-page-wide' : ''}`}>
           {children}
         </div>
       </div>

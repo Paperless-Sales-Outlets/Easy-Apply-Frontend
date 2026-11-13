@@ -2,13 +2,6 @@
 // Centralized mock data used across all Admin dashboard pages.
 // Replace each dataset with real API calls when backend is wired up.
 
-// ── User Privileges ────────────────────────────────────────────────────────────
-export const SYSTEM_ROLES = [
-  'Admin',
-  'Manager',
-  'SalesOfficer',
-];
-
 export const MODULE_ACCESS = [
   { key: 'dashboard',    label: 'Dashboard',    roles: ['Admin', 'Staff', 'Manager', 'SalesOfficer'] },
   { key: 'kyc',          label: 'KYC Review',   roles: ['Admin', 'Staff', 'Manager'] },

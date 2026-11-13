@@ -9,19 +9,24 @@ import KycReviewPage from './pages/KycReviewPage';
 import AppointmentsCalendarPage from './pages/AppointmentsCalendarPage';
 import FieldTechnicianPage from './pages/FieldTechnicianPage';
 import ReportsAnalyticsPage from './pages/ReportsAnalyticsPage';
-import UserPrivilegesPage from './pages/UserPrivilegesPage';
 import UserManagementPage from './pages/UserManagementPage';
+import BranchesPage from './pages/BranchesPage';
 import AuditLogsPage from './pages/AuditLogsPage';
 import SalesOfficerManagementPage from './pages/SalesOfficerManagementPage';
 import SalesOfficerDashboardPage from './pages/SalesOfficerDashboardPage';
 import LeadManagementPage from './pages/LeadManagementPage';
+import { canOpenPage, landingPage } from './utils/pageAccess';
+import { FORM_TYPES } from './utils/applicationUtils';
 import './admin.css';
 
 function getPageFromPath(pathname) {
   const segment = pathname.replace(/\/$/, '').split('/').pop();
-  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'];
+  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'branches', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'];
   if (known.includes(segment)) {
-    return segment === 'applications' ? 'forms' : segment;
+    // Old links: /applications is Forms, /privileges is the Privileges tab of User Management.
+    if (segment === 'applications') return 'forms';
+    if (segment === 'privileges') return 'users';
+    return segment;
   }
   return 'dashboard';
 }
@@ -32,7 +37,8 @@ function AdminDashboardContent() {
   const navigate = useNavigate();
 
   const [activePage, setActivePage] = useState(() => getPageFromPath(location.pathname));
-  const [selectedFormId, setSelectedFormId] = useState(null);
+  // With a single form type there is nothing to choose, so a refresh or a direct link opens it.
+  const [selectedFormId, setSelectedFormId] = useState(FORM_TYPES.length === 1 ? FORM_TYPES[0].id : null);
 
   useEffect(() => {
     const page = getPageFromPath(location.pathname);
@@ -57,11 +63,9 @@ function AdminDashboardContent() {
     handleSetActivePage('forms');
   };
 
-  // Render correct page view
-  // Sales Officers only have access to their own dashboard; every other admin
-  // page calls staff/admin APIs that answer 403 for them.
-  const isSalesOfficer = /^sales\s*officer$/i.test((admin.role || '').trim());
-  const effectivePage = isSalesOfficer ? 'so-dashboard' : activePage;
+  // A page this account has no privilege for falls back to its first allowed one.
+  const effectivePage = canOpenPage(admin, activePage) ? activePage : landingPage(admin);
+  const usersTab = location.pathname.replace(/\/$/, '').endsWith('/privileges') ? 'privileges' : 'team';
 
   const renderActivePage = () => {
     switch (effectivePage) {
@@ -77,10 +81,10 @@ function AdminDashboardContent() {
         return <FieldTechnicianPage />;
       case 'analytics':
         return <ReportsAnalyticsPage />;
-      case 'privileges':
-        return <UserPrivilegesPage />;
       case 'users':
-        return <UserManagementPage />;
+        return <UserManagementPage key={usersTab} initialTab={usersTab} />;
+      case 'branches':
+        return <BranchesPage />;
       case 'audit-logs':
         return <AuditLogsPage />;
       case 'sales-officers':
@@ -89,6 +93,14 @@ function AdminDashboardContent() {
         return <SalesOfficerDashboardPage />;
       case 'leads':
         return <LeadManagementPage />;
+      case null:
+        return (
+          <div className="admin-notice admin-notice-info" role="status">
+            <span className="admin-notice-text">
+              Your account has no modules assigned yet. Ask an administrator to update your role in User Management.
+            </span>
+          </div>
+        );
       default:
         return <AdminDashboardPage />;
     }
@@ -99,7 +111,7 @@ function AdminDashboardContent() {
       activePage={effectivePage}
       setActivePage={handleSetActivePage}
       onSelectForm={handleSelectForm}
-      activeFormId={selectedFormId}
+      activeFormId={effectivePage === 'forms' ? selectedFormId : null}
     >
       {renderActivePage()}
     </AdminLayout>
