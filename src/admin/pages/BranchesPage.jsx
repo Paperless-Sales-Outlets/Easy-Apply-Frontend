@@ -492,6 +492,22 @@ export default function BranchesPage() {
                 {formError && <div className="admin-error-banner" role="alert" style={{ marginBottom: '1rem' }}>{formError}</div>}
 
                 <div className="um-form-grid um-form-vertical">
+                  <label className="um-field">
+                    <span>{modalLevel.label} name *</span>
+                    <input
+                      type="text"
+                      className={`um-input${field('name').cls}`}
+                      {...field('name').props}
+                      value={form.name}
+                      maxLength={NAME_MAX}
+                      autoComplete="off"
+                      autoFocus
+                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                      placeholder={modalLevel.placeholder}
+                    />
+                    <FieldError id={field('name').errorId} message={field('name').error} />
+                  </label>
+
                   {modalParentLevel && (
                     <label className="um-field">
                       <span>{modalParentLevel.label} *</span>
@@ -500,7 +516,6 @@ export default function BranchesPage() {
                         {...field('parentId').props}
                         value={form.parentId}
                         onChange={(e) => setForm((f) => ({ ...f, parentId: e.target.value }))}
-                        autoFocus={!modal.item}
                       >
                         <option value="">Select {article(modalParentLevel.label)} {noun(modalParentLevel.label)}</option>
                         {data[modalParentLevel.key].map((p) => {
@@ -511,22 +526,6 @@ export default function BranchesPage() {
                       <FieldError id={field('parentId').errorId} message={field('parentId').error} />
                     </label>
                   )}
-
-                  <label className="um-field">
-                    <span>{modalLevel.label} name *</span>
-                    <input
-                      type="text"
-                      className={`um-input${field('name').cls}`}
-                      {...field('name').props}
-                      value={form.name}
-                      maxLength={NAME_MAX}
-                      autoComplete="off"
-                      autoFocus={!!modal.item || !modalParentLevel}
-                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                      placeholder={modalLevel.placeholder}
-                    />
-                    <FieldError id={field('name').errorId} message={field('name').error} />
-                  </label>
                 </div>
               </div>
 
