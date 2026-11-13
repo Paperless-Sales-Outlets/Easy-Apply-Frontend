@@ -3,6 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   FiSmartphone,
   FiMail,
+  FiShield,
+  FiZap,
+  FiHeadphones,
   FiRefreshCw,
   FiCheck,
   FiArrowRight,
@@ -10,7 +13,7 @@ import {
   FiLock,
 } from 'react-icons/fi';
 import './SignUpPage.css';
-import sltLogo from '../../assets/slt-logo.png';
+import signupBgImage from '../../assets/team_laptop.jpg';
 import sltlogoOnly from '../../assets/sltlogoOnly.png';
 import api from '../../shared/utils/api';
 import { saveSession, SESSION_EXPIRED_KEY } from '../../shared/utils/authSession';
@@ -29,6 +32,19 @@ function formatPhoneDisplay(raw) {
   if (digits.length <= 5) return `${digits.slice(0, 2)} ${digits.slice(2)}`;
   return `${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5)}`;
 }
+
+const SLTBrandLogo = () => (
+  <div className="login-brand-logo" role="img" aria-label="SLTMobitel — The Connection">
+    <img src={sltlogoOnly} alt="SLTMobitel Emblem" className="login-brand-emblem" />
+    <div className="login-brand-text">
+      <div className="login-brand-title">
+        <span className="brand-slt">SLT</span>
+        <span className="brand-mobitel">MOBITEL</span>
+      </div>
+      <span className="login-brand-tagline">The Connection</span>
+    </div>
+  </div>
+);
 
 /**
  * Look up the SLT connections behind a phone number so the rest of the app
@@ -591,12 +607,77 @@ export default function LoginPage() {
   const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
   return (
-    <div className="signup-root login-root">
+    <div className="signup-root">
       <div className="signup-card login-card">
+        {/* LEFT PROMOTIONAL PANEL */}
+        <div
+          className="signup-sidebar"
+          style={{
+            backgroundImage: `linear-gradient(160deg, rgba(6, 40, 110, 0.95) 0%, rgba(6, 40, 110, 0.88) 40%, rgba(3, 70, 50, 0.95) 100%), url(${signupBgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          <div className="signup-sidebar-inner">
+            <div className="login-sidebar-top">
+              <SLTBrandLogo />
+              <h1 className="signup-sidebar-title" style={{ marginTop: '1.5rem' }}>
+                Join the Family
+              </h1>
+              <p className="signup-sidebar-desc">
+                The national ICT provider.
+              </p>
+            </div>
+
+            <div className="login-sidebar-bottom">
+              <ul className="signup-features login-sidebar-features" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <li className="signup-feature-item">
+                  <div className="signup-feature-icon" aria-hidden="true">
+                    <FiShield size={20} />
+                  </div>
+                  <div>
+                    <p className="signup-feature-title">Data Protection &amp; Privacy</p>
+                    <p>Your information is encrypted under National Data Protection standards</p>
+                  </div>
+                </li>
+                <li className="signup-feature-item">
+                  <div className="signup-feature-icon" aria-hidden="true">
+                    <FiZap size={20} />
+                  </div>
+                  <div>
+                    <p className="signup-feature-title">Instant Digital Verification</p>
+                    <p>Fast, paperless onboarding with real-time verification</p>
+                  </div>
+                </li>
+                <li className="signup-feature-item">
+                  <div className="signup-feature-icon" aria-hidden="true">
+                    <FiHeadphones size={20} />
+                  </div>
+                  <div>
+                    <p className="signup-feature-title">24/7 Priority Support</p>
+                    <p>Our service team is ready to assist you at every step</p>
+                  </div>
+                </li>
+              </ul>
+
+              <div className="login-sidebar-footer">
+                <span>SLTMobitel Official Portal</span>
+                <span>•</span>
+                <span>256-bit Encrypted</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* RIGHT ACTION FORM CARD */}
         <main className="signup-form-section login-form-section">
           <div className="login-form-container">
-            <img src={sltLogo} alt="SLTMobitel - The Connection" className="login-brand-logo-img" />
+            {/* Header Badge & Title */}
+            <div className="login-form-badge">
+              <FiZap size={13} aria-hidden="true" />
+              <span>Fast Onboarding</span>
+            </div>
 
             <div className="login-form-header">
               <h2>Quick Identity Verification</h2>
@@ -608,10 +689,10 @@ export default function LoginPage() {
               <div
                 role="alert"
                 style={{
-                  backgroundColor: 'var(--red-50)',
-                  color: 'var(--red-700)',
-                  border: '1.5px solid var(--red-200)',
-                  borderRadius: 'var(--radius-lg)',
+                  backgroundColor: '#fef2f2',
+                  color: '#991b1b',
+                  border: '1.5px solid #fecaca',
+                  borderRadius: '12px',
                   padding: '0.85rem 1rem',
                   marginBottom: '1.25rem',
                   display: 'flex',
@@ -619,10 +700,10 @@ export default function LoginPage() {
                   gap: '0.65rem',
                   fontSize: '0.9rem',
                   fontWeight: 700,
-                  boxShadow: 'var(--shadow-sm)',
+                  boxShadow: '0 2px 8px rgba(220, 38, 38, 0.08)',
                 }}
               >
-                <FiAlertCircle size={20} color="#b42318" style={{ flexShrink: 0 }} />
+                <FiAlertCircle size={20} color="#dc2626" style={{ flexShrink: 0 }} />
                 <span>{sessionExpiredMsg}</span>
               </div>
             )}
@@ -639,7 +720,7 @@ export default function LoginPage() {
                 </label>
                 <div className="login-phone-group">
                   <div className="login-prefix-box" aria-hidden="true">
-                    <FiSmartphone size={15} style={{ color: '#0a4b8c', flexShrink: 0 }} />
+                    <FiSmartphone size={15} style={{ color: '#0b4a91', flexShrink: 0 }} />
                     <span>+94</span>
                   </div>
                   <div className={`signup-input-wrap login-phone-input-wrap ${phoneError ? 'has-error' : ''}`}>
@@ -699,7 +780,7 @@ export default function LoginPage() {
                           border: '1.5px solid #fecdd3',
                           color: '#be123c',
                           padding: '0.85rem 1rem',
-                          borderRadius: 'var(--radius)',
+                          borderRadius: '10px',
                           marginBottom: '1rem',
                           textAlign: 'center',
                           fontWeight: 600,
@@ -710,7 +791,7 @@ export default function LoginPage() {
                           <FiLock size={16} />
                           <span>Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.</span>
                         </div>
-                        <div style={{ color: '#9f1239', fontWeight: 700, fontSize: '0.95rem' }}>
+                        <div style={{ color: '#9f1239', fontWeight: 800, fontSize: '0.95rem' }}>
                           OTP verification locked. Try again in {formatTimer(phoneLockoutIn)}
                         </div>
                       </div>
@@ -720,7 +801,7 @@ export default function LoginPage() {
                       <span className="login-inline-otp-title" style={{ fontWeight: 700 }}>Enter 6-digit SMS verification code</span>
                       {!phoneLockedOut && !phoneOtpExpired && (
                         <div style={{ fontSize: '0.82rem' }}>
-                          <span style={{ color: '#0a4b8c', fontWeight: 700 }}>
+                          <span style={{ color: '#0369a1', fontWeight: 700 }}>
                             OTP expires in {formatTimer(phoneExpiresIn)}
                           </span>
                         </div>
@@ -826,7 +907,7 @@ export default function LoginPage() {
                           border: '1.5px solid #fecdd3',
                           color: '#be123c',
                           padding: '0.85rem 1rem',
-                          borderRadius: 'var(--radius)',
+                          borderRadius: '10px',
                           marginBottom: '1rem',
                           textAlign: 'center',
                           fontWeight: 600,
@@ -837,7 +918,7 @@ export default function LoginPage() {
                           <FiLock size={16} />
                           <span>Too many incorrect OTP attempts. Email verification is locked for 15 minutes.</span>
                         </div>
-                        <div style={{ color: '#9f1239', fontWeight: 700, fontSize: '0.95rem' }}>
+                        <div style={{ color: '#9f1239', fontWeight: 800, fontSize: '0.95rem' }}>
                           Email verification locked. Try again in {formatTimer(emailLockoutIn)}
                         </div>
                       </div>
@@ -847,7 +928,7 @@ export default function LoginPage() {
                       <span className="login-inline-otp-title" style={{ fontWeight: 700 }}>Enter 6-digit email verification code</span>
                       {!emailLockedOut && !emailOtpExpired && (
                         <div style={{ fontSize: '0.82rem' }}>
-                          <span style={{ color: '#0a4b8c', fontWeight: 700 }}>
+                          <span style={{ color: '#0369a1', fontWeight: 700 }}>
                             OTP expires in {formatTimer(emailExpiresIn)}
                           </span>
                         </div>
