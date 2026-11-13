@@ -1414,6 +1414,7 @@ export default function UserManagementPage({ initialTab = 'team' }) {
                 <div className="um-form-section-label">Default Module Privileges</div>
                 <p className="admin-modal-empty" style={{ marginBottom: '0.75rem' }}>
                   Applied automatically when a user with this role is created — still adjustable per user.
+                  {editingRole && ' Privileges you add or remove here are also added to or removed from its current members; anything else set on individual users stays as it is.'}
                 </p>
                 <div className="um-privileges-grid">
                   {privileges.map((priv) => (
