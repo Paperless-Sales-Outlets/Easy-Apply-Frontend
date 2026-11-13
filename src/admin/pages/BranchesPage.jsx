@@ -320,7 +320,7 @@ export default function BranchesPage() {
                 {loading ? <span className="dash-skeleton um-hero-skeleton" /> : <AnimatedNumber value={data[l.key].length} />}
               </div>
               <div className="um-hero-tile-foot">
-                {loading ? ' ' : l.fullName || (l.parent ? `Each under ${article(LEVEL[l.parent].label)} ${noun(LEVEL[l.parent].label)}` : 'Top level')}
+                {loading ? ' ' : l.parent ? `Each under ${article(LEVEL[l.parent].label)} ${noun(LEVEL[l.parent].label)}` : 'Top level'}
               </div>
             </div>
           ))}

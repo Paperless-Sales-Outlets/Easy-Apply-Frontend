@@ -571,7 +571,7 @@ export default function AdminDashboardPage() {
           <div className="dash-pipeline">
             <div className="dash-pipeline-head">
               <span>Application pipeline</span>
-              <span>Latest {pipelineTotal} applications</span>
+              <span>{serverView ? `All ${pipelineTotal} applications` : `Latest ${pipelineTotal} applications`}</span>
             </div>
             <div className="dash-pipeline-bar" role="img" aria-label={pipeline.map((st) => `${st.label}: ${st.count}`).join(', ')}>
               {pipelineTotal === 0
