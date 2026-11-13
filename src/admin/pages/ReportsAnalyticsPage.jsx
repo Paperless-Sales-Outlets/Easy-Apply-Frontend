@@ -535,6 +535,8 @@ export default function ReportsAnalyticsPage() {
   const appSummary = appData?.summary;
   const hasFilters = preset !== '30d' || status !== 'all' || !!search;
   const totalUsers = reportData?.summary?.totalUsers ?? reports.length;
+  // Staff who actually actioned an application in the chosen period.
+  const activeUsers = reportData?.summary?.activeUsers ?? reports.filter((row) => (row.total || 0) > 0).length;
   const totalTasks = reportData?.summary?.totalTasks ?? reports.reduce((sum, row) => sum + (row.total || 0), 0);
   const totalCollected = appSummary?.totalCollected ?? 0;
   const completedTasks = reports.reduce((sum, row) => sum + (row.approved || 0) + (row.confirmed || 0), 0);
@@ -603,7 +605,7 @@ export default function ReportsAnalyticsPage() {
   };
 
   const tiles = [
-    { key: 'users', cls: 'total', icon: <FiUsers size={15} />, label: 'Users covered', value: totalUsers, foot: 'Staff who handled applications' },
+    { key: 'users', cls: 'total', icon: <FiUsers size={15} />, label: 'Active staff', value: activeUsers, foot: `of ${totalUsers} staff handled applications` },
     { key: 'tasks', cls: 'active', icon: <FiList size={15} />, label: 'Tasks handled', value: totalTasks, foot: `${completedTasks} approved or confirmed` },
     { key: 'rate', cls: 'roles', icon: <FiPercent size={15} />, label: 'Completion rate', value: completionRate, suffix: '%', meter: completionRate, foot: 'Approved or confirmed' },
     { key: 'collected', cls: 'collected', icon: <FiDollarSign size={15} />, label: 'Collected', money: formatAmount(totalCollected), foot: 'From application payments' },
