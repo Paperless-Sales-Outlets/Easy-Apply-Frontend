@@ -49,17 +49,17 @@ export default function SessionGate({ children }) {
           style={{
             maxWidth: '560px',
             width: '100%',
-            backgroundColor: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: '16px',
-            boxShadow: '0 20px 50px rgba(0, 86, 179, 0.08)',
+            backgroundColor: 'var(--paper)',
+            border: '1px solid var(--grey-200)',
+            borderRadius: 'var(--radius-lg)',
+            boxShadow: 'var(--shadow-xl)',
             padding: '2.25rem 2rem',
           }}
         >
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.4rem 0' }}>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#131f33', margin: '0 0 0.4rem 0' }}>
             Choose an account
           </h2>
-          <p style={{ fontSize: '0.9rem', color: '#64748b', margin: '0 0 1.5rem 0' }}>
+          <p style={{ fontSize: '0.9rem', color: '#52627a', margin: '0 0 1.5rem 0' }}>
             This mobile number has more than one SLT connection. Pick the one this request is for.
           </p>
 
@@ -75,18 +75,18 @@ export default function SessionGate({ children }) {
                   gap: '0.85rem',
                   textAlign: 'left',
                   padding: '1rem 1.15rem',
-                  borderRadius: '16px',
-                  border: '1.5px solid #e2e8f0',
-                  backgroundColor: '#f8fafc',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1.5px solid var(--grey-200)',
+                  backgroundColor: 'var(--grey-50)',
                   cursor: 'pointer',
                 }}
               >
-                <FiUser size={20} color="#0056b3" aria-hidden="true" />
+                <FiUser size={20} color="#0056a2" aria-hidden="true" />
                 <span>
-                  <strong style={{ display: 'block', color: '#0f172a', fontSize: '0.95rem' }}>
+                  <strong style={{ display: 'block', color: '#131f33', fontSize: '0.95rem' }}>
                     {account.fullName || account.customerName || 'SLT Account'}
                   </strong>
-                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#52627a' }}>
                     {account.telephone || account.accountNumber}
                   </span>
                 </span>

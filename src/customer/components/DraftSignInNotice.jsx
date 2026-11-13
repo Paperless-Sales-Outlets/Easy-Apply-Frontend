@@ -21,9 +21,9 @@ export default function DraftSignInNotice({ message }) {
     <div
       role="status"
       style={{
-        backgroundColor: '#fffbeb',
-        border: '1.5px solid #fde68a',
-        borderRadius: '14px',
+        backgroundColor: 'var(--amber-50)',
+        border: '1.5px solid var(--amber-200)',
+        borderRadius: 'var(--radius-lg)',
         padding: '0.85rem 1.15rem',
         display: 'flex',
         alignItems: 'center',
@@ -33,14 +33,14 @@ export default function DraftSignInNotice({ message }) {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', minWidth: 0 }}>
-        <FiLock size={18} color="#b45309" aria-hidden="true" style={{ flexShrink: 0 }} />
+        <FiLock size={18} color="#93560a" aria-hidden="true" style={{ flexShrink: 0 }} />
         <p style={{ margin: 0, fontSize: '0.88rem', color: '#78350f', lineHeight: 1.5 }}>{message}</p>
       </div>
       <button
         type="button"
         className="btn btn-secondary"
         onClick={signInAgain}
-        style={{ fontWeight: 700, fontSize: '0.88rem', padding: '0.5rem 1.1rem', borderRadius: '10px' }}
+        style={{ fontWeight: 700, fontSize: '0.88rem', padding: '0.5rem 1.1rem', borderRadius: 'var(--radius)' }}
       >
         Sign in again
       </button>

@@ -284,11 +284,11 @@ export default function IdentityCaptureField({
       role="group"
       aria-labelledby={labelId}
       style={{
-        background: '#ffffff',
-        border: '1.5px solid #e2e8f0',
+        background: 'var(--paper)',
+        border: '1.5px solid var(--grey-200)',
         borderRadius: 'var(--radius-card, 16px)',
         padding: '1.25rem',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)',
+        boxShadow: 'var(--shadow-sm)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -306,7 +306,7 @@ export default function IdentityCaptureField({
             alignItems: 'center',
             justifyContent: 'space-between',
             marginBottom: '1rem',
-            borderBottom: '1px solid #f1f5f9',
+            borderBottom: '1px solid var(--grey-100)',
             paddingBottom: '0.65rem',
           }}
         >
@@ -315,9 +315,9 @@ export default function IdentityCaptureField({
               style={{
                 width: '30px',
                 height: '30px',
-                borderRadius: '8px',
-                background: '#eff6ff',
-                color: '#0b4a91',
+                borderRadius: 'var(--radius)',
+                background: 'var(--blue-50)',
+                color: 'var(--blue-700)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -325,7 +325,7 @@ export default function IdentityCaptureField({
             >
               {isFace ? <FiCamera size={16} /> : <FiCreditCard size={16} />}
             </div>
-            <h4 id={labelId} style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#0f172a' }}>
+            <h4 id={labelId} style={{ margin: 0, fontSize: '0.98rem', fontWeight: 700, color: '#131f33' }}>
               {label}
             </h4>
           </div>
@@ -333,13 +333,13 @@ export default function IdentityCaptureField({
             error ? (
               <span
                 style={{
-                  fontSize: '0.74rem',
+                  fontSize: '0.75rem',
                   fontWeight: 700,
-                  color: '#b45309',
-                  background: '#fef3c7',
-                  border: '1px solid #fde68a',
+                  color: 'var(--amber-700)',
+                  background: 'var(--amber-100)',
+                  border: '1px solid var(--amber-200)',
                   padding: '0.2rem 0.55rem',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-sm)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.3rem',
@@ -350,13 +350,13 @@ export default function IdentityCaptureField({
             ) : (
               <span
                 style={{
-                  fontSize: '0.74rem',
+                  fontSize: '0.75rem',
                   fontWeight: 700,
-                  color: '#166534',
-                  background: '#dcfce7',
-                  border: '1px solid #86efac',
+                  color: 'var(--green-800)',
+                  background: 'var(--green-100)',
+                  border: '1px solid var(--green-300)',
                   padding: '0.2rem 0.55rem',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-sm)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.3rem',
@@ -368,13 +368,13 @@ export default function IdentityCaptureField({
           ) : cameraOnly ? (
             <span
               style={{
-                fontSize: '0.74rem',
+                fontSize: '0.75rem',
                 fontWeight: 600,
                 color: '#1e40af',
-                background: '#eff6ff',
-                border: '1px solid #bfdbfe',
+                background: 'var(--blue-50)',
+                border: '1px solid var(--blue-200)',
                 padding: '0.2rem 0.55rem',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-sm)',
               }}
             >
               Live Camera
@@ -382,13 +382,13 @@ export default function IdentityCaptureField({
           ) : (
             <span
               style={{
-                fontSize: '0.74rem',
+                fontSize: '0.75rem',
                 fontWeight: 600,
-                color: '#64748b',
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                color: 'var(--grey-600)',
+                background: 'var(--grey-50)',
+                border: '1px solid var(--grey-200)',
                 padding: '0.2rem 0.55rem',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-sm)',
               }}
             >
               Required
@@ -399,10 +399,10 @@ export default function IdentityCaptureField({
         {/* Inner Dropzone / Viewfinder */}
         <div
           style={{
-            border: `1.5px dashed ${error ? '#f59e0b' : value ? '#86efac' : '#cbd5e1'}`,
-            borderRadius: '12px',
+            border: `1.5px dashed ${error ? '#f59e0b' : value ? '#9bd89a' : '#c3ccd9'}`,
+            borderRadius: 'var(--radius-lg)',
             padding: '1.2rem 1rem',
-            backgroundColor: error ? '#fffbeb' : value ? '#f0fdf4' : '#f8fafc',
+            backgroundColor: error ? '#fff8e8' : value ? '#f1faf1' : '#f6f8fb',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -435,15 +435,15 @@ export default function IdentityCaptureField({
                     bottom: isFace ? '4px' : '-8px',
                     right: isFace ? '4px' : '-8px',
                     background: error ? '#f59e0b' : '#22c55e',
-                    color: '#ffffff',
+                    color: 'var(--paper)',
                     borderRadius: '50%',
                     width: '26px',
                     height: '26px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '2px solid #ffffff',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                    border: '2px solid var(--paper)',
+                    boxShadow: 'var(--shadow-sm)',
                   }}
                 >
                   {error ? <FiAlertTriangle size={13} /> : <FiCheck size={14} />}
@@ -461,10 +461,10 @@ export default function IdentityCaptureField({
                     padding: '0.45rem 0.85rem',
                     fontSize: '0.82rem',
                     fontWeight: 600,
-                    color: '#0b4a91',
-                    backgroundColor: '#eff6ff',
-                    border: '1px solid #bfdbfe',
-                    borderRadius: '8px',
+                    color: 'var(--blue-700)',
+                    backgroundColor: 'var(--blue-50)',
+                    border: '1px solid var(--blue-200)',
+                    borderRadius: 'var(--radius)',
                     cursor: 'pointer',
                   }}
                 >
@@ -481,10 +481,10 @@ export default function IdentityCaptureField({
                       padding: '0.45rem 0.85rem',
                       fontSize: '0.82rem',
                       fontWeight: 600,
-                      color: '#334155',
-                      backgroundColor: '#ffffff',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '8px',
+                      color: 'var(--grey-800)',
+                      backgroundColor: 'var(--paper)',
+                      border: '1px solid var(--grey-300)',
+                      borderRadius: 'var(--radius)',
                       cursor: 'pointer',
                     }}
                   >
@@ -501,10 +501,10 @@ export default function IdentityCaptureField({
                     padding: '0.45rem 0.85rem',
                     fontSize: '0.82rem',
                     fontWeight: 600,
-                    color: '#dc2626',
+                    color: 'var(--red-700)',
                     backgroundColor: '#fff5f5',
-                    border: '1px solid #fecaca',
-                    borderRadius: '8px',
+                    border: '1px solid var(--red-200)',
+                    borderRadius: 'var(--radius)',
                     cursor: 'pointer',
                   }}
                 >
@@ -522,7 +522,7 @@ export default function IdentityCaptureField({
                   aspectRatio: isFace ? '1 / 1' : '4 / 3',
                   borderRadius: 'var(--radius-card, 16px)',
                   overflow: 'hidden',
-                  backgroundColor: '#0f172a',
+                  backgroundColor: 'var(--grey-900)',
                 }}
               >
                 <video
@@ -535,7 +535,7 @@ export default function IdentityCaptureField({
                 />
 
                 {!videoReady && (
-                  <div role="status" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.85rem', backgroundColor: '#0f172a', color: '#fff', fontSize: '0.85rem', fontWeight: 600, zIndex: 2 }}>
+                  <div role="status" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.85rem', backgroundColor: '#131f33', color: '#ffffff', fontSize: '0.85rem', fontWeight: 600, zIndex: 2 }}>
                     <span className="face-capture-spinner" aria-hidden="true" />
                     Starting camera…
                   </div>
@@ -550,7 +550,7 @@ export default function IdentityCaptureField({
                     transform: 'translate(-50%, -50%)',
                     width: isFace ? '58%' : '86%',
                     height: isFace ? '74%' : '76%',
-                    border: `3px solid ${ready ? '#22c55e' : '#f8fafc'}`,
+                    border: `3px solid ${ready ? '#22c55e' : '#f6f8fb'}`,
                     borderRadius: isFace ? '50%' : 'var(--radius-control, 12px)',
                     boxShadow: '0 0 0 9999px rgba(15, 23, 42, 0.45)',
                     transition: 'border-color 0.2s ease',
@@ -564,7 +564,7 @@ export default function IdentityCaptureField({
                   aria-live="polite"
                   style={{
                     position: 'absolute', bottom: '0.6rem', left: '0.6rem', right: '0.6rem',
-                    textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: '#fff',
+                    textAlign: 'center', fontSize: '0.8rem', fontWeight: 700, color: 'var(--paper)',
                     backgroundColor: ready ? 'rgba(13, 110, 52, 0.95)' : 'rgba(15, 23, 42, 0.85)',
                     borderRadius: '9999px', padding: '0.35rem 0.75rem',
                     opacity: videoReady ? 1 : 0,
@@ -585,9 +585,9 @@ export default function IdentityCaptureField({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.4rem',
-                    backgroundColor: '#0056b3',
+                    backgroundColor: 'var(--blue-600)',
                     opacity: ready && videoReady ? 1 : 0.6,
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius)',
                     padding: '0.5rem 1rem',
                   }}
                 >
@@ -600,7 +600,7 @@ export default function IdentityCaptureField({
                     className="btn btn-secondary"
                     onClick={swapCamera}
                     disabled={starting}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '8px', padding: '0.5rem 1rem' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: 'var(--radius)', padding: '0.5rem 1rem' }}
                   >
                     <FiRepeat size={16} aria-hidden="true" />
                     {facingMode === 'user' ? 'Use back camera' : 'Use front camera'}
@@ -611,7 +611,7 @@ export default function IdentityCaptureField({
                   type="button"
                   className="btn btn-secondary"
                   onClick={stopCamera}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: '8px', padding: '0.5rem 1rem' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', borderRadius: 'var(--radius)', padding: '0.5rem 1rem' }}
                 >
                   <FiX size={16} aria-hidden="true" /> Cancel
                 </button>
@@ -623,9 +623,9 @@ export default function IdentityCaptureField({
                 style={{
                   width: '46px',
                   height: '46px',
-                  borderRadius: '12px',
-                  backgroundColor: '#eff6ff',
-                  color: '#0b4a91',
+                  borderRadius: 'var(--radius-lg)',
+                  backgroundColor: 'var(--blue-50)',
+                  color: 'var(--blue-700)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -638,8 +638,8 @@ export default function IdentityCaptureField({
               {instructions.length > 0 && (
                 <div style={{ margin: '0 auto 1rem auto', maxWidth: '340px', textAlign: 'left' }}>
                   {instructions.map((line) => (
-                    <div key={line} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', marginBottom: '0.25rem', fontSize: '0.78rem', color: '#64748b', lineHeight: 1.4 }}>
-                      <FiCheckCircle size={13} color="#059669" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+                    <div key={line} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', marginBottom: '0.25rem', fontSize: '0.78rem', color: '#52627a', lineHeight: 1.4 }}>
+                      <FiCheckCircle size={13} color="#0f7a4d" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
                       <span>{line}</span>
                     </div>
                   ))}
@@ -656,15 +656,15 @@ export default function IdentityCaptureField({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.45rem',
-                    backgroundColor: '#0056b3',
-                    color: '#ffffff',
+                    backgroundColor: 'var(--blue-600)',
+                    color: 'var(--paper)',
                     border: 'none',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius)',
                     padding: '0.52rem 1.15rem',
                     fontSize: '0.85rem',
                     fontWeight: 600,
                     cursor: 'pointer',
-                    boxShadow: '0 2px 6px rgba(0, 86, 179, 0.25)',
+                    boxShadow: 'var(--shadow-sm)',
                   }}
                 >
                   {starting ? (
@@ -688,10 +688,10 @@ export default function IdentityCaptureField({
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.45rem',
-                        backgroundColor: '#ffffff',
-                        color: '#1e293b',
-                        border: '1.5px solid #cbd5e1',
-                        borderRadius: '8px',
+                        backgroundColor: 'var(--paper)',
+                        color: 'var(--grey-800)',
+                        border: '1.5px solid var(--grey-300)',
+                        borderRadius: 'var(--radius)',
                         padding: '0.52rem 1.15rem',
                         fontSize: '0.85rem',
                         fontWeight: 600,

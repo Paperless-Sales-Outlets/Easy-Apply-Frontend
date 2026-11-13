@@ -374,8 +374,8 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
         {/* Modal Header */}
         <div style={headerStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FiMapPin style={{ color: '#0056b3', fontSize: '1.25rem' }} aria-hidden="true" />
-            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b', fontWeight: 600 }}>
+            <FiMapPin style={{ color: '#0056a2', fontSize: '1.25rem' }} aria-hidden="true" />
+            <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#26344b', fontWeight: 600 }}>
               Select Location on Map
             </h3>
           </div>
@@ -424,7 +424,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
         </div>
 
         {/* Map Container Area (Native Google Map or Leaflet Fallback) */}
-        <div style={{ position: 'relative', height: '360px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+        <div style={{ position: 'relative', height: '360px', width: '100%', borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid #dfe5ee' }}>
           {useGoogleMaps ? (
             <div ref={googleMapRef} style={{ height: '100%', width: '100%' }} />
           ) : (
@@ -459,7 +459,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
         {/* Selected Address Display & Confirmation */}
         <div style={footerStyle}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#52627a' }}>
               SELECTED ADDRESS:
             </span>
             <p style={addressPreviewStyle}>
@@ -503,12 +503,12 @@ const modalOverlayStyle = {
 };
 
 const modalContentStyle = {
-  backgroundColor: '#fff',
-  borderRadius: '16px',
+  backgroundColor: 'var(--paper)',
+  borderRadius: 'var(--radius-lg)',
   width: '100%',
   maxWidth: '700px',
   maxHeight: '92vh',
-  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+  boxShadow: 'var(--shadow-xl)',
   display: 'flex',
   flexDirection: 'column',
   padding: '1.25rem',
@@ -519,7 +519,7 @@ const headerStyle = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  borderBottom: '1px solid #f1f5f9',
+  borderBottom: '1px solid var(--grey-100)',
   paddingBottom: '0.75rem',
 };
 
@@ -528,8 +528,8 @@ const closeButtonStyle = {
   border: 'none',
   cursor: 'pointer',
   padding: '0.25rem',
-  color: '#64748b',
-  borderRadius: '8px',
+  color: 'var(--grey-600)',
+  borderRadius: 'var(--radius)',
 };
 
 const searchContainerStyle = {
@@ -542,10 +542,10 @@ const inputWrapperStyle = {
   display: 'flex',
   alignItems: 'center',
   flex: 1,
-  border: '1px solid #cbd5e1',
-  borderRadius: '8px',
+  border: '1px solid var(--grey-300)',
+  borderRadius: 'var(--radius)',
   padding: '0.4rem 0.75rem',
-  backgroundColor: '#f8fafc',
+  backgroundColor: 'var(--grey-50)',
 };
 
 const searchInputStyle = {
@@ -557,10 +557,10 @@ const searchInputStyle = {
 };
 
 const searchBtnStyle = {
-  backgroundColor: '#0056b3',
-  color: '#fff',
+  backgroundColor: 'var(--blue-600)',
+  color: 'var(--paper)',
   border: 'none',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius)',
   padding: '0.45rem 1.1rem',
   fontSize: '0.85rem',
   fontWeight: 600,
@@ -571,10 +571,10 @@ const locateBtnStyle = {
   display: 'flex',
   alignItems: 'center',
   gap: '0.4rem',
-  backgroundColor: '#f0fdf4',
-  color: '#15803d',
-  border: '1px solid #bbf7d0',
-  borderRadius: '8px',
+  backgroundColor: 'var(--green-50)',
+  color: 'var(--green-700)',
+  border: '1px solid var(--green-200)',
+  borderRadius: 'var(--radius)',
   padding: '0.45rem 0.9rem',
   fontSize: '0.85rem',
   fontWeight: 600,
@@ -588,12 +588,12 @@ const mapHintStyle = {
   transform: 'translateX(-50%)',
   backgroundColor: 'rgba(255, 255, 255, 0.95)',
   padding: '0.35rem 0.9rem',
-  borderRadius: '16px',
+  borderRadius: 'var(--radius-lg)',
   fontSize: '0.75rem',
   fontWeight: 600,
-  color: '#0f172a',
+  color: 'var(--grey-900)',
   zIndex: 1000,
-  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+  boxShadow: 'var(--shadow-sm)',
   pointerEvents: 'none',
 };
 
@@ -602,7 +602,7 @@ const footerStyle = {
   justifyContent: 'space-between',
   alignItems: 'center',
   gap: '1rem',
-  borderTop: '1px solid #f1f5f9',
+  borderTop: '1px solid var(--grey-100)',
   paddingTop: '0.75rem',
   flexWrap: 'wrap',
 };
@@ -610,7 +610,7 @@ const footerStyle = {
 const addressPreviewStyle = {
   margin: '0.2rem 0 0 0',
   fontSize: '0.875rem',
-  color: '#0f172a',
+  color: 'var(--grey-900)',
   fontWeight: 600,
   whiteSpace: 'nowrap',
   overflow: 'hidden',
@@ -618,10 +618,10 @@ const addressPreviewStyle = {
 };
 
 const cancelBtnStyle = {
-  backgroundColor: '#f1f5f9',
-  color: '#475569',
-  border: '1px solid #cbd5e1',
-  borderRadius: '8px',
+  backgroundColor: 'var(--grey-100)',
+  color: 'var(--grey-700)',
+  border: '1px solid var(--grey-300)',
+  borderRadius: 'var(--radius)',
   padding: '0.5rem 1rem',
   fontSize: '0.875rem',
   fontWeight: 500,
@@ -631,10 +631,10 @@ const cancelBtnStyle = {
 const confirmBtnStyle = {
   display: 'flex',
   alignItems: 'center',
-  backgroundColor: '#059669',
-  color: '#fff',
+  backgroundColor: 'var(--green-700)',
+  color: 'var(--paper)',
   border: 'none',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius)',
   padding: '0.5rem 1.15rem',
   fontSize: '0.875rem',
   fontWeight: 600,

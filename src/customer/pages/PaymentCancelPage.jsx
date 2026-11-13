@@ -21,11 +21,11 @@ export default function PaymentCancelPage() {
           maxWidth: '480px',
           width: '100%',
           textAlign: 'center',
-          background: '#fff',
-          borderRadius: '16px',
+          background: 'var(--paper)',
+          borderRadius: 'var(--radius-lg)',
           padding: '3rem 2rem',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.07)',
-          border: '1px solid #e2e8f0',
+          boxShadow: 'var(--shadow-md)',
+          border: '1px solid var(--grey-200)',
         }}
       >
         <div
@@ -33,8 +33,8 @@ export default function PaymentCancelPage() {
             width: '72px',
             height: '72px',
             borderRadius: '50%',
-            backgroundColor: '#fff1f2',
-            color: '#e11d48',
+            backgroundColor: 'var(--grey-100)',
+            color: 'var(--grey-600)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -44,8 +44,8 @@ export default function PaymentCancelPage() {
           <FiXCircle size={40} />
         </div>
 
-        <h2 style={{ color: '#0f172a', marginBottom: '0.5rem' }}>Payment Cancelled</h2>
-        <p style={{ color: '#64748b', marginBottom: '2rem', lineHeight: 1.6 }}>
+        <h2 style={{ marginBottom: '0.5rem' }}>Payment Cancelled</h2>
+        <p style={{ color: 'var(--grey-600)', marginBottom: '2rem', lineHeight: 1.6 }}>
           Your payment was not completed. No charges have been made.
           <br />
           You can go back and try again whenever you're ready.

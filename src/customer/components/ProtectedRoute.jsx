@@ -15,7 +15,7 @@ const ProtectedRoute = ({ children }) => {
           alignItems: 'center',
           minHeight: '100vh',
           background: '#0b1d33',
-          color: '#ffffff',
+          color: 'var(--paper)',
           fontFamily: 'var(--font-body)',
         }}
       >

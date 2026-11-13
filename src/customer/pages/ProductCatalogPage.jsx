@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { FiGrid, FiList, FiCheckCircle, FiClock, FiShield, FiSliders, FiLock, FiPhone, FiGlobe, FiTv, FiLayers } from 'react-icons/fi';
+import { FiGrid, FiList, FiSliders, FiPhone, FiGlobe, FiTv } from 'react-icons/fi';
 import CategoryChips from '../components/catalog/CategoryChips';
 import SidebarFilters from '../components/catalog/SidebarFilters';
 import ProductCard from '../components/catalog/ProductCard';
@@ -598,10 +598,10 @@ export default function ProductCatalogPage() {
         title: t('catalog.sections.voiceTitle', 'Voice Packages (Max 1)'),
         subtitle: t('catalog.sections.voiceSubtitle', 'Crystal clear crystal voice calling for home & enterprise'),
         icon: <FiPhone />,
-        bgColor: '#f0fdf4',
-        iconColor: '#16a34a',
-        badgeBg: '#dcfce7',
-        badgeColor: '#15803d',
+        bgColor: 'var(--green-50)',
+        iconColor: 'var(--green-700)',
+        badgeBg: 'var(--green-100)',
+        badgeColor: 'var(--green-700)',
         products: voiceProds,
       });
     }
@@ -612,10 +612,10 @@ export default function ProductCatalogPage() {
         title: t('catalog.sections.broadbandTitle', 'Broadband Packages (Fibre & LTE - Max 1)'),
         subtitle: t('catalog.sections.broadbandSubtitle', 'High-speed broadband internet for home, 4K streaming & gaming'),
         icon: <FiGlobe />,
-        bgColor: '#eff6ff',
-        iconColor: '#0284c7',
-        badgeBg: '#e0f2fe',
-        badgeColor: '#0369a1',
+        bgColor: 'var(--blue-50)',
+        iconColor: 'var(--blue-500)',
+        badgeBg: 'var(--blue-100)',
+        badgeColor: 'var(--blue-700)',
         products: broadbandProds,
       });
     }
@@ -638,20 +638,20 @@ export default function ProductCatalogPage() {
   }, [filteredProducts, activeCategory, t, i18n.language]);
 
   return (
-    <div style={{ backgroundColor: 'var(--page-bg)', minHeight: '100vh', paddingBottom: '3rem' }}>
+    <div className="catalog-root">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Main Container */}
-      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem' }}>
-        {/* ── Top Hero Banner & Quick Actions Section ── */}
-        <HeroBannerCarousel />
+      <HeroBannerCarousel />
+
+      <div className="catalog-page">
 
         {/* ── Voice Compulsory & Bundle Rules Status Bar (Commented out: single package selection allowed) ──
         <div
           style={{
-            backgroundColor: cartCategoryAnalysis.hasVoice ? '#f0fdf4' : '#eff6ff',
-            border: `1.5px solid ${cartCategoryAnalysis.hasVoice ? '#86efac' : '#93c5fd'}`,
-            borderRadius: '16px',
+            backgroundColor: cartCategoryAnalysis.hasVoice ? '#f1faf1' : '#f1f7fd',
+            border: `1.5px solid ${cartCategoryAnalysis.hasVoice ? '#9bd89a' : '#8ebde8'}`,
+            borderRadius: 'var(--radius-lg)',
             padding: '0.85rem 1.25rem',
             marginTop: '1.25rem',
             marginBottom: '0.5rem',
@@ -660,18 +660,18 @@ export default function ProductCatalogPage() {
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: '0.75rem',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
+            boxShadow: 'var(--shadow-md)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <span style={{ fontSize: '1.2rem', color: cartCategoryAnalysis.hasVoice ? '#0f7a4d' : '#0b4a91' }}>
+            <span style={{ fontSize: '1.2rem', color: cartCategoryAnalysis.hasVoice ? '#0f7a4d' : '#0a4b8c' }}>
               {cartCategoryAnalysis.hasVoice ? <FiCheckCircle /> : <FiAlertCircle />}
             </span>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: cartCategoryAnalysis.hasVoice ? '#14532d' : '#1e40af' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem', color: cartCategoryAnalysis.hasVoice ? '#14532d' : '#1e40af' }}>
                 {cartCategoryAnalysis.hasVoice ? t('catalog.bundleRules.selected', 'Voice Package Selected') : t('catalog.bundleRules.required', 'Voice Package Required (Compulsory)')}
               </div>
-              <div style={{ fontSize: '0.78rem', color: cartCategoryAnalysis.hasVoice ? '#15803d' : '#1e3a8a', fontWeight: 600 }}>
+              <div style={{ fontSize: '0.78rem', color: cartCategoryAnalysis.hasVoice ? '#0f7a4d' : '#1e3a8a', fontWeight: 600 }}>
                 {t('catalog.bundleRules.allowedBundles', 'Allowed bundles:')} <strong>{t('catalog.bundleRules.voiceOnly', 'Voice Only')}</strong> • <strong>{t('catalog.bundleRules.voiceBroadband', 'Voice + Broadband')}</strong> • <strong>{t('catalog.bundleRules.voiceBroadbandPeoTv', 'Voice + Broadband + PEO TV')}</strong> {t('catalog.bundleRules.maxOne', '(Max 1 package per category)')}
               </div>
             </div>
@@ -683,9 +683,9 @@ export default function ProductCatalogPage() {
                 padding: '0.25rem 0.65rem',
                 borderRadius: '9999px',
                 fontSize: '0.75rem',
-                fontWeight: 800,
-                backgroundColor: cartCategoryAnalysis.hasVoice ? '#dcfce7' : '#dbeafe',
-                color: cartCategoryAnalysis.hasVoice ? '#0f7a4d' : '#0b4a91',
+                fontWeight: 700,
+                backgroundColor: cartCategoryAnalysis.hasVoice ? '#e2f4e3' : '#e3effc',
+                color: cartCategoryAnalysis.hasVoice ? '#0f7a4d' : '#0a4b8c',
               }}
             >
               {t('catalog.bundleRules.voiceLabel', 'Voice:')} {cartCategoryAnalysis.hasVoice ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.requiredCount', 'Required (0/1)')}
@@ -695,9 +695,9 @@ export default function ProductCatalogPage() {
                 padding: '0.25rem 0.65rem',
                 borderRadius: '9999px',
                 fontSize: '0.75rem',
-                fontWeight: 800,
-                backgroundColor: cartCategoryAnalysis.hasBroadband ? '#dcfce7' : '#f1f5f9',
-                color: cartCategoryAnalysis.hasBroadband ? '#15803d' : '#556070',
+                fontWeight: 700,
+                backgroundColor: cartCategoryAnalysis.hasBroadband ? '#e2f4e3' : '#eef2f7',
+                color: cartCategoryAnalysis.hasBroadband ? '#0f7a4d' : '#556070',
               }}
             >
               {t('catalog.bundleRules.broadbandLabel', 'Broadband:')} {cartCategoryAnalysis.hasBroadband ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.optionalCount', 'Optional (0/1)')}
@@ -707,9 +707,9 @@ export default function ProductCatalogPage() {
                 padding: '0.25rem 0.65rem',
                 borderRadius: '9999px',
                 fontSize: '0.75rem',
-                fontWeight: 800,
-                backgroundColor: cartCategoryAnalysis.hasPeoTv ? '#dcfce7' : '#f1f5f9',
-                color: cartCategoryAnalysis.hasPeoTv ? '#15803d' : '#556070',
+                fontWeight: 700,
+                backgroundColor: cartCategoryAnalysis.hasPeoTv ? '#e2f4e3' : '#eef2f7',
+                color: cartCategoryAnalysis.hasPeoTv ? '#0f7a4d' : '#556070',
               }}
             >
               {t('catalog.bundleRules.peoTvLabel', 'PEO TV:')} {cartCategoryAnalysis.hasPeoTv ? t('catalog.bundleRules.selectedCount', 'Selected (1/1)') : t('catalog.bundleRules.optionalCount', 'Optional (0/1)')}
@@ -720,13 +720,13 @@ export default function ProductCatalogPage() {
                 onClick={handleClearCartSelection}
                 type="button"
                 style={{
-                  backgroundColor: '#fee2e2',
-                  color: '#dc2626',
-                  border: '1px solid #fca5a5',
+                  backgroundColor: 'var(--red-100)',
+                  color: 'var(--red-700)',
+                  border: '1px solid var(--red-200)',
                   padding: '0.25rem 0.65rem',
                   borderRadius: '9999px',
                   fontSize: '0.75rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                 }}
@@ -747,7 +747,7 @@ export default function ProductCatalogPage() {
         </div>
 
         {/* ── Main Catalog Body Layout (Sidebar Filters + Category-Wise Products) ── */}
-        <div className="catalog-layout-grid" style={{ display: 'grid', gap: '1.5rem', marginTop: '1.5rem' }}>
+        <div className="catalog-layout-grid">
           {/* Left Sidebar Filter Column — desktop only; hidden ≤900px in favor of the "Filters" popup below */}
           <div className="catalog-sidebar-col">
             <SidebarFilters
@@ -804,138 +804,37 @@ export default function ProductCatalogPage() {
 
           {/* Right Product Listing Area */}
           <div>
-            {/* Toolbar Header */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.25rem',
-                width: '100%',
-                flexWrap: 'wrap',
-                gap: '0.85rem',
-                backgroundColor: '#ffffff',
-                padding: '0.85rem 1.25rem',
-                borderRadius: '16px',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.02)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '30px',
-                    height: '30px',
-                    borderRadius: '8px',
-                    backgroundColor: '#e0f2fe',
-                    color: '#0284c7',
-                  }}
-                >
-                  <FiLayers size={15} />
-                </span>
-                <span style={{ fontSize: '0.88rem', color: '#1e293b', fontWeight: 700 }}>
-                  {t('catalog.controls.showingResults', { count: filteredProducts.length, defaultValue: 'Showing {{count}} total packages' })}
-                </span>
-              </div>
+            {/* Toolbar */}
+            <div className="catalog-toolbar">
+              <p className="catalog-count">
+                {t('catalog.controls.showingResults', { count: filteredProducts.length, defaultValue: 'Showing {{count}} total packages' })}
+              </p>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+              <div className="catalog-controls">
                 <button
                   type="button"
-                  className="catalog-filter-toggle-btn"
+                  className="btn btn-secondary catalog-filter-toggle-btn"
                   onClick={() => setShowMobileFilters((prev) => !prev)}
-                  style={{
-                    alignItems: 'center',
-                    gap: '0.45rem',
-                    padding: '0.45rem 0.95rem',
-                    borderRadius: '10px',
-                    border: '1px solid #cbd5e1',
-                    backgroundColor: showMobileFilters ? '#0056b3' : '#f8fafc',
-                    color: showMobileFilters ? '#ffffff' : '#0f172a',
-                    fontSize: '0.82rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
                 >
-                  <FiSliders size={14} />
-                  <span>{t('catalog.controls.filters', 'Filters')}</span>
+                  <FiSliders size={16} aria-hidden="true" />
+                  {t('catalog.controls.filters', 'Filters')}
                 </button>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                  <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>{t('catalog.controls.sortBy', 'Sort by:')}</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    aria-label={t('catalog.controls.sortBy', 'Sort by:')}
-                    style={{
-                      padding: '0.42rem 0.95rem',
-                      borderRadius: '10px',
-                      border: '1.5px solid #e2e8f0',
-                      backgroundColor: '#f8fafc',
-                      fontSize: '0.82rem',
-                      fontWeight: 700,
-                      color: '#0f172a',
-                      cursor: 'pointer',
-                      outline: 'none',
-                      transition: 'border-color 0.2s ease',
-                    }}
-                  >
+                <label className="catalog-sort">
+                  <span>{t('catalog.controls.sortBy', 'Sort by:')}</span>
+                  <select className="form-control" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                     <option value="Popularity">{t('catalog.controls.popularity', 'Popularity')}</option>
                     <option value="Price Low to High">{t('catalog.controls.priceLowHigh', 'Price: Low → High')}</option>
                     <option value="Price High to Low">{t('catalog.controls.priceHighLow', 'Price: High → Low')}</option>
                   </select>
-                </div>
+                </label>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '3px',
-                    backgroundColor: '#f1f5f9',
-                    padding: '3px',
-                    borderRadius: '10px',
-                    border: '1px solid #e2e8f0',
-                  }}
-                >
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    aria-label="Grid view"
-                    aria-pressed={viewMode === 'grid'}
-                    style={{
-                      border: 'none',
-                      backgroundColor: viewMode === 'grid' ? '#0056b3' : 'transparent',
-                      color: viewMode === 'grid' ? '#ffffff' : '#64748b',
-                      padding: '0.4rem 0.65rem',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      boxShadow: viewMode === 'grid' ? '0 2px 6px rgba(0, 86, 179, 0.3)' : 'none',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    <FiGrid size={15} aria-hidden="true" />
+                <div className="catalog-view-toggle" role="group" aria-label="View">
+                  <button type="button" onClick={() => setViewMode('grid')} aria-label="Grid view" aria-pressed={viewMode === 'grid'}>
+                    <FiGrid size={18} aria-hidden="true" />
                   </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    aria-label="List view"
-                    aria-pressed={viewMode === 'list'}
-                    style={{
-                      border: 'none',
-                      backgroundColor: viewMode === 'list' ? '#0056b3' : 'transparent',
-                      color: viewMode === 'list' ? '#ffffff' : '#64748b',
-                      padding: '0.4rem 0.65rem',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      boxShadow: viewMode === 'list' ? '0 2px 6px rgba(0, 86, 179, 0.3)' : 'none',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    <FiList size={15} aria-hidden="true" />
+                  <button type="button" onClick={() => setViewMode('list')} aria-label="List view" aria-pressed={viewMode === 'list'}>
+                    <FiList size={18} aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -947,107 +846,38 @@ export default function ProductCatalogPage() {
                 <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
               </div>
             ) : error ? (
-              <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '12px', padding: '2rem', color: '#991b1b', textAlign: 'center' }}>
+              <div style={{ backgroundColor: '#fef3f2', border: '1px solid #f5c2bd', borderRadius: 'var(--radius-lg)', padding: '2rem', color: '#b42318', textAlign: 'center' }}>
                 <p style={{ fontWeight: 600, margin: 0 }}>{error}</p>
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div style={{ backgroundColor: '#fff', borderRadius: '16px', padding: '3rem 1.5rem', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>{t('catalog.empty.title', 'No Products Found')}</h3>
-                <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '1rem' }}>{t('catalog.empty.subtitle', 'Try adjusting your filters or search keywords.')}</p>
-                <button onClick={handleClearAll} style={{ backgroundColor: '#0056b3', color: '#fff', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
+              <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', padding: '3rem 1.5rem', textAlign: 'center', border: '1px solid #dfe5ee' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#26344b', marginBottom: '0.5rem' }}>{t('catalog.empty.title', 'No Products Found')}</h3>
+                <p style={{ fontSize: '0.875rem', color: '#52627a', marginBottom: '1rem' }}>{t('catalog.empty.subtitle', 'Try adjusting your filters or search keywords.')}</p>
+                <button onClick={handleClearAll} style={{ backgroundColor: '#0056a2', color: '#ffffff', border: 'none', borderRadius: 'var(--radius)', padding: '0.5rem 1.25rem', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
                   {t('catalog.empty.resetFilters', 'Reset Filters')}
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+              <div className="catalog-sections">
                 {categorySections.map((section) => {
                   if (section.products.length === 0) return null;
                   return (
-                    <div
-                      key={section.id}
-                      style={{
-                        backgroundColor: '#ffffff',
-                        borderRadius: '20px',
-                        border: '1px solid #e2e8f0',
-                        padding: '1.5rem',
-                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
-                        position: 'relative',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {/* Section Header */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          rowGap: '0.65rem',
-                          marginBottom: '1.35rem',
-                          paddingBottom: '0.85rem',
-                          borderBottom: '1px solid #f1f5f9',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: 0 }}>
-                          <div
-                            style={{
-                              backgroundColor: section.bgColor,
-                              color: section.iconColor,
-                              width: '42px',
-                              height: '42px',
-                              borderRadius: '12px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '1.25rem',
-                              fontWeight: 900,
-                              flexShrink: 0,
-                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-                            }}
-                          >
-                            {section.icon}
-                          </div>
-                          <div style={{ minWidth: 0 }}>
-                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.01em' }}>
-                              {section.title}
-                            </h3>
-                            <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>
-                              {section.subtitle}
-                            </span>
-                          </div>
+                    <section key={section.id} className="catalog-section">
+                      <header className="catalog-section-head">
+                        <div>
+                          <h2 className="catalog-section-title">{section.title}</h2>
+                          <p className="catalog-section-sub">{section.subtitle}</p>
                         </div>
-                        <span
-                          style={{
-                            backgroundColor: section.badgeBg || '#f1f5f9',
-                            color: section.badgeColor || '#0056b3',
-                            padding: '0.35rem 0.85rem',
-                            borderRadius: '9999px',
-                            fontSize: '0.78rem',
-                            fontWeight: 800,
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0,
-                            border: `1px solid ${section.badgeColor ? section.badgeColor + '22' : '#e2e8f0'}`,
-                          }}
-                        >
+                        <span className="catalog-section-count">
                           {t('catalog.sections.packagesAvailable', {
                             count: section.products.length,
                             defaultValue: '{{count}} Packages Available',
                           })}
                         </span>
-                      </div>
+                      </header>
 
                       {/* Section Cards Grid */}
-                      <div
-                        style={
-                          viewMode === 'list'
-                            ? { display: 'flex', flexDirection: 'column', gap: '0.85rem' }
-                            : {
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))',
-                              gap: '1.15rem',
-                            }
-                        }
-                      >
+                      <div className={viewMode === 'list' ? 'catalog-list' : 'catalog-grid'}>
                         {section.products.map((prod) => {
                           const prodId = String(prod._id || prod.id);
                           const isSelected = selectedProduct && String(selectedProduct._id || selectedProduct.id) === prodId;
@@ -1092,7 +922,7 @@ export default function ProductCatalogPage() {
                           );
                         })}
                       </div>
-                    </div>
+                    </section>
                   );
                 })}
               </div>
@@ -1100,70 +930,6 @@ export default function ProductCatalogPage() {
           </div>
         </div>
 
-        {/* ── Bottom Value Propositions Footer Strip (Exact 5 Icons Bar) ── */}
-        <div
-          style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '20px',
-            border: '1px solid #e2e8f0',
-            padding: '1.25rem 2rem',
-            marginTop: '2.5rem',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '1.5rem',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.03)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FiCheckCircle size={22} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>100% Guaranteed</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Authentic SLT Services</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FiClock size={22} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Express Activation</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Connected in 24-48 Hrs</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FiShield size={22} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Secure Payments</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Bank Grade Security</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FiSliders size={22} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Flexi Customization</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Tailored Add-on Options</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '44px', height: '44px', borderRadius: 'var(--radius-control)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FiLock size={22} />
-            </div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0f172a' }}>Paperless Process</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>100% Online Verification</div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Product Details & Specifications Hub Modal */}

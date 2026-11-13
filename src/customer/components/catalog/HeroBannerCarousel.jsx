@@ -31,11 +31,8 @@ export default function HeroBannerCarousel() {
       style={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: '16px',
-        marginBottom: '2rem',
-        height: 'clamp(220px, 32vw, 420px)',
-        background: '#001f3f',
-        boxShadow: '0 12px 35px rgba(0, 31, 63, 0.35)',
+        height: 'clamp(260px, 38vw, 520px)',
+        background: 'var(--blue-900)',
       }}
     >
       {slide.type === 'video' ? (
@@ -67,10 +64,10 @@ export default function HeroBannerCarousel() {
           alignItems: 'flex-start',
           gap: '0.75rem',
           background: 'linear-gradient(to left, rgba(0, 20, 40, 0.6), transparent)',
-          color: '#ffffff',
+          color: 'var(--paper)',
         }}
       >
-        <h2 style={{ margin: 0, fontSize: 'clamp(1.1rem, 2.6vw, 2.2rem)', fontWeight: 900, color: '#ffffff', fontFamily: 'var(--font-head)' }}>
+        <h2 style={{ margin: 0, fontSize: 'clamp(1.1rem, 2.6vw, 2.2rem)', fontWeight: 700, color: '#ffffff', fontFamily: 'var(--font-head)' }}>
           {slide.title}
         </h2>
         {slide.description && (
@@ -87,14 +84,14 @@ export default function HeroBannerCarousel() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
-              backgroundColor: '#047857',
-              color: '#ffffff',
-              padding: '0.6rem 1.6rem',
-              borderRadius: '9999px',
-              fontWeight: 800,
-              fontSize: '0.9rem',
+              backgroundColor: '#ffffff',
+              color: 'var(--blue-700)',
+              minHeight: '44px',
+              padding: '0 1.25rem',
+              borderRadius: 'var(--radius)',
+              fontWeight: 600,
+              fontSize: '1rem',
               textDecoration: 'none',
-              boxShadow: '0 4px 18px rgba(0, 0, 0, 0.4)',
             }}
           >
             {slide.buttonText} <FiArrowRight size={16} />

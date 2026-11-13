@@ -1,17 +1,11 @@
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut, FiShoppingCart, FiChevronDown } from 'react-icons/fi';
+import { FiSearch, FiGlobe, FiMenu, FiX, FiUser, FiLogOut, FiChevronDown } from 'react-icons/fi';
 import sltLogo from '../../../assets/sltlogoOnly.png';
 import { getVerifiedPhone, getVerifiedName, logoutVerifiedSession, AUTH_UPDATED_EVENT } from '../../../shared/utils/authSession';
-import { getLocalCart } from '../../services/productService';
 
 const formatPhone = (n) => (n && n.length === 9 ? `+94 ${n.slice(0, 2)} ${n.slice(2, 5)} ${n.slice(5)}` : n ? `+94 ${n}` : '');
-
-// A little extra breathing room below the fixed nav so page content never
-// feels flush against it, even before the exact height is measured.
-const NAV_HEIGHT_ESTIMATE = 88;
-const NAV_SPACER_BUFFER = 16;
 
 // Searchable products dataset for navbar suggestions
 const SEARCHABLE_PRODUCTS = [
@@ -41,34 +35,10 @@ export default function Navbar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(() => {
-    try {
-      return getLocalCart().reduce((sum, item) => sum + (item.quantity || 1), 0);
-    } catch {
-      return 0;
-    }
-  });
   const menuRef = useRef(null);
   const searchRef = useRef(null);
   const searchInputRef = useRef(null);
   const userRef = useRef(null);
-
-  useEffect(() => {
-    const syncCart = () => {
-      try {
-        setCartCount(getLocalCart().reduce((sum, item) => sum + (item.quantity || 1), 0));
-      } catch {
-        setCartCount(0);
-      }
-    };
-    syncCart();
-    window.addEventListener('easyapply:cart-updated', syncCart);
-    window.addEventListener('storage', syncCart);
-    return () => {
-      window.removeEventListener('easyapply:cart-updated', syncCart);
-      window.removeEventListener('storage', syncCart);
-    };
-  }, []);
 
   // Filter search suggestions
   const suggestions = React.useMemo(() => {
@@ -126,20 +96,6 @@ export default function Navbar() {
     }
   };
 
-  // useLayoutEffect (not useEffect) so the spacer is sized before the browser
-  // paints — otherwise content briefly renders behind the fixed nav on first
-  // load. Seeded with a sane estimate so there's no gap even before that.
-  const [navHeight, setNavHeight] = useState(NAV_HEIGHT_ESTIMATE);
-  useLayoutEffect(() => {
-    const el = menuRef.current;
-    if (!el || typeof ResizeObserver === 'undefined') return;
-    const update = () => setNavHeight(el.offsetHeight);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   const [verifiedPhone, setVerifiedPhone] = useState(getVerifiedPhone);
   const [verifiedName, setVerifiedName] = useState(getVerifiedName);
 
@@ -159,32 +115,26 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logoutVerifiedSession();
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   };
 
   const isActivePath = (path) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
-  const navLinkStyle = (path) =>
-    isActivePath(path)
-      ? {
-        color: '#0056b3',
-        textDecoration: 'none',
-        fontWeight: 800,
-        fontSize: '0.88rem',
-        position: 'relative',
-        paddingBottom: '0.25rem',
-        borderBottom: '2.5px solid #0056b3',
-      }
-      : {
-        color: '#334155',
-        textDecoration: 'none',
-        fontWeight: 600,
-        fontSize: '0.88rem',
-        position: 'relative',
-        paddingBottom: '0.25rem',
-        borderBottom: '2.5px solid transparent',
-      };
+  // Same 44px box as the other nav controls, text centred in it; the active
+  // underline is an inset shadow so it never shifts the text off the line.
+  const navLinkStyle = (path) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    height: '44px',
+    boxSizing: 'border-box',
+    textDecoration: 'none',
+    fontSize: '0.95rem',
+    lineHeight: 1,
+    ...(isActivePath(path)
+      ? { color: 'var(--blue-600)', fontWeight: 700, boxShadow: 'inset 0 -3px 0 var(--blue-600)' }
+      : { color: 'var(--grey-800)', fontWeight: 600 }),
+  });
 
   useEffect(() => {
     setMenuOpen(false);
@@ -206,7 +156,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="top-navbar-wrapper" ref={menuRef} style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100 }}>
+      <nav className="top-navbar-wrapper" ref={menuRef} style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #dfe5ee', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '1600px', margin: '0 auto', padding: 'clamp(0.75rem, 2.5vw, 1.15rem) clamp(0.5rem, 4vw, 1.5rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'clamp(0.5rem, 2vw, 1.25rem)' }}>
 
           {/* ── Left: Logo ── */}
@@ -220,8 +170,8 @@ export default function Navbar() {
               style={{
                 fontFamily: 'var(--font-head)',
                 fontSize: '1.05rem',
-                fontWeight: 800,
-                color: '#191970',
+                fontWeight: 700,
+                color: 'var(--blue-900)',
                 letterSpacing: '-0.02em',
                 whiteSpace: 'nowrap',
                 display: 'inline-flex',
@@ -235,9 +185,6 @@ export default function Navbar() {
 
         {/* ── Desktop Nav Links ── */}
         <div className="nav-links-desktop" style={{ alignItems: 'center', gap: '1.75rem', marginLeft: 'clamp(0.5rem, 2.5vw, 2rem)', marginRight: 'auto', opacity: searchOpen ? 0 : 1, pointerEvents: searchOpen ? 'none' : 'auto', transition: 'opacity 0.2s ease' }}>
-          <Link to="/" style={navLinkStyle('/')}>
-            {t('nav.home', 'Home')}
-          </Link>
           <Link to="/check-status" style={navLinkStyle('/check-status')}>
             {t('nav.applicationStatus', 'Application Status')}
           </Link>
@@ -264,7 +211,7 @@ export default function Navbar() {
             <div
               ref={searchRef}
               className="nav-center-search"
-              style={{ position: 'relative', width: '38px', height: '38px', flexShrink: 0 }}
+              style={{ position: 'relative', width: '44px', height: '44px', flexShrink: 0 }}
             >
               <button
                   type="button"
@@ -272,12 +219,12 @@ export default function Navbar() {
                   aria-label="Open search"
                   title="Search"
                   style={{
-                    width: '38px',
-                    height: '38px',
+                    width: '44px',
+                    height: '44px',
                     borderRadius: '50%',
-                    border: '1px solid #e2e8f0',
-                    backgroundColor: '#f8fafc',
-                    color: '#0056b3',
+                    border: '1px solid var(--grey-200)',
+                    backgroundColor: 'var(--grey-50)',
+                    color: 'var(--blue-600)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -306,10 +253,10 @@ export default function Navbar() {
                     zIndex: 5,
                     display: 'flex',
                     alignItems: 'center',
-                    width: searchOpen ? 'min(380px, calc(100vw - 2rem))' : '38px',
-                    height: '38px',
-                    backgroundColor: '#ffffff',
-                    border: '1.5px solid #0056b3',
+                    width: searchOpen ? 'min(380px, calc(100vw - 2rem))' : '44px',
+                    height: '44px',
+                    backgroundColor: 'var(--paper)',
+                    border: '1.5px solid var(--blue-600)',
                     borderRadius: '9999px',
                     overflow: 'hidden',
                     boxShadow: '0 0 0 3px rgba(0, 86, 179, 0.12)',
@@ -318,7 +265,7 @@ export default function Navbar() {
                     transition: `width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, visibility 0s linear ${searchOpen ? '0s' : '0.3s'}`,
                   }}
                 >
-                  <FiSearch style={{ color: '#94a3b8', marginLeft: '0.85rem', flexShrink: 0 }} size={16} aria-hidden="true" />
+                  <FiSearch style={{ color: '#94a1b5', marginLeft: '0.85rem', flexShrink: 0 }} size={16} aria-hidden="true" />
                   <input
                     ref={searchInputRef}
                     type="text"
@@ -337,7 +284,7 @@ export default function Navbar() {
                       border: 'none',
                       outline: 'none',
                       fontSize: '0.85rem',
-                      color: '#0f172a',
+                      color: 'var(--grey-900)',
                       backgroundColor: 'transparent',
                     }}
                   />
@@ -347,12 +294,12 @@ export default function Navbar() {
                     aria-label="Filter search by category"
                     style={{
                       border: 'none',
-                      borderLeft: '1px solid #e2e8f0',
+                      borderLeft: '1px solid var(--grey-200)',
                       backgroundColor: 'transparent',
                       padding: '0 0.5rem',
                       height: '60%',
                       fontSize: '0.8rem',
-                      color: '#475569',
+                      color: 'var(--grey-700)',
                       fontWeight: 600,
                       outline: 'none',
                       cursor: 'pointer',
@@ -371,7 +318,7 @@ export default function Navbar() {
                       setSearchOpen(false);
                       setShowSuggestions(false);
                     }}
-                    style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0 0.75rem 0 0.35rem', display: 'flex', alignItems: 'center' }}
+                    style={{ background: 'none', border: 'none', color: '#94a1b5', cursor: 'pointer', padding: '0 0.75rem 0 0.35rem', display: 'flex', alignItems: 'center' }}
                   >
                     <FiX size={16} />
                   </button>
@@ -384,10 +331,10 @@ export default function Navbar() {
                   top: 'calc(100% + 4px)',
                   right: 0,
                   width: 'min(380px, calc(100vw - 2rem))',
-                  backgroundColor: '#ffffff',
-                  borderRadius: '12px',
-                  boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
-                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'var(--paper)',
+                  borderRadius: 'var(--radius-lg)',
+                  boxShadow: 'var(--shadow-lg)',
+                  border: '1px solid var(--grey-200)',
                   zIndex: 1000,
                   overflow: 'hidden',
                   maxHeight: '380px',
@@ -405,34 +352,34 @@ export default function Navbar() {
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         cursor: 'pointer',
-                        borderBottom: '1px solid #f1f5f9',
+                        borderBottom: '1px solid var(--grey-100)',
                         transition: 'background-color 0.15s ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f8fafc';
+                        e.currentTarget.style.backgroundColor = '#f6f8fb';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a' }}>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#131f33' }}>
                           {item.name}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
-                          <span style={{ backgroundColor: '#eff6ff', color: '#0056b3', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700 }}>
+                        <div style={{ fontSize: '0.75rem', color: '#52627a', display: 'flex', gap: '0.5rem', marginTop: '0.15rem' }}>
+                          <span style={{ backgroundColor: '#f1f7fd', color: '#0056a2', padding: '0.1rem 0.4rem', borderRadius: 'var(--radius-sm)', fontWeight: 700 }}>
                             {item.category}
                           </span>
                           <span>• {item.speed}</span>
                         </div>
                       </div>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 900, color: '#0056b3', whiteSpace: 'nowrap' }}>
-                        Rs. {item.monthlyPrice.toLocaleString()} <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 500 }}>/mo</span>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0056a2', whiteSpace: 'nowrap' }}>
+                        Rs. {item.monthlyPrice.toLocaleString()} <span style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 500 }}>/mo</span>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+                  <div style={{ padding: '1rem', textAlign: 'center', color: '#52627a', fontSize: '0.85rem' }}>
                     No matching packages found for "<strong>{searchQuery}</strong>"
                   </div>
                 )}
@@ -441,71 +388,19 @@ export default function Navbar() {
             </div>
             )}
 
-            {/* Cart quick-access button */}
-            <Link
-              to="/cart"
-              className="navbar-cart-btn"
-              style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                backgroundColor: isActivePath('/cart') ? '#eff6ff' : '#f8fafc',
-                border: `1px solid ${isActivePath('/cart') ? '#bfdbfe' : '#e2e8f0'}`,
-                borderRadius: '8px',
-                padding: '0.4rem 0.75rem',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                color: '#0056b3',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.2s ease',
-              }}
-              aria-label={`Shopping Cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
-              title={t('nav.cart', 'Shopping Cart')}
-            >
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <FiShoppingCart size={16} />
-                {cartCount > 0 && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '-8px',
-                      right: '-10px',
-                      backgroundColor: '#10b981',
-                      color: '#ffffff',
-                      fontSize: '0.68rem',
-                      fontWeight: 800,
-                      minWidth: '17px',
-                      height: '17px',
-                      lineHeight: '17px',
-                      borderRadius: '9999px',
-                      textAlign: 'center',
-                      padding: '0 3px',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.18)',
-                    }}
-                  >
-                    {cartCount > 99 ? '99+' : cartCount}
-                  </span>
-                )}
-              </div>
-              <span className="navbar-cart-label">{t('nav.cart', 'Cart')}</span>
-            </Link>
-
             {/* Language Switcher */}
             <div
               className="lang-switcher"
               style={{
                 alignItems: 'center',
                 gap: '0.35rem',
-                backgroundColor: '#f8fafc',
+                backgroundColor: 'var(--grey-50)',
                 padding: '0.35rem 0.65rem',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
+                borderRadius: 'var(--radius)',
+                border: '1px solid var(--grey-200)',
               }}
             >
-              <FiGlobe style={{ color: '#0056b3' }} size={15} />
+              <FiGlobe style={{ color: '#0056a2' }} size={15} />
               <select
                 value={i18n.language}
                 onChange={(e) => i18n.changeLanguage(e.target.value)}
@@ -516,7 +411,7 @@ export default function Navbar() {
                   outline: 'none',
                   fontSize: '0.82rem',
                   fontWeight: 600,
-                  color: '#334155',
+                  color: 'var(--grey-800)',
                   cursor: 'pointer',
                 }}
               >
@@ -533,7 +428,7 @@ export default function Navbar() {
                 ref={userRef}
                 style={{
                   position: 'relative',
-                  borderLeft: '1px solid #cbd5e1',
+                  borderLeft: '1px solid var(--grey-300)',
                   paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)',
                 }}
               >
@@ -547,17 +442,17 @@ export default function Navbar() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
-                    color: '#334155',
+                    color: 'var(--grey-800)',
                     fontWeight: 700,
                     fontSize: '0.85rem',
                     padding: '0.3rem 0.6rem 0.3rem 0.35rem',
                     borderRadius: '9999px',
-                    backgroundColor: userMenuOpen || isActivePath('/profile') ? '#eff6ff' : '#f8fafc',
-                    border: `1px solid ${userMenuOpen || isActivePath('/profile') ? '#bfdbfe' : '#e2e8f0'}`,
+                    backgroundColor: userMenuOpen || isActivePath('/profile') ? '#f1f7fd' : '#f6f8fb',
+                    border: `1px solid ${userMenuOpen || isActivePath('/profile') ? '#c3dcf5' : '#dfe5ee'}`,
                     cursor: 'pointer',
                   }}
                 >
-                  <span style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#0056b3', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: 800 }}>
+                  <span style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#0056a2', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: 700 }}>
                     {(verifiedName || '#').trim().charAt(0).toUpperCase()}
                   </span>
                   <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -574,34 +469,34 @@ export default function Navbar() {
                       top: 'calc(100% + 8px)',
                       right: 0,
                       minWidth: '200px',
-                      backgroundColor: '#ffffff',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '12px',
-                      boxShadow: '0 12px 30px rgba(0, 0, 0, 0.15)',
+                      backgroundColor: 'var(--paper)',
+                      border: '1px solid var(--grey-200)',
+                      borderRadius: 'var(--radius-lg)',
+                      boxShadow: 'var(--shadow-lg)',
                       padding: '0.4rem',
                       zIndex: 1000,
                     }}
                   >
-                    <div style={{ padding: '0.5rem 0.75rem 0.6rem', borderBottom: '1px solid #f1f5f9', marginBottom: '0.3rem' }}>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a' }}>{verifiedName || t('nav.account', 'My Account')}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{formatPhone(verifiedPhone)}</div>
+                    <div style={{ padding: '0.5rem 0.75rem 0.6rem', borderBottom: '1px solid #eef2f7', marginBottom: '0.3rem' }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#131f33' }}>{verifiedName || t('nav.account', 'My Account')}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#52627a' }}>{formatPhone(verifiedPhone)}</div>
                     </div>
                     <Link
                       to="/profile"
                       role="menuitem"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', padding: '0.55rem 0.75rem', borderRadius: '8px', color: '#0f172a', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', padding: '0.55rem 0.75rem', borderRadius: 'var(--radius)', color: '#131f33', textDecoration: 'none', fontWeight: 600, fontSize: '0.88rem' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f6f8fb'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
-                      <FiUser size={15} style={{ color: '#0056b3' }} />
+                      <FiUser size={15} style={{ color: '#0056a2' }} />
                       {t('nav.myProfile', 'My Profile')}
                     </Link>
                     <button
                       type="button"
                       role="menuitem"
                       onClick={handleLogout}
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', background: 'none', border: 'none', color: '#dc2626', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', textAlign: 'left' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef2f2'; }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', width: '100%', padding: '0.55rem 0.75rem', borderRadius: 'var(--radius)', background: 'none', border: 'none', color: '#b42318', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fef3f2'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                     >
                       <FiLogOut size={15} />
@@ -621,11 +516,11 @@ export default function Navbar() {
                   gap: '0.4rem',
                   background: 'none',
                   border: 'none',
-                  borderLeft: '1px solid #cbd5e1',
+                  borderLeft: '1px solid var(--grey-300)',
                   paddingLeft: 'clamp(0.35rem, 2vw, 1.25rem)',
-                  color: '#0056b3',
+                  color: 'var(--blue-600)',
                   fontWeight: 700,
-                  fontSize: '0.88rem',
+                  fontSize: '0.95rem',
                   cursor: 'pointer',
                 }}
               >
@@ -649,10 +544,8 @@ export default function Navbar() {
         </div>
         {/* Mobile Slide Menu */}
         {menuOpen && (
-          <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', padding: '1rem' }}>
+          <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #dfe5ee', padding: '1rem' }}>
             {[
-              { to: '/', label: t('nav.home', 'Home') },
-              { to: '/cart', label: `${t('nav.cart', 'Cart')}${cartCount > 0 ? ` (${cartCount})` : ''}` },
               { to: '/check-status', label: t('nav.applicationStatus', 'Application Status') },
               { to: '/help', label: t('nav.help', 'Help & Support') },
             ].map(({ to, label }) => {
@@ -664,12 +557,12 @@ export default function Navbar() {
                   style={{
                     display: 'block',
                     padding: '0.6rem 0.75rem',
-                    color: active ? '#0056b3' : '#0f172a',
+                    color: active ? '#0056a2' : '#131f33',
                     textDecoration: 'none',
                     fontWeight: active ? 800 : 600,
-                    backgroundColor: active ? '#eff6ff' : 'transparent',
-                    borderRadius: '8px',
-                    borderLeft: active ? '3px solid #0056b3' : '3px solid transparent',
+                    backgroundColor: active ? '#f1f7fd' : 'transparent',
+                    borderRadius: 'var(--radius)',
+                    borderLeft: active ? '3px solid #0056a2' : '3px solid transparent',
                   }}
                 >
                   {label}
@@ -677,12 +570,12 @@ export default function Navbar() {
               );
             })}
 
-            <div style={{ borderTop: '1px solid #e2e8f0', margin: '0.5rem 0', paddingTop: '0.5rem' }}>
+            <div style={{ borderTop: '1px solid #dfe5ee', margin: '0.5rem 0', paddingTop: '0.5rem' }}>
               {verifiedPhone ? (
                 <>
                   <Link
                     to="/profile"
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', color: isActivePath('/profile') ? '#0056b3' : '#0f172a', textDecoration: 'none', fontWeight: isActivePath('/profile') ? 800 : 600, fontSize: '0.95rem', backgroundColor: isActivePath('/profile') ? '#eff6ff' : 'transparent', borderRadius: '8px', borderLeft: isActivePath('/profile') ? '3px solid #0056b3' : '3px solid transparent' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', color: isActivePath('/profile') ? '#0056a2' : '#131f33', textDecoration: 'none', fontWeight: isActivePath('/profile') ? 800 : 600, fontSize: '0.95rem', backgroundColor: isActivePath('/profile') ? '#f1f7fd' : 'transparent', borderRadius: 'var(--radius)', borderLeft: isActivePath('/profile') ? '3px solid #0056a2' : '3px solid transparent' }}
                   >
                     <FiUser size={16} style={{ color: '#50b748' }} />
                     <span>{verifiedName || formatPhone(verifiedPhone)}</span>
@@ -690,7 +583,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={handleLogout}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#dc2626', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#b42318', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
                   >
                     <FiLogOut size={16} />
                     <span>{t('nav.logout', 'Logout')}</span>
@@ -700,7 +593,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => navigate('/login')}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#0056b3', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.75rem', background: 'none', border: 'none', color: '#0056a2', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}
                 >
                   <FiUser size={16} />
                   <span>{t('nav.login', 'Login')}</span>
@@ -710,8 +603,6 @@ export default function Navbar() {
           </div>
         )}
       </nav>
-      {/* Spacer so fixed-position nav doesn't cover page content; height tracks the nav's own (responsive) height, plus a little breathing room */}
-      <div style={{ height: navHeight + NAV_SPACER_BUFFER }} aria-hidden="true" />
     </>
   );
 }

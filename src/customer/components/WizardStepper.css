@@ -1,0 +1,138 @@
+/* Wizard progress: done = solid green with a check, current = solid blue,
+   upcoming = quiet grey. Colour is backed by the check mark and the number. */
+
+.stepper {
+  margin-bottom: var(--s6);
+}
+
+.stepper-list {
+  list-style: none;
+  display: flex;
+}
+
+.stepper-item {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* connector to the previous step */
+.stepper-item + .stepper-item::before {
+  content: '';
+  position: absolute;
+  top: 17px;
+  right: calc(50% + 24px);
+  width: calc(100% - 48px);
+  height: 2px;
+  background: var(--grey-200);
+}
+
+.stepper-item.is-done + .stepper-item::before,
+.stepper-item.is-current::before {
+  background: var(--green-700);
+}
+
+.stepper-item button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s2);
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.stepper-item button:disabled {
+  cursor: default;
+}
+
+.stepper-dot {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--grey-300);
+  background: #ffffff;
+  color: var(--grey-600);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.is-done .stepper-dot {
+  background: var(--green-700);
+  border-color: var(--green-700);
+  color: #ffffff;
+}
+
+.is-current .stepper-dot {
+  background: var(--blue-600);
+  border-color: var(--blue-600);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px var(--blue-100);
+}
+
+.stepper-label {
+  max-width: 9em;
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  text-align: center;
+  color: var(--grey-600);
+}
+
+.is-current .stepper-label {
+  color: var(--grey-900);
+  font-weight: 600;
+}
+
+.stepper-compact {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .stepper-list {
+    display: none;
+  }
+
+  .stepper-compact {
+    display: block;
+  }
+
+  .stepper-compact p {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s1) var(--s3);
+    margin-bottom: var(--s2);
+  }
+
+  .stepper-compact strong {
+    color: var(--grey-900);
+  }
+
+  .stepper-compact span {
+    color: var(--grey-600);
+    font-size: var(--text-sm);
+  }
+
+  .stepper-bar {
+    height: 6px;
+    background: var(--grey-200);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .stepper-bar span {
+    display: block;
+    height: 100%;
+    background: var(--blue-600);
+    border-radius: 3px;
+  }
+}

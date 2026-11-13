@@ -9,9 +9,9 @@ export default function Toast({ toast, onClose }) {
   const { type = 'success', message = '' } = toast;
 
   const icons = {
-    success: <FiCheckCircle style={{ color: '#10b981', fontSize: '1.25rem', flexShrink: 0 }} />,
-    info: <FiInfo style={{ color: '#0284c7', fontSize: '1.25rem', flexShrink: 0 }} />,
-    error: <FiXCircle style={{ color: '#ef4444', fontSize: '1.25rem', flexShrink: 0 }} />,
+    success: <FiCheckCircle style={{ color: '#0f7a4d', fontSize: '1.25rem', flexShrink: 0 }} />,
+    info: <FiInfo style={{ color: '#1a6cbd', fontSize: '1.25rem', flexShrink: 0 }} />,
+    error: <FiXCircle style={{ color: '#d92d20', fontSize: '1.25rem', flexShrink: 0 }} />,
   };
 
   return (
@@ -28,12 +28,12 @@ export default function Toast({ toast, onClose }) {
           display: 'flex',
           alignItems: 'center',
           gap: '0.75rem',
-          backgroundColor: '#ffffff',
-          color: '#1e293b',
+          backgroundColor: 'var(--paper)',
+          color: 'var(--grey-800)',
           padding: '0.875rem 1.25rem',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-          borderLeft: `4px solid ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#0284c7'}`,
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-lg)',
+          borderLeft: `4px solid ${type === 'success' ? '#0f7a4d' : type === 'error' ? '#d92d20' : '#1a6cbd'}`,
           maxWidth: '380px',
         }}
       >
@@ -44,7 +44,7 @@ export default function Toast({ toast, onClose }) {
           style={{
             background: 'none',
             border: 'none',
-            color: '#94a3b8',
+            color: 'var(--grey-400)',
             cursor: 'pointer',
             padding: '2px',
             display: 'flex',

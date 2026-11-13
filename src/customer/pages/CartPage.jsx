@@ -8,9 +8,6 @@ import {
   FiPlus,
   FiMinus,
   FiShoppingCart,
-  FiShield,
-  FiWifi,
-  FiHeadphones,
   FiTag,
   FiBookmark,
   FiArrowRight,
@@ -179,21 +176,21 @@ export default function CartPage() {
       <div className="page-container" style={{ maxWidth: '1380px', margin: '0 auto', padding: '0 1.5rem' }}>
 
         {/* Breadcrumbs */}
-        <nav style={{ fontSize: '0.825rem', color: '#64748b', marginBottom: '1.25rem', display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-          <Link to="/" style={{ color: '#64748b', textDecoration: 'none' }}>Home</Link>
+        <nav style={{ fontSize: '0.825rem', color: '#52627a', marginBottom: '1.25rem', display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+          <Link to="/" style={{ color: '#52627a', textDecoration: 'none' }}>Home</Link>
           <span>›</span>
-          <Link to="/new-connection/products" style={{ color: '#64748b', textDecoration: 'none' }}>Product Catalogue</Link>
+          <Link to="/new-connection/products" style={{ color: '#52627a', textDecoration: 'none' }}>Product Catalogue</Link>
           <span>›</span>
-          <span style={{ color: '#0056b3', fontWeight: 600 }}>Shopping Cart</span>
+          <span style={{ color: '#0056a2', fontWeight: 600 }}>Shopping Cart</span>
         </nav>
 
         {/* Page Title & Header Action */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.9rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
+            <h1 style={{ fontSize: '1.9rem', fontWeight: 700, color: '#131f33', margin: 0, letterSpacing: '-0.02em' }}>
               {t('cart.title', 'Your Shopping Cart')}
             </h1>
-            <p style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '0.35rem', marginBottom: 0 }}>
+            <p style={{ fontSize: '0.9rem', color: '#52627a', marginTop: '0.35rem', marginBottom: 0 }}>
               {t('cart.subtitle', 'Review your selected products before proceeding.')}
             </p>
           </div>
@@ -204,15 +201,15 @@ export default function CartPage() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
-              color: '#0056b3',
+              color: 'var(--blue-600)',
               textDecoration: 'none',
               fontWeight: 700,
               fontSize: '0.875rem',
               padding: '0.6rem 1.25rem',
-              borderRadius: '12px',
-              backgroundColor: '#ffffff',
-              border: '1.5px solid #0056b3',
-              boxShadow: '0 2px 6px rgba(0, 86, 179, 0.08)',
+              borderRadius: 'var(--radius-lg)',
+              backgroundColor: 'var(--paper)',
+              border: '1.5px solid var(--blue-600)',
+              boxShadow: 'var(--shadow-sm)',
               transition: 'all 0.15s ease',
             }}
           >
@@ -221,7 +218,7 @@ export default function CartPage() {
         </div>
 
         {loading ? (
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '16px', padding: '4rem', textAlign: 'center', color: '#64748b', border: '1px solid #e2e8f0' }}>
+          <div style={{ backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', padding: '4rem', textAlign: 'center', color: '#52627a', border: '1px solid #dfe5ee' }}>
             Loading your cart...
           </div>
         ) : items.length === 0 ? (
@@ -232,12 +229,12 @@ export default function CartPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
               style={{
-                backgroundColor: '#ffffff',
-                borderRadius: '16px',
+                backgroundColor: 'var(--paper)',
+                borderRadius: 'var(--radius-lg)',
                 padding: '4.5rem 2rem',
                 textAlign: 'center',
-                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.04)',
-                border: '1px solid #e2e8f0',
+                boxShadow: 'var(--shadow-lg)',
+                border: '1px solid var(--grey-200)',
                 marginBottom: '3rem',
                 position: 'relative',
                 overflow: 'hidden',
@@ -250,10 +247,10 @@ export default function CartPage() {
                   width: 'fit-content',
                   alignItems: 'center',
                   gap: '0.35rem',
-                  backgroundColor: '#eff6ff',
-                  color: '#0056b3',
+                  backgroundColor: 'var(--blue-50)',
+                  color: 'var(--blue-600)',
                   fontSize: '0.75rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   padding: '0.35rem 0.85rem',
                   borderRadius: '9999px',
                   textTransform: 'uppercase',
@@ -273,19 +270,19 @@ export default function CartPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderRadius: '50%',
-                  backgroundColor: '#eff6ff',
-                  color: '#0056b3',
+                  backgroundColor: 'var(--blue-50)',
+                  color: 'var(--blue-600)',
                   margin: '0 auto 1.75rem auto',
                 }}
               >
                 <FiShoppingCart size={54} />
               </div>
 
-              <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.6rem', letterSpacing: '-0.02em' }}>
+              <h2 style={{ fontSize: '1.85rem', fontWeight: 700, color: '#131f33', marginBottom: '0.6rem', letterSpacing: '-0.02em' }}>
                 {t('cart.emptyTitle', 'Your cart is currently empty')}
               </h2>
 
-              <p style={{ fontSize: '0.98rem', color: '#64748b', marginBottom: '2.5rem', maxWidth: '540px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
+              <p style={{ fontSize: '0.98rem', color: '#52627a', marginBottom: '2.5rem', maxWidth: '540px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
                 {t('cart.emptyText', "Looks like you haven't added any SLTMobitel products yet. Explore our high-speed Fibre Broadband, 4G LTE Home, and PEO TV packages to build your connection.")}
               </p>
 
@@ -298,14 +295,14 @@ export default function CartPage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.55rem',
-                    backgroundColor: '#0056b3',
-                    color: '#ffffff',
+                    backgroundColor: 'var(--blue-600)',
+                    color: 'var(--paper)',
                     padding: '0.95rem 2.5rem',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-lg)',
                     fontWeight: 700,
                     fontSize: '0.95rem',
                     textDecoration: 'none',
-                    boxShadow: '0 6px 20px rgba(0, 86, 179, 0.28)',
+                    boxShadow: 'var(--shadow-md)',
                     transition: 'all 0.15s ease',
                   }}
                 >
@@ -317,10 +314,10 @@ export default function CartPage() {
             {/* Recommended Packages Section */}
             <section style={{ marginBottom: '3.5rem' }}>
               <div style={{ marginBottom: '1.5rem' }}>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.35rem 0' }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#131f33', margin: '0 0 0.35rem 0' }}>
                   Recommended Packages
                 </h3>
-                <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>
+                <p style={{ fontSize: '0.88rem', color: '#52627a', margin: 0 }}>
                   Handpicked top-rated connections for home and office.
                 </p>
               </div>
@@ -341,63 +338,10 @@ export default function CartPage() {
                     />
                   ))
                 ) : (
-                  <div style={{ gridColumn: '1 / -1', padding: '2rem', backgroundColor: '#ffffff', borderRadius: '16px', color: '#64748b', textAlign: 'center', border: '1px solid #e2e8f0' }}>
+                  <div style={{ gridColumn: '1 / -1', padding: '2rem', backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)', color: '#52627a', textAlign: 'center', border: '1px solid #dfe5ee' }}>
                     Loading recommended packages...
                   </div>
                 )}
-              </div>
-            </section>
-
-            {/* Benefits Bar */}
-            <section>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.25rem' }}>
-                Why choose EasyApply?
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-                {[
-                  { title: 'Free Installation', text: 'On all eligible packages', Icon: FiZap },
-                  { title: '24/7 Customer Support', text: "We're here to help you", Icon: FiHeadphones },
-                  { title: 'Trusted Network', text: "Sri Lanka's No.1 Network", Icon: FiWifi },
-                  { title: '100% Secure Payments', text: 'Your payments are safe with us', Icon: FiShield },
-                ].map((benefit) => (
-                  <div
-                    key={benefit.title}
-                    style={{
-                      backgroundColor: '#ffffff',
-                      borderRadius: '16px',
-                      padding: '1.35rem 1.25rem',
-                      border: '1px solid #e2e8f0',
-                      boxShadow: '0 4px 18px rgba(15, 23, 42, 0.03)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1rem',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '12px',
-                        backgroundColor: '#eff6ff',
-                        color: '#0b4a91',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <benefit.Icon size={22} aria-hidden="true" />
-                    </div>
-                    <div>
-                      <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.2rem 0' }}>
-                        {benefit.title}
-                      </h4>
-                      <p style={{ fontSize: '0.825rem', color: '#64748b', margin: 0 }}>
-                        {benefit.text}
-                      </p>
-                    </div>
-                  </div>
-                ))}
               </div>
             </section>
           </>
@@ -409,8 +353,8 @@ export default function CartPage() {
               {/* Left Column: Cart Items List (8 cols) */}
               <div className="cart-layout-items" style={{ gridColumn: 'span 8', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.25rem' }}>
-                  <FiShoppingCart color="#0056b3" size={20} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.05rem', fontWeight: 700, color: '#131f33', marginBottom: '0.25rem' }}>
+                  <FiShoppingCart color="#0056a2" size={20} />
                   <span>{t('cart.itemsHeading', { count: totalItemCount, defaultValue: 'Cart Items ({{count}})' })}</span>
                 </div>
 
@@ -428,11 +372,11 @@ export default function CartPage() {
                     <div
                       key={prodId || idx}
                       style={{
-                        backgroundColor: '#ffffff',
+                        backgroundColor: 'var(--paper)',
                         borderRadius: '20px',
                         padding: '1.4rem 1.5rem',
-                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)',
-                        border: '1px solid #e2e8f0',
+                        boxShadow: 'var(--shadow-md)',
+                        border: '1px solid var(--grey-200)',
                         position: 'relative',
                         overflow: 'hidden',
                         transition: 'box-shadow 0.2s ease',
@@ -451,8 +395,8 @@ export default function CartPage() {
                           style={{
                             width: '100px',
                             height: '100px',
-                            borderRadius: '16px',
-                            background: 'linear-gradient(135deg, #0a1f3b 0%, #0056b3 100%)',
+                            borderRadius: 'var(--radius-lg)',
+                            background: '#0a1f3b',
                             position: 'relative',
                             display: 'flex',
                             alignItems: 'center',
@@ -460,7 +404,7 @@ export default function CartPage() {
                             flexShrink: 0,
                             overflow: 'hidden',
                             padding: '0.4rem',
-                            boxShadow: '0 4px 12px rgba(0, 86, 179, 0.15)',
+                            boxShadow: 'var(--shadow-md)',
                           }}
                         >
                           {isPopular && (
@@ -469,10 +413,10 @@ export default function CartPage() {
                                 position: 'absolute',
                                 top: '0.4rem',
                                 left: '0.4rem',
-                                backgroundColor: '#10b981',
-                                color: '#ffffff',
-                                fontSize: '0.55rem',
-                                fontWeight: 900,
+                                backgroundColor: 'var(--green-700)',
+                                color: 'var(--paper)',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
                                 padding: '0.15rem 0.4rem',
                                 borderRadius: '9999px',
                                 textTransform: 'uppercase',
@@ -489,30 +433,32 @@ export default function CartPage() {
                         {/* 2. Middle: Package Title, Features & Unit Price */}
                         <div style={{ flex: '1 1 240px', minWidth: '220px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                            {item.category && (
                             <span
                               style={{
-                                fontSize: '0.68rem',
-                                fontWeight: 800,
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.04em',
                                 padding: '0.18rem 0.5rem',
-                                borderRadius: '6px',
-                                backgroundColor: '#eff6ff',
-                                color: '#0056b3',
-                                border: '1px solid #bfdbfe',
+                                borderRadius: 'var(--radius-sm)',
+                                backgroundColor: 'var(--blue-50)',
+                                color: 'var(--blue-600)',
+                                border: '1px solid var(--blue-200)',
                               }}
                             >
-                              {item.category || 'Package'}
+                              {item.category}
                             </span>
+                            )}
                             {speed && (
                               <span
                                 style={{
                                   display: 'inline-flex',
                                   alignItems: 'center',
                                   gap: '0.2rem',
-                                  fontSize: '0.72rem',
+                                  fontSize: '0.75rem',
                                   fontWeight: 700,
-                                  color: '#0284c7',
+                                  color: 'var(--blue-500)',
                                 }}
                               >
                                 <FiZap size={12} /> {speed}
@@ -523,8 +469,8 @@ export default function CartPage() {
                           <h3
                             style={{
                               fontSize: '1.15rem',
-                              fontWeight: 800,
-                              color: '#0f172a',
+                              fontWeight: 700,
+                              color: 'var(--grey-900)',
                               margin: '0 0 0.5rem 0',
                               lineHeight: 1.35,
                             }}
@@ -534,10 +480,7 @@ export default function CartPage() {
 
                           {/* Dynamic Features List */}
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem 0.75rem', marginBottom: '0.65rem' }}>
-                            {(Array.isArray(item.features) && item.features.length > 0
-                              ? item.features.slice(0, 3)
-                              : ['High Speed Connectivity', '24/7 Support']
-                            ).map((feat, fIdx) => (
+                            {(Array.isArray(item.features) ? item.features.slice(0, 3) : []).map((feat, fIdx) => (
                               <span
                                 key={fIdx}
                                 style={{
@@ -545,11 +488,11 @@ export default function CartPage() {
                                   alignItems: 'center',
                                   gap: '0.3rem',
                                   fontSize: '0.75rem',
-                                  color: '#64748b',
+                                  color: 'var(--grey-600)',
                                   fontWeight: 500,
                                 }}
                               >
-                                <FiCheck size={13} style={{ color: '#16a34a', flexShrink: 0 }} />
+                                <FiCheck size={13} style={{ color: '#0f7a4d', flexShrink: 0 }} />
                                 <span>{String(feat).replace(/^[✓✔]\s*/, '')}</span>
                               </span>
                             ))}
@@ -557,24 +500,24 @@ export default function CartPage() {
 
                           {/* Package Unit Price & Installation Fee */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-                            <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>
-                              Unit Price: <strong style={{ color: '#0f172a', fontSize: '0.95rem' }}>Rs. {monthly.toLocaleString()}</strong> <span style={{ fontSize: '0.75rem' }}>/mo</span>
+                            <div style={{ fontSize: '0.85rem', color: '#52627a', fontWeight: 600 }}>
+                              Unit Price: <strong style={{ color: '#131f33', fontSize: '0.95rem' }}>Rs. {monthly.toLocaleString()}</strong> <span style={{ fontSize: '0.75rem' }}>/mo</span>
                             </div>
                             {instFee === 0 ? (
                               <span
                                 style={{
-                                  backgroundColor: '#dcfce7',
-                                  color: '#15803d',
+                                  backgroundColor: 'var(--green-100)',
+                                  color: 'var(--green-700)',
                                   padding: '0.15rem 0.5rem',
-                                  borderRadius: '6px',
-                                  fontSize: '0.72rem',
+                                  borderRadius: 'var(--radius-sm)',
+                                  fontSize: '0.75rem',
                                   fontWeight: 700,
                                 }}
                               >
                                 Free Installation
                               </span>
                             ) : (
-                              <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 500 }}>
+                              <span style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 500 }}>
                                 Installation: Rs. {instFee.toLocaleString()}
                               </span>
                             )}
@@ -599,11 +542,11 @@ export default function CartPage() {
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                border: '1.5px solid #cbd5e1',
-                                borderRadius: '10px',
+                                border: '1.5px solid var(--grey-300)',
+                                borderRadius: 'var(--radius)',
                                 overflow: 'hidden',
-                                backgroundColor: '#f8fafc',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                                backgroundColor: 'var(--grey-50)',
+                                boxShadow: 'var(--shadow-xs)',
                               }}
                             >
                               <button
@@ -617,7 +560,7 @@ export default function CartPage() {
                                   background: 'transparent',
                                   padding: '0.4rem 0.7rem',
                                   cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer',
-                                  color: item.quantity <= 1 ? '#94a3b8' : '#1e293b',
+                                  color: item.quantity <= 1 ? '#94a1b5' : '#26344b',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -632,11 +575,11 @@ export default function CartPage() {
                                 style={{
                                   padding: '0.4rem 0.75rem',
                                   fontSize: '0.9rem',
-                                  fontWeight: 800,
-                                  color: '#0f172a',
+                                  fontWeight: 700,
+                                  color: 'var(--grey-900)',
                                   minWidth: '32px',
                                   textAlign: 'center',
-                                  backgroundColor: '#ffffff',
+                                  backgroundColor: 'var(--paper)',
                                 }}
                               >
                                 {item.quantity}
@@ -652,7 +595,7 @@ export default function CartPage() {
                                   background: 'transparent',
                                   padding: '0.4rem 0.7rem',
                                   cursor: 'pointer',
-                                  color: '#1e293b',
+                                  color: 'var(--grey-800)',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -672,15 +615,15 @@ export default function CartPage() {
                                 handleRemove(prodId);
                               }}
                               style={{
-                                background: '#fef2f2',
-                                border: '1px solid #fee2e2',
-                                color: '#ef4444',
+                                background: 'var(--red-50)',
+                                border: '1px solid var(--red-100)',
+                                color: 'var(--red-600)',
                                 cursor: 'pointer',
                                 padding: '0.5rem',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                borderRadius: '10px',
+                                borderRadius: 'var(--radius)',
                                 transition: 'all 0.15s ease',
                               }}
                               title="Remove item"
@@ -691,15 +634,15 @@ export default function CartPage() {
 
                           {/* Line Item Subtotal */}
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                               Item Subtotal
                             </div>
-                            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0056b3' }}>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0056a2' }}>
                               Rs. {itemSubtotal.toLocaleString()}
-                              <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: 600 }}>/mo</span>
+                              <span style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 600 }}>/mo</span>
                             </div>
                             {item.quantity > 1 && (
-                              <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 500 }}>
+                              <div style={{ fontSize: '0.75rem', color: '#94a1b5', fontWeight: 500 }}>
                                 {item.quantity} × Rs. {monthly.toLocaleString()}
                               </div>
                             )}
@@ -710,42 +653,6 @@ export default function CartPage() {
                   );
                 })}
 
-                {/* Secure & Hassle-Free Banner */}
-                <div
-                  style={{
-                    backgroundColor: '#eff6ff',
-                    border: '1px solid #bfdbfe',
-                    borderRadius: '16px',
-                    padding: '1rem 1.25rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.85rem',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '50%',
-                      backgroundColor: '#dbeafe',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#0056b3',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <FiShield size={18} />
-                  </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>
-                      {t('cart.secure', 'Secure & Hassle-Free')}
-                    </h4>
-                    <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.8rem', color: '#475569' }}>
-                      {t('cart.secureText', 'Your information is safe with us. We use OTP verification to ensure a secure application process.')}
-                    </p>
-                  </div>
-                </div>
 
               </div>
 
@@ -753,11 +660,11 @@ export default function CartPage() {
               <div className="cart-layout-summary" style={{ gridColumn: 'span 4' }}>
                 <div
                   style={{
-                    backgroundColor: '#ffffff',
+                    backgroundColor: 'var(--paper)',
                     borderRadius: '20px',
                     padding: '1.75rem',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-                    border: '1px solid #e2e8f0',
+                    boxShadow: 'var(--shadow-md)',
+                    border: '1px solid var(--grey-200)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '1.25rem',
@@ -765,30 +672,30 @@ export default function CartPage() {
                     top: 'calc(var(--nav-height, 90px) + 1.25rem)',
                   }}
                 >
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#131f33', margin: 0 }}>
                     {t('cart.orderSummary', 'Order Summary')}
                   </h3>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.9rem', color: '#475569' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.9rem', color: '#3b4a61' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>{t('cart.subtotalWithCount', { count: totalItemCount, defaultValue: `Subtotal (${totalItemCount} ${totalItemCount === 1 ? 'item' : 'items'})` })}</span>
-                      <strong style={{ color: '#0f172a' }}>Rs. {monthlyTotal.toLocaleString()}</strong>
+                      <strong style={{ color: '#131f33' }}>Rs. {monthlyTotal.toLocaleString()}</strong>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                        {t('cart.installationFees', 'Installation Fees')} <FiInfo size={13} color="#94a3b8" />
+                        {t('cart.installationFees', 'Installation Fees')} <FiInfo size={13} color="#94a1b5" />
                       </span>
-                      <strong style={{ color: '#0f172a' }}>Rs. {installationTotal.toLocaleString()}</strong>
+                      <strong style={{ color: '#131f33' }}>Rs. {installationTotal.toLocaleString()}</strong>
                     </div>
 
-                    <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '0.35rem 0' }} />
+                    <hr style={{ border: 'none', borderTop: '1px solid #eef2f7', margin: '0.35rem 0' }} />
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                      <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#131f33' }}>
                         {t('cart.totalDue', 'Total Due (First Month)')}
                       </span>
-                      <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0056b3' }}>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 700, color: '#0056a2' }}>
                         Rs. {grandTotal.toLocaleString()}
                       </span>
                     </div>
@@ -797,12 +704,12 @@ export default function CartPage() {
                   {/* Green Notice Banner */}
                   <div
                     style={{
-                      backgroundColor: '#ecfdf5',
-                      border: '1px solid #a7f3d0',
-                      borderRadius: '12px',
+                      backgroundColor: 'var(--green-50)',
+                      border: '1px solid var(--green-200)',
+                      borderRadius: 'var(--radius-lg)',
                       padding: '0.75rem 0.9rem',
                       fontSize: '0.78rem',
-                      color: '#047857',
+                      color: 'var(--green-700)',
                       lineHeight: 1.4,
                       display: 'flex',
                       alignItems: 'flex-start',
@@ -817,16 +724,16 @@ export default function CartPage() {
                   <button
                     onClick={handleProceedToCheckout}
                     style={{
-                      backgroundColor: '#0056b3',
-                      color: '#ffffff',
+                      backgroundColor: 'var(--blue-600)',
+                      color: 'var(--paper)',
                       border: 'none',
-                      borderRadius: '12px',
+                      borderRadius: 'var(--radius-lg)',
                       padding: '0.95rem',
                       fontSize: '0.95rem',
-                      fontWeight: 800,
+                      fontWeight: 700,
                       cursor: 'pointer',
                       width: '100%',
-                      boxShadow: '0 4px 14px rgba(0, 86, 179, 0.28)',
+                      boxShadow: 'var(--shadow-md)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -841,10 +748,10 @@ export default function CartPage() {
                   <button
                     onClick={() => showToast(t('cart.savedToast', 'Cart saved for later!'), 'info')}
                     style={{
-                      backgroundColor: '#ffffff',
-                      color: '#0056b3',
-                      border: '1.5px solid #cbd5e1',
-                      borderRadius: '12px',
+                      backgroundColor: 'var(--paper)',
+                      color: 'var(--blue-600)',
+                      border: '1.5px solid var(--grey-300)',
+                      borderRadius: 'var(--radius-lg)',
                       padding: '0.85rem',
                       fontSize: '0.9rem',
                       fontWeight: 700,
@@ -859,83 +766,12 @@ export default function CartPage() {
                     <FiBookmark size={15} /> {t('cart.saveForLater', 'Save for Later')}
                   </button>
 
-                  {/* We Accept Footer */}
-                  <div style={{ marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '0.5rem' }}>
-                      {t('cart.weAccept', 'We Accept')}
-                    </span>
-                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                      {['VISA', 'Mastercard', 'AMEX', 'UnionPay', 'Cash'].map((card) => (
-                        <span
-                          key={card}
-                          style={{
-                            backgroundColor: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '8px',
-                            padding: '0.2rem 0.55rem',
-                            fontSize: '0.7rem',
-                            fontWeight: 700,
-                            color: '#334155',
-                          }}
-                        >
-                          {card}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
 
                 </div>
               </div>
 
             </div>
 
-            {/* Bottom Benefits Bar (4 items matching Image 3) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-              {[
-                { title: 'Free Installation', text: 'On all eligible packages', Icon: FiZap },
-                { title: '24/7 Customer Support', text: "We're here to help you", Icon: FiHeadphones },
-                { title: 'Trusted Network', text: "Sri Lanka's No.1 Network", Icon: FiWifi },
-                { title: '100% Secure Payments', text: 'Your payments are safe with us', Icon: FiShield },
-              ].map((benefit) => (
-                <div
-                  key={benefit.title}
-                  style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '16px',
-                    padding: '1.25rem',
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 4px 18px rgba(15, 23, 42, 0.03)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1rem',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '46px',
-                      height: '46px',
-                      borderRadius: '12px',
-                      backgroundColor: '#eff6ff',
-                      color: '#0b4a91',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <benefit.Icon size={22} aria-hidden="true" />
-                  </div>
-                  <div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.2rem 0' }}>
-                      {benefit.title}
-                    </h4>
-                    <p style={{ fontSize: '0.825rem', color: '#64748b', margin: 0 }}>
-                      {benefit.text}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </>
         )}
 

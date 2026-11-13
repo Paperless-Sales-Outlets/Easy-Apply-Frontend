@@ -116,8 +116,8 @@ const CONTACT_CHANNELS = [
     detail: '1212 (Toll-free)',
     detailSecondary: '+94 11 230 0300',
     icon: <FiPhone size={24} />,
-    color: '#0056b3',
-    bgColor: '#eff6ff',
+    color: 'var(--blue-600)',
+    bgColor: 'var(--blue-50)',
   },
   {
     title: 'Email Us',
@@ -125,8 +125,8 @@ const CONTACT_CHANNELS = [
     detail: 'support@slt.lk',
     detailSecondary: 'info@slt.lk',
     icon: <FiMail size={24} />,
-    color: '#047857',
-    bgColor: '#ecfdf5',
+    color: 'var(--blue-600)',
+    bgColor: 'var(--blue-50)',
   },
   {
     title: 'Live Chat',
@@ -134,8 +134,8 @@ const CONTACT_CHANNELS = [
     detail: 'Available 24/7',
     detailSecondary: 'via SLTMobitel App',
     icon: <FiMessageCircle size={24} />,
-    color: '#7c3aed',
-    bgColor: '#f5f3ff',
+    color: 'var(--blue-600)',
+    bgColor: 'var(--blue-50)',
   },
   {
     title: 'Visit Us',
@@ -143,8 +143,8 @@ const CONTACT_CHANNELS = [
     detail: 'Find nearest branch',
     detailSecondary: 'Mon–Fri: 8:30 AM – 4:30 PM',
     icon: <FiMapPin size={24} />,
-    color: '#dc2626',
-    bgColor: '#fef2f2',
+    color: 'var(--blue-600)',
+    bgColor: 'var(--blue-50)',
   },
 ];
 
@@ -153,9 +153,9 @@ function AccordionItem({ question, answer, isOpen, onToggle }) {
   return (
     <div
       style={{
-        backgroundColor: '#fff',
-        borderRadius: '12px',
-        border: `1px solid ${isOpen ? '#bfdbfe' : '#e2e8f0'}`,
+        backgroundColor: 'var(--paper)',
+        borderRadius: 'var(--radius-lg)',
+        border: `1px solid ${isOpen ? '#c3dcf5' : '#dfe5ee'}`,
         overflow: 'hidden',
         transition: 'border-color 0.2s',
       }}
@@ -169,12 +169,12 @@ function AccordionItem({ question, answer, isOpen, onToggle }) {
           width: '100%',
           padding: '1rem 1.25rem',
           border: 'none',
-          background: isOpen ? '#f8fafc' : 'transparent',
+          background: isOpen ? '#f6f8fb' : 'transparent',
           cursor: 'pointer',
           textAlign: 'left',
           fontSize: '0.92rem',
           fontWeight: 600,
-          color: isOpen ? '#0056b3' : '#1e293b',
+          color: isOpen ? '#0056a2' : '#26344b',
           transition: 'all 0.2s',
           gap: '1rem',
         }}
@@ -195,7 +195,7 @@ function AccordionItem({ question, answer, isOpen, onToggle }) {
               style={{
                 padding: '0 1.25rem 1rem',
                 fontSize: '0.87rem',
-                color: '#475569',
+                color: 'var(--grey-700)',
                 lineHeight: 1.7,
               }}
             >
@@ -227,14 +227,11 @@ export default function HelpSupportPage() {
         {/* ── Page Header ──────────────────────────────────────────────── */}
         <div style={{ marginBottom: '2.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-            <div style={{ display: 'flex', gap: '4px', fontStyle: 'italic', fontSize: '1.8rem', fontWeight: 900 }}>
-              <span style={{ color: '#10b981' }}>/</span><span style={{ color: '#0056b3' }}>/</span>
-            </div>
-            <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 800, color: '#0f172a' }}>
+            <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 700, color: '#131f33' }}>
               Help & Support
             </h1>
           </div>
-          <p style={{ margin: 0, fontSize: '0.95rem', color: '#475569', maxWidth: '600px' }}>
+          <p style={{ margin: 0, fontSize: '0.95rem', color: '#3b4a61', maxWidth: '600px' }}>
             Find answers to your questions, get in touch with our support team, or browse our knowledge base.
           </p>
         </div>
@@ -252,11 +249,11 @@ export default function HelpSupportPage() {
             <div
               key={channel.title}
               style={{
-                backgroundColor: '#fff',
-                borderRadius: '16px',
+                backgroundColor: 'var(--paper)',
+                borderRadius: 'var(--radius-lg)',
                 padding: '1.5rem',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                border: '1px solid #f1f5f9',
+                boxShadow: 'var(--shadow-md)',
+                border: '1px solid var(--grey-100)',
                 display: 'flex',
                 gap: '1rem',
                 alignItems: 'flex-start',
@@ -282,14 +279,14 @@ export default function HelpSupportPage() {
                   left: 0,
                   right: 0,
                   height: '3px',
-                  background: `linear-gradient(90deg, ${channel.color}, ${channel.color}88)`,
+                  background: channel.color,
                 }}
               />
               <div
                 style={{
                   width: '48px',
                   height: '48px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-lg)',
                   backgroundColor: channel.bgColor,
                   display: 'flex',
                   alignItems: 'center',
@@ -301,16 +298,16 @@ export default function HelpSupportPage() {
                 {channel.icon}
               </div>
               <div>
-                <h3 style={{ margin: '0 0 0.25rem', fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
+                <h3 style={{ margin: '0 0 0.25rem', fontSize: '1rem', fontWeight: 700, color: '#131f33' }}>
                   {channel.title}
                 </h3>
-                <p style={{ margin: '0 0 0.5rem', fontSize: '0.82rem', color: '#475569' }}>
+                <p style={{ margin: '0 0 0.5rem', fontSize: '0.82rem', color: '#3b4a61' }}>
                   {channel.description}
                 </p>
                 <p style={{ margin: '0 0 0.15rem', fontSize: '0.9rem', fontWeight: 600, color: channel.color }}>
                   {channel.detail}
                 </p>
-                <p style={{ margin: 0, fontSize: '0.78rem', color: '#475569' }}>
+                <p style={{ margin: 0, fontSize: '0.78rem', color: '#3b4a61' }}>
                   {channel.detailSecondary}
                 </p>
               </div>
@@ -320,7 +317,7 @@ export default function HelpSupportPage() {
 
         {/* ── FAQ Section ──────────────────────────────────────────────── */}
         <div style={{ marginBottom: '3rem' }}>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#131f33', marginBottom: '1.5rem' }}>
             <FiHelpCircle size={20} style={{ marginRight: '0.5rem', verticalAlign: 'text-bottom' }} />
             Frequently Asked Questions
           </h2>
@@ -346,9 +343,9 @@ export default function HelpSupportPage() {
                   gap: '0.4rem',
                   padding: '0.55rem 1rem',
                   borderRadius: '9999px',
-                  border: activeCategory === cat.category ? '2px solid #0056b3' : '1px solid #e2e8f0',
-                  backgroundColor: activeCategory === cat.category ? '#eff6ff' : '#fff',
-                  color: activeCategory === cat.category ? '#0056b3' : '#475569',
+                  border: activeCategory === cat.category ? '2px solid #0056a2' : '1px solid #dfe5ee',
+                  backgroundColor: activeCategory === cat.category ? '#f1f7fd' : '#ffffff',
+                  color: activeCategory === cat.category ? '#0056a2' : '#3b4a61',
                   fontWeight: activeCategory === cat.category ? 700 : 500,
                   fontSize: '0.83rem',
                   cursor: 'pointer',
@@ -383,7 +380,7 @@ export default function HelpSupportPage() {
 
         {/* ── Quick Links ──────────────────────────────────────────────── */}
         <div>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0f172a', marginBottom: '1.25rem' }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#131f33', marginBottom: '1.25rem' }}>
             Quick Links
           </h2>
           <div
@@ -412,14 +409,14 @@ export default function HelpSupportPage() {
                   }
                 }}
                 style={{
-                  backgroundColor: '#fff',
-                  borderRadius: '12px',
+                  backgroundColor: 'var(--paper)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1.25rem 1.5rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid var(--grey-200)',
                   transition: 'transform 0.2s, box-shadow 0.2s',
                 }}
                 onMouseEnter={(e) => {
@@ -432,12 +429,12 @@ export default function HelpSupportPage() {
                 }}
               >
                 <div>
-                  <h4 style={{ margin: '0 0 0.25rem', fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
+                  <h4 style={{ margin: '0 0 0.25rem', fontSize: '0.95rem', fontWeight: 700, color: '#131f33' }}>
                     {link.label}
                   </h4>
-                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#475569' }}>{link.desc}</p>
+                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#3b4a61' }}>{link.desc}</p>
                 </div>
-                <FiExternalLink size={18} style={{ color: '#0056b3', flexShrink: 0 }} />
+                <FiExternalLink size={18} style={{ color: '#0056a2', flexShrink: 0 }} />
               </div>
             ))}
           </div>
@@ -447,22 +444,23 @@ export default function HelpSupportPage() {
         <div
           style={{
             marginTop: '2.5rem',
-            background: 'linear-gradient(135deg, #0056b3 0%, #0284c7 100%)',
-            borderRadius: '16px',
-            padding: '2rem',
-            color: '#fff',
+            background: 'var(--blue-50)',
+            border: '1px solid var(--blue-200)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.5rem 2rem',
+            color: 'var(--grey-800)',
             display: 'flex',
             alignItems: 'center',
             gap: '1.5rem',
             flexWrap: 'wrap',
           }}
         >
-          <FiClock size={32} style={{ flexShrink: 0 }} />
+          <FiClock size={28} style={{ flexShrink: 0, color: 'var(--blue-600)' }} />
           <div style={{ flex: 1, minWidth: '200px' }}>
-            <h3 style={{ margin: '0 0 0.35rem', fontSize: '1.1rem', fontWeight: 700 }}>
+            <h3 style={{ margin: '0 0 0.35rem', fontSize: '1.1rem', fontWeight: 700, color: 'var(--grey-900)' }}>
               Customer Support Hours
             </h3>
-            <p style={{ margin: 0, fontSize: '0.9rem', opacity: 0.9, lineHeight: 1.6 }}>
+            <p style={{ margin: 0, fontSize: '1rem', lineHeight: 1.7 }}>
               <strong>Hotline (1212):</strong> 24 hours / 7 days<br />
               <strong>Branch offices:</strong> Mon – Fri, 8:30 AM – 4:30 PM<br />
               <strong>Online support:</strong> Available 24/7 via chat & email

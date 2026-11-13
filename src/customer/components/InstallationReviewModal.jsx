@@ -83,7 +83,7 @@ export default function InstallationReviewModal({
         particleCount: 110,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#0056b3', '#10b981', '#fbbf24', '#38bdf8', '#6366f1'],
+        colors: ['#0056a2', '#0f7a4d', '#f4d58f', '#4b92d6', '#6366f1'],
       });
     } catch {
       // Fallback if canvas is not ready
@@ -164,9 +164,9 @@ export default function InstallationReviewModal({
         style={{
           width: '100%',
           maxWidth: '740px',
-          backgroundColor: '#ffffff',
+          backgroundColor: 'var(--paper)',
           borderRadius: '20px',
-          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.3)',
+          boxShadow: 'var(--shadow-xl)',
           border: '1px solid rgba(226, 232, 240, 0.8)',
           overflow: 'hidden',
           position: 'relative',
@@ -180,7 +180,7 @@ export default function InstallationReviewModal({
           style={{
             height: '6px',
             background:
-              'linear-gradient(90deg, #10b981 0%, #0056b3 50%, #0284c7 100%)',
+              'var(--blue-600)',
           }}
         />
 
@@ -200,7 +200,7 @@ export default function InstallationReviewModal({
               position: 'absolute',
               top: '1.25rem',
               right: '1.25rem',
-              background: '#f1f5f9',
+              background: 'var(--grey-100)',
               border: 'none',
               borderRadius: '50%',
               width: '34px',
@@ -209,16 +209,16 @@ export default function InstallationReviewModal({
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#64748b',
+              color: 'var(--grey-600)',
               transition: 'all 0.15s',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#e2e8f0';
-              e.currentTarget.style.color = '#0f172a';
+              e.currentTarget.style.backgroundColor = '#dfe5ee';
+              e.currentTarget.style.color = '#131f33';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#f1f5f9';
-              e.currentTarget.style.color = '#64748b';
+              e.currentTarget.style.backgroundColor = '#eef2f7';
+              e.currentTarget.style.color = '#52627a';
             }}
           >
             <X size={18} />
@@ -240,9 +240,9 @@ export default function InstallationReviewModal({
               <div
                 style={{
                   background: 'rgba(16, 185, 129, 0.12)',
-                  color: '#10b981',
+                  color: 'var(--green-700)',
                   padding: '0.75rem',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-lg)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -255,9 +255,9 @@ export default function InstallationReviewModal({
               <div>
                 <span
                   style={{
-                    fontSize: '0.74rem',
-                    fontWeight: 800,
-                    color: '#10b981',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    color: 'var(--green-700)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.6px',
                   }}
@@ -267,8 +267,8 @@ export default function InstallationReviewModal({
                 <h2
                   style={{
                     fontSize: '1.35rem',
-                    fontWeight: 800,
-                    color: '#0f172a',
+                    fontWeight: 700,
+                    color: 'var(--grey-900)',
                     lineHeight: 1.2,
                     margin: '0.15rem 0 0 0',
                   }}
@@ -285,25 +285,25 @@ export default function InstallationReviewModal({
                 onClick={handleAutoFill}
                 style={{
                   background: 'rgba(0, 86, 179, 0.08)',
-                  border: '1.5px solid #0056b3',
-                  color: '#0056b3',
-                  fontWeight: 800,
+                  border: '1.5px solid var(--blue-600)',
+                  color: 'var(--blue-600)',
+                  fontWeight: 700,
                   fontSize: '0.78rem',
                   padding: '0.45rem 0.85rem',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.4rem',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius)',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#0056b3';
+                  e.currentTarget.style.backgroundColor = '#0056a2';
                   e.currentTarget.style.color = '#ffffff';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgba(0, 86, 179, 0.08)';
-                  e.currentTarget.style.color = '#0056b3';
+                  e.currentTarget.style.color = '#0056a2';
                 }}
                 title="Auto-fill 5-star customer review"
               >
@@ -315,9 +315,9 @@ export default function InstallationReviewModal({
           {/* Technician Setup / Optical Diagnostic Card */}
           <div
             style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '16px',
+              background: 'var(--grey-50)',
+              border: '1px solid var(--grey-200)',
+              borderRadius: 'var(--radius-lg)',
               padding: '1.25rem',
               marginBottom: '1.25rem',
             }}
@@ -335,8 +335,8 @@ export default function InstallationReviewModal({
               <div>
                 <span
                   style={{
-                    fontSize: '0.72rem',
-                    color: '#64748b',
+                    fontSize: '0.75rem',
+                    color: 'var(--grey-600)',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
@@ -347,8 +347,8 @@ export default function InstallationReviewModal({
                 <div
                   style={{
                     fontSize: '1.05rem',
-                    fontWeight: 900,
-                    color: '#0056b3',
+                    fontWeight: 700,
+                    color: 'var(--blue-600)',
                     letterSpacing: '0.5px',
                   }}
                 >
@@ -357,9 +357,9 @@ export default function InstallationReviewModal({
               </div>
               <span
                 style={{
-                  fontSize: '0.74rem',
-                  fontWeight: 800,
-                  color: '#10b981',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: 'var(--green-700)',
                   background: 'rgba(16, 185, 129, 0.12)',
                   border: '1px solid rgba(16, 185, 129, 0.3)',
                   padding: '0.3rem 0.75rem',
@@ -376,9 +376,9 @@ export default function InstallationReviewModal({
             {/* Assigned Line Box */}
             <div
               style={{
-                background: '#ffffff',
-                border: '1px solid #cbd5e1',
-                borderRadius: '12px',
+                background: 'var(--paper)',
+                border: '1px solid var(--grey-300)',
+                borderRadius: 'var(--radius-lg)',
                 padding: '1rem 1.25rem',
                 display: 'flex',
                 alignItems: 'center',
@@ -390,8 +390,8 @@ export default function InstallationReviewModal({
               <div>
                 <span
                   style={{
-                    fontSize: '0.7rem',
-                    color: '#64748b',
+                    fontSize: '0.75rem',
+                    color: 'var(--grey-600)',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
@@ -402,21 +402,21 @@ export default function InstallationReviewModal({
                 <div
                   style={{
                     fontSize: '1.05rem',
-                    fontWeight: 900,
-                    color: '#0f172a',
+                    fontWeight: 700,
+                    color: 'var(--grey-900)',
                     margin: '0.2rem 0',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.45rem',
                   }}
                 >
-                  <Phone size={16} color="#0056b3" /> {telephone}
+                  <Phone size={16} color="#0056a2" /> {telephone}
                 </div>
               </div>
               <span
                 style={{
-                  fontSize: '0.74rem',
-                  color: '#0056b3',
+                  fontSize: '0.75rem',
+                  color: 'var(--blue-600)',
                   background: 'rgba(0, 86, 179, 0.08)',
                   border: '1px solid rgba(0, 86, 179, 0.25)',
                   padding: '0.35rem 0.85rem',
@@ -437,9 +437,9 @@ export default function InstallationReviewModal({
             <form onSubmit={handleSubmit}>
               <div
                 style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '16px',
+                  background: 'var(--grey-50)',
+                  border: '1px solid var(--grey-200)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1.25rem',
                   marginBottom: '1.25rem',
                 }}
@@ -447,8 +447,8 @@ export default function InstallationReviewModal({
                 <h3
                   style={{
                     fontSize: '1rem',
-                    fontWeight: 800,
-                    color: '#0f172a',
+                    fontWeight: 700,
+                    color: 'var(--grey-900)',
                     margin: '0 0 0.25rem 0',
                   }}
                 >
@@ -457,7 +457,7 @@ export default function InstallationReviewModal({
                 <p
                   style={{
                     fontSize: '0.82rem',
-                    color: '#64748b',
+                    color: 'var(--grey-600)',
                     margin: '0 0 1rem 0',
                   }}
                 >
@@ -498,13 +498,13 @@ export default function InstallationReviewModal({
                           size={32}
                           fill={
                             (hoverRating || rating) >= star
-                              ? '#fbbf24'
+                              ? '#f4d58f'
                               : 'none'
                           }
                           color={
                             (hoverRating || rating) >= star
-                              ? '#fbbf24'
-                              : '#cbd5e1'
+                              ? '#f4d58f'
+                              : '#c3ccd9'
                           }
                           strokeWidth={1.75}
                           style={{
@@ -520,8 +520,8 @@ export default function InstallationReviewModal({
                   <span
                     style={{
                       fontSize: '0.84rem',
-                      fontWeight: 800,
-                      color: '#d97706',
+                      fontWeight: 700,
+                      color: 'var(--amber-700)',
                     }}
                   >
                     {getRatingLabel(hoverRating || rating)}
@@ -534,7 +534,7 @@ export default function InstallationReviewModal({
                       display: 'block',
                       fontSize: '0.75rem',
                       fontWeight: 700,
-                      color: '#475569',
+                      color: 'var(--grey-700)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.5px',
                       marginBottom: '0.4rem',
@@ -550,15 +550,15 @@ export default function InstallationReviewModal({
                     style={{
                       width: '100%',
                       padding: '0.75rem 0.9rem',
-                      borderRadius: '12px',
-                      border: '1.5px solid #cbd5e1',
+                      borderRadius: 'var(--radius-lg)',
+                      border: '1.5px solid var(--grey-300)',
                       fontSize: '0.88rem',
-                      color: '#0f172a',
+                      color: 'var(--grey-900)',
                       fontWeight: 600,
                       outline: 'none',
                       resize: 'vertical',
                       boxSizing: 'border-box',
-                      backgroundColor: '#ffffff',
+                      backgroundColor: 'var(--paper)',
                       boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)',
                     }}
                   />
@@ -569,10 +569,10 @@ export default function InstallationReviewModal({
                     style={{
                       marginTop: '0.75rem',
                       padding: '0.6rem 0.85rem',
-                      borderRadius: '8px',
-                      backgroundColor: '#fef2f2',
-                      border: '1px solid #fecaca',
-                      color: '#b91c1c',
+                      borderRadius: 'var(--radius)',
+                      backgroundColor: 'var(--red-50)',
+                      border: '1px solid var(--red-200)',
+                      color: 'var(--red-700)',
                       fontSize: '0.82rem',
                       fontWeight: 700,
                     }}
@@ -589,18 +589,18 @@ export default function InstallationReviewModal({
                   style={{
                     width: '100%',
                     padding: '0.9rem 1.5rem',
-                    borderRadius: '14px',
+                    borderRadius: 'var(--radius-lg)',
                     background: 'var(--brand-gradient-soft)',
-                    color: '#ffffff',
+                    color: 'var(--paper)',
                     border: 'none',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     fontSize: '0.95rem',
                     cursor: isSubmitting ? 'not-allowed' : 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '0.5rem',
-                    boxShadow: '0 4px 16px rgba(0, 86, 179, 0.3)',
+                    boxShadow: 'var(--shadow-md)',
                     transition: 'all 0.15s ease',
                   }}
                 >
@@ -625,14 +625,14 @@ export default function InstallationReviewModal({
                 textAlign: 'center',
                 padding: '1.5rem 0.5rem',
                 background:
-                  'radial-gradient(circle at center, rgba(16, 185, 129, 0.08) 0%, transparent 70%)',
+                  'none',
               }}
             >
               <div
                 style={{
                   background: 'rgba(16, 185, 129, 0.15)',
-                  color: '#10b981',
-                  border: '2px solid #10b981',
+                  color: 'var(--green-700)',
+                  border: '2px solid var(--green-700)',
                   width: '64px',
                   height: '64px',
                   borderRadius: '50%',
@@ -640,7 +640,7 @@ export default function InstallationReviewModal({
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 1rem auto',
-                  boxShadow: '0 0 30px rgba(16, 185, 129, 0.35)',
+                  boxShadow: 'var(--shadow-lg)',
                 }}
               >
                 <Sparkles size={34} />
@@ -649,8 +649,8 @@ export default function InstallationReviewModal({
               <h3
                 style={{
                   fontSize: '1.45rem',
-                  fontWeight: 900,
-                  color: '#0f172a',
+                  fontWeight: 700,
+                  color: 'var(--grey-900)',
                   marginBottom: '0.4rem',
                 }}
               >
@@ -659,7 +659,7 @@ export default function InstallationReviewModal({
 
               <p
                 style={{
-                  color: '#64748b',
+                  color: 'var(--grey-600)',
                   fontSize: '0.9rem',
                   maxWidth: '500px',
                   margin: '0 auto 1.5rem auto',
@@ -668,7 +668,7 @@ export default function InstallationReviewModal({
                 }}
               >
                 Your connection is officially live and active with{' '}
-                <strong style={{ color: '#10b981' }}>{rating}/5 Stars</strong>{' '}
+                <strong style={{ color: '#0f7a4d' }}>{rating}/5 Stars</strong>{' '}
                 satisfaction. Thank you for choosing SLTMobitel!
               </p>
 
@@ -685,17 +685,17 @@ export default function InstallationReviewModal({
                   onClick={onClose}
                   style={{
                     padding: '0.75rem 1.75rem',
-                    borderRadius: '12px',
-                    background: '#0056b3',
-                    color: '#ffffff',
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'var(--blue-600)',
+                    color: 'var(--paper)',
                     border: 'none',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     fontSize: '0.88rem',
                     cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '0.4rem',
-                    boxShadow: '0 4px 12px rgba(0, 86, 179, 0.25)',
+                    boxShadow: 'var(--shadow-md)',
                   }}
                 >
                   <CheckCircle2 size={16} /> Done & Close

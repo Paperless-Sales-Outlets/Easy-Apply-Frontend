@@ -13,26 +13,26 @@ import { normalizeProductDetail } from '../../shared/utils/productHubAdapter';
 
 // Authentic Channel metadata with genre and brand styling
 const CHANNEL_METADATA = {
-  '0': { name: 'SLTMobitel Group Watch', genre: 'Special', res: 'HD', bg: '#0b2d5b', logoText: 'SLT WATCH', tagColor: '#38bdf8' },
-  '1': { name: 'Rupavahini', genre: 'National', res: 'HD', bg: '#003b73', logoText: 'RUPAVAHINI', tagColor: '#60a5fa' },
+  '0': { name: 'SLTMobitel Group Watch', genre: 'Special', res: 'HD', bg: '#0d2b52', logoText: 'SLT WATCH', tagColor: '#4b92d6' },
+  '1': { name: 'Rupavahini', genre: 'National', res: 'HD', bg: '#123c73', logoText: 'RUPAVAHINI', tagColor: '#4b92d6' },
   '2': { name: 'Nethra TV', genre: 'Tamil', res: 'HD', bg: '#4c1d95', logoText: 'NETHRA', tagColor: '#c084fc' },
-  '3': { name: 'ITN', genre: 'Entertainment', res: 'HD', bg: '#0369a1', logoText: 'ITN', tagColor: '#38bdf8' },
-  '4': { name: 'TV Derana', genre: 'Entertainment', res: 'HD', bg: '#b91c1c', logoText: 'DERANA', tagColor: '#f87171' },
+  '3': { name: 'ITN', genre: 'Entertainment', res: 'HD', bg: '#0a4b8c', logoText: 'ITN', tagColor: '#4b92d6' },
+  '4': { name: 'TV Derana', genre: 'Entertainment', res: 'HD', bg: '#b42318', logoText: 'DERANA', tagColor: '#f87171' },
   '5': { name: 'Charana TV', genre: 'Entertainment', res: 'HD', bg: '#0f766e', logoText: 'CHARANA', tagColor: '#2dd4bf' },
-  '6': { name: 'Swarnavahini', genre: 'Entertainment', res: 'HD', bg: '#b45309', logoText: 'SWARNA', tagColor: '#fbbf24' },
+  '6': { name: 'Swarnavahini', genre: 'Entertainment', res: 'HD', bg: '#93560a', logoText: 'SWARNA', tagColor: '#f4d58f' },
   '7': { name: 'Vasanthm TV', genre: 'Tamil', res: 'HD', bg: '#c2410c', logoText: 'VASANTHAM', tagColor: '#fb923c' },
-  '8': { name: 'Siyatha TV', genre: 'News & Ent.', res: 'HD', bg: '#1e3a8a', logoText: 'SIYATHA', tagColor: '#93c5fd' },
-  '9': { name: 'Haritha TV', genre: 'Nature & Edu.', res: 'HD', bg: '#15803d', logoText: 'HARITHA', tagColor: '#4ade80' },
-  '10': { name: 'Sirasa TV', genre: 'Entertainment', res: 'HD', bg: '#991b1b', logoText: 'SIRASA', tagColor: '#fca5a5' },
-  '11': { name: 'Shakthi TV', genre: 'Tamil', res: 'HD', bg: '#9a3412', logoText: 'SHAKTHI', tagColor: '#fdba74' },
-  '12': { name: 'TV 1', genre: 'Youth & Music', res: 'HD', bg: '#0f172a', logoText: 'TV 1', tagColor: '#94a3b8' },
+  '8': { name: 'Siyatha TV', genre: 'News & Ent.', res: 'HD', bg: '#1e3a8a', logoText: 'SIYATHA', tagColor: '#8ebde8' },
+  '9': { name: 'Haritha TV', genre: 'Nature & Edu.', res: 'HD', bg: '#0f7a4d', logoText: 'HARITHA', tagColor: '#4ade80' },
+  '10': { name: 'Sirasa TV', genre: 'Entertainment', res: 'HD', bg: '#b42318', logoText: 'SIRASA', tagColor: '#f5c2bd' },
+  '11': { name: 'Shakthi TV', genre: 'Tamil', res: 'HD', bg: '#93560a', logoText: 'SHAKTHI', tagColor: '#fdba74' },
+  '12': { name: 'TV 1', genre: 'Youth & Music', res: 'HD', bg: '#131f33', logoText: 'TV 1', tagColor: '#94a1b5' },
   '13': { name: 'Supreme TV', genre: 'Entertainment', res: 'HD', bg: '#831843', logoText: 'SUPREME', tagColor: '#f472b6' },
-  '14': { name: 'A Derana News Channel', genre: 'News', res: 'HD', bg: '#991b1b', logoText: 'ADA DERANA', tagColor: '#f87171' },
+  '14': { name: 'A Derana News Channel', genre: 'News', res: 'HD', bg: '#b42318', logoText: 'ADA DERANA', tagColor: '#f87171' },
   '15': { name: 'Music Plus TV', genre: 'Music', res: 'HD', bg: '#701a75', logoText: 'MUSIC+', tagColor: '#e879f9' },
   '17': { name: 'Art TV', genre: 'Movies & Art', res: 'HD', bg: '#312e81', logoText: 'ART TV', tagColor: '#a5b4fc' },
-  '23': { name: 'CNN', genre: 'News', res: 'HD', bg: '#cc0000', logoText: 'CNN', tagColor: '#fca5a5' },
-  '24': { name: 'BBC', genre: 'News', res: 'HD', bg: '#000000', logoText: 'BBC', tagColor: '#e2e8f0' },
-  '28': { name: 'Star Movies', genre: 'Movies', res: 'HD', bg: '#1e1b4b', logoText: 'STAR MOVIES', tagColor: '#fbbf24' },
+  '23': { name: 'CNN', genre: 'News', res: 'HD', bg: '#cc0000', logoText: 'CNN', tagColor: '#f5c2bd' },
+  '24': { name: 'BBC', genre: 'News', res: 'HD', bg: '#000000', logoText: 'BBC', tagColor: '#dfe5ee' },
+  '28': { name: 'Star Movies', genre: 'Movies', res: 'HD', bg: '#1e1b4b', logoText: 'STAR MOVIES', tagColor: '#f4d58f' },
 };
 
 /** Modal with full package details (specs, channels, pricing). */
@@ -129,9 +129,9 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
       name: channelName,
       genre: 'Entertainment',
       res: 'HD',
-      bg: '#003b73',
+      bg: 'var(--blue-800)',
       logoText: channelName.toUpperCase().slice(0, 10),
-      tagColor: '#38bdf8',
+      tagColor: 'var(--blue-400)',
     };
     const isAddOn = !String(channelPrice).toLowerCase().includes('n/a') && String(channelPrice) !== '0';
 
@@ -180,10 +180,10 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: '#ffffff',
-          borderRadius: '6px', // 6px clean modern radius
+          backgroundColor: 'var(--paper)',
+          borderRadius: 'var(--radius-sm)', // 6px clean modern radius
           border: '1px solid #002b5c',
-          boxShadow: '0 20px 60px rgba(0, 43, 92, 0.35)',
+          boxShadow: 'var(--shadow-xl)',
           overflow: 'hidden',
           position: 'relative',
         }}
@@ -194,7 +194,7 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
           style={{
             backgroundColor: '#002244',
             padding: '1.25rem 1.5rem',
-            color: '#ffffff',
+            color: 'var(--paper)',
             position: 'relative',
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             display: 'flex',
@@ -207,12 +207,12 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
               <span
                 style={{
-                  backgroundColor: '#0056b3',
-                  color: '#ffffff',
+                  backgroundColor: 'var(--blue-600)',
+                  color: 'var(--paper)',
                   padding: '0.2rem 0.6rem',
-                  borderRadius: '6px',
-                  fontSize: '0.72rem',
-                  fontWeight: 800,
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
                 }}
@@ -221,7 +221,7 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
               </span>
               <span
                 style={{
-                  color: '#94a3b8',
+                  color: 'var(--grey-400)',
                   fontSize: '0.75rem',
                   fontWeight: 600,
                 }}
@@ -237,13 +237,13 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
               style={{
                 background: 'rgba(255, 255, 255, 0.12)',
                 border: 'none',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-sm)',
                 width: '30px',
                 height: '30px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#ffffff',
+                color: 'var(--paper)',
                 cursor: 'pointer',
                 transition: 'background 0.15s ease',
               }}
@@ -260,15 +260,15 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                   style={{
                     width: '68px',
                     height: '68px',
-                    backgroundColor: '#ffffff',
-                    borderRadius: '6px',
+                    backgroundColor: 'var(--paper)',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid rgba(255, 255, 255, 0.25)',
                     padding: '4px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                    boxShadow: 'var(--shadow-md)',
                   }}
                 >
                   <img
@@ -279,21 +279,21 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                 </div>
               )}
               <div>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#ffffff', margin: 0, letterSpacing: '-0.02em' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ffffff', margin: 0, letterSpacing: '-0.02em' }}>
                   {detailsData?.productName || product?.name || 'Peo Silver'}
                 </h2>
-                <div style={{ fontSize: '0.82rem', color: '#cbd5e1', fontWeight: 500, marginTop: '0.2rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#c3ccd9', fontWeight: 500, marginTop: '0.2rem' }}>
                   Complete Home Entertainment with {totalChannelsCount} TV Channels
                 </div>
               </div>
             </div>
 
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#ffffff', lineHeight: 1 }}>
+              <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#ffffff', lineHeight: 1 }}>
                 Rs. {(detailsData?.monthlyPrice || product?.monthlyPrice || 1125).toLocaleString()}
-                <span style={{ fontSize: '0.85rem', color: '#cbd5e1', fontWeight: 600 }}>/mo</span>
+                <span style={{ fontSize: '0.85rem', color: '#c3ccd9', fontWeight: 600 }}>/mo</span>
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.3rem', fontWeight: 500 }}>
+              <div style={{ fontSize: '0.75rem', color: '#94a1b5', marginTop: '0.3rem', fontWeight: 500 }}>
                 + One-time setup: Rs. {product?.installationFee === 0 ? '0 (Free)' : '2,500'}
               </div>
             </div>
@@ -304,8 +304,8 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
         <div
           style={{
             display: 'flex',
-            borderBottom: '1px solid #e2e8f0',
-            backgroundColor: '#f8fafc',
+            borderBottom: '1px solid var(--grey-200)',
+            backgroundColor: 'var(--grey-50)',
             padding: '0 1.5rem',
           }}
         >
@@ -316,9 +316,9 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
               padding: '0.75rem 1.25rem',
               background: 'none',
               border: 'none',
-              borderBottom: activeTab === 'lineup' ? '2.5px solid #0056b3' : '2.5px solid transparent',
+              borderBottom: activeTab === 'lineup' ? '2.5px solid #0056a2' : '2.5px solid transparent',
               marginBottom: '-1px',
-              color: activeTab === 'lineup' ? '#0056b3' : '#64748b',
+              color: activeTab === 'lineup' ? '#0056a2' : '#52627a',
               fontWeight: activeTab === 'lineup' ? 800 : 600,
               fontSize: '0.86rem',
               cursor: 'pointer',
@@ -338,9 +338,9 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
               padding: '0.75rem 1.25rem',
               background: 'none',
               border: 'none',
-              borderBottom: activeTab === 'specs' ? '2.5px solid #0056b3' : '2.5px solid transparent',
+              borderBottom: activeTab === 'specs' ? '2.5px solid #0056a2' : '2.5px solid transparent',
               marginBottom: '-1px',
-              color: activeTab === 'specs' ? '#0056b3' : '#64748b',
+              color: activeTab === 'specs' ? '#0056a2' : '#52627a',
               fontWeight: activeTab === 'specs' ? 800 : 600,
               fontSize: '0.86rem',
               cursor: 'pointer',
@@ -362,24 +362,24 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                 style={{
                   width: '32px',
                   height: '32px',
-                  border: '2.5px solid #e2e8f0',
-                  borderTop: '2.5px solid #0056b3',
+                  border: '2.5px solid var(--grey-200)',
+                  borderTop: '2.5px solid var(--blue-600)',
                   borderRadius: '50%',
                   margin: '0 auto 1rem auto',
                   animation: 'spin 0.8s linear infinite',
                 }}
               />
               <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-              <p style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>Loading official channel lineup from SLT Hub...</p>
+              <p style={{ fontSize: '0.85rem', color: '#52627a', fontWeight: 600 }}>Loading official channel lineup from SLT Hub...</p>
             </div>
           ) : (
             <>
               {notice && (
                 <div
                   style={{
-                    backgroundColor: '#eff6ff',
-                    border: '1px solid #bfdbfe',
-                    borderRadius: '6px',
+                    backgroundColor: 'var(--blue-50)',
+                    border: '1px solid var(--blue-200)',
+                    borderRadius: 'var(--radius-sm)',
                     padding: '0.65rem 0.85rem',
                     fontSize: '0.8rem',
                     color: '#1e40af',
@@ -389,7 +389,7 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                     marginBottom: '1rem',
                   }}
                 >
-                  <Info size={15} style={{ color: '#0b4a91', flexShrink: 0 }} />
+                  <Info size={15} style={{ color: '#0a4b8c', flexShrink: 0 }} />
                   <span>{notice}</span>
                 </div>
               )}
@@ -410,7 +410,7 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                   >
                     {/* Search Input */}
                     <div style={{ position: 'relative', flex: '1 1 220px' }}>
-                      <Search size={14} style={{ position: 'absolute', top: '10px', left: '10px', color: '#94a3b8' }} />
+                      <Search size={14} style={{ position: 'absolute', top: '10px', left: '10px', color: '#94a1b5' }} />
                       <input
                         type="text"
                         placeholder="Search channels by name or genre..."
@@ -419,10 +419,10 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                         style={{
                           width: '100%',
                           padding: '0.45rem 0.75rem 0.45rem 2rem',
-                          backgroundColor: '#f8fafc',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: '6px',
-                          color: '#0f172a',
+                          backgroundColor: 'var(--grey-50)',
+                          border: '1px solid var(--grey-300)',
+                          borderRadius: 'var(--radius-sm)',
+                          color: 'var(--grey-900)',
                           fontSize: '0.82rem',
                           outline: 'none',
                         }}
@@ -438,12 +438,12 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                           onClick={() => setActiveGenre(genre)}
                           style={{
                             padding: '0.35rem 0.75rem',
-                            borderRadius: '6px',
+                            borderRadius: 'var(--radius-sm)',
                             border: '1px solid',
-                            borderColor: activeGenre === genre ? '#0056b3' : '#e2e8f0',
-                            backgroundColor: activeGenre === genre ? '#0056b3' : '#ffffff',
-                            color: activeGenre === genre ? '#ffffff' : '#475569',
-                            fontSize: '0.74rem',
+                            borderColor: activeGenre === genre ? '#0056a2' : '#dfe5ee',
+                            backgroundColor: activeGenre === genre ? '#0056a2' : '#ffffff',
+                            color: activeGenre === genre ? '#ffffff' : '#3b4a61',
+                            fontSize: '0.75rem',
                             fontWeight: 700,
                             cursor: 'pointer',
                             transition: 'all 0.12s ease',
@@ -456,14 +456,14 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                   </div>
 
                   {/* Channel Count Subtitle */}
-                  <div style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600, marginBottom: '0.75rem' }}>
+                  <div style={{ fontSize: '0.76rem', color: '#52627a', fontWeight: 600, marginBottom: '0.75rem' }}>
                     Showing {filteredChannels.length} channels • Full Lineup Included
                   </div>
 
                   {/* Channel Cards Grid with Real Brand Logos */}
                   {filteredChannels.length === 0 ? (
-                    <div style={{ backgroundColor: '#f8fafc', borderRadius: '6px', padding: '2rem', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-                      <p style={{ color: '#64748b', margin: 0, fontSize: '0.85rem', fontWeight: 600 }}>No channels found matching "{channelSearch}".</p>
+                    <div style={{ backgroundColor: '#f6f8fb', borderRadius: 'var(--radius-sm)', padding: '2rem', textAlign: 'center', border: '1px solid #dfe5ee' }}>
+                      <p style={{ color: '#52627a', margin: 0, fontSize: '0.85rem', fontWeight: 600 }}>No channels found matching "{channelSearch}".</p>
                     </div>
                   ) : (
                     <div
@@ -477,9 +477,9 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                         <div
                           key={ch.id}
                           style={{
-                            backgroundColor: '#ffffff',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '6px',
+                            backgroundColor: 'var(--paper)',
+                            border: '1px solid var(--grey-200)',
+                            borderRadius: 'var(--radius-sm)',
                             padding: '0.65rem 0.75rem',
                             display: 'flex',
                             alignItems: 'center',
@@ -494,18 +494,18 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                               width: '44px',
                               height: '34px',
                               backgroundColor: ch.bg,
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-sm)',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              color: '#ffffff',
-                              fontWeight: 900,
-                              fontSize: '0.58rem',
+                              color: 'var(--paper)',
+                              fontWeight: 700,
+                              fontSize: '0.75rem',
                               letterSpacing: '0.04em',
                               textAlign: 'center',
                               padding: '2px',
                               flexShrink: 0,
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+                              boxShadow: 'var(--shadow-xs)',
                             }}
                           >
                             {ch.logoText}
@@ -516,8 +516,8 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                             <div
                               style={{
                                 fontSize: '0.82rem',
-                                fontWeight: 800,
-                                color: '#0f172a',
+                                fontWeight: 700,
+                                color: 'var(--grey-900)',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
@@ -527,17 +527,17 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                               {ch.name}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.15rem' }}>
-                              <span style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>
+                              <span style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 600 }}>
                                 {ch.genre}
                               </span>
                               <span
                                 style={{
-                                  fontSize: '0.62rem',
-                                  fontWeight: 800,
-                                  color: ch.isAddOn ? '#b45309' : '#0f7a4d',
-                                  backgroundColor: ch.isAddOn ? '#fef3c7' : '#dcfce7',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                  color: ch.isAddOn ? '#93560a' : '#0f7a4d',
+                                  backgroundColor: ch.isAddOn ? '#fdf0d5' : '#e2f4e3',
                                   padding: '0.05rem 0.35rem',
-                                  borderRadius: '4px',
+                                  borderRadius: 'var(--radius-sm)',
                                 }}
                               >
                                 {ch.isAddOn ? ch.price : ch.res}
@@ -556,7 +556,7 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {/* Contract Terms Grid */}
                   <div>
-                    <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#002b5c', marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#002b5c', marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Tariffs & Service Terms
                     </h4>
 
@@ -571,19 +571,19 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                         <div
                           key={idx}
                           style={{
-                            backgroundColor: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '6px',
+                            backgroundColor: 'var(--grey-50)',
+                            border: '1px solid var(--grey-200)',
+                            borderRadius: 'var(--radius-sm)',
                             padding: '0.75rem 0.85rem',
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '0.2rem',
                           }}
                         >
-                          <span style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
+                          <span style={{ fontSize: '0.75rem', color: '#52627a', textTransform: 'uppercase', fontWeight: 700 }}>
                             {ff.name}
                           </span>
-                          <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#131f33' }}>
                             {ff.value}
                           </div>
                         </div>
@@ -593,20 +593,20 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
 
                   {/* Included SLT Services */}
                   <div>
-                    <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: '#002b5c', marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#002b5c', marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       Included SLTMobitel Benefits
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.82rem', color: '#334155', fontWeight: 600 }}>
-                        <ShieldCheck size={16} style={{ color: '#0056b3', flexShrink: 0 }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.82rem', color: '#26344b', fontWeight: 600 }}>
+                        <ShieldCheck size={16} style={{ color: '#0056a2', flexShrink: 0 }} />
                         <span>Official SLTMobitel digital provisioning and zero paperwork onboarding.</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.82rem', color: '#334155', fontWeight: 600 }}>
-                        <ShieldCheck size={16} style={{ color: '#0056b3', flexShrink: 0 }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.82rem', color: '#26344b', fontWeight: 600 }}>
+                        <ShieldCheck size={16} style={{ color: '#0056a2', flexShrink: 0 }} />
                         <span>Dedicated SLT optical line connection with standard setup included.</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.82rem', color: '#334155', fontWeight: 600 }}>
-                        <ShieldCheck size={16} style={{ color: '#0056b3', flexShrink: 0 }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.82rem', color: '#26344b', fontWeight: 600 }}>
+                        <ShieldCheck size={16} style={{ color: '#0056a2', flexShrink: 0 }} />
                         <span>24/7 technical customer support via 1212 / 1717 helplines.</span>
                       </div>
                     </div>
@@ -624,8 +624,8 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '0.85rem 1.5rem',
-            borderTop: '1px solid #e2e8f0',
-            backgroundColor: '#ffffff',
+            borderTop: '1px solid var(--grey-200)',
+            backgroundColor: 'var(--paper)',
           }}
         >
           <button
@@ -633,10 +633,10 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
             onClick={onClose}
             style={{
               padding: '0.65rem 1.35rem',
-              borderRadius: '6px',
-              border: '1px solid #cbd5e1',
-              backgroundColor: '#ffffff',
-              color: '#475569',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--grey-300)',
+              backgroundColor: 'var(--paper)',
+              color: 'var(--grey-700)',
               fontSize: '0.85rem',
               fontWeight: 700,
               cursor: 'pointer',
@@ -654,17 +654,17 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
               }}
               style={{
                 padding: '0.75rem 1.75rem',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-sm)',
                 border: 'none',
-                backgroundColor: '#0056b3',
-                color: '#ffffff',
+                backgroundColor: 'var(--blue-600)',
+                color: 'var(--paper)',
                 fontSize: '0.9rem',
-                fontWeight: 800,
+                fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                boxShadow: '0 4px 12px rgba(0, 86, 179, 0.3)',
+                boxShadow: 'var(--shadow-md)',
                 transition: 'all 0.15s ease',
               }}
             >

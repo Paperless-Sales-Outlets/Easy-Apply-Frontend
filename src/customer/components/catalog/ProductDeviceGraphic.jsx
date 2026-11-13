@@ -22,31 +22,31 @@ function RouterGraphic() {
       <rect x="62" y="2" width="5" height="50" rx="2.5" fill="#1a2232" />
       <rect x="103" y="8" width="5" height="44" rx="2.5" fill="#1a2232" />
       {/* Antenna tips */}
-      <circle cx="24.5" cy="7" r="3" fill="#38bdf8" opacity="0.9" />
-      <circle cx="64.5" cy="1" r="3" fill="#38bdf8" opacity="0.9" />
-      <circle cx="105.5" cy="7" r="3" fill="#38bdf8" opacity="0.9" />
+      <circle cx="24.5" cy="7" r="3" fill="#4b92d6" opacity="0.9" />
+      <circle cx="64.5" cy="1" r="3" fill="#4b92d6" opacity="0.9" />
+      <circle cx="105.5" cy="7" r="3" fill="#4b92d6" opacity="0.9" />
 
       {/* Body */}
       <rect x="5" y="52" width="120" height="32" rx="9" fill={`url(#rb-${uid})`} />
-      <rect x="8" y="56" width="114" height="24" rx="7" fill="#111827" />
+      <rect x="8" y="56" width="114" height="24" rx="7" fill="#131f33" />
 
       {/* LEDs */}
-      <circle cx="22" cy="68" r="3" fill="#38bdf8">
+      <circle cx="22" cy="68" r="3" fill="#4b92d6">
         <animate attributeName="opacity" values="1;0.3;1" dur="1.8s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="33" cy="68" r="3" fill="#38bdf8">
+      <circle cx="33" cy="68" r="3" fill="#4b92d6">
         <animate attributeName="opacity" values="1;0.3;1" dur="2.2s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="44" cy="68" r="3" fill="#10b981">
+      <circle cx="44" cy="68" r="3" fill="#0f7a4d">
         <animate attributeName="opacity" values="1;0.4;1" dur="2.6s" repeatCount="indefinite"/>
       </circle>
-      <circle cx="55" cy="68" r="3" fill="#38bdf8" />
-      <circle cx="66" cy="68" r="3" fill="#38bdf8" />
+      <circle cx="55" cy="68" r="3" fill="#4b92d6" />
+      <circle cx="66" cy="68" r="3" fill="#4b92d6" />
 
       {/* Branding */}
       <rect x="82" y="63" width="28" height="10" rx="3" fill="#1e3a5f" />
-      <rect x="84" y="65" width="8" height="6" rx="1" fill="#0056b3" />
-      <rect x="94" y="65" width="14" height="6" rx="1" fill="#0284c7" />
+      <rect x="84" y="65" width="8" height="6" rx="1" fill="#0056a2" />
+      <rect x="94" y="65" width="14" height="6" rx="1" fill="#1a6cbd" />
 
       {/* Feet */}
       <rect x="10" y="83" width="14" height="3" rx="1.5" fill="#0d1117" />
@@ -83,42 +83,42 @@ function LTEGraphic() {
       <rect x="23" y="13" width="49" height="84" rx="10" fill={`url(#lf-${uid})`} />
 
       {/* Signal bars */}
-      <rect x="30" y="22" width="4" height="8" rx="1" fill="#10b981" />
-      <rect x="36" y="19" width="4" height="11" rx="1" fill="#10b981" />
-      <rect x="42" y="16" width="4" height="14" rx="1" fill="#10b981" />
+      <rect x="30" y="22" width="4" height="8" rx="1" fill="#0f7a4d" />
+      <rect x="36" y="19" width="4" height="11" rx="1" fill="#0f7a4d" />
+      <rect x="42" y="16" width="4" height="14" rx="1" fill="#0f7a4d" />
       <rect x="48" y="22" width="4" height="8" rx="1" fill="#d1dce8" />
-      <circle cx="58" cy="24" r="3" fill="#10b981">
+      <circle cx="58" cy="24" r="3" fill="#0f7a4d">
         <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
       </circle>
 
       {/* Screen */}
-      <rect x="27" y="36" width="41" height="28" rx="4" fill="#0f172a" />
+      <rect x="27" y="36" width="41" height="28" rx="4" fill="#131f33" />
       <rect x="29" y="38" width="37" height="24" rx="3" fill="#0d1b2a" />
-      <rect x="32" y="42" width="20" height="2" rx="1" fill="#38bdf8" opacity="0.9" />
-      <rect x="32" y="47" width="28" height="2" rx="1" fill="#64748b" opacity="0.8" />
-      <rect x="32" y="52" width="24" height="2" rx="1" fill="#64748b" opacity="0.7" />
-      <rect x="32" y="57" width="16" height="2" rx="1" fill="#10b981" opacity="0.9" />
+      <rect x="32" y="42" width="20" height="2" rx="1" fill="#4b92d6" opacity="0.9" />
+      <rect x="32" y="47" width="28" height="2" rx="1" fill="#52627a" opacity="0.8" />
+      <rect x="32" y="52" width="24" height="2" rx="1" fill="#52627a" opacity="0.7" />
+      <rect x="32" y="57" width="16" height="2" rx="1" fill="#0f7a4d" opacity="0.9" />
 
       {/* SLT badge */}
-      <rect x="28" y="70" width="39" height="12" rx="4" fill="#0056b3" />
-      <text x="47.5" y="79.5" fontSize="7" fontWeight="800" fill="#fff" textAnchor="middle" fontFamily="var(--font-head)">SLT</text>
+      <rect x="28" y="70" width="39" height="12" rx="4" fill="#0056a2" />
+      <text x="47.5" y="79.5" fontSize="7" fontWeight="800" fill="#ffffff" textAnchor="middle" fontFamily="var(--font-head)">SLT</text>
 
       {/* Ports */}
       <rect x="28" y="87" width="39" height="10" rx="3" fill="#d9e2ec" />
-      <rect x="31" y="89" width="8" height="6" rx="1" fill="#94a3b8" />
-      <rect x="42" y="89" width="8" height="6" rx="1" fill="#94a3b8" />
-      <rect x="53" y="89" width="8" height="6" rx="1" fill="#94a3b8" />
+      <rect x="31" y="89" width="8" height="6" rx="1" fill="#94a1b5" />
+      <rect x="42" y="89" width="8" height="6" rx="1" fill="#94a1b5" />
+      <rect x="53" y="89" width="8" height="6" rx="1" fill="#94a1b5" />
 
       {/* Remote */}
-      <rect x="82" y="38" width="20" height="58" rx="6" fill="#1e2a3a" />
+      <rect x="82" y="38" width="20" height="58" rx="6" fill="#131f33" />
       <rect x="84" y="40" width="16" height="56" rx="5" fill="#252d3a" />
-      <circle cx="92" cy="50" r="5" fill="#0056b3" />
-      <circle cx="92" cy="64" r="7" fill="#1e2a3a" />
-      <circle cx="92" cy="64" r="5" fill="#334155" />
-      <circle cx="92" cy="59" r="2" fill="#64748b" />
-      <circle cx="92" cy="69" r="2" fill="#64748b" />
-      <circle cx="87" cy="64" r="2" fill="#64748b" />
-      <circle cx="97" cy="64" r="2" fill="#64748b" />
+      <circle cx="92" cy="50" r="5" fill="#0056a2" />
+      <circle cx="92" cy="64" r="7" fill="#131f33" />
+      <circle cx="92" cy="64" r="5" fill="#26344b" />
+      <circle cx="92" cy="59" r="2" fill="#52627a" />
+      <circle cx="92" cy="69" r="2" fill="#52627a" />
+      <circle cx="87" cy="64" r="2" fill="#52627a" />
+      <circle cx="97" cy="64" r="2" fill="#52627a" />
       <rect x="86" y="76" width="4" height="3" rx="1" fill="#3d4a5c" />
       <rect x="90" y="76" width="4" height="3" rx="1" fill="#3d4a5c" />
       <rect x="94" y="76" width="4" height="3" rx="1" fill="#3d4a5c" />
@@ -142,11 +142,11 @@ function PEOTVGraphic() {
       style={{ display: 'block', filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.45))' }}>
       <defs>
         <linearGradient id={`ts-${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#1e293b" /><stop offset="1" stopColor="#0f172a" />
+          <stop stopColor="#26344b" /><stop offset="1" stopColor="#131f33" />
         </linearGradient>
         <radialGradient id={`sg-${uid}`} cx="50%" cy="50%" r="50%">
-          <stop stopColor="#0284c7" stopOpacity="0.85" />
-          <stop offset="1" stopColor="#0f172a" stopOpacity="0.25" />
+          <stop stopColor="#1a6cbd" stopOpacity="0.85" />
+          <stop offset="1" stopColor="#131f33" stopOpacity="0.25" />
         </radialGradient>
       </defs>
 
@@ -154,22 +154,22 @@ function PEOTVGraphic() {
       <rect x="5" y="5" width="110" height="70" rx="8" fill="#1a2030" />
       <rect x="8" y="8" width="104" height="64" rx="6" fill={`url(#ts-${uid})`} />
       <rect x="12" y="12" width="96" height="56" rx="4" fill={`url(#sg-${uid})`} />
-      <rect x="28" y="26" width="64" height="28" rx="4" fill="#0f172a" opacity="0.6" />
+      <rect x="28" y="26" width="64" height="28" rx="4" fill="#131f33" opacity="0.6" />
       <text x="60" y="44" fontSize="11" fontWeight="900" fill="#ff6b35" textAnchor="middle" fontFamily="var(--font-head)">PEO TV</text>
 
       {/* Stand */}
-      <rect x="50" y="75" width="20" height="10" rx="1" fill="#1e2a3a" />
-      <rect x="35" y="85" width="50" height="5" rx="2.5" fill="#0f172a" />
+      <rect x="50" y="75" width="20" height="10" rx="1" fill="#131f33" />
+      <rect x="35" y="85" width="50" height="5" rx="2.5" fill="#131f33" />
 
       {/* STB */}
       <rect x="10" y="90" width="100" height="14" rx="5" fill="#1a2232" />
-      <rect x="12" y="91" width="96" height="12" rx="4" fill="#1e2a3a" />
-      <circle cx="20" cy="97" r="3" fill="#10b981">
+      <rect x="12" y="91" width="96" height="12" rx="4" fill="#131f33" />
+      <circle cx="20" cy="97" r="3" fill="#0f7a4d">
         <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
       </circle>
-      <rect x="28" y="93" width="22" height="8" rx="2" fill="#0f172a" />
-      <rect x="30" y="95" width="5" height="4" rx="1" fill="#10b981" opacity="0.8" />
-      <rect x="37" y="95" width="5" height="4" rx="1" fill="#10b981" opacity="0.8" />
+      <rect x="28" y="93" width="22" height="8" rx="2" fill="#131f33" />
+      <rect x="30" y="95" width="5" height="4" rx="1" fill="#0f7a4d" opacity="0.8" />
+      <rect x="37" y="95" width="5" height="4" rx="1" fill="#0f7a4d" opacity="0.8" />
       <rect x="80" y="94" width="10" height="6" rx="1" fill="#0d1117" />
       <rect x="93" y="94" width="10" height="6" rx="1" fill="#0d1117" />
 
@@ -195,14 +195,14 @@ function VoicePhoneGraphic() {
 
       {/* Phone base */}
       <rect x="28" y="32" width="82" height="64" rx="10" fill={`url(#pb-${uid})`} />
-      <rect x="31" y="35" width="76" height="58" rx="8" fill="#1e2a3a" />
+      <rect x="31" y="35" width="76" height="58" rx="8" fill="#131f33" />
 
       {/* LCD screen */}
-      <rect x="36" y="40" width="66" height="20" rx="4" fill="#0f172a" />
+      <rect x="36" y="40" width="66" height="20" rx="4" fill="#131f33" />
       <rect x="38" y="42" width="62" height="16" rx="3" fill="#0d1b2a" />
-      <rect x="41" y="45" width="36" height="2" rx="1" fill="#38bdf8" opacity="0.9" />
-      <rect x="41" y="50" width="26" height="2" rx="1" fill="#64748b" opacity="0.7" />
-      <rect x="41" y="55" width="30" height="2" rx="1" fill="#64748b" opacity="0.6" />
+      <rect x="41" y="45" width="36" height="2" rx="1" fill="#4b92d6" opacity="0.9" />
+      <rect x="41" y="50" width="26" height="2" rx="1" fill="#52627a" opacity="0.7" />
+      <rect x="41" y="55" width="30" height="2" rx="1" fill="#52627a" opacity="0.6" />
 
       {/* Keypad — 3x4 */}
       {[0,1,2,3].map(row => [0,1,2].map(col => (
@@ -212,16 +212,16 @@ function VoicePhoneGraphic() {
       )))}
 
       {/* Handset */}
-      <rect x="3" y="16" width="23" height="72" rx="11.5" fill="#0f172a" />
+      <rect x="3" y="16" width="23" height="72" rx="11.5" fill="#131f33" />
       <rect x="5" y="18" width="19" height="68" rx="9.5" fill="#1a2232" />
-      <ellipse cx="14.5" cy="28" rx="7" ry="9" fill="#0f172a" />
-      <ellipse cx="14.5" cy="28" rx="5" ry="7" fill="#1e2a3a" />
-      <ellipse cx="14.5" cy="76" rx="7" ry="9" fill="#0f172a" />
-      <ellipse cx="14.5" cy="76" rx="5" ry="7" fill="#1e2a3a" />
-      <path d="M26 56 Q30 56 30 66 Q30 76 28 78" stroke="#334155" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <ellipse cx="14.5" cy="28" rx="7" ry="9" fill="#131f33" />
+      <ellipse cx="14.5" cy="28" rx="5" ry="7" fill="#131f33" />
+      <ellipse cx="14.5" cy="76" rx="7" ry="9" fill="#131f33" />
+      <ellipse cx="14.5" cy="76" rx="5" ry="7" fill="#131f33" />
+      <path d="M26 56 Q30 56 30 66 Q30 76 28 78" stroke="#26344b" strokeWidth="2" fill="none" strokeLinecap="round" />
 
       {/* SLT badge */}
-      <rect x="76" y="88" width="28" height="9" rx="3" fill="#0056b3" />
+      <rect x="76" y="88" width="28" height="9" rx="3" fill="#0056a2" />
       <text x="90" y="95.5" fontSize="6" fontWeight="800" fill="white" textAnchor="middle" fontFamily="var(--font-head)">SLT</text>
 
       <ellipse cx="68" cy="106" rx="50" ry="4" fill="black" opacity="0.18" />

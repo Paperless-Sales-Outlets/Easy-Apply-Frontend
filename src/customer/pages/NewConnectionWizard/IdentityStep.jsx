@@ -29,10 +29,10 @@ const inputStyle = {
   width: '100%',
   padding: '0.75rem 0.9rem',
   fontSize: '0.92rem',
-  borderRadius: '10px',
-  border: '1.5px solid #cbd5e1',
-  backgroundColor: '#fff',
-  color: '#0f172a',
+  borderRadius: 'var(--radius)',
+  border: '1.5px solid var(--grey-300)',
+  backgroundColor: 'var(--paper)',
+  color: 'var(--grey-900)',
 };
 
 /**
@@ -570,11 +570,11 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
   };
 
   const fieldIcons = {
-    nameFull: <FiUser size={14} color="#0056b3" />,
-    nic: <FiCreditCard size={14} color="#0056b3" />,
-    gender: <FiUsers size={14} color="#0056b3" />,
-    dob: <FiCalendar size={14} color="#0056b3" />,
-    nicAddress: <FiMapPin size={14} color="#0056b3" />,
+    nameFull: <FiUser size={14} color="#0056a2" />,
+    nic: <FiCreditCard size={14} color="#0056a2" />,
+    gender: <FiUsers size={14} color="#0056a2" />,
+    dob: <FiCalendar size={14} color="#0056a2" />,
+    nicAddress: <FiMapPin size={14} color="#0056a2" />,
   };
 
   const text = (name, label, type = 'text') => {
@@ -592,16 +592,16 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
     return (
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-          <label htmlFor={`id-${name}`} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
+          <label htmlFor={`id-${name}`} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.82rem', fontWeight: 700, color: '#26344b' }}>
             {fieldIcons[name] || null}
             <span>{label}</span>
           </label>
           {isActuallyVerified ? (
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#16a34a', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#0f7a4d', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
               <FiCheck size={12} /> Verified
             </span>
           ) : isFilled ? (
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#0284c7', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#1a6cbd', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
               ✓ Manual Entry
             </span>
           ) : null}
@@ -611,8 +611,8 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
             id={`id-${name}`}
             style={{
               ...inputStyle,
-              borderColor: errors[name] ? '#dc2626' : isActuallyVerified ? '#86efac' : isFilled ? '#93c5fd' : '#cbd5e1',
-              backgroundColor: isActuallyVerified ? '#f8fafc' : '#ffffff',
+              borderColor: errors[name] ? '#b42318' : isActuallyVerified ? '#9bd89a' : isFilled ? '#8ebde8' : '#c3ccd9',
+              backgroundColor: isActuallyVerified ? '#f6f8fb' : '#ffffff',
               transition: 'border-color 0.2s, background-color 0.2s',
             }}
             value={formData[name] || ''}
@@ -635,8 +635,8 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
             type={type}
             style={{
               ...inputStyle,
-              borderColor: errors[name] ? '#dc2626' : isActuallyVerified ? '#86efac' : isFilled ? '#93c5fd' : '#cbd5e1',
-              backgroundColor: isActuallyVerified ? '#f8fafc' : '#ffffff',
+              borderColor: errors[name] ? '#b42318' : isActuallyVerified ? '#9bd89a' : isFilled ? '#8ebde8' : '#c3ccd9',
+              backgroundColor: isActuallyVerified ? '#f6f8fb' : '#ffffff',
               transition: 'border-color 0.2s, background-color 0.2s',
             }}
             value={formData[name] || ''}
@@ -672,7 +672,7 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
             }}
           />
         )}
-        {errors[name] && <span style={{ color: '#dc2626', fontSize: '0.78rem', marginTop: '0.2rem', display: 'block' }}>{errors[name]}</span>}
+        {errors[name] && <span style={{ color: '#b42318', fontSize: '0.78rem', marginTop: '0.2rem', display: 'block' }}>{errors[name]}</span>}
       </div>
     );
   };
@@ -689,12 +689,12 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
       {/* ── Top NIC Verification Gateway ─────────────────────────── */}
       <div
         style={{
-          background: '#ffffff',
-          border: '1.5px solid #e2e8f0',
-          borderRadius: '14px',
+          background: 'var(--paper)',
+          border: '1.5px solid var(--grey-200)',
+          borderRadius: 'var(--radius-lg)',
           padding: '1.25rem',
           marginBottom: '1.5rem',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
@@ -702,21 +702,21 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
             style={{
               width: '32px',
               height: '32px',
-              borderRadius: '8px',
-              backgroundColor: '#eff6ff',
+              borderRadius: 'var(--radius)',
+              backgroundColor: 'var(--blue-50)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#0056b3',
+              color: 'var(--blue-600)',
             }}
           >
             <FiShield size={18} />
           </div>
           <div>
-            <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#0f172a' }}>
+            <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 700, color: '#131f33' }}>
               NIC Verification & Customer Check
             </h4>
-            <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: '#52627a' }}>
               Enter your NIC to verify your customer status. Existing customers with verified documents skip NIC uploads!
             </p>
           </div>
@@ -746,14 +746,14 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
               }}
               style={{
                 ...inputStyle,
-                borderColor: errors.nicInput ? '#dc2626' : '#cbd5e1',
+                borderColor: errors.nicInput ? '#b42318' : '#c3ccd9',
                 textTransform: 'uppercase',
                 fontWeight: 600,
                 letterSpacing: '0.5px',
               }}
             />
             {errors.nicInput && (
-              <span style={{ color: '#dc2626', fontSize: '0.78rem', display: 'block', marginTop: '0.25rem' }}>
+              <span style={{ color: '#b42318', fontSize: '0.78rem', display: 'block', marginTop: '0.25rem' }}>
                 {errors.nicInput}
               </span>
             )}
@@ -770,19 +770,19 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
               gap: '0.5rem',
               padding: '0 1.4rem',
               minHeight: '45px',
-              borderRadius: '10px',
+              borderRadius: 'var(--radius)',
               border: 'none',
               backgroundColor: isExistingCustomer
-                ? '#059669'
+                ? '#0f7a4d'
                 : verifyMessage?.type === 'missing_docs'
-                  ? '#d97706'
-                  : '#0056b3',
-              color: '#ffffff',
+                  ? '#93560a'
+                  : '#0056a2',
+              color: 'var(--paper)',
               fontSize: '0.9rem',
               fontWeight: 700,
               cursor: isVerifyingNic ? 'wait' : 'pointer',
               transition: 'background-color 0.2s ease',
-              boxShadow: '0 2px 6px rgba(0, 86, 179, 0.2)',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
             {isVerifyingNic ? (
@@ -820,19 +820,19 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
             style={{
               marginTop: '1rem',
               padding: '0.85rem 1rem',
-              borderRadius: '10px',
+              borderRadius: 'var(--radius)',
               border: `1px solid ${verifyMessage.type === 'existing_verified'
-                ? '#bbf7d0'
+                ? '#c9ebc8'
                 : verifyMessage.type === 'missing_docs'
-                  ? '#fed7aa'
-                  : '#bfdbfe'
+                  ? '#f4d58f'
+                  : '#c3dcf5'
                 }`,
               backgroundColor:
                 verifyMessage.type === 'existing_verified'
-                  ? '#f0fdf4'
+                  ? '#f1faf1'
                   : verifyMessage.type === 'missing_docs'
-                    ? '#fff7ed'
-                    : '#eff6ff',
+                    ? '#fff8e8'
+                    : '#f1f7fd',
               display: 'flex',
               alignItems: 'flex-start',
               gap: '0.75rem',
@@ -840,23 +840,23 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
           >
             <div style={{ marginTop: '0.1rem', flexShrink: 0 }}>
               {verifyMessage.type === 'existing_verified' ? (
-                <FiCheckCircle size={20} color="#16a34a" />
+                <FiCheckCircle size={20} color="#0f7a4d" />
               ) : verifyMessage.type === 'missing_docs' ? (
-                <FiAlertCircle size={20} color="#ea580c" />
+                <FiAlertCircle size={20} color="#93560a" />
               ) : (
-                <FiUserPlus size={20} color="#2563eb" />
+                <FiUserPlus size={20} color="#0056a2" />
               )}
             </div>
             <div>
               <div
                 style={{
                   fontSize: '0.88rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color:
                     verifyMessage.type === 'existing_verified'
-                      ? '#166534'
+                      ? '#0b5f3c'
                       : verifyMessage.type === 'missing_docs'
-                        ? '#9a3412'
+                        ? '#93560a'
                         : '#1e40af',
                   marginBottom: '0.2rem',
                 }}
@@ -869,10 +869,10 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                   lineHeight: '1.4',
                   color:
                     verifyMessage.type === 'existing_verified'
-                      ? '#15803d'
+                      ? '#0f7a4d'
                       : verifyMessage.type === 'missing_docs'
                         ? '#c2410c'
-                        : '#1d4ed8',
+                        : '#0056a2',
                 }}
               >
                 {verifyMessage.description}
@@ -904,15 +904,15 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
-              backgroundColor: '#0f57a8',
-              color: '#ffffff',
+              backgroundColor: 'var(--blue-600)',
+              color: 'var(--paper)',
               border: 'none',
               borderRadius: '9999px',
               padding: '0.65rem 1.25rem',
               fontSize: '0.88rem',
               fontWeight: 700,
               cursor: isScanning ? 'wait' : 'pointer',
-              boxShadow: '0 4px 12px rgba(15, 87, 168, 0.25)',
+              boxShadow: 'var(--shadow-md)',
             }}
           >
             {isScanning ? 'Extracting Details...' : 'Re-Scan NIC & Auto-Fill Details'}
@@ -928,20 +928,20 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
             className="kyc-grid-full"
             style={{
               padding: '1rem 1.25rem',
-              backgroundColor: '#f0fdf4',
-              border: '1.5px solid #86efac',
-              borderRadius: '12px',
+              backgroundColor: 'var(--green-50)',
+              border: '1.5px solid var(--green-300)',
+              borderRadius: 'var(--radius-lg)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.75rem',
             }}
           >
-            <FiCheckCircle size={22} color="#059669" />
+            <FiCheckCircle size={22} color="#0f7a4d" />
             <div>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#131f33' }}>
                 NIC Documents Waived
               </div>
-              <div style={{ fontSize: '0.8rem', color: '#166534' }}>
+              <div style={{ fontSize: '0.8rem', color: '#0b5f3c' }}>
                 Your National Identity Card copies are already verified and on file with SLT. Only a Live Selfie is required.
               </div>
             </div>
@@ -954,18 +954,18 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                 className="kyc-grid-full"
                 style={{
                   padding: '0.85rem 1rem',
-                  backgroundColor: '#fffbeb',
-                  border: '1px solid #fde68a',
-                  borderRadius: '10px',
+                  backgroundColor: 'var(--amber-50)',
+                  border: '1px solid var(--amber-200)',
+                  borderRadius: 'var(--radius)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.65rem',
-                  color: '#92400e',
+                  color: 'var(--amber-700)',
                   fontSize: '0.83rem',
                   fontWeight: 600,
                 }}
               >
-                <FiAlertCircle size={18} color="#d97706" style={{ flexShrink: 0 }} />
+                <FiAlertCircle size={18} color="#93560a" style={{ flexShrink: 0 }} />
                 <span>
                   Customer record was found in the database, but physical NIC copies are missing. Please upload both front and back images below.
                 </span>
@@ -1021,20 +1021,20 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
               <div
                 style={{
                   padding: '0.75rem 0.9rem',
-                  borderRadius: '10px',
-                  backgroundColor: '#eff6ff',
-                  border: '1px solid #bfdbfe',
+                  borderRadius: 'var(--radius)',
+                  backgroundColor: 'var(--blue-50)',
+                  border: '1px solid var(--blue-200)',
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '0.65rem',
                 }}
               >
-                <FiClock size={16} color="#2563eb" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+                <FiClock size={16} color="#0056a2" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
                 <div>
                   <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e40af', marginBottom: '0.15rem' }}>
                     Live Photo Captured — Queued for Manual Review
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#3b82f6', lineHeight: 1.4 }}>
+                  <div style={{ fontSize: '0.75rem', color: '#1a6cbd', lineHeight: 1.4 }}>
                     Your selfie has been recorded. To safeguard your identity, an authorized SLT officer will cross-verify your live photo with your NIC image prior to service activation.
                   </div>
                 </div>
@@ -1052,7 +1052,7 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 marginBottom: '1rem',
-                borderBottom: '1px solid #f1f5f9',
+                borderBottom: '1px solid var(--grey-100)',
                 paddingBottom: '0.65rem',
               }}
             >
@@ -1061,9 +1061,9 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                   style={{
                     width: '30px',
                     height: '30px',
-                    borderRadius: '8px',
-                    background: '#eff6ff',
-                    color: '#0b4a91',
+                    borderRadius: 'var(--radius)',
+                    background: 'var(--blue-50)',
+                    color: 'var(--blue-700)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -1071,19 +1071,19 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                 >
                   <FiUser size={16} />
                 </div>
-                <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#0f172a' }}>
+                <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 700, color: '#131f33' }}>
                   Details from your NIC
                 </h4>
               </div>
               <span
                 style={{
-                  fontSize: '0.74rem',
+                  fontSize: '0.75rem',
                   fontWeight: 600,
-                  color: '#64748b',
-                  background: '#f8fafc',
+                  color: 'var(--grey-600)',
+                  background: 'var(--grey-50)',
                   padding: '0.2rem 0.55rem',
-                  borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--grey-200)',
                 }}
               >
                 Auto-extracted
@@ -1112,14 +1112,14 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
           <div
             style={{
               marginTop: '0.85rem',
-              fontSize: '0.74rem',
-              color: '#64748b',
+              fontSize: '0.75rem',
+              color: 'var(--grey-600)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.35rem',
             }}
           >
-            <FiInfo size={14} color="#3b82f6" style={{ flexShrink: 0 }} />
+            <FiInfo size={14} color="#1a6cbd" style={{ flexShrink: 0 }} />
             <span>Details auto-populated from NIC OCR. Review and edit if needed.</span>
           </div>
         </div>
@@ -1151,12 +1151,12 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
         >
           <div
             style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '16px',
+              backgroundColor: 'var(--paper)',
+              borderRadius: 'var(--radius-lg)',
               maxWidth: '520px',
               width: '100%',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-              border: '1px solid #fee2e2',
+              boxShadow: 'var(--shadow-xl)',
+              border: '1px solid var(--red-100)',
               overflow: 'hidden',
               animation: 'fadeIn 0.2s ease-out',
             }}
@@ -1165,7 +1165,7 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
             <div
               style={{
                 padding: '1.25rem 1.5rem',
-                borderBottom: '1px solid #f1f5f9',
+                borderBottom: '1px solid var(--grey-100)',
                 display: 'flex',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
@@ -1177,12 +1177,12 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                   style={{
                     width: '42px',
                     height: '42px',
-                    borderRadius: '10px',
-                    backgroundColor: '#fef2f2',
+                    borderRadius: 'var(--radius)',
+                    backgroundColor: 'var(--red-50)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#dc2626',
+                    color: 'var(--red-700)',
                     flexShrink: 0,
                   }}
                 >
@@ -1194,13 +1194,13 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                     style={{
                       margin: 0,
                       fontSize: '1.05rem',
-                      fontWeight: 800,
-                      color: '#0f172a',
+                      fontWeight: 700,
+                      color: 'var(--grey-900)',
                     }}
                   >
                     NIC Document Images Required
                   </h3>
-                  <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+                  <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.8rem', color: '#52627a' }}>
                     Record exists but digital copies are not on file
                   </p>
                 </div>
@@ -1211,13 +1211,13 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#94a3b8',
+                  color: 'var(--grey-400)',
                   cursor: 'pointer',
                   padding: '0.25rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-sm)',
                 }}
                 aria-label="Close modal"
               >
@@ -1227,13 +1227,13 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
 
             {/* Modal Body */}
             <div style={{ padding: '1.25rem 1.5rem' }}>
-              <p style={{ margin: '0 0 1rem 0', fontSize: '0.88rem', color: '#334155', lineHeight: '1.5' }}>
+              <p style={{ margin: '0 0 1rem 0', fontSize: '0.88rem', color: '#26344b', lineHeight: '1.5' }}>
                 Your customer profile was found in our system for NIC{' '}
-                <strong style={{ color: '#0f172a' }}>{missingDocsModal.nic}</strong>
+                <strong style={{ color: '#131f33' }}>{missingDocsModal.nic}</strong>
                 {missingDocsModal.customerName && (
                   <span>
                     {' '}
-                    registered to <strong style={{ color: '#0f172a' }}>{missingDocsModal.customerName}</strong>
+                    registered to <strong style={{ color: '#131f33' }}>{missingDocsModal.customerName}</strong>
                   </span>
                 )}
                 . However, scanned copies of your National Identity Card are missing from our database.
@@ -1242,57 +1242,57 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
               {/* Status details checklist */}
               <div
                 style={{
-                  backgroundColor: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '10px',
+                  backgroundColor: 'var(--grey-50)',
+                  border: '1px solid var(--grey-200)',
+                  borderRadius: 'var(--radius)',
                   padding: '0.85rem 1rem',
                   marginBottom: '1rem',
                 }}
               >
-                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.5px' }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#52627a', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.5px' }}>
                   Document Status Check
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem' }}>
-                    <span style={{ color: '#334155', fontWeight: 600 }}>NIC Front Copy:</span>
+                    <span style={{ color: '#26344b', fontWeight: 600 }}>NIC Front Copy:</span>
                     <span
                       style={{
                         fontSize: '0.75rem',
                         fontWeight: 700,
                         padding: '0.2rem 0.6rem',
-                        borderRadius: '6px',
-                        backgroundColor: missingDocsModal.missingFront ? '#fef2f2' : '#f0fdf4',
-                        color: missingDocsModal.missingFront ? '#dc2626' : '#16a34a',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: missingDocsModal.missingFront ? '#fef3f2' : '#f1faf1',
+                        color: missingDocsModal.missingFront ? '#b42318' : '#0f7a4d',
                       }}
                     >
                       {missingDocsModal.missingFront ? 'Missing — Upload Required' : 'Available on File'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem' }}>
-                    <span style={{ color: '#334155', fontWeight: 600 }}>NIC Back Copy:</span>
+                    <span style={{ color: '#26344b', fontWeight: 600 }}>NIC Back Copy:</span>
                     <span
                       style={{
                         fontSize: '0.75rem',
                         fontWeight: 700,
                         padding: '0.2rem 0.6rem',
-                        borderRadius: '6px',
-                        backgroundColor: missingDocsModal.missingBack ? '#fef2f2' : '#f0fdf4',
-                        color: missingDocsModal.missingBack ? '#dc2626' : '#16a34a',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: missingDocsModal.missingBack ? '#fef3f2' : '#f1faf1',
+                        color: missingDocsModal.missingBack ? '#b42318' : '#0f7a4d',
                       }}
                     >
                       {missingDocsModal.missingBack ? 'Missing — Upload Required' : 'Available on File'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem' }}>
-                    <span style={{ color: '#334155', fontWeight: 600 }}>Live Selfie:</span>
+                    <span style={{ color: '#26344b', fontWeight: 600 }}>Live Selfie:</span>
                     <span
                       style={{
                         fontSize: '0.75rem',
                         fontWeight: 700,
                         padding: '0.2rem 0.6rem',
-                        borderRadius: '6px',
-                        backgroundColor: '#eff6ff',
-                        color: '#2563eb',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--blue-50)',
+                        color: 'var(--blue-600)',
                       }}
                     >
                       Live Camera Capture Required
@@ -1307,11 +1307,11 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                   alignItems: 'flex-start',
                   gap: '0.5rem',
                   fontSize: '0.8rem',
-                  color: '#64748b',
+                  color: 'var(--grey-600)',
                   lineHeight: '1.45',
                 }}
               >
-                <FiInfo size={16} color="#0056b3" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+                <FiInfo size={16} color="#0056a2" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
                 <span>
                   Please upload clear images of your NIC (or take photos) in the fields below, then take a live selfie with your camera to proceed with your application.
                 </span>
@@ -1322,8 +1322,8 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
             <div
               style={{
                 padding: '1rem 1.5rem',
-                backgroundColor: '#f8fafc',
-                borderTop: '1px solid #f1f5f9',
+                backgroundColor: 'var(--grey-50)',
+                borderTop: '1px solid var(--grey-100)',
                 display: 'flex',
                 justifyContent: 'flex-end',
                 gap: '0.75rem',
@@ -1334,10 +1334,10 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                 onClick={() => setMissingDocsModal((prev) => ({ ...prev, isOpen: false }))}
                 style={{
                   padding: '0.65rem 1.1rem',
-                  borderRadius: '8px',
-                  border: '1.5px solid #cbd5e1',
-                  backgroundColor: '#ffffff',
-                  color: '#334155',
+                  borderRadius: 'var(--radius)',
+                  border: '1.5px solid var(--grey-300)',
+                  backgroundColor: 'var(--paper)',
+                  color: 'var(--grey-800)',
                   fontSize: '0.85rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -1356,10 +1356,10 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
                 }}
                 style={{
                   padding: '0.65rem 1.25rem',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius)',
                   border: 'none',
-                  backgroundColor: '#0056b3',
-                  color: '#ffffff',
+                  backgroundColor: 'var(--blue-600)',
+                  color: 'var(--paper)',
                   fontSize: '0.85rem',
                   fontWeight: 700,
                   cursor: 'pointer',

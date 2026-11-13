@@ -4,17 +4,17 @@ import { FiCheckCircle } from 'react-icons/fi';
 
 const Row = ({ label, value }) => (
   <div>
-    <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</span>
-    <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a', wordBreak: 'break-word' }}>
-      {value || <span style={{ color: '#94a3b8' }}>—</span>}
+    <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#52627a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</span>
+    <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#131f33', wordBreak: 'break-word' }}>
+      {value || <span style={{ color: '#94a1b5' }}>—</span>}
     </span>
   </div>
 );
 
 const Section = ({ title, onEdit, children }) => (
-  <div style={{ border: '1.5px solid #e2e8f0', borderRadius: '14px', padding: '1.1rem 1.25rem', backgroundColor: '#fff' }}>
+  <div style={{ border: '1.5px solid #dfe5ee', borderRadius: 'var(--radius-lg)', padding: '1.1rem 1.25rem', backgroundColor: '#ffffff' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-      <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#0f172a' }}>{title}</h4>
+      <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 700, color: '#131f33' }}>{title}</h4>
       {onEdit && (
         <button type="button" className="auth-link-btn" onClick={onEdit}>Edit</button>
       )}
@@ -27,8 +27,8 @@ const Section = ({ title, onEdit, children }) => (
 
 const Thumb = ({ src, label }) => src ? (
   <figure style={{ margin: 0 }}>
-    <img src={src} alt={label} style={{ width: '100%', maxHeight: '120px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-    <figcaption style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.2rem' }}>{label}</figcaption>
+    <img src={src} alt={label} style={{ width: '100%', maxHeight: '120px', objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid #dfe5ee' }} />
+    <figcaption style={{ fontSize: '0.75rem', color: '#52627a', marginTop: '0.2rem' }}>{label}</figcaption>
   </figure>
 ) : null;
 
@@ -86,14 +86,14 @@ export default function ReviewStep({ formData, selectedProduct, goTo, onEditCart
       <Section title="Digital Signature" onEdit={() => goTo('signature')}>
         <Row label="Declaration" value={formData.declarationAccepted ? 'Accepted' : 'Not accepted'} />
         {formData.signature && (
-          <img src={formData.signature} alt="Your signature" style={{ maxHeight: '80px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+          <img src={formData.signature} alt="Your signature" style={{ maxHeight: '80px', background: '#f6f8fb', borderRadius: 'var(--radius)', border: '1px solid #dfe5ee' }} />
         )}
       </Section>
 
       <Section title="Payment Details" onEdit={() => goTo('payment')}>
         <div>
-          <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Status</span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#16a34a', fontWeight: 800, fontSize: '0.92rem' }}>
+          <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#52627a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Status</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: '#0f7a4d', fontWeight: 700, fontSize: '0.92rem' }}>
             <FiCheckCircle size={15} /> Paid & Confirmed
           </span>
         </div>

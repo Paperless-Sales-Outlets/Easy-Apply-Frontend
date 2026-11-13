@@ -23,10 +23,10 @@ const STYLES = `
   .isp-wrapper {
     width: 100%;
     min-height: 88vh;
-    background: #f8fafc;
+    background: #f6f8fb;
     padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 3vw, 1.5rem);
     box-sizing: border-box;
-    color: #0f172a;
+    color: #131f33;
     overflow-x: hidden;
   }
 
@@ -351,11 +351,11 @@ export default function InstallationSchedulingPage() {
         {/* ── 4-Step Breadcrumb Progress Stepper ── */}
         <div
           style={{
-            background: '#ffffff',
-            borderRadius: '14px',
+            background: 'var(--paper)',
+            borderRadius: 'var(--radius-lg)',
             padding: '0.85rem clamp(0.75rem, 3vw, 1.25rem)',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 2px 8px rgba(0, 86, 179, 0.04)',
+            border: '1px solid var(--grey-200)',
+            boxShadow: 'var(--shadow-sm)',
             marginBottom: '1.25rem',
             boxSizing: 'border-box',
           }}
@@ -368,23 +368,23 @@ export default function InstallationSchedulingPage() {
                   width: '22px',
                   height: '22px',
                   borderRadius: '50%',
-                  background: '#dcfce7',
-                  color: '#15803d',
+                  background: 'var(--green-100)',
+                  color: 'var(--green-700)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '0.75rem',
-                  fontWeight: 900,
+                  fontWeight: 700,
                 }}
               >
                 ✓
               </div>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#52627a' }}>
                 1. Plan Selected
               </span>
             </div>
 
-            <div style={{ height: '1.5px', flex: 1, background: '#cbd5e1', margin: '0 0.4rem' }} />
+            <div style={{ height: '1.5px', flex: 1, background: '#c3ccd9', margin: '0 0.4rem' }} />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
               <div
@@ -392,23 +392,23 @@ export default function InstallationSchedulingPage() {
                   width: '22px',
                   height: '22px',
                   borderRadius: '50%',
-                  background: '#dcfce7',
-                  color: '#15803d',
+                  background: 'var(--green-100)',
+                  color: 'var(--green-700)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '0.75rem',
-                  fontWeight: 900,
+                  fontWeight: 700,
                 }}
               >
                 ✓
               </div>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#52627a' }}>
                 2. KYC & Details
               </span>
             </div>
 
-            <div style={{ height: '1.5px', flex: 1, background: '#cbd5e1', margin: '0 0.4rem' }} />
+            <div style={{ height: '1.5px', flex: 1, background: '#c3ccd9', margin: '0 0.4rem' }} />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
               <div
@@ -416,23 +416,23 @@ export default function InstallationSchedulingPage() {
                   width: '22px',
                   height: '22px',
                   borderRadius: '50%',
-                  background: '#dcfce7',
-                  color: '#15803d',
+                  background: 'var(--green-100)',
+                  color: 'var(--green-700)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '0.75rem',
-                  fontWeight: 900,
+                  fontWeight: 700,
                 }}
               >
                 ✓
               </div>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#52627a' }}>
                 3. Payment
               </span>
             </div>
 
-            <div style={{ height: '1.5px', flex: 1, background: '#0056b3', margin: '0 0.4rem' }} />
+            <div style={{ height: '1.5px', flex: 1, background: '#0056a2', margin: '0 0.4rem' }} />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
               <div
@@ -440,19 +440,19 @@ export default function InstallationSchedulingPage() {
                   width: '22px',
                   height: '22px',
                   borderRadius: '50%',
-                  background: '#0056b3',
-                  color: '#ffffff',
+                  background: 'var(--blue-600)',
+                  color: 'var(--paper)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '0.75rem',
-                  fontWeight: 900,
-                  boxShadow: '0 0 10px rgba(0, 86, 179, 0.35)',
+                  fontWeight: 700,
+                  boxShadow: 'var(--shadow-sm)',
                 }}
               >
                 4
               </div>
-              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0056b3' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0056a2' }}>
                 4. Schedule Installation
               </span>
             </div>
@@ -466,28 +466,28 @@ export default function InstallationSchedulingPage() {
                   width: '24px',
                   height: '24px',
                   borderRadius: '50%',
-                  background: '#0056b3',
-                  color: '#ffffff',
+                  background: 'var(--blue-600)',
+                  color: 'var(--paper)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '0.75rem',
-                  fontWeight: 900,
+                  fontWeight: 700,
                 }}
               >
                 4
               </div>
               <div>
-                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700 }}>STEP 4 OF 4</div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0056b3' }}>Schedule Installation</div>
+                <div style={{ fontSize: '0.75rem', color: '#52627a', fontWeight: 700 }}>STEP 4 OF 4</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0056a2' }}>Schedule Installation</div>
               </div>
             </div>
             <div
               style={{
-                background: '#dcfce7',
-                color: '#15803d',
-                fontSize: '0.72rem',
-                fontWeight: 800,
+                background: 'var(--green-100)',
+                color: 'var(--green-700)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
                 padding: '0.2rem 0.55rem',
                 borderRadius: '9999px',
               }}
@@ -504,11 +504,11 @@ export default function InstallationSchedulingPage() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.35 }}
             style={{
-              background: '#ffffff',
+              background: 'var(--paper)',
               borderRadius: '20px',
               padding: 'clamp(1.5rem, 4vw, 3rem)',
-              boxShadow: '0 20px 50px rgba(0, 86, 179, 0.08)',
-              border: '1px solid #e2e8f0',
+              boxShadow: 'var(--shadow-xl)',
+              border: '1px solid var(--grey-200)',
               maxWidth: '720px',
               margin: '0 auto',
               boxSizing: 'border-box',
@@ -517,9 +517,9 @@ export default function InstallationSchedulingPage() {
             <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
               <div
                 style={{
-                  background: '#dcfce7',
-                  color: '#16a34a',
-                  border: '2px solid #16a34a',
+                  background: 'var(--green-100)',
+                  color: 'var(--green-700)',
+                  border: '2px solid var(--green-700)',
                   width: '60px',
                   height: '60px',
                   borderRadius: '50%',
@@ -527,7 +527,7 @@ export default function InstallationSchedulingPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 1rem auto',
-                  boxShadow: '0 0 24px rgba(22, 163, 74, 0.2)',
+                  boxShadow: 'var(--shadow-lg)',
                 }}
               >
                 <FiCheckCircle size={32} />
@@ -535,10 +535,10 @@ export default function InstallationSchedulingPage() {
               <span
                 style={{
                   fontSize: '0.75rem',
-                  fontWeight: 800,
-                  color: '#16a34a',
+                  fontWeight: 700,
+                  color: 'var(--green-700)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: '0.06em',
                 }}
               >
                 Appointment Confirmed
@@ -546,15 +546,15 @@ export default function InstallationSchedulingPage() {
               <h2
                 style={{
                   fontSize: 'clamp(1.25rem, 4vw, 1.6rem)',
-                  fontWeight: 900,
-                  color: '#0f172a',
+                  fontWeight: 700,
+                  color: 'var(--grey-900)',
                   marginTop: '0.35rem',
                   letterSpacing: '-0.02em',
                 }}
               >
                 Physical Installation Scheduled
               </h2>
-              <p style={{ color: '#64748b', fontSize: '0.88rem', marginTop: '0.35rem' }}>
+              <p style={{ color: '#52627a', fontSize: '0.88rem', marginTop: '0.35rem' }}>
                 Your installation work order has been queued with the OPMC Field Operations Unit.
               </p>
             </div>
@@ -562,9 +562,9 @@ export default function InstallationSchedulingPage() {
             {/* Reference Box */}
             <div
               style={{
-                background: '#f0f9ff',
-                border: '1.5px dashed #0284c7',
-                borderRadius: '16px',
+                background: 'var(--blue-50)',
+                border: '1px solid var(--blue-200)',
+                borderRadius: 'var(--radius-lg)',
                 padding: '1.25rem clamp(0.75rem, 3vw, 1.25rem)',
                 marginBottom: '1.5rem',
                 textAlign: 'center',
@@ -573,11 +573,11 @@ export default function InstallationSchedulingPage() {
             >
               <span
                 style={{
-                  fontSize: '0.72rem',
-                  fontWeight: 800,
-                  color: '#0284c7',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: 'var(--blue-500)',
                   textTransform: 'uppercase',
-                  letterSpacing: '1px',
+                  letterSpacing: '0.06em',
                 }}
               >
                 Application Reference Number
@@ -585,9 +585,9 @@ export default function InstallationSchedulingPage() {
               <div
                 style={{
                   fontSize: 'clamp(1.3rem, 5vw, 1.8rem)',
-                  fontWeight: 900,
-                  color: '#0056b3',
-                  letterSpacing: '1.5px',
+                  fontWeight: 700,
+                  color: 'var(--blue-600)',
+                  letterSpacing: '0.06em',
                   margin: '0.35rem 0',
                   wordBreak: 'break-all',
                 }}
@@ -599,13 +599,13 @@ export default function InstallationSchedulingPage() {
                 type="button"
                 onClick={handleCopyRef}
                 style={{
-                  background: copiedRef ? '#dcfce7' : '#ffffff',
-                  border: `1px solid ${copiedRef ? '#86efac' : '#cbd5e1'}`,
-                  color: copiedRef ? '#15803d' : '#0056b3',
+                  background: copiedRef ? '#e2f4e3' : '#ffffff',
+                  border: `1px solid ${copiedRef ? '#9bd89a' : '#c3ccd9'}`,
+                  color: copiedRef ? '#0f7a4d' : '#0056a2',
                   padding: '0.4rem 0.9rem',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius)',
                   fontSize: '0.8rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -629,9 +629,9 @@ export default function InstallationSchedulingPage() {
             >
               <div
                 style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
+                  background: 'var(--grey-50)',
+                  border: '1px solid var(--grey-200)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1rem',
                 }}
               >
@@ -640,28 +640,28 @@ export default function InstallationSchedulingPage() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.45rem',
-                    color: '#0056b3',
+                    color: 'var(--blue-600)',
                     marginBottom: '0.35rem',
                   }}
                 >
                   <FiCalendar size={16} />
-                  <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
                     Visit Date & Slot
                   </span>
                 </div>
-                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#131f33' }}>
                   {bookedConfirmation.appointmentDate}
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.15rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#52627a', marginTop: '0.15rem' }}>
                   {bookedConfirmation.appointmentSlot}
                 </div>
               </div>
 
               <div
                 style={{
-                  background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
+                  background: 'var(--grey-50)',
+                  border: '1px solid var(--grey-200)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1rem',
                 }}
               >
@@ -670,19 +670,19 @@ export default function InstallationSchedulingPage() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.45rem',
-                    color: '#16a34a',
+                    color: 'var(--blue-600)',
                     marginBottom: '0.35rem',
                   }}
                 >
                   <FiMapPin size={16} />
-                  <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
                     OPMC Dispatch ID
                   </span>
                 </div>
-                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#131f33' }}>
                   {bookedConfirmation.opmcDispatchId}
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.15rem' }}>
+                <div style={{ fontSize: '0.82rem', color: '#52627a', marginTop: '0.15rem' }}>
                   {installCity}
                 </div>
               </div>
@@ -693,18 +693,18 @@ export default function InstallationSchedulingPage() {
               style={{
                 background: 'rgba(0, 102, 204, 0.06)',
                 border: '1px solid rgba(0, 102, 204, 0.2)',
-                borderRadius: '12px',
+                borderRadius: 'var(--radius-lg)',
                 padding: '1rem',
                 marginBottom: '1.75rem',
                 fontSize: '0.84rem',
-                color: '#1e293b',
+                color: 'var(--grey-800)',
                 lineHeight: 1.55,
                 display: 'flex',
                 gap: '0.75rem',
                 alignItems: 'flex-start',
               }}
             >
-              <FiInfo size={18} style={{ color: '#0056b3', flexShrink: 0, marginTop: '2px' }} />
+              <FiInfo size={18} style={{ color: '#0056a2', flexShrink: 0, marginTop: '2px' }} />
               <div>
                 <strong>Next Step:</strong> You can safely close your browser. When the technician completes the optical fibre wiring and testing, open your <strong>Profile → My Applications</strong> to sign off and submit your installation feedback.
               </div>
@@ -716,19 +716,19 @@ export default function InstallationSchedulingPage() {
               onClick={() => navigate('/profile')}
               style={{
                 width: '100%',
-                background: 'linear-gradient(90deg, #0056b3 0%, #0077ee 100%)',
-                color: '#ffffff',
+                background: 'var(--blue-600)',
+                color: 'var(--paper)',
                 border: 'none',
-                borderRadius: '12px',
+                borderRadius: 'var(--radius-lg)',
                 padding: '0.95rem',
-                fontWeight: 900,
+                fontWeight: 700,
                 fontSize: '0.95rem',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.5rem',
-                boxShadow: '0 4px 16px rgba(0, 86, 179, 0.25)',
+                boxShadow: 'var(--shadow-md)',
               }}
             >
               <FiUser size={16} /> Return to My Profile & Applications
@@ -744,11 +744,11 @@ export default function InstallationSchedulingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
               style={{
-                background: '#ffffff',
+                background: 'var(--paper)',
                 borderRadius: '20px',
                 padding: 'clamp(1.15rem, 3vw, 2rem)',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 10px 30px rgba(0, 86, 179, 0.05)',
+                border: '1px solid var(--grey-200)',
+                boxShadow: 'var(--shadow-lg)',
                 width: '100%',
                 boxSizing: 'border-box',
                 minWidth: 0,
@@ -759,8 +759,8 @@ export default function InstallationSchedulingPage() {
                 <h1
                   style={{
                     fontSize: 'clamp(1.15rem, 3vw, 1.35rem)',
-                    fontWeight: 900,
-                    color: '#0f172a',
+                    fontWeight: 700,
+                    color: 'var(--grey-900)',
                     letterSpacing: '-0.02em',
                     margin: 0,
                     lineHeight: 1.3,
@@ -768,7 +768,7 @@ export default function InstallationSchedulingPage() {
                 >
                   Schedule Installation Date & Time
                 </h1>
-                <p style={{ color: '#64748b', fontSize: '0.84rem', marginTop: '0.35rem', margin: '0.35rem 0 0 0' }}>
+                <p style={{ color: '#52627a', fontSize: '0.84rem', marginTop: '0.35rem', margin: '0.35rem 0 0 0' }}>
                   Select your preferred date and arrival window for the optical fibre technician visit.
                 </p>
               </div>
@@ -776,11 +776,11 @@ export default function InstallationSchedulingPage() {
               {/* Section 1: Select Installation Date (10-Day Carousel) */}
               <div
                 style={{
-                  border: '1.5px solid #e2e8f0',
-                  borderRadius: '16px',
+                  border: '1.5px solid var(--grey-200)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1rem clamp(0.5rem, 2vw, 0.85rem)',
                   marginBottom: '1.25rem',
-                  background: '#f8fafc',
+                  background: 'var(--grey-50)',
                   width: '100%',
                   boxSizing: 'border-box',
                   minWidth: 0,
@@ -789,8 +789,8 @@ export default function InstallationSchedulingPage() {
                 <div
                   style={{
                     fontSize: '0.9rem',
-                    fontWeight: 800,
-                    color: '#0f172a',
+                    fontWeight: 700,
+                    color: 'var(--grey-900)',
                     marginBottom: '0.75rem',
                     letterSpacing: '-0.01em',
                   }}
@@ -804,18 +804,18 @@ export default function InstallationSchedulingPage() {
                     type="button"
                     onClick={() => scrollDates('left')}
                     style={{
-                      background: '#ffffff',
-                      border: '1.5px solid #cbd5e1',
-                      color: '#334155',
+                      background: 'var(--paper)',
+                      border: '1.5px solid var(--grey-300)',
+                      color: 'var(--grey-800)',
                       width: '32px',
                       height: '74px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--radius)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
                       flexShrink: 0,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                      boxShadow: 'var(--shadow-xs)',
                       transition: 'all 0.15s ease',
                     }}
                     aria-label="Previous dates"
@@ -836,10 +836,10 @@ export default function InstallationSchedulingPage() {
                             flex: '0 0 76px',
                             minWidth: '76px',
                             height: '74px',
-                            borderRadius: '12px',
-                            border: isSelected ? 'none' : '1.5px solid #cbd5e1',
-                            background: isSelected ? '#0056b3' : '#ffffff',
-                            color: isSelected ? '#ffffff' : '#0f172a',
+                            borderRadius: 'var(--radius-lg)',
+                            border: isSelected ? 'none' : '1.5px solid #c3ccd9',
+                            background: isSelected ? '#0056a2' : '#ffffff',
+                            color: isSelected ? '#ffffff' : '#131f33',
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
@@ -859,10 +859,10 @@ export default function InstallationSchedulingPage() {
                               style={{
                                 position: 'absolute',
                                 top: '-7px',
-                                background: isSelected ? '#22c55e' : '#0284c7',
-                                color: '#ffffff',
-                                fontSize: '0.58rem',
-                                fontWeight: 900,
+                                background: isSelected ? '#22c55e' : '#1a6cbd',
+                                color: 'var(--paper)',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
                                 padding: '0.1rem 0.35rem',
                                 borderRadius: '9999px',
                                 textTransform: 'uppercase',
@@ -875,9 +875,9 @@ export default function InstallationSchedulingPage() {
 
                           <span
                             style={{
-                              fontSize: '0.68rem',
-                              fontWeight: 800,
-                              color: isSelected ? 'rgba(255, 255, 255, 0.85)' : '#64748b',
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              color: isSelected ? 'rgba(255, 255, 255, 0.85)' : '#52627a',
                               letterSpacing: '0.5px',
                             }}
                           >
@@ -886,18 +886,18 @@ export default function InstallationSchedulingPage() {
                           <span
                             style={{
                               fontSize: '1.25rem',
-                              fontWeight: 900,
+                              fontWeight: 700,
                               lineHeight: 1.1,
                               margin: '0.05rem 0',
-                              color: isSelected ? '#ffffff' : '#0f172a',
+                              color: isSelected ? '#ffffff' : '#131f33',
                             }}
                           >
                             {d.dayNumber}
                           </span>
                           <span
                             style={{
-                              fontSize: '0.68rem',
-                              color: isSelected ? '#ffffff' : d.isWeekend ? '#2563eb' : '#94a3b8',
+                              fontSize: '0.75rem',
+                              color: isSelected ? '#ffffff' : d.isWeekend ? '#0056a2' : '#94a1b5',
                               fontWeight: 700,
                             }}
                           >
@@ -913,18 +913,18 @@ export default function InstallationSchedulingPage() {
                     type="button"
                     onClick={() => scrollDates('right')}
                     style={{
-                      background: '#ffffff',
-                      border: '1.5px solid #cbd5e1',
-                      color: '#334155',
+                      background: 'var(--paper)',
+                      border: '1.5px solid var(--grey-300)',
+                      color: 'var(--grey-800)',
                       width: '32px',
                       height: '74px',
-                      borderRadius: '10px',
+                      borderRadius: 'var(--radius)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
                       flexShrink: 0,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                      boxShadow: 'var(--shadow-xs)',
                       transition: 'all 0.15s ease',
                     }}
                     aria-label="Next dates"
@@ -937,11 +937,11 @@ export default function InstallationSchedulingPage() {
               {/* Section 2: Select Time Slot (3 Slots) */}
               <div
                 style={{
-                  border: '1.5px solid #e2e8f0',
-                  borderRadius: '16px',
+                  border: '1.5px solid var(--grey-200)',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1rem clamp(0.5rem, 2vw, 0.85rem)',
                   marginBottom: '1.25rem',
-                  background: '#f8fafc',
+                  background: 'var(--grey-50)',
                   width: '100%',
                   boxSizing: 'border-box',
                 }}
@@ -949,8 +949,8 @@ export default function InstallationSchedulingPage() {
                 <div
                   style={{
                     fontSize: '0.9rem',
-                    fontWeight: 800,
-                    color: '#0f172a',
+                    fontWeight: 700,
+                    color: 'var(--grey-900)',
                     marginBottom: '0.75rem',
                     letterSpacing: '-0.01em',
                   }}
@@ -971,15 +971,15 @@ export default function InstallationSchedulingPage() {
                         className="isp-slot-btn"
                         style={{
                           border: isSelected
-                            ? '2px solid #0056b3'
+                            ? '2px solid #0056a2'
                             : slot.available
-                            ? '1.5px solid #cbd5e1'
-                            : '1.5px solid #e2e8f0',
+                            ? '1.5px solid #c3ccd9'
+                            : '1.5px solid #dfe5ee',
                           background: isSelected
-                            ? '#eff6ff'
+                            ? '#f1f7fd'
                             : slot.available
                             ? '#ffffff'
-                            : '#f8fafc',
+                            : '#f6f8fb',
                           opacity: slot.available ? 1 : 0.45,
                           cursor: slot.available ? 'pointer' : 'not-allowed',
                           boxShadow: isSelected ? '0 2px 8px rgba(0, 86, 179, 0.12)' : 'none',
@@ -989,9 +989,9 @@ export default function InstallationSchedulingPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                           <span
                             style={{
-                              fontWeight: 800,
+                              fontWeight: 700,
                               fontSize: '0.9rem',
-                              color: isSelected ? '#0056b3' : '#0f172a',
+                              color: isSelected ? '#0056a2' : '#131f33',
                               minWidth: '60px',
                               textAlign: 'left',
                             }}
@@ -1003,7 +1003,7 @@ export default function InstallationSchedulingPage() {
                             style={{
                               fontSize: '0.84rem',
                               fontWeight: 700,
-                              color: slot.available ? '#475569' : '#94a3b8',
+                              color: slot.available ? '#3b4a61' : '#94a1b5',
                             }}
                           >
                             {slot.timeRange}
@@ -1015,11 +1015,11 @@ export default function InstallationSchedulingPage() {
                           {slot.available ? (
                             <span
                               style={{
-                                fontSize: '0.72rem',
-                                fontWeight: 800,
-                                color: '#047857',
-                                background: '#ecfdf5',
-                                border: '1px solid #a7f3d0',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                color: 'var(--green-700)',
+                                background: 'var(--green-50)',
+                                border: '1px solid var(--green-200)',
                                 padding: '0.15rem 0.55rem',
                                 borderRadius: '9999px',
                               }}
@@ -1029,11 +1029,11 @@ export default function InstallationSchedulingPage() {
                           ) : (
                             <span
                               style={{
-                                fontSize: '0.72rem',
-                                fontWeight: 800,
-                                color: '#b91c1c',
-                                background: '#fef2f2',
-                                border: '1px solid #fecaca',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                color: 'var(--red-700)',
+                                background: 'var(--red-50)',
+                                border: '1px solid var(--red-200)',
                                 padding: '0.15rem 0.55rem',
                                 borderRadius: '9999px',
                               }}
@@ -1049,8 +1049,8 @@ export default function InstallationSchedulingPage() {
                                 width: '16px',
                                 height: '16px',
                                 borderRadius: '50%',
-                                border: isSelected ? '5px solid #0056b3' : '2px solid #cbd5e1',
-                                background: '#ffffff',
+                                border: isSelected ? '5px solid #0056a2' : '2px solid #c3ccd9',
+                                background: 'var(--paper)',
                                 transition: 'all 0.15s ease',
                                 flexShrink: 0,
                               }}
@@ -1070,7 +1070,7 @@ export default function InstallationSchedulingPage() {
                     display: 'block',
                     fontSize: '0.84rem',
                     fontWeight: 700,
-                    color: '#334155',
+                    color: 'var(--grey-800)',
                     marginBottom: '0.4rem',
                   }}
                 >
@@ -1085,18 +1085,18 @@ export default function InstallationSchedulingPage() {
                     style={{
                       width: '100%',
                       padding: '0.65rem 0.85rem 0.65rem 2.2rem',
-                      borderRadius: '10px',
-                      border: '1.5px solid #cbd5e1',
+                      borderRadius: 'var(--radius)',
+                      border: '1.5px solid var(--grey-300)',
                       fontSize: '0.85rem',
-                      color: '#0f172a',
-                      background: '#ffffff',
+                      color: 'var(--grey-900)',
+                      background: 'var(--paper)',
                       boxSizing: 'border-box',
                       resize: 'none',
                     }}
                   />
                   <FiMessageSquare
                     size={15}
-                    color="#94a3b8"
+                    color="#94a1b5"
                     style={{ position: 'absolute', top: '12px', left: '10px' }}
                   />
                 </div>
@@ -1109,12 +1109,12 @@ export default function InstallationSchedulingPage() {
                 onClick={handleBook}
                 style={{
                   width: '100%',
-                  background: 'linear-gradient(90deg, #0056b3 0%, #0077ee 100%)',
-                  color: '#ffffff',
+                  background: 'var(--blue-600)',
+                  color: 'var(--paper)',
                   border: 'none',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-lg)',
                   padding: '1rem 1.25rem',
-                  fontWeight: 900,
+                  fontWeight: 700,
                   fontSize: 'clamp(0.92rem, 2.5vw, 1.02rem)',
                   letterSpacing: '0.2px',
                   cursor: isBooking ? 'not-allowed' : 'pointer',
@@ -1122,7 +1122,7 @@ export default function InstallationSchedulingPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.6rem',
-                  boxShadow: '0 8px 24px rgba(0, 86, 179, 0.35)',
+                  boxShadow: 'var(--shadow-lg)',
                   opacity: isBooking ? 0.75 : 1,
                   transition: 'all 0.15s ease',
                   boxSizing: 'border-box',
@@ -1139,11 +1139,11 @@ export default function InstallationSchedulingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
               style={{
-                background: '#ffffff',
+                background: 'var(--paper)',
                 borderRadius: '20px',
                 padding: 'clamp(1.15rem, 3vw, 1.75rem)',
-                border: '1px solid #e2e8f0',
-                boxShadow: '0 10px 30px rgba(0, 86, 179, 0.05)',
+                border: '1px solid var(--grey-200)',
+                boxShadow: 'var(--shadow-lg)',
                 width: '100%',
                 boxSizing: 'border-box',
                 minWidth: 0,
@@ -1155,15 +1155,15 @@ export default function InstallationSchedulingPage() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   paddingBottom: '0.85rem',
-                  borderBottom: '1.5px solid #f1f5f9',
+                  borderBottom: '1.5px solid var(--grey-100)',
                   marginBottom: '1.15rem',
                 }}
               >
                 <h2
                   style={{
                     fontSize: '1.05rem',
-                    fontWeight: 900,
-                    color: '#0f172a',
+                    fontWeight: 700,
+                    color: 'var(--grey-900)',
                     margin: 0,
                   }}
                 >
@@ -1171,11 +1171,11 @@ export default function InstallationSchedulingPage() {
                 </h2>
                 <span
                   style={{
-                    background: '#ecfdf5',
-                    color: '#047857',
-                    border: '1px solid #a7f3d0',
-                    fontSize: '0.72rem',
-                    fontWeight: 800,
+                    background: 'var(--green-50)',
+                    color: 'var(--green-700)',
+                    border: '1px solid var(--green-200)',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
                     padding: '0.15rem 0.55rem',
                     borderRadius: '9999px',
                   }}
@@ -1186,26 +1186,26 @@ export default function InstallationSchedulingPage() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem', fontSize: '0.88rem' }}>
                 {/* Package */}
-                <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ background: '#f6f8fb', padding: '0.85rem 1rem', borderRadius: 'var(--radius-lg)', border: '1px solid #dfe5ee' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#52627a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Selected Package
                   </div>
-                  <div style={{ fontSize: '1.02rem', fontWeight: 900, color: '#0056b3', marginTop: '0.2rem' }}>
+                  <div style={{ fontSize: '1.02rem', fontWeight: 700, color: '#0056a2', marginTop: '0.2rem' }}>
                     {packageName}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 700, marginTop: '0.15rem' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#0f7a4d', fontWeight: 700, marginTop: '0.15rem' }}>
                     ⚡ High-Speed Fibre Connection
                   </div>
                 </div>
 
                 {/* Reference Number */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
-                  <FiFileText size={18} color="#0056b3" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <FiFileText size={18} color="#0056a2" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <div>
-                    <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#52627a', textTransform: 'uppercase' }}>
                       Application Ref No
                     </div>
-                    <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a', marginTop: '0.15rem' }}>
+                    <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#131f33', marginTop: '0.15rem' }}>
                       {referenceNumber}
                     </div>
                   </div>
@@ -1213,12 +1213,12 @@ export default function InstallationSchedulingPage() {
 
                 {/* Installation Address */}
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.65rem' }}>
-                  <FiMapPin size={18} color="#16a34a" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <FiMapPin size={18} color="#0f7a4d" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <div>
-                    <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#52627a', textTransform: 'uppercase' }}>
                       Installation Premises
                     </div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', marginTop: '0.15rem' }}>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#131f33', marginTop: '0.15rem' }}>
                       {installAddress}
                     </div>
                   </div>
@@ -1228,7 +1228,7 @@ export default function InstallationSchedulingPage() {
                 <div
                   style={{
                     background: 'rgba(0, 102, 204, 0.05)',
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-lg)',
                     padding: '0.85rem 0.95rem',
                     border: '1px solid rgba(0, 102, 204, 0.2)',
                     display: 'flex',
@@ -1236,9 +1236,9 @@ export default function InstallationSchedulingPage() {
                     gap: '0.65rem',
                   }}
                 >
-                  <FiShield size={20} color="#0056b3" style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div style={{ fontSize: '0.8rem', color: '#334155', lineHeight: 1.45 }}>
-                    <strong style={{ color: '#0056b3', display: 'block', marginBottom: '0.15rem' }}>
+                  <FiShield size={20} color="#0056a2" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div style={{ fontSize: '0.8rem', color: '#26344b', lineHeight: 1.45 }}>
+                    <strong style={{ color: '#0056a2', display: 'block', marginBottom: '0.15rem' }}>
                       Certified SLT Technical Operations
                     </strong>
                     Physical cabling, optical splice validation, and Wi-Fi ONT testing included.
@@ -1252,13 +1252,13 @@ export default function InstallationSchedulingPage() {
                     alignItems: 'center',
                     gap: '0.5rem',
                     fontSize: '0.82rem',
-                    color: '#64748b',
+                    color: 'var(--grey-600)',
                     paddingTop: '0.5rem',
-                    borderTop: '1px solid #f1f5f9',
+                    borderTop: '1px solid var(--grey-100)',
                   }}
                 >
-                  <FiHeadphones size={15} color="#0056b3" />
-                  <span>24/7 SLT Support Hotline: <strong style={{ color: '#0056b3' }}>1212</strong></span>
+                  <FiHeadphones size={15} color="#0056a2" />
+                  <span>24/7 SLT Support Hotline: <strong style={{ color: '#0056a2' }}>1212</strong></span>
                 </div>
               </div>
             </motion.div>

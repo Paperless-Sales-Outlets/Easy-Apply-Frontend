@@ -7,11 +7,11 @@ import WizardStepHeader from '../../components/wizard/WizardStepHeader';
 import api from '../../../shared/utils/api';
 
 const cardStyle = {
-  backgroundColor: '#ffffff',
-  borderRadius: '16px',
-  border: '1px solid #e2e8f0',
+  backgroundColor: 'var(--paper)',
+  borderRadius: 'var(--radius-lg)',
+  border: '1px solid var(--grey-200)',
   padding: '1.5rem',
-  boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+  boxShadow: 'var(--shadow-md)',
 };
 
 // The consent wording lives in ConsentHub (CMS) in EN / SI / TA; show the customer's language, English as the fallback.
@@ -20,9 +20,6 @@ const consentText = (consent, language) => {
   return texts[String(language || 'en').slice(0, 2).toUpperCase()] || texts.EN || Object.values(texts)[0] || {};
 };
 
-const metaStyle = { display: 'flex', flexWrap: 'wrap', gap: '0.5rem 2rem', marginTop: '0.85rem' };
-const metaLabel = { display: 'block', fontSize: '0.75rem', color: '#64748b' };
-const metaValue = { display: 'block', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' };
 
 const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) => {
   const { t, i18n } = useTranslation();
@@ -105,9 +102,9 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
           <FiFileText size={20} style={{ color: 'var(--slt-blue)' }} />
-          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', fontWeight: 800 }}>Declaration</h3>
+          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#131f33', fontWeight: 700 }}>Declaration</h3>
         </div>
-        <div style={{ ...cardStyle, fontSize: '0.92rem', lineHeight: 1.6, color: '#334155' }}>
+        <div style={{ ...cardStyle, fontSize: '0.92rem', lineHeight: 1.6, color: '#26344b' }}>
           I, <strong>{applicantName}</strong>, holder of NIC <strong>{formData.nic || '—'}</strong>, confirm that the information and
           documents I have provided in this application are true, accurate and my own. I understand that SLTMOBITEL may reject or
           cancel my application if any information is found to be false.
@@ -118,24 +115,22 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
           <FiCheckSquare size={20} style={{ color: 'var(--slt-blue)' }} />
-          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', fontWeight: 800 }}>Consents</h3>
+          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#131f33', fontWeight: 700 }}>Consents</h3>
         </div>
-        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 0.75rem 0' }}>
+        <p style={{ fontSize: '0.8rem', color: '#52627a', margin: '0 0 0.75rem 0' }}>
           Each consent is a separate checkbox. No checkbox is ticked in advance.
         </p>
 
         {loadState === 'loading' && <div style={cardStyle}>Loading consents…</div>}
         {loadState === 'error' && (
-          <div style={{ ...cardStyle, borderColor: '#ef4444' }}>
-            <p style={{ margin: '0 0 0.75rem 0', color: '#b91c1c' }}>Could not load the consents.</p>
+          <div style={{ ...cardStyle, borderColor: '#d92d20' }}>
+            <p style={{ margin: '0 0 0.75rem 0', color: '#b42318' }}>Could not load the consents.</p>
             <button type="button" className="btn btn-outline" onClick={loadConsents}>Retry</button>
           </div>
         )}
         {loadState === 'ready' && consents.map((consent) => {
           const { title, statement } = consentText(consent, i18n.language);
           const checked = accepted.includes(consent.consentCode);
-          const meta = [['Data', consent.data], ['Action', consent.action], ['Valid for', consent.validFor]]
-            .map(([label, value]) => [label, [].concat(value || []).join(', ')]).filter(([, value]) => value);
           return (
             <label
               key={consent.consentCode}
@@ -148,15 +143,10 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
                 style={{ width: '20px', height: '20px', marginTop: '3px', cursor: 'pointer', accentColor: 'var(--slt-blue)', flexShrink: 0 }}
               />
               <span style={{ flex: 1 }}>
-                <strong style={{ display: 'block', fontSize: '1.05rem', color: '#0f172a' }}>
-                  {title}{consent.isMandatory === 'Y' && <span style={{ color: '#ef4444' }}> *</span>}
+                <strong style={{ display: 'block', fontSize: '1.05rem', color: '#131f33' }}>
+                  {title}{consent.isMandatory === 'Y' && <span style={{ color: '#d92d20' }}> *</span>}
                 </strong>
-                <span style={{ display: 'block', fontSize: '0.92rem', lineHeight: 1.5, color: '#334155', marginTop: '0.25rem' }}>{statement}</span>
-                <span style={metaStyle}>
-                  {meta.map(([label, value]) => (
-                    <span key={label}><span style={metaLabel}>{label}</span><span style={metaValue}>{value}</span></span>
-                  ))}
-                </span>
+                <span style={{ display: 'block', fontSize: '0.92rem', lineHeight: 1.5, color: '#26344b', marginTop: '0.25rem' }}>{statement}</span>
               </span>
             </label>
           );
@@ -167,12 +157,12 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
           <FiEdit3 size={20} style={{ color: 'var(--slt-blue)' }} />
-          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', fontWeight: 800 }}>
-            Signature <span style={{ color: '#ef4444' }}>*</span>
+          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#131f33', fontWeight: 700 }}>
+            Signature <span style={{ color: '#d92d20' }}>*</span>
           </h3>
         </div>
-        <div style={{ ...cardStyle, border: signatureError ? '2px solid #ef4444' : cardStyle.border }}>
-          <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: 0, marginBottom: '1rem' }}>
+        <div style={{ ...cardStyle, border: signatureError ? '2px solid #d92d20' : cardStyle.border }}>
+          <p style={{ fontSize: '0.85rem', color: '#52627a', marginTop: 0, marginBottom: '1rem' }}>
             Sign in the box below. Your signature will be added to your application form, which will be digitally signed and kept as
             your official application record.
           </p>
