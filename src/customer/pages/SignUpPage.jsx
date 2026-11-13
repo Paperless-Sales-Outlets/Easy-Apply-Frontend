@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FiShield, FiX, FiRefreshCw, FiCheck, FiAlertCircle, FiLock } from 'react-icons/fi';
 import './SignUpPage.css';
+import signupBgImage from '../../assets/team_laptop.jpg';
 import api from '../../shared/utils/api';
 import { saveSession } from '../../shared/utils/authSession';
 import IdentityCaptureField from '../components/form/IdentityCaptureField';
@@ -896,6 +897,12 @@ export default function SignUpPage() {
         {/* LEFT SIDEBAR */}
         <div 
           className="signup-sidebar" 
+          style={{ 
+            backgroundImage: `linear-gradient(160deg, rgba(6, 40, 110, 0.95) 0%, rgba(6, 40, 110, 0.88) 40%, rgba(3, 70, 50, 0.95) 100%), url(${signupBgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'no-repeat'
+          }}
         >
           <div className="signup-sidebar-inner">
             <div className="signup-badge">
@@ -1069,7 +1076,7 @@ export default function SignUpPage() {
             {/* STEP 2 FIELDS */}
             {step === 2 && (
               <>
-                <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.88rem', color: '#3b4a61' }}>
+                <p style={{ margin: '0 0 1.25rem 0', fontSize: '0.88rem', color: '#475569' }}>
                   Please upload or photograph the front and back of your National Identity Card (NIC).
                   Our system will automatically fetch your details to save your time.
                 </p>
@@ -1437,21 +1444,21 @@ export default function SignUpPage() {
             <button
               type="button"
               onClick={() => setEmailModalOpen(false)}
-              style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', background: 'none', border: 'none', color: '#52627a', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: 'var(--radius)' }}
+              style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '8px' }}
               aria-label="Close verification dialog"
             >
               <FiX size={20} aria-hidden="true" />
             </button>
 
-            <div style={{ backgroundColor: '#f1f7fd', color: '#0a4b8c', width: '54px', height: '54px', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem auto' }}>
+            <div style={{ backgroundColor: '#eff6ff', color: '#0b4a91', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem auto' }}>
               <IconMail />
             </div>
 
-            <h3 id="email-otp-title" style={{ fontSize: '1.25rem', fontWeight: 700, color: '#131f33', margin: '0 0 0.3rem 0' }}>
+            <h3 id="email-otp-title" style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.3rem 0' }}>
               Verify Your Email Address
             </h3>
             <p id="email-otp-desc" style={{ fontSize: '0.85rem', color: '#5b6472', marginBottom: '1.5rem', fontWeight: 500 }}>
-              Enter the 6-digit code sent to <strong style={{ color: '#131f33' }}>{form.email}</strong>
+              Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>{form.email}</strong>
             </p>
 
             <div role="group" aria-labelledby="email-otp-desc" className="otp-boxes" style={{ justifyContent: 'center', marginBottom: '1rem' }}>
@@ -1477,14 +1484,14 @@ export default function SignUpPage() {
 
             <div role="alert" aria-live="assertive">
               {emailOtpError && (
-                <p style={{ color: '#b42318', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>{emailOtpError}</p>
+                <p style={{ color: '#b91c1c', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>{emailOtpError}</p>
               )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
               {emailResendIn > 0 ? (
                 <span style={{ fontSize: '0.8rem', color: '#5b6472', fontWeight: 600 }} aria-live="polite">
-                  Resend code in <strong style={{ color: '#131f33' }}>{emailResendIn}s</strong>
+                  Resend code in <strong style={{ color: '#0f172a' }}>{emailResendIn}s</strong>
                 </span>
               ) : (
                 <button type="button" className="auth-link-btn" onClick={handleResendEmailOtp} disabled={verifyingEmailOtp}>
@@ -1519,7 +1526,7 @@ export default function SignUpPage() {
               <button
                 type="button"
                 onClick={() => setOtpModalOpen(false)}
-                style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', background: 'none', border: 'none', color: '#52627a', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: 'var(--radius-lg)' }}
+                style={{ position: 'absolute', top: '0.6rem', right: '0.6rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '12px' }}
                 aria-label="Close verification dialog"
               >
                 <FiX size={20} aria-hidden="true" />
@@ -1527,11 +1534,11 @@ export default function SignUpPage() {
 
               <div
                 style={{
-                  backgroundColor: 'var(--green-100)',
-                  color: 'var(--green-700)',
+                  backgroundColor: '#dcfce7',
+                  color: '#16a34a',
                   width: '54px',
                   height: '54px',
-                  borderRadius: 'var(--radius-lg)',
+                  borderRadius: '16px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -1541,11 +1548,11 @@ export default function SignUpPage() {
                 <FiShield size={26} aria-hidden="true" />
               </div>
 
-              <h3 id="otp-dialog-title" style={{ fontSize: '1.25rem', fontWeight: 700, color: '#131f33', margin: '0 0 0.3rem 0' }}>
+              <h3 id="otp-dialog-title" style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: '0 0 0.3rem 0' }}>
                 Verify Your Mobile Number
               </h3>
               <p id="otp-dialog-desc" style={{ fontSize: '0.85rem', color: '#5b6472', marginBottom: '1.25rem', fontWeight: 500 }}>
-                Enter the 6-digit code sent to <strong style={{ color: '#131f33' }}>+94 {normalisedPhone()}</strong>
+                Enter the 6-digit code sent to <strong style={{ color: '#0f172a' }}>+94 {normalisedPhone()}</strong>
               </p>
 
               {/* 15-Minute Lockout Display */}
@@ -1557,7 +1564,7 @@ export default function SignUpPage() {
                     border: '1.5px solid #fecdd3',
                     color: '#be123c',
                     padding: '0.85rem 1rem',
-                    borderRadius: 'var(--radius-lg)',
+                    borderRadius: '12px',
                     marginBottom: '1rem',
                     textAlign: 'center',
                     fontWeight: 600,
@@ -1568,7 +1575,7 @@ export default function SignUpPage() {
                     <FiLock size={16} />
                     <span>Too many incorrect OTP attempts. OTP verification is locked for 15 minutes.</span>
                   </div>
-                  <div style={{ color: '#9f1239', fontWeight: 700, fontSize: '0.95rem' }}>
+                  <div style={{ color: '#9f1239', fontWeight: 800, fontSize: '0.95rem' }}>
                     OTP verification locked. Try again in {formatTimer(lockoutIn)}
                   </div>
                 </div>
@@ -1577,7 +1584,7 @@ export default function SignUpPage() {
               {/* 5-Minute Expiry Countdown Display */}
               {!isLockedOut && (
                 <div style={{ marginBottom: '1rem', fontSize: '0.85rem' }}>
-                  <span style={{ color: '#0a4b8c', fontWeight: 700 }}>OTP expires in {formatTimer(otpExpiresIn)}</span>
+                  <span style={{ color: '#0369a1', fontWeight: 700 }}>OTP expires in {formatTimer(otpExpiresIn)}</span>
                 </div>
               )}
 
@@ -1609,7 +1616,7 @@ export default function SignUpPage() {
 
               <div role="alert" aria-live="assertive">
                 {otpError && (
-                  <p style={{ color: '#b42318', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>
+                  <p style={{ color: '#b91c1c', fontSize: '0.82rem', marginBottom: '1rem', fontWeight: 700 }}>
                     {otpError}
                   </p>
                 )}
