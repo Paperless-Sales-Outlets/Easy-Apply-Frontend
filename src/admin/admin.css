@@ -4621,6 +4621,23 @@ select.um-input.invalid {
   animation: um-field-error-in 0.15s ease;
 }
 
+/* `.um-field span` styles field labels (small grey capitals) and, being more
+   specific, used to restyle these too — errors came out grey and in capitals. */
+.um-field .um-field-error {
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--danger);
+}
+.um-field .um-field-hint {
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--muted);
+}
+
 .um-field-error::before {
   content: '!';
   display: inline-flex;
@@ -9498,7 +9515,9 @@ span.alog-caret { cursor: inherit; }
   color: var(--navy);
 }
 
-.admin-modal-body {
+/* Passkey popup only: as a global `.admin-modal-body` rule it turned every
+   popup body into a flex column, which shrank centred forms to their content. */
+.passkey-modal .admin-modal-body {
   padding: 1.4rem 1.6rem;
   display: flex;
   flex-direction: column;
