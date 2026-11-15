@@ -102,7 +102,7 @@ export const normalizeBackendProduct = (p) => {
     productName: p.productName || p.name || 'SLTMobitel Connection',
     monthlyPrice: p.monthlyPrice !== undefined ? p.monthlyPrice : (p.price || 0),
     price: p.price !== undefined ? p.price : (p.monthlyPrice || 0),
-    installationFee: p.installationFee !== undefined ? p.installationFee : 2500,
+    installationFee: p.installationFee !== undefined ? Number(p.installationFee) : 0,
     category: normalizedCat,
     speed: p.speed || (catLower.includes('voice') ? 'Voice' : catLower.includes('peo') ? 'HD TV' : '100 Mbps'),
     features: (Array.isArray(p.features) && p.features.length > 0)
@@ -297,7 +297,7 @@ export const addToCart = async (productOrId, quantity = 1) => {
       name: prodObj.name || prodObj.productName || 'SLTMobitel Package',
       monthlyPrice: itemPrice,
       price: itemPrice,
-      installationFee: prodObj.installationFee !== undefined ? prodObj.installationFee : 2500,
+      installationFee: prodObj.installationFee !== undefined ? Number(prodObj.installationFee) : 0,
       speed: prodObj.speed || 'HD TV',
       category: prodObj.category || 'PEO TV',
       popular: !!prodObj.popular,
@@ -325,20 +325,48 @@ export const addToCart = async (productOrId, quantity = 1) => {
  * Get current user cart details
  */
 export const getCart = async () => {
+  const localItems = getLocalCart();
   try {
     const response = await api.get('/cart', getCartConfig());
     const cartRes = response.data?.data || response.data?.cart || response.data || {};
     const apiItems = cartRes.items || [];
     
     if (apiItems.length > 0) {
-      saveLocalCart(apiItems);
-      return response.data;
+      const enrichedItems = apiItems.map((apiItem) => {
+        const localMatch = localItems.find(
+          (li) => (li.productId || li.id || li._id) === (apiItem.productId || apiItem.id || apiItem._id)
+        );
+        return {
+          ...apiItem,
+          name: apiItem.productName || apiItem.name || localMatch?.name || 'SLTMobitel Connection',
+          productName: apiItem.productName || localMatch?.productName || 'SLTMobitel Connection',
+          monthlyPrice: apiItem.price !== undefined ? apiItem.price : (apiItem.monthlyPrice !== undefined ? apiItem.monthlyPrice : (localMatch?.monthlyPrice || 0)),
+          price: apiItem.price !== undefined ? apiItem.price : (apiItem.monthlyPrice !== undefined ? apiItem.monthlyPrice : (localMatch?.price || 0)),
+          installationFee: apiItem.installationFee !== undefined
+            ? Number(apiItem.installationFee)
+            : (localMatch?.installationFee !== undefined ? Number(localMatch.installationFee) : 0),
+          category: apiItem.category || localMatch?.category || 'Broadband',
+          speed: apiItem.speed || localMatch?.speed || '',
+          features: apiItem.features || localMatch?.features || [],
+        };
+      });
+      saveLocalCart(enrichedItems);
+      return {
+        ...response.data,
+        data: {
+          ...cartRes,
+          items: enrichedItems,
+        },
+        cart: {
+          ...cartRes,
+          items: enrichedItems,
+        },
+      };
     }
   } catch (err) {
     console.warn('Backend getCart failed, using local cart fallback:', err.message);
   }
 
-  const localItems = getLocalCart();
   return {
     success: true,
     data: {

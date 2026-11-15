@@ -59,7 +59,7 @@ export default function ProductDetailsPanel({
     productName,
     monthlyPrice: rawMonthlyPrice,
     price,
-    installationFee = 1500,
+    installationFee = 0,
     description,
     features: rawFeatures = [],
     popular = false,
@@ -286,7 +286,7 @@ export default function ProductDetailsPanel({
                   <span style={{ fontSize: '0.9rem', color: '#52627a', fontWeight: 700 }}>/month</span>
                 </div>
                 <div style={{ fontSize: '0.8rem', color: '#52627a', marginTop: '0.2rem', fontWeight: 600 }}>
-                  Installation Fee: Rs. {installationFee ? installationFee.toLocaleString() : '1,500'} (One-time)
+                  Installation Fee: {Number(installationFee) === 0 ? <strong style={{ color: '#0f7a4d' }}>Free</strong> : <strong>Rs. {Number(installationFee).toLocaleString()}</strong>} (One-time)
                 </div>
               </div>
 

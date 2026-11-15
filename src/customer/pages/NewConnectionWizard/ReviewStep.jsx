@@ -34,7 +34,7 @@ const Thumb = ({ src, label }) => src ? (
 
 /** Read-only summary of everything collected and paid, shown before final submission to tracking. */
 export default function ReviewStep({ formData, selectedProduct, goTo, onEditCart }) {
-  const fee = selectedProduct?.installationFee ?? 2500;
+  const fee = selectedProduct?.installationFee !== undefined ? Number(selectedProduct.installationFee) : 0;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <WizardStepHeader 
@@ -53,7 +53,7 @@ export default function ReviewStep({ formData, selectedProduct, goTo, onEditCart
         <Row label="Product" value={selectedProduct?.productName} />
         <Row label="Monthly" value={selectedProduct?.monthlyPrice != null && `Rs. ${Number(selectedProduct.monthlyPrice).toLocaleString()}`} />
         <Row label="Quantity" value={selectedProduct?.quantity || 1} />
-        <Row label="Installation Fee" value={`Rs. ${Number(fee).toLocaleString()}`} />
+        <Row label="Installation Fee" value={fee === 0 ? 'Free (Promotion)' : `Rs. ${fee.toLocaleString()}`} />
       </Section>
 
       <Section title="Installation Location" onEdit={() => goTo('location')}>
