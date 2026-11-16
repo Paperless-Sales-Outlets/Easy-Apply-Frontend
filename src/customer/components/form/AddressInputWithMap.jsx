@@ -99,10 +99,49 @@ export default function AddressInputWithMap({
     }
   };
 
+  const geocodeTimerRef = useRef(null);
+
+  const forwardGeocodeText = async (text) => {
+    if (!text || text.trim().length < 4) return;
+    try {
+      if (window.google?.maps?.Geocoder) {
+        const geocoder = new window.google.maps.Geocoder();
+        const res = await new Promise((resolve) => {
+          geocoder.geocode({ address: `${text}, Sri Lanka` }, (results, status) => {
+            if (status === 'OK' && results && results[0]) resolve(results[0]);
+            else resolve(null);
+          });
+        });
+        if (res?.geometry?.location) {
+          const coords = { lat: res.geometry.location.lat(), lng: res.geometry.location.lng() };
+          setCurrentCoords(coords);
+          if (onLocationSelect) onLocationSelect({ address: text, coords });
+          return;
+        }
+      }
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text + ', Sri Lanka')}&countrycodes=lk&limit=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        setCurrentCoords(coords);
+        if (onLocationSelect) onLocationSelect({ address: text, coords });
+      }
+    } catch {}
+  };
+
   const handleInputChange = (e) => {
     if (disabled || readOnly) return;
-    setInternalValue(e.target.value);
+    const val = e.target.value;
+    setInternalValue(val);
     if (onChange) onChange(e);
+
+    if (geocodeTimerRef.current) clearTimeout(geocodeTimerRef.current);
+    geocodeTimerRef.current = setTimeout(() => {
+      forwardGeocodeText(val);
+    }, 800);
   };
 
   const handleDetectLocation = () => {
@@ -312,7 +351,7 @@ export default function AddressInputWithMap({
         onClose={() => setIsModalOpen(false)}
         onSelectAddress={handleModalSelectAddress}
         initialAddress={internalValue}
-        initialCenter={defaultCenter}
+        initialCenter={currentCoords || defaultCenter}
       />
     </div>
   );
