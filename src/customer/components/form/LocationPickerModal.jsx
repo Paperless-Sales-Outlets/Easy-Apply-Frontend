@@ -3,9 +3,9 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import toast from 'react-hot-toast';
-import { FiX, FiCheck, FiMapPin, FiNavigation, FiSearch } from 'react-icons/fi';
+import { FiX, FiCheck, FiMapPin, FiNavigation, FiSearch, FiAlertCircle } from 'react-icons/fi';
 import { loadGoogleMapsScript } from '../../../shared/utils/loadGoogleMaps';
-import { cleanGoogleAddress, cleanNominatimAddress, getFallbackAddressText } from '../../../shared/utils/addressFormatter';
+import { cleanGoogleAddress, cleanNominatimAddress, getFallbackAddressText, calculateDistanceKm } from '../../../shared/utils/addressFormatter';
 
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -64,10 +64,19 @@ function MapRecenter({ center }) {
 }
 
 /** Map modal for picking a location and reverse-geocoding it to an address. */
-export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, initialAddress = '', initialCenter = null }) {
+export default function LocationPickerModal({
+  isOpen,
+  onClose,
+  onSelectAddress,
+  initialAddress = '',
+  initialCenter = null,
+  selectedCity = '',
+  cityCoordinates = null,
+  allowedRadiusKm = 35,
+}) {
   const [useGoogleMaps, setUseGoogleMaps] = useState(false);
   const [googleLoaded, setGoogleLoaded] = useState(false);
-  const [position, setPosition] = useState(initialCenter && initialCenter.lat ? initialCenter : DEFAULT_CENTER);
+  const [position, setPosition] = useState(initialCenter && initialCenter.lat ? initialCenter : (cityCoordinates || DEFAULT_CENTER));
   const [addressText, setAddressText] = useState(initialAddress);
   const [detectedDetails, setDetectedDetails] = useState(null);
   const [isFetchingAddress, setIsFetchingAddress] = useState(false);
@@ -97,7 +106,38 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
     }
   }, [isOpen]);
 
-  // Initial user location or initialCenter detection
+  const forwardGeocodeInitialAddress = async (query) => {
+    if (!query) return;
+    try {
+      if (window.google && window.google.maps && window.google.maps.Geocoder) {
+        const geocoder = new window.google.maps.Geocoder();
+        const res = await new Promise((resolve) => {
+          geocoder.geocode({ address: query }, (results, status) => {
+            if (status === 'OK' && results && results[0]) resolve(results[0]);
+            else resolve(null);
+          });
+        });
+        if (res?.geometry?.location) {
+          const coords = { lat: res.geometry.location.lat(), lng: res.geometry.location.lng() };
+          handlePositionChange(coords);
+          return;
+        }
+      }
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=lk&limit=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const data = await response.json();
+      if (data && data.length > 0) {
+        const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        handlePositionChange(coords);
+      }
+    } catch (err) {
+      console.warn('Initial address geocode failed:', err);
+    }
+  };
+
+  // Initial user location, address geocoding, or initialCenter detection
   useEffect(() => {
     if (isOpen) {
       if (initialCenter && typeof initialCenter.lat === 'number' && typeof initialCenter.lng === 'number') {
@@ -108,6 +148,16 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
           mapInstanceRef.current.setCenter(coords);
           if (markerInstanceRef.current) markerInstanceRef.current.setPosition(coords);
         }
+      } else if (cityCoordinates && typeof cityCoordinates.lat === 'number' && typeof cityCoordinates.lng === 'number') {
+        const coords = { lat: cityCoordinates.lat, lng: cityCoordinates.lng };
+        setPosition(coords);
+        reverseGeocode(coords.lat, coords.lng);
+        if (useGoogleMaps && mapInstanceRef.current) {
+          mapInstanceRef.current.setCenter(coords);
+          if (markerInstanceRef.current) markerInstanceRef.current.setPosition(coords);
+        }
+      } else if (initialAddress && initialAddress.trim().length > 3) {
+        forwardGeocodeInitialAddress(initialAddress.trim());
       } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
@@ -124,7 +174,7 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
         reverseGeocode(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng);
       }
     }
-  }, [isOpen, initialCenter]);
+  }, [isOpen, initialCenter, cityCoordinates]);
 
   // Initialize Native Google Map when Google Maps API is active
   useEffect(() => {
@@ -352,7 +402,29 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
     );
   };
 
+  // Boundary validation against selected city (preventing e.g. Colombo address with Jaffna map pin)
+  const boundaryError = useMemo(() => {
+    if (!selectedCity || !cityCoordinates || typeof cityCoordinates.lat !== 'number' || typeof cityCoordinates.lng !== 'number') {
+      return null;
+    }
+    if (!position || typeof position.lat !== 'number' || typeof position.lng !== 'number') {
+      return null;
+    }
+    const dist = calculateDistanceKm(cityCoordinates.lat, cityCoordinates.lng, position.lat, position.lng);
+    if (dist > allowedRadiusKm) {
+      return {
+        message: `Location mismatch: The pin is located ~${Math.round(dist)} km away from ${selectedCity}. Please place the pin within the ${selectedCity} area or update your selected city.`,
+        distanceKm: Math.round(dist),
+      };
+    }
+    return null;
+  }, [selectedCity, cityCoordinates, position, allowedRadiusKm]);
+
   const handleConfirm = () => {
+    if (boundaryError) {
+      toast.error(boundaryError.message);
+      return;
+    }
     if (addressText) {
       onSelectAddress(addressText, position, detectedDetails);
     }
@@ -456,6 +528,49 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
           </div>
         </div>
 
+        {/* Boundary Error Alert when pin is too far from selected city */}
+        {boundaryError && (
+          <div
+            style={{
+              backgroundColor: '#fef2f2',
+              border: '1.5px solid #fecaca',
+              borderRadius: 'var(--radius)',
+              padding: '0.65rem 0.85rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.6rem',
+              fontSize: '0.82rem',
+              color: '#991b1b',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <FiAlertCircle size={18} color="#dc2626" style={{ flexShrink: 0 }} />
+              <span style={{ fontWeight: 600 }}>{boundaryError.message}</span>
+            </div>
+            {cityCoordinates && (
+              <button
+                type="button"
+                onClick={() => handlePositionChange(cityCoordinates)}
+                style={{
+                  backgroundColor: '#ffffff',
+                  border: '1.5px solid #dc2626',
+                  color: '#dc2626',
+                  padding: '0.25rem 0.65rem',
+                  borderRadius: 'var(--radius-sm)',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                Reset Pin to {selectedCity}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Selected Address Display & Confirmation */}
         <div style={footerStyle}>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -473,8 +588,14 @@ export default function LocationPickerModal({ isOpen, onClose, onSelectAddress, 
             <button
               type="button"
               onClick={handleConfirm}
-              disabled={isFetchingAddress || !addressText}
-              style={confirmBtnStyle}
+              disabled={isFetchingAddress || !addressText || Boolean(boundaryError)}
+              style={{
+                ...confirmBtnStyle,
+                opacity: boundaryError ? 0.45 : 1,
+                cursor: boundaryError ? 'not-allowed' : 'pointer',
+                backgroundColor: boundaryError ? '#94a3b8' : confirmBtnStyle.backgroundColor,
+              }}
+              title={boundaryError ? boundaryError.message : 'Confirm Address'}
             >
               <FiCheck style={{ marginRight: '0.3rem' }} />
               Confirm Address

@@ -28,7 +28,7 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
   const { t, i18n } = useTranslation();
   const [signatureError, setSignatureError] = useState(false);
   const [consents, setConsents] = useState([]);
-  const [loadState, setLoadState] = useState('loading'); // loading | ready | error
+  const [loadState, setLoadState] = useState('loading'); // loading | ready | fallback
   const accepted = Array.isArray(formData.consentsAccepted) ? formData.consentsAccepted : [];
   const signatureVal = formData.signature || '';
 
@@ -36,10 +36,16 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
     setLoadState('loading');
     try {
       const res = await api.get('/consents/catalog');
-      setConsents(res.data?.data || []);
-      setLoadState('ready');
+      const list = res.data?.data;
+      if (Array.isArray(list) && list.length > 0) {
+        setConsents(list);
+        setLoadState('ready');
+      } else {
+        setLoadState('fallback');
+      }
     } catch {
-      setLoadState('error');
+      // ConsentHub unreachable or offline -> smoothly fall back to standard Terms & Conditions
+      setLoadState('fallback');
     }
   }, []);
   useEffect(() => { loadConsents(); }, [loadConsents]);
@@ -50,13 +56,24 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
   // Expose validation to parent wizard
   useImperativeHandle(ref, () => ({
     validate: () => {
-      if (loadState !== 'ready' || consents.length === 0) {
-        toast.error('Consents could not be loaded. Please retry.');
+      if (loadState === 'fallback') {
+        if (!formData.declarationAccepted) {
+          toast.error(t('wizards.newConnection.declaration.mustAgreeFallback', 'Please accept the Terms & Conditions and Service Declaration to continue.'));
+          return false;
+        }
+      } else if (loadState === 'ready' && consents.length > 0) {
+        if (!allRequiredAccepted) {
+          toast.error(t('wizards.newConnection.declaration.mustAgree', 'Please accept all the consents to continue.'));
+          return false;
+        }
+      } else if (loadState === 'loading') {
+        toast.error('Loading consents, please wait...');
         return false;
-      }
-      if (!allRequiredAccepted) {
-        toast.error(t('wizards.newConnection.declaration.mustAgree', 'Please accept all the consents to continue.'));
-        return false;
+      } else {
+        if (!formData.declarationAccepted) {
+          toast.error(t('wizards.newConnection.declaration.mustAgreeFallback', 'Please accept the Terms & Conditions and Service Declaration to continue.'));
+          return false;
+        }
       }
       if (!signatureVal || signatureVal.trim() === '') {
         setSignatureError(true);
@@ -67,6 +84,18 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
       return true;
     },
   }));
+
+  const handleFallbackCheckbox = (checked) => {
+    if (setFields) {
+      setFields({
+        declarationAccepted: checked,
+        consentsAccepted: checked ? ['TERMS_AND_CONDITIONS_FALLBACK'] : [],
+      });
+    } else if (handleChange) {
+      handleChange({ target: { name: 'declarationAccepted', type: 'checkbox', checked } });
+      handleChange({ target: { name: 'consentsAccepted', value: checked ? ['TERMS_AND_CONDITIONS_FALLBACK'] : [] } });
+    }
+  };
 
   const toggleConsent = (code, checked) => {
     const next = checked ? [...new Set([...accepted, code])] : accepted.filter((c) => c !== code);
@@ -114,23 +143,71 @@ const DeclarationStep = forwardRef(({ formData, handleChange, setFields }, ref) 
         </div>
       </div>
 
-      {/* ── Consents (from ConsentHub) ── */}
+      {/* ── Consents (from ConsentHub or Fallback) ── */}
       <div style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
           <FiCheckSquare size={20} style={{ color: 'var(--slt-blue)' }} />
-          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', fontWeight: 800 }}>Consents</h3>
+          <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#131f33', fontWeight: 700 }}>
+            {loadState === 'fallback' ? 'Terms & Conditions' : 'Consents'}
+          </h3>
         </div>
-        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 0.75rem 0' }}>
-          Each consent is a separate checkbox. No checkbox is ticked in advance.
+        <p style={{ fontSize: '0.8rem', color: '#52627a', margin: '0 0 0.75rem 0' }}>
+          {loadState === 'fallback'
+            ? 'Please review and accept the standard terms and conditions to proceed with your application.'
+            : 'Each consent is a separate checkbox. No checkbox is ticked in advance.'}
         </p>
 
         {loadState === 'loading' && <div style={cardStyle}>Loading consents…</div>}
-        {loadState === 'error' && (
-          <div style={{ ...cardStyle, borderColor: '#ef4444' }}>
-            <p style={{ margin: '0 0 0.75rem 0', color: '#b91c1c' }}>Could not load the consents.</p>
-            <button type="button" className="btn btn-outline" onClick={loadConsents}>Retry</button>
-          </div>
+
+        {loadState === 'fallback' && (
+          <label
+            style={{
+              ...cardStyle,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.85rem',
+              cursor: 'pointer',
+              userSelect: 'none',
+              border: formData.declarationAccepted
+                ? '1.5px solid var(--slt-blue, #0056b3)'
+                : '1px solid var(--grey-300, #cbd5e1)',
+              backgroundColor: formData.declarationAccepted ? 'var(--blue-50, #eff6ff)' : 'var(--paper)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={Boolean(formData.declarationAccepted)}
+              onChange={(e) => handleFallbackCheckbox(e.target.checked)}
+              style={{
+                width: '20px',
+                height: '20px',
+                marginTop: '3px',
+                cursor: 'pointer',
+                accentColor: 'var(--slt-blue)',
+                flexShrink: 0,
+              }}
+            />
+            <span style={{ flex: 1 }}>
+              <strong style={{ display: 'block', fontSize: '1.02rem', color: '#131f33' }}>
+                I accept the Terms & Conditions and Service Declaration{' '}
+                <span style={{ color: '#d92d20' }}>*</span>
+              </strong>
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: '0.9rem',
+                  lineHeight: 1.55,
+                  color: '#475569',
+                  marginTop: '0.35rem',
+                }}
+              >
+                I confirm that I have read, understood, and agree to abide by the standard Terms & Conditions, service agreements, and privacy policies of Sri Lanka Telecom PLC (SLTMOBITEL) for this connection.
+              </span>
+            </span>
+          </label>
         )}
+
         {loadState === 'ready' && consents.map((consent) => {
           const { title, statement } = consentText(consent, i18n.language);
           const checked = accepted.includes(consent.consentCode);

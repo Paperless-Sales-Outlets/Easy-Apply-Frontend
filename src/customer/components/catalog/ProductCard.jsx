@@ -58,7 +58,7 @@ export default function ProductCard({
     productName,
     monthlyPrice: rawMonthlyPrice,
     price,
-    installationFee = 2500,
+    installationFee = 0,
     features: rawFeatures = [],
     category = 'Broadband',
     popular = false,
@@ -101,7 +101,14 @@ export default function ProductCard({
         <span>{t('catalog.card.perMonth', '/month')}</span>
       </p>
       <p className="pcard-fee">
-        {t('catalog.card.installation', 'Installation:')} Rs. {installationFee ? installationFee.toLocaleString() : '2,500'}
+        {t('catalog.card.installation', 'Installation:')}{' '}
+        {Number(installationFee) === 0 ? (
+          <span style={{ color: 'var(--green-600, #16a34a)', fontWeight: 700 }}>
+            {t('catalog.card.freeInstallation', 'Free')}
+          </span>
+        ) : (
+          `Rs. ${Number(installationFee).toLocaleString()}`
+        )}
       </p>
     </div>
   );

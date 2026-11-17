@@ -899,7 +899,7 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
         paymentReference: orderId,
         paymentCompleted: true,
         paymentStatus: 'PAID',
-        paidAmount: selectedProduct?.installationFee ?? 2500,
+        paidAmount: selectedProduct?.installationFee !== undefined ? Number(selectedProduct.installationFee) : 0,
         payerMobile: payerMobile || formData.mobileNumber,
       },
     });
@@ -1049,7 +1049,7 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.9rem', color: '#26344b', textAlign: 'right' }}>
             <span>Monthly: <strong style={{ color: '#0056a2' }}>Rs. {(selectedProduct.monthlyPrice || 0).toLocaleString()}</strong></span>
-            <span>Installation: <strong>Rs. {(selectedProduct.installationFee ?? 2500).toLocaleString()}</strong></span>
+            <span>Installation: <strong>{Number(selectedProduct?.installationFee || 0) === 0 ? 'Free' : `Rs. ${Number(selectedProduct.installationFee).toLocaleString()}`}</strong></span>
             {selectedProduct.quantity > 1 && <span>Qty: <strong>{selectedProduct.quantity}</strong></span>}
           </div>
         </div>
@@ -1110,7 +1110,7 @@ export default function NewConnectionWizard({ stepperMode = 'seven' }) {
             <PaymentStep
               isActive
               verifiedPhone={verifiedMobile}
-              amount={selectedProduct?.installationFee ?? 2500}
+              amount={selectedProduct?.installationFee !== undefined ? Number(selectedProduct.installationFee) : 0}
               amountLabel="Installation Fee"
               onSuccess={handlePaymentSuccess}
             />

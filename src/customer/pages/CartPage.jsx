@@ -132,8 +132,8 @@ export default function CartPage() {
   };
 
   const items = cart?.items || [];
-  const monthlyTotal = items.reduce((sum, item) => sum + (item.price || item.monthlyPrice || 0) * item.quantity, 0);
-  const installationTotal = items.reduce((sum, item) => sum + (item.installationFee !== undefined ? item.installationFee : 2500) * item.quantity, 0);
+  const monthlyTotal = items.reduce((sum, item) => sum + (item.price || item.monthlyPrice || 0) * (item.quantity || 1), 0);
+  const installationTotal = items.reduce((sum, item) => sum + (item.installationFee !== undefined ? Number(item.installationFee) : 0) * (item.quantity || 1), 0);
   const grandTotal = monthlyTotal + installationTotal;
   const totalItemCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
@@ -152,7 +152,7 @@ export default function CartPage() {
       name: itemRawName,
       category: primaryItem.category || (isFibre ? 'Fibre Broadband' : 'Broadband'),
       monthlyPrice: primaryItem.price || primaryItem.monthlyPrice,
-      installationFee: primaryItem.installationFee !== undefined ? primaryItem.installationFee : 2500,
+      installationFee: primaryItem.installationFee !== undefined ? Number(primaryItem.installationFee) : 0,
       quantity: primaryItem.quantity,
       speed: primaryItem.speed,
       features: primaryItem.features,
@@ -362,7 +362,7 @@ export default function CartPage() {
                   const prodId = item.productId || item._id || item.id;
                   const prodName = item.productName || item.name || 'SLTMobitel Connection';
                   const monthly = item.price || item.monthlyPrice || 0;
-                  const instFee = item.installationFee !== undefined ? item.installationFee : 2500;
+                  const instFee = item.installationFee !== undefined ? Number(item.installationFee) : 0;
                   const speed = item.speed || '';
                   const isPopular = item.popular !== undefined ? item.popular : true;
                   const cleanedTitle = cleanCartTitle(prodName);
@@ -686,7 +686,11 @@ export default function CartPage() {
                       <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                         {t('cart.installationFees', 'Installation Fees')} <FiInfo size={13} color="#94a1b5" />
                       </span>
-                      <strong style={{ color: '#131f33' }}>Rs. {installationTotal.toLocaleString()}</strong>
+                      {installationTotal === 0 ? (
+                        <strong style={{ color: 'var(--green-600, #16a34a)' }}>{t('cart.freeInstallation', 'Free')}</strong>
+                      ) : (
+                        <strong style={{ color: '#131f33' }}>Rs. {installationTotal.toLocaleString()}</strong>
+                      )}
                     </div>
 
                     <hr style={{ border: 'none', borderTop: '1px solid #eef2f7', margin: '0.35rem 0' }} />

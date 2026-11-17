@@ -20,7 +20,14 @@ import {
 } from 'react-icons/fi';
 import IdentityCaptureField from '../../components/form/IdentityCaptureField';
 import WizardStepHeader from '../../components/wizard/WizardStepHeader';
-import { validateNIC, cleanNIC, parseSriLankanNIC, parseSriLankanAddress, isValidAddressText } from '../../../shared/utils/nicParser';
+import {
+  validateNIC,
+  cleanNIC,
+  parseSriLankanNIC,
+  parseSriLankanAddress,
+  isValidAddressText,
+  deriveGenderAndDOBFromNIC,
+} from '../../../shared/utils/nicParser';
 import { scanNIC } from '../../services/nicScanService';
 import api from '../../../shared/utils/api';
 import { getAuthUser, notifyAuthUpdated } from '../../../shared/utils/authSession';
@@ -358,11 +365,19 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
       // 3. Date of Birth
       // 4. Gender
       // 5. Address
+      // Name extraction
+      const rawExtractedName = (r?.fullName || r?.nameFull || r?.name || '').trim();
+      const hasName = Boolean(rawExtractedName && rawExtractedName.length > 2 && rawExtractedName.toLowerCase() !== 'customer');
+      const currentName = (formData.nameFull && formData.nameFull.toLowerCase() !== 'customer') ? formData.nameFull : '';
+      const resolvedName = hasName ? rawExtractedName : currentName;
+
+      // Address extraction
+      const rawExtractedAddress = (r?.address || r?.nicAddress || '').trim();
+      const hasAddress = Boolean(rawExtractedAddress && (isValidAddressText(rawExtractedAddress) || r?.city || r?.district));
+
       const hasNic = Boolean(extractedNic || (validEnteredNic && (r?.success || activeFront)));
-      const hasName = Boolean(r?.fullName && r.fullName.trim().length > 2 && r.fullName.toLowerCase() !== 'customer');
       const hasDob = Boolean(resolvedDob);
       const hasGender = Boolean(resolvedGender);
-      const hasAddress = Boolean(r?.address && isValidAddressText(r.address));
 
       const coreFields = {
         'NIC Number': hasNic,
@@ -376,22 +391,22 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
       const missingCount = 5 - fetchedCount;
 
       // Prepare autofill details with whatever was extracted (never discard extracted data!)
-      const parsedAddress = parseSriLankanAddress(r?.address, r?.city, r?.district);
+      const parsedAddress = parseSriLankanAddress(rawExtractedAddress || r?.address, r?.city, r?.district);
       const isMismatch = Boolean(currentEnteredNic && extractedNic && currentEnteredNic !== extractedNic);
-      const validAddress = Boolean(isValidAddressText(parsedAddress?.addressLine1) || isValidAddressText(r?.address));
+      const validAddress = Boolean(hasAddress || isValidAddressText(parsedAddress?.addressLine1));
 
       const found = {
-        nameFull: (r?.fullName && r.fullName.toLowerCase() !== 'customer') ? r.fullName : (formData.nameFull || ''),
+        nameFull: resolvedName || formData.nameFull || '',
         nic: activeApplicantNic,
         dob: resolvedDob || formData.dob || '',
         gender: resolvedGender || formData.gender || '',
         title: r?.suggestedTitle || formData.title || (resolvedGender === 'Female' ? 'Ms.' : resolvedGender === 'Male' ? 'Mr.' : ''),
-        nicAddress: validAddress ? (r?.address || formData.nicAddress || '') : (formData.nicAddress || ''),
-        addressLine1: validAddress ? (parsedAddress?.addressLine1 || r?.address || formData.addressLine1 || '') : (formData.addressLine1 || ''),
+        nicAddress: (validAddress && rawExtractedAddress) ? rawExtractedAddress : (formData.nicAddress || ''),
+        addressLine1: validAddress ? (parsedAddress?.addressLine1 || rawExtractedAddress || formData.addressLine1 || '') : (formData.addressLine1 || ''),
         addressLine2: validAddress ? (parsedAddress?.addressLine2 || formData.addressLine2 || '') : (formData.addressLine2 || ''),
-        city: (parsedAddress?.city && (isValidAddressText(parsedAddress.city) || validAddress)) ? parsedAddress.city : (formData.city || ''),
-        district: validAddress ? (parsedAddress?.district || formData.district || '') : (formData.district || ''),
-        postalCode: validAddress ? (parsedAddress?.postalCode || formData.postalCode || '') : (formData.postalCode || ''),
+        city: (parsedAddress?.city || r?.city || formData.city || ''),
+        district: (parsedAddress?.district || r?.district || formData.district || ''),
+        postalCode: (parsedAddress?.postalCode || formData.postalCode || ''),
       };
 
       const exceptionFlags = [];
@@ -534,7 +549,8 @@ const IdentityStep = forwardRef(({ formData, setFields, stepNumber = 3, totalSte
           console.warn('Silent OCR DB sync notice:', err?.message);
         });
       }
-    } catch {
+    } catch (scanErr) {
+      console.error('[IdentityStep] OCR Scan exception:', scanErr);
       if (seq.current !== mySeq) return;
       setErrors((prev) => ({ ...prev, nicFront: undefined, nicBack: undefined }));
       setOcrState({ verified: false, error: null, manualReview: true });

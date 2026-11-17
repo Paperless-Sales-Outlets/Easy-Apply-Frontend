@@ -505,7 +505,9 @@ export default function PaymentStep({
 
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.75rem', borderBottom: parsedFee > 0 ? 'none' : '1px solid var(--grey-200)', marginBottom: parsedFee > 0 ? '0.4rem' : '0.75rem' }}>
                 <span style={{ color: '#52627a', fontWeight: 500, fontSize: '0.92rem' }}>{amountLabel}</span>
-                <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#131f33' }}>Rs. {formattedPending}</span>
+                <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#131f33' }}>
+                  {parsedAmount === 0 ? 'Rs. 0.00 (Free)' : `Rs. ${formattedPending}`}
+                </span>
               </div>
 
               {parsedFee > 0 && (
@@ -517,12 +519,16 @@ export default function PaymentStep({
 
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.85rem', borderBottom: '1px solid #eef2f7', marginBottom: '0.85rem' }}>
                 <span style={{ color: '#131f33', fontWeight: 700, fontSize: '1.05rem' }}>Total Amount Due</span>
-                <span style={{ fontWeight: 700, fontSize: '1.25rem', color: '#0056a2' }}>Rs. {formattedAmount}</span>
+                <span style={{ fontWeight: 700, fontSize: '1.25rem', color: totalAmount <= 0 ? 'var(--green-600, #16a34a)' : '#0056a2' }}>
+                  {totalAmount <= 0 ? 'Rs. 0.00 (Waived)' : `Rs. ${formattedAmount}`}
+                </span>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: '#52627a', fontWeight: 500, fontSize: '0.88rem' }}>Gateway Mode</span>
-                <span style={{ fontWeight: 700, color: '#0f7a4d', fontSize: '0.88rem' }}>PayHere Sandbox Verified</span>
+                <span style={{ fontWeight: 700, color: '#0f7a4d', fontSize: '0.88rem' }}>
+                  {totalAmount <= 0 ? 'Direct Confirmation (Zero Due)' : 'PayHere Sandbox Verified'}
+                </span>
               </div>
             </div>
 
@@ -532,46 +538,73 @@ export default function PaymentStep({
               </div>
             )}
 
-            {/* Action Buttons: PayHere Sandbox Gateway & Fast Demo Checkout */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            {/* Action Buttons: Free Instant Confirmation OR PayHere Sandbox Gateway */}
+            {totalAmount <= 0 ? (
               <button
                 type="button"
                 className="btn btn-primary"
                 style={{
                   height: '52px',
+                  width: '100%',
                   fontSize: '1.05rem',
                   fontWeight: 700,
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
                   gap: '0.65rem',
-                  backgroundColor: 'var(--blue-600)',
+                  backgroundColor: 'var(--green-600, #16a34a)',
                   borderRadius: 'var(--radius)',
                   boxShadow: 'var(--shadow-md)',
-                }}
-                onClick={handlePayHerePayment}
-              >
-                <FiCreditCard size={20} />
-                Pay Rs. {formattedAmount} via PayHere Gateway
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{
-                  height: '46px',
-                  fontSize: '0.92rem',
-                  fontWeight: 700,
-                  backgroundColor: 'var(--grey-50)',
-                  color: 'var(--grey-800)',
-                  border: '1.5px solid var(--grey-300)',
-                  borderRadius: 'var(--radius)',
+                  border: 'none',
+                  color: '#ffffff',
+                  cursor: 'pointer',
                 }}
                 onClick={handleInstantConfirm}
               >
-                Instant Confirm (Demo / Teleshop Pay)
+                <FiCheckCircle size={20} />
+                Confirm Application (Free Installation — Rs. 0.00 Due)
               </button>
-            </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{
+                    height: '52px',
+                    fontSize: '1.05rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '0.65rem',
+                    backgroundColor: 'var(--blue-600)',
+                    borderRadius: 'var(--radius)',
+                    boxShadow: 'var(--shadow-md)',
+                  }}
+                  onClick={handlePayHerePayment}
+                >
+                  <FiCreditCard size={20} />
+                  Pay Rs. {formattedAmount} via PayHere Gateway
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{
+                    height: '46px',
+                    fontSize: '0.92rem',
+                    fontWeight: 700,
+                    backgroundColor: 'var(--grey-50)',
+                    color: 'var(--grey-800)',
+                    border: '1.5px solid var(--grey-300)',
+                    borderRadius: 'var(--radius)',
+                  }}
+                  onClick={handleInstantConfirm}
+                >
+                  Instant Confirm (Demo / Teleshop Pay)
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

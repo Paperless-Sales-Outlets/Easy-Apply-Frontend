@@ -294,7 +294,7 @@ export default function PackageDetailModal({ isOpen, onClose, product, onSelectP
                 <span style={{ fontSize: '0.85rem', color: '#c3ccd9', fontWeight: 600 }}>/mo</span>
               </div>
               <div style={{ fontSize: '0.75rem', color: '#94a1b5', marginTop: '0.3rem', fontWeight: 500 }}>
-                + One-time setup: Rs. {product?.installationFee === 0 ? '0 (Free)' : '2,500'}
+                + One-time setup: {Number(product?.installationFee ?? 0) === 0 ? 'Free' : `Rs. ${Number(product?.installationFee).toLocaleString()}`}
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FiCheck, FiCopy, FiDownload, FiEdit3, FiFileText, FiFlag, FiMessageSquare, FiX } from 'react-icons/fi';
+import { FiCheck, FiCopy, FiDownload, FiEdit3, FiFlag, FiMessageSquare, FiX } from 'react-icons/fi';
 import {
   formatDate,
   getAssetUrl,
