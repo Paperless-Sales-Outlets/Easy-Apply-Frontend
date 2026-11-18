@@ -1,90 +1,137 @@
 /* ============================================================
    SLTMobitel EasyApply — design system
-   Single source of truth for color, type, spacing, and the
-   diagonal "slash" brand motif.
+   One palette, one type scale, one spacing scale, one elevation
+   scale. Every screen draws from these; nothing is hand-picked.
+   (Principles: Refactoring UI — hierarchy first, systems over
+   one-off values, flat colour, shadows only to convey elevation.)
    ============================================================ */
 
 :root {
-  /* Palette */
-  --navy: #0b2d5b;
-  --blue: #0f57a8;
-  --blue-deep: #0a3f7e;
-  --green: #50b748;
-  --green-deep: #3a9636;
-  --paper: #ffffff;
-  --surface: #ffffff;
-  --line: #d9e2ef;
-  --text: #16233a;
-  --muted: #5a6a82;
-  --danger: #c4372c;
+  /* ── Greys (cool-tinted, never pure black) ─────────────────── */
+  --grey-900: #131f33; /* headings, primary text            */
+  --grey-800: #26344b; /* body text                          */
+  --grey-700: #3b4a61; /* strong secondary text              */
+  --grey-600: #52627a; /* secondary text (≥ 6:1 on white)    */
+  --grey-500: #66768d; /* tertiary text, placeholders (4.6:1)*/
+  --grey-400: #94a1b5; /* icons, disabled                    */
+  --grey-300: #c3ccd9; /* input borders                      */
+  --grey-200: #dfe5ee; /* dividers, card borders             */
+  --grey-100: #eef2f7; /* subtle fills                       */
+  --grey-50:  #f6f8fb; /* page wash                          */
 
-  /* Shape & depth */
-  --radius: 12px;
-  --radius-lg: 14px;
-  --shadow: 0 6px 20px rgba(11, 45, 91, 0.1);
+  /* ── Brand blue (action colour) ────────────────────────────── */
+  --blue-900: #0d2b52;
+  --blue-800: #123c73;
+  --blue-700: #0a4b8c;
+  --blue-600: #0056a2; /* buttons, links — 7.6:1 on white     */
+  --blue-500: #1a6cbd;
+  --blue-400: #4b92d6;
+  --blue-300: #8ebde8;
+  --blue-200: #c3dcf5;
+  --blue-100: #e3effc;
+  --blue-50:  #f1f7fd;
 
-  /* Spacing (4px scale) */
+  /* ── Brand green: fills and marks only; text uses --green-700 ─ */
+  --green-500: #50b748;
+  --green-700: #0f7a4d;
+  --green-800: #0b5f3c;
+  --green-300: #9bd89a;
+  --green-200: #c9ebc8;
+  --green-100: #e2f4e3;
+  --green-50:  #f1faf1;
+
+  /* ── Feedback ──────────────────────────────────────────────── */
+  --red-700: #b42318;
+  --red-600: #d92d20;
+  --red-200: #f5c2bd;
+  --red-100: #fde8e6;
+  --red-50:  #fef3f2;
+  --amber-700: #93560a;
+  --amber-200: #f4d58f;
+  --amber-100: #fdf0d5;
+  --amber-50:  #fff8e8;
+
+  /* ── Spacing & sizing: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 ─── */
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
   --s4: 16px;
-  --s5: 20px;
-  --s6: 24px;
-  --s8: 32px;
-  --s10: 40px;
-  --s12: 48px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
 
-  /* Type */
-  /* Matches slt.lk: Raleway for headings, Inter for body copy */
-  --font-head: 'Raleway', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* ── Type scale: 12 · 14 · 16 · 18 · 20 · 24 · 30 · 36 · 48 ── */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
 
-  /* ── Layout & surface system ──────────────────────────────────
-     One content width, one card treatment and one gradient family,
-     so every page reads as the same product. */
-  --page-max: 1400px;
-  --page-bg: #ffffff;
+  --font-head: 'Raleway', 'Noto Sans Sinhala', 'Noto Sans Tamil', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Noto Sans Sinhala', 'Noto Sans Tamil', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* ── Shape: one small radius family ────────────────────────── */
+  --radius-sm: 4px;  /* badges, small chips                */
+  --radius: 8px;     /* buttons, inputs, tiles             */
+  --radius-lg: 12px; /* cards, modals                      */
+
+  /* ── Elevation: five steps, two-part shadows ───────────────── */
+  --shadow-xs: 0 1px 2px rgba(19, 31, 51, 0.06);
+  --shadow-sm: 0 1px 3px rgba(19, 31, 51, 0.1), 0 1px 2px rgba(19, 31, 51, 0.06);
+  --shadow-md: 0 4px 8px -2px rgba(19, 31, 51, 0.1), 0 2px 4px -2px rgba(19, 31, 51, 0.06);
+  --shadow-lg: 0 12px 20px -4px rgba(19, 31, 51, 0.12), 0 4px 6px -4px rgba(19, 31, 51, 0.06);
+  --shadow-xl: 0 24px 40px -8px rgba(19, 31, 51, 0.18);
+
+  /* ── Layout ────────────────────────────────────────────────── */
+  --page-max: 1200px;
   --page-gutter: clamp(1rem, 4vw, 2rem);
+  --control-h: 48px;
 
-  --radius-card: 16px;
-  --radius-control: 12px;
+  /* Focus ring only: SLT sky blue */
+  --focus: #0a8bff;
 
-  /* Icons are a single brand blue. Colour is used to convey state
-     (error, success), never for decoration. */
-  --icon-color: var(--blue);
+  /* ── Aliases (names older screens still use) ───────────────── */
+  --navy: var(--blue-900);
+  --blue: var(--blue-600);
+  --blue-deep: var(--blue-700);
+  --green: var(--green-500);
+  --green-deep: var(--green-700);
+  --green-text: var(--green-700);
+  --paper: #ffffff;
+  --surface: #ffffff;
+  --line: var(--grey-200);
+  --text: var(--grey-800);
+  --muted: var(--grey-600);
+  --danger: var(--red-700);
+  --shadow: var(--shadow-md);
+  --radius-card: var(--radius-lg);
+  --radius-control: var(--radius);
+  --page-bg: #ffffff;
+  --icon-color: var(--blue-600);
+  --brand-gradient: var(--blue-900);
+  --brand-gradient-soft: var(--blue-800);
+  --slash-gradient: linear-gradient(104deg, var(--blue-600) 0 62%, var(--green-500) 62% 100%);
 
-  /* The brand green (#50b748) is only 2.56:1 on white — fine for logos and
-     fills, unusable for text. This is its accessible counterpart. */
-  --green-text: #0f7a4d;
-
-  /* The two approved gradients: the SLT brand sweep for feature
-     surfaces, and a flat blue for primary controls. */
-  --brand-gradient: linear-gradient(135deg, #001f3f 0%, #003b73 45%, #004d38 85%, #01291e 100%);
-  --brand-gradient-soft: linear-gradient(135deg, #0b4a91 0%, #003b73 100%);
-
-  /* Brand slash gradient (dual-tone, hard break) */
-  --slash-gradient: linear-gradient(104deg, var(--blue) 0 62%, var(--green) 62% 100%);
-
-  /* ---- Legacy aliases ----
-     Screens not yet redesigned reference these; they now resolve
-     to the new tokens. Remove once every screen is migrated. */
-  --slt-blue: var(--blue);
-  --slt-blue-hover: var(--blue-deep);
-  --slt-green: var(--green);
-  --slt-green-hover: var(--green-deep);
+  --slt-blue: var(--blue-600);
+  --slt-blue-hover: var(--blue-700);
+  --slt-green: var(--green-500);
+  --slt-green-hover: var(--green-700);
   --slt-gradient: var(--slash-gradient);
   --bg-color: var(--paper);
   --surface-color: var(--surface);
-  --text-primary: var(--text);
-  --text-secondary: var(--muted);
-  --border-color: var(--line);
+  --text-primary: var(--grey-900);
+  --text-secondary: var(--grey-600);
+  --border-color: var(--grey-200);
   --font-family: var(--font-body);
-  --shadow-sm: var(--shadow);
-  --shadow-md: var(--shadow);
-  --shadow-lg: var(--shadow);
+  --shadow-sm-legacy: var(--shadow-sm);
   --radius-md: var(--radius);
   --radius-full: 9999px;
-  --transition: all 0.18s ease;
+  --transition: all 0.15s ease;
 }
 
 * {
@@ -93,19 +140,12 @@
   padding: 0;
 }
 
-/* Accessibility: guaranteed visible keyboard-focus ring on every
-   interactive element, site-wide. Many components set `outline: none`
-   inline (higher specificity than any plain CSS rule) without an
-   alternate focus indicator, which fails WCAG 2.4.7 for keyboard users.
-   `!important` here is a deliberate, narrow override of exactly that. */
-:focus-visible {
-  outline: 2px solid var(--blue) !important;
-  outline-offset: 2px !important;
-}
+/* Focus ring: see :focus-visible below (one rule, one colour). */
 
 html, body {
   max-width: 100vw;
-  overflow-x: hidden;
+  /* clip, not hidden: hidden turns body into a scroll container and breaks position: sticky on the nav */
+  overflow-x: clip;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -116,9 +156,10 @@ html, body {
 
 body {
   font-family: var(--font-body);
+  font-size: var(--text-base);
   background-color: var(--paper);
-  color: var(--text);
-  line-height: 1.55;
+  color: var(--grey-800);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -132,27 +173,36 @@ textarea {
   font-family: inherit;
 }
 
-/* Typography */
+/* Typography
+   Headings label a section; they should not shout. Sizes come from
+   --text-*, weight carries emphasis, tight leading on large sizes. */
 h1,
 h2,
 h3,
 h4 {
   font-family: var(--font-head);
   font-weight: 700;
-  color: var(--navy);
-  line-height: 1.2;
-  margin-bottom: 0.5rem;
+  color: var(--grey-900);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  font-variant-numeric: lining-nums;
+  margin-bottom: var(--s2);
 }
 
+h1 { font-size: var(--text-3xl); line-height: 1.15; }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+
 a {
-  color: var(--blue);
+  color: var(--blue-600);
 }
 
 /* Keyboard focus — visible everywhere, keyboard only */
 :focus-visible {
-  outline: 2px solid var(--blue);
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: 3px solid var(--focus) !important;
+  outline-offset: 2px !important;
+  border-radius: var(--radius-sm);
 }
 
 /* Layout ------------------------------------------------------------ */
@@ -181,6 +231,7 @@ a {
   max-width: var(--page-max);
   margin: 0 auto;
   padding-inline: var(--page-gutter);
+  padding-top: var(--s5);
 }
 
 .page-shell--form {
@@ -188,6 +239,7 @@ a {
   max-width: var(--page-max);
   margin: 0 auto;
   padding-inline: var(--page-gutter);
+  padding-top: var(--s5);
   /* Wizard steps end in a Back/Next Step footer that's the last thing in
      the page — without this the site Footer sits flush against it. */
   padding-bottom: 3rem;
@@ -197,7 +249,7 @@ a {
   .page-shell,
   .page-shell--form {
     max-width: 100%;
-    padding: 0 1rem;
+    padding: var(--s4) 1rem 0;
   }
 
   .page-shell--form {
@@ -241,104 +293,113 @@ a {
   color: var(--navy);
 }
 
-/* Buttons ------------------------------------------------------------ */
+/* Buttons -------------------------------------------------------------
+   Hierarchy: one primary (solid) per view, secondary (outline),
+   tertiary (link-style). 48px tall so a thumb can hit it. */
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--s2);
-  padding: 0.75rem 1.6rem;
+  min-height: var(--control-h);
+  padding: 0 var(--s5);
   font-family: var(--font-body);
-  font-size: 0.98rem;
-  font-weight: 700;
-  border: none;
-  border-radius: 12px;
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.2;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-/* Primary Action Button (Reference UI Green Pill) */
 .btn-primary {
-  background: linear-gradient(135deg, #50b748 0%, #3ca836 100%);
+  background: var(--blue-600);
   color: #ffffff !important;
-  box-shadow: 0 4px 14px rgba(80, 183, 72, 0.28);
+  box-shadow: var(--shadow-xs);
 }
 
-.btn-primary:hover {
-  background: linear-gradient(135deg, #44a43c 0%, #32922c 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(80, 183, 72, 0.38);
-}
+.btn-primary:hover { background: var(--blue-700); }
+.btn-primary:active { background: var(--blue-800); box-shadow: none; }
 
-/* Secondary Button (Reference UI Light Blue Pill) */
 .btn-secondary {
-  background-color: #e8effe;
-  color: #0f57a8 !important;
-  border: 1px solid #dbeafe;
+  background: #ffffff;
+  color: var(--blue-600) !important;
+  border-color: var(--grey-300);
 }
 
-.btn-secondary:hover {
-  background-color: #d4e3fc;
-  color: #0a3f7e !important;
-  transform: translateY(-1px);
+.btn-secondary:hover { background: var(--blue-50); border-color: var(--blue-300); }
+.btn-secondary:active { background: var(--blue-100); }
+
+.btn-tertiary {
+  background: transparent;
+  color: var(--blue-600) !important;
+  padding: 0 var(--s3);
 }
 
-/* Brand Blue Action Button */
+.btn-tertiary:hover { background: var(--blue-50); }
 
 .btn:disabled {
-  opacity: 0.5;
+  background: var(--grey-100);
+  border-color: var(--grey-200);
+  color: var(--grey-500) !important;
   cursor: not-allowed;
-  transform: none !important;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
-/* Forms -------------------------------------------------------------- */
+/* Forms ----------------------------------------------------------------
+   Labels are supporting text; the value is what matters. */
 
 .form-group {
-  margin-bottom: var(--s6);
+  margin-bottom: var(--s5);
 }
 
 .form-label {
   display: block;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.4rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--grey-700);
+  margin-bottom: var(--s2);
 }
 
 .form-control {
   width: 100%;
-  padding: 0.75rem 1.1rem;
+  min-height: var(--control-h);
+  padding: var(--s3) var(--s4);
   font-family: var(--font-body);
-  font-size: 0.98rem;
-  color: #0f172a;
+  font-size: var(--text-base);
+  color: var(--grey-900);
   background-color: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 12px;
-  transition: all 0.2s ease;
+  border: 1px solid var(--grey-300);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control:hover {
+  border-color: var(--grey-400);
 }
 
 .form-control:focus {
   outline: none;
-  border-color: #0f57a8;
-  box-shadow: 0 0 0 4px rgba(15, 87, 168, 0.15);
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 3px var(--blue-200);
 }
 
 .form-control::placeholder {
-  color: #94a3b8;
-  opacity: 0.8;
+  color: var(--grey-500);
+  opacity: 1;
 }
 
-/* Cards --------------------------------------------------------------- */
+/* Cards ------------------------------------------------------------------ */
 
 .card {
   background-color: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(11, 45, 91, 0.07);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--grey-200);
 }
 
 /* Utilities ------------------------------------------------------------ */
@@ -484,7 +545,7 @@ a {
 .chip:has(input:checked) {
   border-color: var(--blue);
   background: var(--blue);
-  color: #fff;
+  color: var(--paper);
 }
 
 .chip:has(input:focus-visible) {
@@ -521,7 +582,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Navbar right-side group (language + hamburger) */
@@ -536,8 +597,8 @@ a {
   align-items: center;
   gap: 0.3rem;
   padding: 0.4rem 0.6rem;
-  background-color: #f8fafc;
-  border-radius: 8px;
+  background-color: var(--grey-50);
+  border-radius: var(--radius);
   border: 1px solid var(--line);
 }
 
@@ -556,12 +617,12 @@ a {
   border: none;
   cursor: pointer;
   padding: 0.4rem;
-  border-radius: 8px;
+  border-radius: var(--radius);
   transition: background 0.2s;
 }
 
 .hamburger-btn:hover {
-  background: #f1f5f9;
+  background: var(--grey-100);
 }
 
 /* Top Navbar Responsive Rules */
@@ -691,9 +752,9 @@ a {
 /* Form Control Read-Only / Disabled Enhancements */
 .form-control:disabled,
 .form-control[readonly] {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #334155 !important;
+  background-color: var(--grey-100) !important;
+  border-color: var(--grey-300) !important;
+  color: var(--grey-800) !important;
   cursor: not-allowed !important;
 }
 
@@ -715,12 +776,12 @@ a {
   0%,
   100% {
     transform: scale(1);
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--shadow-lg);
   }
 
   50% {
     transform: scale(1.06);
-    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.45);
+    box-shadow: var(--shadow-lg);
   }
 }
 
@@ -740,8 +801,7 @@ a {
 }
 
 .shimmer-btn:hover {
-  background-position: right center;
-  transform: translateY(-2px) scale(1.02);
+  background-position: right center;
 }
 
 /* Floating input labels */
@@ -813,17 +873,6 @@ a {
   }
 }
 
-@media (max-width: 768px) {
-  .catalog-product-list-row {
-    flex-direction: column;
-    align-items: flex-start !important;
-  }
-
-  .catalog-product-list-actions {
-    justify-content: space-between !important;
-    width: 100%;
-  }
-}
 
 /* CartPage's non-empty layout — cart items (span 8) + Order Summary (span 4)
    side by side on a 12-col grid. Below 900px the "span 4" column doesn't have
@@ -908,8 +957,8 @@ a {
   max-width: 380px;
   padding: 2.25rem 2rem;
   border-radius: 20px;
-  background-color: #ffffff;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  background-color: var(--paper);
+  box-shadow: var(--shadow-xl);
   text-align: center;
   animation: otp-dialog-in 0.2s ease-out;
 }
@@ -942,32 +991,32 @@ a {
   flex: 1;
   min-width: 0;
   height: 54px;
-  border-radius: 12px;
-  border: 1.5px solid #94a3b8;
-  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--grey-400);
+  background: var(--paper);
   font-family: inherit;
   font-size: 1.3rem;
-  font-weight: 800;
-  color: #0f172a;
+  font-weight: 700;
+  color: var(--grey-900);
   text-align: center;
 }
 
 .otp-box.is-filled {
-  border: 2px solid #0f7a4d;
-  background: #f0fdf4;
+  border: 2px solid var(--green-700);
+  background: var(--green-50);
 }
 
 .otp-box.is-error {
-  border: 2px solid #b91c1c;
+  border: 2px solid var(--red-700);
 }
 
 .otp-box:disabled {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--grey-100);
+  color: var(--grey-600);
 }
 
 .otp-box:focus-visible {
-  outline: 3px solid #0f57a8;
+  outline: 3px solid var(--blue-600);
   outline-offset: 2px;
 }
 
@@ -991,7 +1040,7 @@ a {
   width: 28px;
   height: 28px;
   border: 3px solid rgba(255, 255, 255, 0.25);
-  border-top-color: #ffffff;
+  border-top-color: var(--paper);
   border-radius: 50%;
   animation: face-capture-spin 0.8s linear infinite;
 }
@@ -1001,7 +1050,7 @@ a {
   height: 16px;
   border-width: 2px;
   border-color: rgba(255, 255, 255, 0.35);
-  border-top-color: #ffffff;
+  border-top-color: var(--paper);
 }
 
 @keyframes face-capture-spin {
@@ -1027,11 +1076,11 @@ a {
 
 .kyc-capture-card,
 .kyc-details-card {
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
+  background: var(--paper);
+  border: 1.5px solid var(--grey-200);
   border-radius: var(--radius-card, 16px);
   padding: 1.25rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1043,8 +1092,8 @@ a {
 
 .kyc-capture-card:hover,
 .kyc-details-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  border-color: var(--grey-300);
+  box-shadow: var(--shadow-md);
 }
 
 @media (max-width: 860px) {
@@ -1087,7 +1136,7 @@ body {
 }
 
 .section-title::before {
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .card,
@@ -1096,7 +1145,7 @@ body {
 .sidebar-box,
 .sidebar-btn {
   border-color: var(--line);
-  box-shadow: 0 6px 20px rgba(11, 45, 91, 0.07);
+  box-shadow: var(--shadow-md);
 }
 
 .card-tint-blue {
@@ -1116,7 +1165,7 @@ body {
 }
 
 .form-control {
-  background: #fff;
+  background: var(--paper);
   border-color: var(--line);
 }
 
@@ -1139,7 +1188,7 @@ body {
 }
 
 .product-card-green {
-  background: linear-gradient(135deg, #50b748, #3a9636);
+  background: var(--green-500);
 }
 
 .product-btn-primary {
@@ -1180,3 +1229,40 @@ body {
   }
 }
 
+
+/* Touch-size floor for every text control, including ones styled inline. */
+.page-shell input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):not([type='hidden']),
+.page-shell--form input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):not([type='hidden']),
+.page-shell select,
+.page-shell--form select {
+  min-height: 44px;
+}
+
+/* Navbar: every control on the right shares one 44px height and radius,
+   so the row reads as a single aligned line. (Overrides inline sizes.) */
+.top-navbar-wrapper .navbar-cart-btn,
+.top-navbar-wrapper .lang-switcher,
+.top-navbar-wrapper .navbar-auth,
+.top-navbar-wrapper .hamburger-btn,
+.top-navbar-wrapper .nav-center-search > button {
+  box-sizing: border-box !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: var(--radius) !important;
+  align-items: center !important;
+}
+
+.top-navbar-wrapper .navbar-auth-phone {
+  height: 100% !important;
+  align-items: center !important;
+}
+
+.top-navbar-wrapper .nav-center-search > button {
+  width: 44px !important;
+}
+
+/* Back link at the top-left of a wizard card */
+.wizard-top-back {
+  margin: 0 0 var(--s3) calc(-1 * var(--s3));
+  min-height: 40px;
+}
