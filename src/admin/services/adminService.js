@@ -30,6 +30,12 @@ export const updateApplicationStatus = async (id, status, notes = '') => {
   return response.data;
 };
 
+// PATCH /api/admin/applications/:id/office-fields — save office details and staff signature
+export const updateOfficeFields = async (id, data) => {
+  const response = await api.patch(`/admin/applications/${id}/office-fields`, data);
+  return response.data;
+};
+
 // GET /api/admin/kyc — KYC cases (waiting + recently decided) with document URLs,
 // the automated checks and the full decision history
 export const getKycQueue = async () => {

@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
-import { FiClock, FiArrowRight, FiAlertCircle } from 'react-icons/fi';
+import { FiFileText, FiArrowRight } from 'react-icons/fi';
 import {
   getDraftSummary,
   deleteDraft,
   hasDraftAccess,
-  draftDaysLeft,
-  formatDraftDate,
   DRAFT_ACCESS_EVENT,
-  DRAFT_EXPIRY_WARNING_DAYS,
 } from '../services/draftService';
 import DraftSignInNotice from './DraftSignInNotice';
+import { FULL_ONBOARDING_7_STEPS } from './WizardStepper';
 
 const lastSavedText = (updatedAt) => {
   if (!updatedAt) return '';
@@ -25,25 +22,104 @@ const lastSavedText = (updatedAt) => {
   return `${days} day${days === 1 ? '' : 's'} ago`;
 };
 
-// Render into the slot above the nav bar so the banner spans the full width of the page.
-const aboveNav = (node) => {
-  const slot = typeof document !== 'undefined' ? document.getElementById('top-notice-root') : null;
-  return slot ? createPortal(node, slot) : node;
+// Saved stepIndex (location, loop, identity, signature, payment, review) ->
+// its number on the wizard's progress bar, so the banner matches the wizard.
+// The coverage check is part of Service Location there.
+const DISPLAY_STEP_BY_INDEX = [2, 2, 3, 4, 5, 6];
+const TOTAL_STEPS = FULL_ONBOARDING_7_STEPS.length;
+
+const stepOf = (stepIndex) => {
+  const index = Math.min(Math.max(Number.parseInt(stepIndex, 10) || 0, 0), DISPLAY_STEP_BY_INDEX.length - 1);
+  const number = DISPLAY_STEP_BY_INDEX[index];
+  return { number, label: FULL_ONBOARDING_7_STEPS[number - 1] };
 };
 
-// Calm blue normally; amber in the last few days before the 30-day limit.
-const THEMES = {
-  normal: { background: '#f0f7ff', border: '#c3dcf5', icon: '#0056a2', accent: '#0056a2' },
-  warning: { background: '#fff8e8', border: '#f4d58f', icon: '#93560a', accent: '#93560a' },
-};
+const styles = `
+.rdb-section { padding: 1.25rem 0 0; background: var(--page-bg); }
+.rdb-card {
+  position: relative;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  width: calc(100% - 2 * var(--page-gutter));
+  box-sizing: border-box;
+  background: var(--paper);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.1rem 1.25rem 1.1rem 1.5rem;
+}
+.rdb-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--blue-600);
+}
+.rdb-icon {
+  width: 48px; height: 48px; flex-shrink: 0;
+  border-radius: var(--radius-lg);
+  background: var(--blue-50);
+  color: var(--blue-600);
+  display: flex; align-items: center; justify-content: center;
+}
+.rdb-body { flex: 1; min-width: 0; }
+.rdb-eyebrow {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--blue-600);
+}
+.rdb-title { margin: 0; font-size: 1.02rem; font-weight: 700; color: var(--grey-900); line-height: 1.35; }
+.rdb-meta {
+  margin: 0.3rem 0 0;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem;
+  font-size: 0.84rem; color: var(--grey-600);
+}
+.rdb-meta strong { color: var(--grey-700); font-weight: 600; }
+.rdb-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--grey-500); }
+.rdb-progress { width: 180px; flex-shrink: 0; }
+.rdb-progress-label {
+  display: flex; justify-content: space-between;
+  font-size: 0.75rem; font-weight: 600; color: var(--grey-600); margin-bottom: 0.35rem;
+}
+.rdb-track { height: 6px; border-radius: 999px; background: var(--grey-100); overflow: hidden; }
+.rdb-fill { height: 100%; border-radius: 999px; background: var(--blue-600); }
+.rdb-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.rdb-discard {
+  background: none; border: 1px solid transparent; border-radius: var(--radius);
+  color: var(--grey-600); font-size: 0.86rem; font-weight: 600;
+  padding: 0.6rem 0.9rem; cursor: pointer;
+}
+.rdb-discard:hover:not(:disabled) { background: var(--grey-100); color: var(--grey-900); }
+.rdb-continue {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-weight: 700; font-size: 0.9rem; padding: 0.65rem 1.2rem;
+  border-radius: var(--radius); white-space: nowrap;
+}
+.rdb-discard:focus-visible, .rdb-continue:focus-visible { outline: 2px solid var(--blue-400); outline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .rdb-progress { display: none; }
+}
+@media (max-width: 640px) {
+  .rdb-card { flex-wrap: wrap; gap: 0.9rem; padding: 1rem 1rem 1rem 1.25rem; }
+  .rdb-icon { width: 40px; height: 40px; }
+  .rdb-body { flex-basis: calc(100% - 56px); }
+  .rdb-actions { width: 100%; flex-direction: column-reverse; align-items: stretch; }
+  .rdb-continue { justify-content: center; }
+}
+`;
 
 /**
- * Tells a signed-in customer they have an unfinished New Connection
- * application, how long they have to finish it (30 days from when they started
- * it), and lets them carry on where they stopped. Renders nothing when there is
- * no saved progress, it has passed its 30 days, or it can't be checked. If this
- * browser can't reach saved applications at all, asks the customer to sign in
- * again rather than silently showing nothing.
+ * Shown under the header on the signed-in home page when the customer has an
+ * unfinished New Connection application: what they picked, where they
+ * stopped, and a way to carry on or discard it. Saved applications never
+ * expire. Renders nothing when there is no saved progress or it can't be
+ * checked. If this browser can't reach saved applications at all, asks the
+ * customer to sign in again rather than silently showing nothing.
  */
 export default function ResumeDraftBanner() {
   const navigate = useNavigate();
@@ -75,9 +151,10 @@ export default function ResumeDraftBanner() {
   }, [access]);
 
   if (!access) {
-    return aboveNav(
-      <div style={{ backgroundColor: 'var(--page-bg)' }}>
-        <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '1.5rem 1.5rem 0 1.5rem' }}>
+    return (
+      <div className="rdb-section">
+        <style>{styles}</style>
+        <div style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '0 var(--page-gutter)' }}>
           <DraftSignInNotice message="Please sign in again to see any unfinished New Connection application and keep your progress saved." />
         </div>
       </div>
@@ -85,23 +162,6 @@ export default function ResumeDraftBanner() {
   }
 
   if (!draft) return null;
-
-  // Past the 30-day limit it can no longer be continued, so it isn't offered.
-  const daysLeft = draftDaysLeft(draft.resumeUntil, draft.serverTime);
-  if (daysLeft === 0) return null;
-
-  const savedUntil = formatDraftDate(draft.resumeUntil);
-  const closeToLimit = daysLeft !== null && daysLeft <= DRAFT_EXPIRY_WARNING_DAYS;
-  const theme = closeToLimit ? THEMES.warning : THEMES.normal;
-
-  let deadline = null;
-  if (daysLeft === 1) {
-    deadline = <>Expires within 24 hours ({savedUntil}). Complete it today to keep your details.</>;
-  } else if (closeToLimit) {
-    deadline = <>Expires in {daysLeft} days ({savedUntil}). Complete it before then to keep your details.</>;
-  } else if (daysLeft !== null) {
-    deadline = <>Saved until {savedUntil} · {daysLeft} days left to complete it.</>;
-  }
 
   const handleStartOver = async () => {
     if (!window.confirm('Discard your unfinished application? Your saved details will be removed.')) return;
@@ -116,103 +176,68 @@ export default function ResumeDraftBanner() {
     }
   };
 
-  return aboveNav(
-    <div style={{ backgroundColor: 'var(--page-bg)' }}>
-      {/* Full-width band right under the nav bar; the content inside lines up with the page */}
-      <div
-        role="region"
-        aria-label="Unfinished application"
-        style={{
-          backgroundColor: theme.background,
-          borderBottom: `1px solid ${theme.border}`,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: 'var(--page-max)',
-            margin: '0 auto',
-            padding: '1rem var(--page-gutter)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '1rem',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', minWidth: 0 }}>
-            <div
-              aria-hidden="true"
-              style={{
-                width: '42px',
-                height: '42px',
-                flexShrink: 0,
-                borderRadius: 'var(--radius-lg)',
-                backgroundColor: 'var(--paper)',
-                color: theme.icon,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {closeToLimit ? <FiAlertCircle size={20} /> : <FiClock size={20} />}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '0.15rem 0.75rem' }}>
-                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--grey-900)' }}>
-                  You have an unfinished New Connection application
-                </h3>
-                {draft.updatedAt && (
-                  <span style={{ fontSize: '0.86rem', color: 'var(--grey-700)', whiteSpace: 'nowrap' }}>
-                    Last saved {lastSavedText(draft.updatedAt)}
-                  </span>
-                )}
-              </div>
-              {deadline && (
-                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.84rem', fontWeight: 700, color: theme.accent }}>
-                  {deadline}
-                </p>
-              )}
-            </div>
-          </div>
+  const step = stepOf(draft.stepIndex);
+  const percent = Math.round(((step.number - 1) / TOTAL_STEPS) * 100);
+  const packageName = draft.selectedProduct?.productName || draft.selectedProduct?.name || '';
+  const lastSaved = lastSavedText(draft.updatedAt);
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <button
-              type="button"
-              onClick={handleStartOver}
-              disabled={discarding}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--grey-600)',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                padding: '0.35rem',
-              }}
-            >
-              Start over
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => navigate('/new-connection')}
-              disabled={discarding}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                fontWeight: 700,
-                fontSize: '0.92rem',
-                padding: '0.65rem 1.25rem',
-                borderRadius: 'var(--radius)',
-              }}
-            >
-              Continue application <FiArrowRight size={16} aria-hidden="true" />
-            </button>
+  return (
+    <section className="rdb-section" aria-label="Unfinished application">
+      <style>{styles}</style>
+      <div className="rdb-card">
+        <div className="rdb-icon" aria-hidden="true">
+          <FiFileText size={22} />
+        </div>
+
+        <div className="rdb-body">
+          <p className="rdb-eyebrow">Continue where you left off</p>
+          <h2 className="rdb-title">Your New Connection application is saved</h2>
+          <p className="rdb-meta">
+            {packageName && (
+              <>
+                <strong>{packageName}</strong>
+                <span className="rdb-dot" aria-hidden="true" />
+              </>
+            )}
+            <span>Next: {step.label}</span>
+            {lastSaved && (
+              <>
+                <span className="rdb-dot" aria-hidden="true" />
+                <span>Last saved {lastSaved}</span>
+              </>
+            )}
+          </p>
+        </div>
+
+        <div className="rdb-progress" aria-hidden="true">
+          <div className="rdb-progress-label">
+            <span>Step {step.number} of {TOTAL_STEPS}</span>
+            <span>{percent}%</span>
+          </div>
+          <div className="rdb-track">
+            <div className="rdb-fill" style={{ width: `${Math.max(percent, 4)}%` }} />
           </div>
         </div>
+
+        <div className="rdb-actions">
+          <button
+            type="button"
+            className="rdb-discard"
+            onClick={handleStartOver}
+            disabled={discarding}
+          >
+            {discarding ? 'Discarding…' : 'Discard'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary rdb-continue"
+            onClick={() => navigate('/new-connection')}
+            disabled={discarding}
+          >
+            Continue application <FiArrowRight size={16} aria-hidden="true" />
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,24 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiMapPin, FiCheck, FiNavigation, FiCompass, FiZap, FiCrosshair, FiMaximize2, FiHome } from 'react-icons/fi';
 import LocationPickerModal from '../../components/form/LocationPickerModal';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import toast from 'react-hot-toast';
 import { useVerifiedContext } from '../../components/verification';
 import { getAuthUser } from '../../../shared/utils/authSession';
-import { calculateDistanceKm } from '../../../shared/utils/addressFormatter';
 import { motion } from 'framer-motion';
 import WizardStepHeader from '../../components/wizard/WizardStepHeader';
-
-function MiniMapRecenter({ center }) {
-  const map = useMap();
-  useEffect(() => {
-    if (center && typeof center.lat === 'number' && typeof center.lng === 'number') {
-      map.flyTo([center.lat, center.lng], Math.max(map.getZoom(), 15), { animate: true });
-    }
-  }, [center, map]);
-  return null;
-}
 
 export const SRI_LANKA_AREA_CODES = [
   { code: '011', label: '011 — Western (Colombo & Suburbs)', keywords: ['colombo', 'dehiwala', 'mount lavinia', 'nugegoda', 'maharagama', 'kottawa', 'battaramulla', 'kotte', 'malabe', 'rajagiriya', 'moratuwa', 'piliyandala', 'homagama', 'padukka', 'hanwella', 'hokandara', 'thalawathugoda', 'pannipitiya'] },
@@ -275,9 +264,6 @@ export default function CustomerInfoStep({
 
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [detectingGps, setDetectingGps] = useState(false);
-  const [geocodingStatus, setGeocodingStatus] = useState(formData.latitude && formData.longitude ? 'exact' : '');
-  const geocodeTimerRef = useRef(null);
-  const manualPinRef = useRef(false);
 
   // Helper to compose full installation address from separate physical fields + city/postal
   const composeFullAddress = ({
@@ -330,113 +316,6 @@ export default function CustomerInfoStep({
     );
   };
 
-  // Forward Geocoding Engine: automatically locates approximate map pin from typed street & address
-  const forwardGeocodeAddress = useCallback(
-    async (line1, line2, cityName) => {
-      const street = (line2 || '').trim();
-      const city = (cityName || '').trim();
-      if (!street && !city) return;
-
-      setGeocodingStatus('searching');
-
-      // Anchor coordinates of the selected city from SRI_LANKA_CITY_POSTAL_DATA
-      const cityMatch = SRI_LANKA_CITY_POSTAL_DATA.find(
-        (c) => c.city.toLowerCase() === city.toLowerCase()
-      );
-      const cityCoords = cityMatch?.lat && cityMatch?.lng ? { lat: cityMatch.lat, lng: cityMatch.lng } : null;
-
-      // Progressive queries
-      const queries = [];
-      if (street && city) {
-        if (line1 && line1.trim()) queries.push(`${line1.trim()}, ${street}, ${city}, Sri Lanka`);
-        queries.push(`${street}, ${city}, Sri Lanka`);
-      } else if (street) {
-        if (line1 && line1.trim()) queries.push(`${line1.trim()}, ${street}, Sri Lanka`);
-        queries.push(`${street}, Sri Lanka`);
-      } else if (city) {
-        queries.push(`${city}, Sri Lanka`);
-      }
-
-      let foundCoords = null;
-
-      // 1. Try Google Maps Geocoder if loaded
-      if (window.google?.maps?.Geocoder) {
-        const geocoder = new window.google.maps.Geocoder();
-        for (const q of queries) {
-          try {
-            const res = await new Promise((resolve) => {
-              geocoder.geocode({ address: q }, (results, status) => {
-                if (status === 'OK' && results && results[0]) resolve(results[0]);
-                else resolve(null);
-              });
-            });
-            if (res?.geometry?.location) {
-              const lat = res.geometry.location.lat();
-              const lng = res.geometry.location.lng();
-              if (cityCoords) {
-                const dist = calculateDistanceKm(cityCoords.lat, cityCoords.lng, lat, lng);
-                if (dist <= 35) {
-                  foundCoords = { lat, lng };
-                  break;
-                }
-              } else {
-                foundCoords = { lat, lng };
-                break;
-              }
-            }
-          } catch {}
-        }
-      }
-
-      // 2. OpenStreetMap Nominatim search fallback
-      if (!foundCoords) {
-        for (const q of queries) {
-          try {
-            const res = await fetch(
-              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=lk&limit=1`,
-              { headers: { 'Accept-Language': 'en' } }
-            );
-            const data = await res.json();
-            if (data && data.length > 0) {
-              const lat = parseFloat(data[0].lat);
-              const lng = parseFloat(data[0].lon);
-              if (cityCoords) {
-                const dist = calculateDistanceKm(cityCoords.lat, cityCoords.lng, lat, lng);
-                if (dist <= 35) {
-                  foundCoords = { lat, lng };
-                  break;
-                }
-              } else {
-                foundCoords = { lat, lng };
-                break;
-              }
-            }
-          } catch {}
-        }
-      }
-
-      // 3. City Anchor Fallback
-      if (!foundCoords && cityCoords) {
-        foundCoords = cityCoords;
-      }
-
-      if (foundCoords) {
-        manualPinRef.current = false;
-        if (setFields) {
-          setFields({
-            latitude: foundCoords.lat,
-            longitude: foundCoords.lng,
-            gpsCoordinates: foundCoords,
-          });
-        }
-        setGeocodingStatus('approximate');
-      } else {
-        setGeocodingStatus('');
-      }
-    },
-    [setFields]
-  );
-
   // Handle address line change (Address Line 1, Line 2, Landmark)
   const handleAddressLineChange = (field, value) => {
     const updated = {
@@ -464,16 +343,6 @@ export default function CustomerInfoStep({
     if (handleChange) {
       handleChange({ target: { name: field, value } });
     }
-
-    // Trigger debounced forward geocoding when Address Line 1 or Line 2 (Street) changes
-    if (field === 'addressLine1' || field === 'addressLine2') {
-      if (geocodeTimerRef.current) clearTimeout(geocodeTimerRef.current);
-      geocodeTimerRef.current = setTimeout(() => {
-        const line1 = field === 'addressLine1' ? value : formData.addressLine1;
-        const line2 = field === 'addressLine2' ? value : formData.addressLine2;
-        forwardGeocodeAddress(line1, line2, formData.city, formData.nearestLandmark);
-      }, 700);
-    }
   };
 
   const handleCitySelect = (e) => {
@@ -497,16 +366,6 @@ export default function CustomerInfoStep({
         address: full,
       };
       setFields(updates);
-
-      // Trigger forward geocoding if street was already entered
-      if (formData.addressLine2) {
-        if (geocodeTimerRef.current) clearTimeout(geocodeTimerRef.current);
-        geocodeTimerRef.current = setTimeout(() => {
-          forwardGeocodeAddress(formData.addressLine1, formData.addressLine2, cityName, formData.nearestLandmark);
-        }, 350);
-      } else if (match?.lat && match?.lng) {
-        setGeocodingStatus('approximate');
-      }
     }
   };
 
@@ -536,25 +395,6 @@ export default function CustomerInfoStep({
     const updates = {};
 
     if (coords && typeof coords.lat === 'number' && typeof coords.lng === 'number') {
-      // Strict Geographical Boundary Guard: Prevent picking a location (e.g. Jaffna) mismatched with selected city (e.g. Colombo)
-      if (formData.city) {
-        const cityMatch = SRI_LANKA_CITY_POSTAL_DATA.find(
-          (c) => c.city.toLowerCase() === formData.city.toLowerCase()
-        );
-        if (cityMatch?.lat && cityMatch?.lng) {
-          const dist = calculateDistanceKm(cityMatch.lat, cityMatch.lng, coords.lat, coords.lng);
-          if (dist > 35) {
-            toast.error(
-              `Location mismatch: Selected spot is ~${Math.round(dist)} km away from ${formData.city}. The map cannot accept this location.`
-            );
-            return;
-          }
-        }
-      }
-
-      manualPinRef.current = true;
-      setGeocodingStatus('exact');
-
       updates.latitude = coords.lat;
       updates.longitude = coords.lng;
       updates.gpsCoordinates = coords;
@@ -800,7 +640,7 @@ export default function CustomerInfoStep({
                   htmlFor="nc-address-line1"
                   style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#26344b', marginBottom: '0.35rem' }}
                 >
-                  Address Line 1 (House No. / Building / Floor) <span style={{ color: '#b42318' }}>*</span>
+                  Address Line 1 (House No. &amp; Street) <span style={{ color: '#b42318' }}>*</span>
                 </label>
                 <input
                   id="nc-address-line1"
@@ -808,7 +648,7 @@ export default function CustomerInfoStep({
                   name="addressLine1"
                   value={formData.addressLine1 || ''}
                   onChange={(e) => handleAddressLineChange('addressLine1', e.target.value)}
-                  placeholder="e.g. No. 45/2 or 3rd Floor, Block B"
+                  placeholder="e.g. No. 45/2, Temple Road"
                   required
                   style={{
                     width: '100%',
@@ -832,7 +672,7 @@ export default function CustomerInfoStep({
                   htmlFor="nc-address-line2"
                   style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#26344b', marginBottom: '0.35rem' }}
                 >
-                  Address Line 2 (Street / Road Name) <span style={{ color: '#b42318' }}>*</span>
+                  Address Line 2 (Apartment, Unit, Floor) <span style={{ color: '#52627a', fontWeight: 500 }}>(Optional)</span>
                 </label>
                 <input
                   id="nc-address-line2"
@@ -840,8 +680,7 @@ export default function CustomerInfoStep({
                   name="addressLine2"
                   value={formData.addressLine2 || ''}
                   onChange={(e) => handleAddressLineChange('addressLine2', e.target.value)}
-                  placeholder="e.g. Temple Road, Station Road, Galle Road"
-                  required
+                  placeholder="e.g. Lotus Residencies, 3rd Floor, Apt 3B"
                   style={{
                     width: '100%',
                     padding: '0.75rem 0.95rem',
@@ -858,13 +697,13 @@ export default function CustomerInfoStep({
                 />
               </div>
 
-              {/* Address Line 3: Nearest Landmark */}
+              {/* Nearest Landmark */}
               <div>
                 <label
                   htmlFor="nc-nearest-landmark"
                   style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: '#26344b', marginBottom: '0.35rem' }}
                 >
-                  Address Line 3 (Nearby Landmark) <span style={{ color: '#52627a', fontWeight: 500 }}>(Optional)</span>
+                  Nearest Landmark <span style={{ color: '#52627a', fontWeight: 500 }}>(Optional)</span>
                 </label>
                 <input
                   id="nc-nearest-landmark"
@@ -872,7 +711,7 @@ export default function CustomerInfoStep({
                   name="nearestLandmark"
                   value={formData.nearestLandmark || formData.landmark || ''}
                   onChange={(e) => handleAddressLineChange('nearestLandmark', e.target.value)}
-                  placeholder="e.g. Opposite Sambuddha Jayanthi Temple, Near Clock Tower"
+                  placeholder="e.g. Opposite Sambuddha Jayanthi Temple, Near Water Tank"
                   style={{
                     width: '100%',
                     padding: '0.75rem 0.95rem',
@@ -1054,12 +893,12 @@ export default function CustomerInfoStep({
                   </div>
                 </div>
 
-                {/* GPS / Approximate Locked Confirmation Box & Mini Map Preview */}
+                {/* GPS Locked Confirmation Box & Mini Map Preview */}
                 {formData.latitude && formData.longitude ? (
                   <div
                     style={{
-                      backgroundColor: geocodingStatus === 'approximate' ? '#f0f9ff' : 'var(--green-50)',
-                      border: `1.5px solid ${geocodingStatus === 'approximate' ? '#bae6fd' : 'var(--green-300)'}`,
+                      backgroundColor: 'var(--green-50)',
+                      border: '1.5px solid var(--green-300)',
                       borderRadius: 'var(--radius-lg)',
                       padding: '0.85rem',
                       boxShadow: 'var(--shadow-sm)',
@@ -1067,32 +906,12 @@ export default function CustomerInfoStep({
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.65rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                        <div
-                          style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '50%',
-                            backgroundColor: geocodingStatus === 'approximate' ? '#e0f2fe' : '#e2f4e3',
-                            color: geocodingStatus === 'approximate' ? '#0284c7' : '#0f7a4d',
-                            display: 'grid',
-                            placeItems: 'center',
-                          }}
-                        >
-                          {geocodingStatus === 'approximate' ? <FiCompass size={14} /> : <FiCheck size={14} />}
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#e2f4e3', color: '#0f7a4d', display: 'grid', placeItems: 'center' }}>
+                          <FiCheck size={14} />
                         </div>
                         <div>
-                          <span
-                            style={{
-                              fontSize: '0.75rem',
-                              fontWeight: 700,
-                              textTransform: 'uppercase',
-                              color: geocodingStatus === 'approximate' ? '#0369a1' : '#0b5f3c',
-                              letterSpacing: '0.5px',
-                            }}
-                          >
-                            {geocodingStatus === 'approximate'
-                              ? 'Approximate Location (from Street Address)'
-                              : 'Exact GPS Coordinates Locked'}
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#0b5f3c', letterSpacing: '0.5px' }}>
+                            Exact GPS Coordinates Locked
                           </span>
                           <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#131f33' }}>
                             {Number(formData.latitude).toFixed(5)}° N, {Number(formData.longitude).toFixed(5)}° E
@@ -1105,8 +924,8 @@ export default function CustomerInfoStep({
                         onClick={() => setIsMapModalOpen(true)}
                         style={{
                           backgroundColor: 'var(--paper)',
-                          border: `1px solid ${geocodingStatus === 'approximate' ? '#bae6fd' : 'var(--green-300)'}`,
-                          color: geocodingStatus === 'approximate' ? '#0284c7' : 'var(--green-700)',
+                          border: '1px solid var(--green-300)',
+                          color: 'var(--green-700)',
                           padding: '0.25rem 0.6rem',
                           borderRadius: 'var(--radius)',
                           fontSize: '0.75rem',
@@ -1123,7 +942,7 @@ export default function CustomerInfoStep({
                     </div>
 
                     {/* Leaflet Mini Map Preview */}
-                    <div style={{ height: '170px', width: '100%', borderRadius: 'var(--radius)', overflow: 'hidden', border: `1px solid ${geocodingStatus === 'approximate' ? '#bae6fd' : '#c9ebc8'}`, position: 'relative' }}>
+                    <div style={{ height: '170px', width: '100%', borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid #c9ebc8', position: 'relative' }}>
                       <MapContainer
                         center={[formData.latitude, formData.longitude]}
                         zoom={15}
@@ -1134,7 +953,6 @@ export default function CustomerInfoStep({
                           attribution='&copy; OpenStreetMap'
                           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
-                        <MiniMapRecenter center={{ lat: formData.latitude, lng: formData.longitude }} />
                         <Marker position={[formData.latitude, formData.longitude]} />
                       </MapContainer>
                       <div
@@ -1142,7 +960,7 @@ export default function CustomerInfoStep({
                           position: 'absolute',
                           bottom: '6px',
                           left: '6px',
-                          backgroundColor: 'rgba(15, 23, 42, 0.82)',
+                          backgroundColor: 'rgba(15, 23, 42, 0.8)',
                           color: 'var(--paper)',
                           padding: '0.2rem 0.55rem',
                           borderRadius: 'var(--radius-sm)',
@@ -1152,9 +970,7 @@ export default function CustomerInfoStep({
                           backdropFilter: 'blur(4px)',
                         }}
                       >
-                        {geocodingStatus === 'approximate'
-                          ? '📍 Approx. Street Location (Click "Adjust Pin" to fine-tune)'
-                          : '📍 Pinned Installation Spot'}
+                        📍 Pinned Installation Spot
                       </div>
                     </div>
                   </div>
@@ -1191,7 +1007,7 @@ export default function CustomerInfoStep({
                         No Map Coordinates Pinned Yet
                       </div>
                       <div style={{ fontSize: '0.75rem', color: '#52627a', maxWidth: '300px', marginTop: '0.15rem' }}>
-                        Type your Street in Address Line 2, select your city, or open the map picker to pinpoint your installation location.
+                        Pin your exact spot on the map or use GPS to verify Fibre loop availability in the next step.
                       </div>
                     </div>
                     <button
@@ -1228,18 +1044,6 @@ export default function CustomerInfoStep({
         onClose={() => setIsMapModalOpen(false)}
         onSelectAddress={handleLocationSelect}
         initialAddress={formData.installAddress || formData.address}
-        initialCenter={
-          formData.latitude && formData.longitude
-            ? { lat: Number(formData.latitude), lng: Number(formData.longitude) }
-            : null
-        }
-        selectedCity={formData.city}
-        cityCoordinates={
-          (() => {
-            const match = SRI_LANKA_CITY_POSTAL_DATA.find((c) => c.city === formData.city);
-            return match?.lat && match?.lng ? { lat: match.lat, lng: match.lng } : null;
-          })()
-        }
       />
 
       {/* Contact email for billing and updates, from the verified session */}
