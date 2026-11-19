@@ -15,7 +15,7 @@ import { formatDate, serviceLabel, statusBadgeClass, statusLabel } from '../util
 
 const OPEN_STATUSES = ['pending', 'pending payment', 'flagged'];
 const STATUS_ORDER = ['pending', 'pending payment', 'flagged', 'approved', 'rejected', 'confirmed'];
-const REFRESH_MS = 30000;
+const REFRESH_MS = 60000;
 const PAGE_SIZE = 25;
 const SYSTEM_NAME = 'Automated KYC';
 const RECHECK_POLL_MS = 2000;
