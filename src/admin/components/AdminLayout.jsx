@@ -71,6 +71,11 @@ const NAV_ICONS = {
       <path d="M4 4h16v16H4z" /><path d="M8 8h8M8 12h8M8 16h5" />
     </svg>
   ),
+  backups: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5" /><path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" />
+    </svg>
+  ),
   branches: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 21h18M5 21V7l7-4 7 4v14" /><path d="M9 21v-6h6v6M9 10h.01M15 10h.01" />
@@ -96,6 +101,8 @@ const NAV_BY_KEY = {
   'sales-officers': { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'] },
   'audit-logs': { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'] },
   branches: { key: 'branches', label: 'Branches', icon: NAV_ICONS.branches },
+  // Backup Dashboard — visible only to the Super Admin role (see utils/pageAccess.js)
+  backups: { key: 'backups', label: 'Backups', icon: NAV_ICONS.backups },
   // Sales Officer personal dashboard — visible only to Sales Officer role
   'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'] },
 };
@@ -105,7 +112,7 @@ const NAV_BY_KEY = {
 // A module that is not listed here (e.g. a new one) still shows, under "More".
 const NAV_SECTION_LAYOUT = [
   { key: 'overview', label: 'Overview', items: ['dashboard', 'so-dashboard'] },
-  { key: 'administration', label: 'Administration', items: ['analytics', 'audit-logs', 'users', 'branches'] },
+  { key: 'administration', label: 'Administration', items: ['analytics', 'audit-logs', 'users', 'branches', 'backups'] },
   { key: 'operations', label: 'Operations', items: ['sales-officers', 'kyc', 'leads', 'forms'] },
   { key: 'field', label: 'Field Service', items: ['appointments', 'technician'] },
 ];
@@ -169,7 +176,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
 
   // 'Admin' and 'Staff' are the only fixed labels — everything else is a
   // custom role name an Admin defined in User Management, shown as-is.
-  const roleLabel = { Admin: 'Administrator', Staff: 'Staff' }[admin?.role] || admin?.role || 'Staff';
+  const roleLabel = { Admin: 'Administrator', 'Super Admin': 'Super Administrator', Staff: 'Staff' }[admin?.role] || admin?.role || 'Staff';
 
   return (
     <div className="admin-shell">

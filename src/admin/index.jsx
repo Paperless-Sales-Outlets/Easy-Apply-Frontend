@@ -15,13 +15,14 @@ import AuditLogsPage from './pages/AuditLogsPage';
 import SalesOfficerManagementPage from './pages/SalesOfficerManagementPage';
 import SalesOfficerDashboardPage from './pages/SalesOfficerDashboardPage';
 import LeadManagementPage from './pages/LeadManagementPage';
+import BackupDashboardPage from './pages/BackupDashboardPage';
 import { canOpenPage, landingPage } from './utils/pageAccess';
 import { FORM_TYPES } from './utils/applicationUtils';
 import './admin.css';
 
 function getPageFromPath(pathname) {
   const segment = pathname.replace(/\/$/, '').split('/').pop();
-  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'branches', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads'];
+  const known = ['dashboard', 'forms', 'applications', 'kyc', 'appointments', 'technician', 'analytics', 'privileges', 'users', 'branches', 'audit-logs', 'sales-officers', 'so-dashboard', 'leads', 'backups'];
   if (known.includes(segment)) {
     // Old links: /applications is Forms, /privileges is the Privileges tab of User Management.
     if (segment === 'applications') return 'forms';
@@ -93,6 +94,8 @@ function AdminDashboardContent() {
         return <SalesOfficerDashboardPage />;
       case 'leads':
         return <LeadManagementPage />;
+      case 'backups':
+        return <BackupDashboardPage />;
       case null:
         return (
           <div className="admin-notice admin-notice-info" role="status">
