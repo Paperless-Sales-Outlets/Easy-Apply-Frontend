@@ -8,6 +8,9 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      API_URL: /Paperlessbackup/api
+      DEST_DIR: /var/www/paperlessbackup
 
     steps:
       - name: Checkout Code
@@ -19,18 +22,13 @@ jobs:
           node-version: 20
           cache: "npm"
 
-      - name: Determine Environment Variables & Folders
-        run: |
-          echo "API_URL=/Paperlessbackup/api" >> $GITHUB_ENV
-          echo "DEST_DIR=/var/www/paperlessbackup" >> $GITHUB_ENV
-
       - name: Create Production .env file
         run: |
           echo "VITE_API_BASE_URL=${{ env.API_URL }}" > .env
           echo "VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}" >> .env
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
       - name: Build Application
         run: npm run build
@@ -42,6 +40,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "dist/*"
-          target: ${{ env.DEST_DIR }}
+          source: "dist/**"
+          target: "${{ env.DEST_DIR }}"
           strip_components: 1
+          rm: true
