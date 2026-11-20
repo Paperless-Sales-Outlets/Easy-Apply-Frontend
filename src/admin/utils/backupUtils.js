@@ -60,6 +60,7 @@ export const STAGE_LABELS = {
   starting: 'Starting',
   dumping_database: 'Dumping the database',
   archiving_files: 'Archiving uploaded files',
+  archiving_documents: 'Copying the document storage bucket',
   bundling: 'Packaging',
   encrypting: 'Encrypting',
   uploading: 'Saving to storage',
@@ -71,7 +72,20 @@ export const RESTORE_STAGE_LABELS = {
   verifying_backup: 'Checking the backup',
   restoring_database: 'Restoring the database',
   restoring_files: 'Restoring uploaded files',
+  restoring_documents: 'Restoring the document storage bucket',
 };
+
+/** What a backup holds, in words: "Database, uploads folder, bucket kyc-documents (120 files, 45 MB)". */
+export function describeContents(backup) {
+  const parts = ['Database'];
+  if (backup?.contents?.files) parts.push('uploads folder');
+  for (const doc of backup?.contents?.documents || []) {
+    parts.push(`storage bucket ${doc.bucket} (${doc.count} file${doc.count === 1 ? '' : 's'}, ${formatBytes(doc.bytes)})`);
+  }
+  return parts.join(', ');
+}
+
+export const hasDocuments = (backup) => Boolean(backup?.contents?.documents?.length);
 
 export const AUDIT_ACTION_LABELS = {
   created: 'Created',

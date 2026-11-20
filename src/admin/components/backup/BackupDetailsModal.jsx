@@ -3,7 +3,7 @@ import BackupModal from './BackupModal';
 import { getBackupDetails } from '../../services/backupService';
 import {
   AUDIT_ACTION_LABELS, RESTORE_STAGE_LABELS, STAGE_LABELS, STATUS_BADGE, STATUS_LABELS, TYPE_LABELS,
-  formatBytes, formatDateTime, formatDuration,
+  describeContents, formatBytes, formatDateTime, formatDuration,
 } from '../../utils/backupUtils';
 
 const RESULT_BADGE = { passed: 'approved', success: 'approved', failed: 'rejected', running: 'in-progress' };
@@ -65,6 +65,7 @@ export default function BackupDetailsModal({ backup, onClose }) {
         <div><dt>Finished</dt><dd>{formatDateTime(backup.finishedAt)}</dd></div>
         <div><dt>Duration</dt><dd>{formatDuration(backup.durationMs)}</dd></div>
         <div><dt>Size</dt><dd>{formatBytes(backup.sizeBytes)}</dd></div>
+        {backup.status === 'success' && <div className="bk-wide"><dt>Contains</dt><dd>{describeContents(backup)}</dd></div>}
         <div className="bk-wide"><dt>Backup ID</dt><dd className="bk-mono">{backup.id}</dd></div>
         <div className="bk-wide"><dt>File name</dt><dd className="bk-mono">{backup.fileName}</dd></div>
         <div className="bk-wide"><dt>SHA-256 checksum</dt><dd className="bk-mono">{backup.checksum || '—'}</dd></div>
@@ -116,6 +117,7 @@ export default function BackupDetailsModal({ backup, onClose }) {
           {restore && (
             <ResultBlock title="Restore" result={restore}>
               {restore.status === 'running' && restore.stage && <p>{RESTORE_STAGE_LABELS[restore.stage] || restore.stage}…</p>}
+              {restore.documents && <p className="bk-muted">Storage bucket: {restore.documents.uploaded} file(s) restored{restore.documents.deleted ? `, ${restore.documents.deleted} extra file(s) deleted` : ', none deleted'}.</p>}
               {restore.preRestoreBackupId && <p className="bk-muted">Safety backup ID: <span className="bk-mono">{restore.preRestoreBackupId}</span></p>}
             </ResultBlock>
           )}

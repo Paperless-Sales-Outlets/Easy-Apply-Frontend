@@ -10139,7 +10139,7 @@ span.alog-caret { cursor: inherit; }
 .bk-actions { position: relative; display: flex; gap: 0.35rem; justify-content: flex-end; }
 .bk-details-btn, .bk-menu-btn { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
 .bk-menu {
-  position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 180px;
+  position: fixed; z-index: 1200; min-width: 180px;
   background: #fff; border: 1px solid var(--line); border-radius: 10px;
   box-shadow: 0 10px 30px rgba(11,45,91,0.18); padding: 0.3rem; display: flex; flex-direction: column;
 }
@@ -10204,3 +10204,47 @@ span.alog-caret { cursor: inherit; }
   .bk-note { max-width: 140px; }
   .bk-facts > div { flex-direction: column; gap: 0.1rem; }
 }
+
+.bk-check { display: flex; gap: 0.6rem; align-items: flex-start; margin-top: 0.6rem; font-size: 0.84rem; cursor: pointer; }
+.bk-check input { margin-top: 0.2rem; }
+
+/* Review fixes: readable badge on the dark summary tiles, no awkward wrapping of IDs and dates. */
+.bk-tile-value .admin-badge { background: rgba(255, 255, 255, 0.92); font-size: 0.85rem; }
+.bk-name strong, .bk-date { white-space: nowrap; }
+
+/* Review fixes (browser review): keep the row actions reachable, single-line rows, usable on phones. */
+.bk-table td { white-space: nowrap; }
+.bk-table td:nth-child(3) { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.bk-table tbody tr { background: #fff; }
+.bk-table tbody tr:nth-child(even) { background: #f4f8fd; }
+.bk-table tbody tr:hover { background: #e9f1fb; }
+.bk-table th:last-child, .bk-table td:last-child {
+  position: sticky; right: 0; background: inherit;
+  box-shadow: -10px 0 10px -10px rgba(11, 45, 91, 0.25);
+}
+.bk-table thead th:last-child { background: #eef3fa; }
+
+@media (max-width: 900px) {
+  .bk-page .um-hero-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bk-page .um-tab-label { display: inline; }
+  .bk-page .um-tab { gap: 0.4rem; font-size: 0.82rem; }
+}
+@media (max-width: 480px) {
+  .bk-page .um-hero-tiles { grid-template-columns: minmax(0, 1fr); }
+  .bk-page .bk-tile-value { font-size: 1.15rem; }
+}
+
+/* Review fixes, round 2: show the Status column fully next to the pinned actions; plain scrolling on phones. */
+.bk-table .bk-note { max-width: 170px; }
+.bk-table td:nth-child(3) { max-width: 110px; }
+.bk-table td:nth-child(10) .bk-note { max-width: 120px; }
+@media (max-width: 640px) {
+  .bk-table th:last-child, .bk-table td:last-child { position: static; box-shadow: none; }
+}
+
+/* Review fixes, round 3: tighter cells so Status is never hidden under the pinned actions at 1440 px. */
+.bk-table th, .bk-table td { padding-left: 0.6rem; padding-right: 0.6rem; }
+.bk-table .bk-note { max-width: 150px; }
+.bk-table td:nth-child(3) { max-width: 100px; }
+
+.bk-table td .bk-progress-text { white-space: normal; max-width: 130px; }

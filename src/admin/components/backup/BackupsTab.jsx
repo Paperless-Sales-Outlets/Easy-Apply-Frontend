@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Pager } from '../AdminVisuals';
 import {
   STAGE_LABELS, RESTORE_STAGE_LABELS, STATUS_BADGE, STATUS_LABELS, TYPE_LABELS,
@@ -29,16 +30,41 @@ function runningLabel(backup) {
 function RowActions({ backup, summary, onAction }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const menuRef = useRef(null);
+  const [pos, setPos] = useState(null);
+
+  // The menu is drawn in a portal at a fixed position: inside the table it would be clipped by the
+  // scrolling container and covered by the pinned actions cells of the rows below.
+  const place = () => {
+    const rect = ref.current.getBoundingClientRect();
+    const openUp = window.innerHeight - rect.bottom < 220 && rect.top > 220;
+    setPos({ right: window.innerWidth - rect.right, ...(openUp ? { bottom: window.innerHeight - rect.top + 4 } : { top: rect.bottom + 4 }) });
+  };
+  const toggle = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    place();
+    setOpen(true);
+  };
 
   useEffect(() => {
     if (!open) return undefined;
-    const onDown = (event) => { if (ref.current && !ref.current.contains(event.target)) setOpen(false); };
+    const inside = (event) => ref.current?.contains(event.target) || menuRef.current?.contains(event.target);
+    const onDown = (event) => { if (!inside(event)) setOpen(false); };
     const onKey = (event) => { if (event.key === 'Escape') setOpen(false); };
+    // The menu follows its button when the page or the table scrolls, instead of closing.
+    const follow = () => { if (ref.current) place(); };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);
+    window.addEventListener('resize', follow);
+    window.addEventListener('scroll', follow, true);
     return () => {
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', follow);
+      window.removeEventListener('scroll', follow, true);
     };
   }, [open]);
 
@@ -61,12 +87,12 @@ function RowActions({ backup, summary, onAction }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`More actions for ${backup.note}`}
-        onClick={() => setOpen((value) => !value)}
+        onClick={toggle}
       >
         ⋯
       </button>
-      {open && (
-        <div className="bk-menu" role="menu">
+      {open && pos && createPortal(
+        <div className="bk-menu" role="menu" ref={menuRef} style={{ position: 'fixed', ...pos }}>
           {items.map((item) => (
             <button
               key={item.key}
@@ -80,7 +106,8 @@ function RowActions({ backup, summary, onAction }) {
               {item.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -173,7 +200,7 @@ export default function BackupsTab({
                         {backup.purpose === 'pre_restore' && <span className="admin-badge scheduled">Auto</span>}
                       </div>
                     </td>
-                    <td>{formatDateTime(backup.startedAt)}</td>
+                    <td className="bk-date">{formatDateTime(backup.startedAt)}</td>
                     <td>{backup.createdByName || '—'}</td>
                     <td>{TYPE_LABELS[backup.type] || backup.type}</td>
                     <td><span className="bk-note" title={backup.note}>{backup.note}</span></td>

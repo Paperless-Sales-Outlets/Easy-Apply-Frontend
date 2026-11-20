@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import BackupModal from './BackupModal';
 import { restoreBackup, backupErrorMessage } from '../../services/backupService';
-import { formatBytes, formatDateTime, TYPE_LABELS } from '../../utils/backupUtils';
+import { describeContents, formatBytes, formatDateTime, hasDocuments, TYPE_LABELS } from '../../utils/backupUtils';
 
 export const RESTORE_PHRASE = 'RESTORE';
 
@@ -12,6 +12,7 @@ export const RESTORE_PHRASE = 'RESTORE';
 export default function RestoreModal({ backup, onClose, onStarted }) {
   const [phrase, setPhrase] = useState('');
   const [password, setPassword] = useState('');
+  const [deleteExtraDocuments, setDeleteExtraDocuments] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,7 +25,7 @@ export default function RestoreModal({ backup, onClose, onStarted }) {
     setBusy(true);
     setError('');
     try {
-      await restoreBackup(backup.id, { confirmation: phrase, password });
+      await restoreBackup(backup.id, { confirmation: phrase, password, deleteExtraDocuments });
       onStarted();
     } catch (err) {
       setError(await backupErrorMessage(err, 'The restore could not be started.'));
@@ -72,10 +73,22 @@ export default function RestoreModal({ backup, onClose, onStarted }) {
         <div><dt>Created</dt><dd>{formatDateTime(backup.startedAt)} by {backup.createdByName || 'unknown'}</dd></div>
         <div><dt>Type</dt><dd>{TYPE_LABELS[backup.type] || backup.type}</dd></div>
         <div><dt>Size</dt><dd>{formatBytes(backup.sizeBytes)}</dd></div>
+        <div><dt>Contains</dt><dd>{describeContents(backup)}</dd></div>
         {backup.testRestoreResult?.status === 'passed'
           ? <div><dt>Test restore</dt><dd>Passed on {formatDateTime(backup.testRestoreResult.finishedAt)}</dd></div>
           : <div><dt>Test restore</dt><dd className="bk-warn-text">Not tested — consider running “Test restore” first.</dd></div>}
       </dl>
+
+      {hasDocuments(backup) && (
+        <div className="bk-callout bk-callout-warn">
+          <strong>Customer documents in the storage bucket</strong>
+          <span>The documents saved in this backup are uploaded back to the bucket. Files added to the bucket after the backup are normally left untouched.</span>
+          <label className="bk-check">
+            <input type="checkbox" checked={deleteExtraDocuments} onChange={(event) => setDeleteExtraDocuments(event.target.checked)} />
+            <span><strong>Also permanently delete bucket files that are not in this backup</strong> (documents customers uploaded after it was made). Leave this unticked unless you are sure.</span>
+          </label>
+        </div>
+      )}
 
       <form id="bk-restore-form" onSubmit={submit} noValidate>
         <label className="um-field">

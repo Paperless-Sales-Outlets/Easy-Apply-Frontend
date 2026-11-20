@@ -70,6 +70,22 @@ export default function StorageSettingsTab({ summary }) {
           <Row label="Encryption key">
             {settings.encryptionConfigured ? <span className="bk-ok-text">Configured (AES-256-GCM)</span> : <span className="bk-warn-text">Missing — backups cannot be created</span>}
           </Row>
+          <Row label="Database connection" hint={settings.database?.ok ? `Set by ${settings.database.source}` : undefined}>
+            {settings.database?.ok
+              ? <span className="bk-ok-text">Direct ({settings.database.host}:{settings.database.port})</span>
+              : <span className="bk-warn-text">{settings.database?.error || 'Unknown'}</span>}
+          </Row>
+          <Row label="Test restore runs on">{settings.testRestoreTarget === 'BACKUP_TEST_RESTORE_URL' ? 'A separate server (BACKUP_TEST_RESTORE_URL)' : 'The database server (needs CREATEDB)'}</Row>
+          <Row label="Backend instances">
+            {settings.instance?.ok
+              ? <span className="bk-ok-text">Single instance</span>
+              : <span className="bk-warn-text">More than one instance: {settings.instance?.reason}. Backups are refused.</span>}
+          </Row>
+          <Row label="Customer-document bucket" hint="BACKUP_INCLUDE_SUPABASE_STORAGE">
+            {settings.documents?.enabled
+              ? <span className="bk-ok-text">Included: {settings.documents.buckets.join(', ')}{settings.documents.configured ? '' : ' (credentials missing)'}</span>
+              : 'Not included (off)'}
+          </Row>
           <Row label="pg_dump">{settings.tools?.pgDump ? <span className="bk-ok-text">{settings.tools.pgDump}</span> : <span className="bk-warn-text">Not found</span>}</Row>
           <Row label="pg_restore">{settings.tools?.pgRestore ? <span className="bk-ok-text">{settings.tools.pgRestore}</span> : <span className="bk-warn-text">Not found</span>}</Row>
         </dl>

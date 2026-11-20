@@ -19,8 +19,8 @@ export const verifyBackup = async (id) => (await api.post(`/admin/backups/${id}/
 
 export const testRestoreBackup = async (id) => (await api.post(`/admin/backups/${id}/test-restore`)).data;
 
-export const restoreBackup = async (id, { confirmation, password }) =>
-  (await api.post(`/admin/backups/${id}/restore`, { confirmation, password })).data;
+export const restoreBackup = async (id, { confirmation, password, deleteExtraDocuments = false }) =>
+  (await api.post(`/admin/backups/${id}/restore`, { confirmation, password, deleteExtraDocuments: deleteExtraDocuments === true })).data;
 
 export const deleteBackup = async (id) => (await api.delete(`/admin/backups/${id}`)).data;
 
