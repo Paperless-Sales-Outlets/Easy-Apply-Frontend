@@ -1,6 +1,16 @@
 import api from '../../shared/utils/api';
 
-// Backup Dashboard API (Super Admin only — the server enforces it).
+// Backup Dashboard API. Only the roles in the server's BACKUP_ALLOWED_ROLES setting (default: Admin)
+// may use it — the server enforces that with a 403.
+
+/** Whether the signed-in user may use backups. False on any error, so the page stays hidden. */
+export const getBackupAccess = async () => {
+  try {
+    return (await api.get('/admin/backups/access')).data?.allowed === true;
+  } catch {
+    return false;
+  }
+};
 
 export const getBackupSummary = async () => (await api.get('/admin/backups/summary')).data;
 

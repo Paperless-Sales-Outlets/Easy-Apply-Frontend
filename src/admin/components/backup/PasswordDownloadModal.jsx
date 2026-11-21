@@ -3,7 +3,7 @@ import BackupModal from './BackupModal';
 import { downloadBackup, backupErrorMessage } from '../../services/backupService';
 import { formatBytes, formatDateTime } from '../../utils/backupUtils';
 
-/** Download needs the Super Admin's password again; the file then arrives through a single-use, authenticated link. */
+/** Download needs the user's password again; the file then arrives through a single-use, authenticated link. */
 export default function PasswordDownloadModal({ backup, onClose, onDone }) {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);

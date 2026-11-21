@@ -101,7 +101,7 @@ const NAV_BY_KEY = {
   'sales-officers': { key: 'sales-officers', label: 'QR Management', icon: NAV_ICONS['sales-officers'] },
   'audit-logs': { key: 'audit-logs', label: 'Audit Logs', icon: NAV_ICONS['audit-logs'] },
   branches: { key: 'branches', label: 'Branches', icon: NAV_ICONS.branches },
-  // Backup Dashboard — visible only to the Super Admin role (see utils/pageAccess.js)
+  // Backup Dashboard — shown only when the server says this user may use backups (BACKUP_ALLOWED_ROLES)
   backups: { key: 'backups', label: 'Backups', icon: NAV_ICONS.backups },
   // Sales Officer personal dashboard — visible only to Sales Officer role
   'so-dashboard': { key: 'so-dashboard', label: 'My Dashboard', icon: NAV_ICONS['so-dashboard'] },
@@ -138,7 +138,7 @@ function shortFormLabel(label) {
 }
 
 /** Admin portal shell: sidebar navigation, user menu and the active page content. */
-export default function AdminLayout({ activePage, setActivePage, children, onSelectForm, activeFormId }) {
+export default function AdminLayout({ activePage, setActivePage, children, onSelectForm, activeFormId, backupAccess = false }) {
   const { admin, logout } = useAdminAuth();
   const [openForms, setOpenForms] = useState(activePage === 'forms');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -146,7 +146,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
 
   // Only the sections this account can open something in; a lone module needs no heading.
   const visibleSections = NAV_SECTIONS
-    .map(section => ({ ...section, items: section.items.filter(item => canOpenPage(admin, item.key)) }))
+    .map(section => ({ ...section, items: section.items.filter(item => canOpenPage(admin, item.key, { backups: backupAccess })) }))
     .filter(section => section.items.length > 0);
   const showSectionHeadings = visibleSections.reduce((count, section) => count + section.items.length, 0) > 1;
 
@@ -176,7 +176,7 @@ export default function AdminLayout({ activePage, setActivePage, children, onSel
 
   // 'Admin' and 'Staff' are the only fixed labels — everything else is a
   // custom role name an Admin defined in User Management, shown as-is.
-  const roleLabel = { Admin: 'Administrator', 'Super Admin': 'Super Administrator', Staff: 'Staff' }[admin?.role] || admin?.role || 'Staff';
+  const roleLabel = { Admin: 'Administrator', Staff: 'Staff' }[admin?.role] || admin?.role || 'Staff';
 
   return (
     <div className="admin-shell">

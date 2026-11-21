@@ -17,6 +17,7 @@ import SalesOfficerDashboardPage from './pages/SalesOfficerDashboardPage';
 import LeadManagementPage from './pages/LeadManagementPage';
 import BackupDashboardPage from './pages/BackupDashboardPage';
 import { canOpenPage, landingPage } from './utils/pageAccess';
+import { getBackupAccess } from './services/backupService';
 import { FORM_TYPES } from './utils/applicationUtils';
 import './admin.css';
 
@@ -40,6 +41,20 @@ function AdminDashboardContent() {
   const [activePage, setActivePage] = useState(() => getPageFromPath(location.pathname));
   // With a single form type there is nothing to choose, so a refresh or a direct link opens it.
   const [selectedFormId, setSelectedFormId] = useState(FORM_TYPES.length === 1 ? FORM_TYPES[0].id : null);
+
+  // Whether this user may use the Backups page is decided by the server (BACKUP_ALLOWED_ROLES);
+  // null = not known yet.
+  const [backupAccess, setBackupAccess] = useState(null);
+  const signedInId = admin?._id || admin?.id || admin?.email || null;
+  useEffect(() => {
+    let cancelled = false;
+    if (!signedInId) {
+      setBackupAccess(null);
+      return undefined;
+    }
+    getBackupAccess().then((allowed) => { if (!cancelled) setBackupAccess(allowed); });
+    return () => { cancelled = true; };
+  }, [signedInId]);
 
   useEffect(() => {
     const page = getPageFromPath(location.pathname);
@@ -65,7 +80,10 @@ function AdminDashboardContent() {
   };
 
   // A page this account has no privilege for falls back to its first allowed one.
-  const effectivePage = canOpenPage(admin, activePage) ? activePage : landingPage(admin);
+  const access = { backups: backupAccess === true };
+  // While the server's answer about backups is still loading, stay on the Backups URL instead of bouncing away.
+  const waitingForBackupAccess = activePage === 'backups' && backupAccess === null;
+  const effectivePage = waitingForBackupAccess || canOpenPage(admin, activePage, access) ? activePage : landingPage(admin, access);
   const usersTab = location.pathname.replace(/\/$/, '').endsWith('/privileges') ? 'privileges' : 'team';
 
   const renderActivePage = () => {
@@ -95,7 +113,9 @@ function AdminDashboardContent() {
       case 'leads':
         return <LeadManagementPage />;
       case 'backups':
-        return <BackupDashboardPage />;
+        return waitingForBackupAccess
+          ? <div className="admin-notice admin-notice-info" role="status"><span className="admin-notice-text">Checking access…</span></div>
+          : <BackupDashboardPage />;
       case null:
         return (
           <div className="admin-notice admin-notice-info" role="status">
@@ -111,6 +131,7 @@ function AdminDashboardContent() {
 
   return (
     <AdminLayout
+      backupAccess={backupAccess === true}
       activePage={effectivePage}
       setActivePage={handleSetActivePage}
       onSelectForm={handleSelectForm}

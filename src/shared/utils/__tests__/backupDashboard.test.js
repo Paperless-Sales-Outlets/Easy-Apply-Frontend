@@ -1,30 +1,43 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { canOpenPage, landingPage, isSuperAdmin } from '../../../admin/utils/pageAccess.js';
+import { canOpenPage, landingPage } from '../../../admin/utils/pageAccess.js';
 import {
   formatBytes, formatDuration, shortChecksum, hasRunningWork, actionBlockedReason, deleteBlockedReason,
 } from '../../../admin/utils/backupUtils.js';
 
-describe('Backup Dashboard access (menu visibility)', () => {
-  test('only a Super Admin can open the backups page', () => {
-    assert.equal(canOpenPage({ role: 'Super Admin' }, 'backups'), true);
-    assert.equal(canOpenPage({ role: ' super admin ' }, 'backups'), true);
-    for (const role of ['Admin', 'Staff', 'Manager', 'Sales Officer', 'Customer']) {
-      assert.equal(canOpenPage({ role, permissions: ['backups'] }, 'backups'), false, role);
+describe('Backups menu item and page: the server decides, not a role name', () => {
+  test('hidden until the server says the user may use backups', () => {
+    for (const role of ['Admin', 'Staff', 'Manager', 'Sales Officer', 'Customer', 'Super Admin']) {
+      assert.equal(canOpenPage({ role }, 'backups'), false, `${role} without a server answer`);
+      assert.equal(canOpenPage({ role }, 'backups', { backups: false }), false, `${role} refused by the server`);
     }
-    assert.equal(canOpenPage(null, 'backups'), false);
+  });
+
+  test('shown when the server says yes, whatever the role is called', () => {
+    for (const role of ['Admin', 'Manager', 'Team Lead']) {
+      assert.equal(canOpenPage({ role }, 'backups', { backups: true }), true, role);
+    }
+  });
+
+  test('only a real boolean true opens it (never a truthy string)', () => {
+    assert.equal(canOpenPage({ role: 'Admin' }, 'backups', { backups: 'true' }), false);
+    assert.equal(canOpenPage({ role: 'Admin' }, 'backups', { backups: 1 }), false);
+    assert.equal(canOpenPage({ role: 'Admin' }, 'backups', { backups: undefined }), false);
   });
 
   test('a privilege named "backups" cannot grant access', () => {
     assert.equal(canOpenPage({ role: 'Custom', permissions: ['backups', 'all'] }, 'backups'), false);
   });
 
-  test('a Super Admin keeps Admin pages; an Admin is not a Super Admin', () => {
+  test('other pages are unchanged: Admin opens them all, there is no special Super Admin role', () => {
     for (const page of ['users', 'audit-logs', 'branches', 'dashboard', 'kyc']) {
-      assert.equal(canOpenPage({ role: 'Super Admin' }, page), true, page);
+      assert.equal(canOpenPage({ role: 'Admin' }, page), true, page);
+      assert.equal(canOpenPage({ role: 'Super Admin' }, page), false, `Super Admin ${page}`);
     }
-    assert.equal(isSuperAdmin({ role: 'Admin' }), false);
-    assert.equal(landingPage({ role: 'Super Admin' }), 'dashboard');
+    assert.equal(canOpenPage({ role: 'Staff', permissions: ['kyc'] }, 'kyc'), true);
+    assert.equal(canOpenPage({ role: 'Staff', permissions: [] }, 'users'), false);
+    assert.equal(landingPage({ role: 'Admin' }), 'dashboard');
+    assert.equal(landingPage({ role: 'Admin' }, { backups: true }), 'dashboard', 'backups is never a landing page');
   });
 });
 

@@ -61,6 +61,7 @@ export default function StorageSettingsTab({ summary }) {
           <Row label="Stale-backup warning after" hint="BACKUP_WARNING_DAYS">{settings.warningDays} day{settings.warningDays === 1 ? '' : 's'}</Row>
           <Row label="Download link lifetime">{settings.downloadLinkTtlSec} seconds, single use</Row>
           <Row label="Automatic deletion">Never. At the limit you must delete old backups yourself.</Row>
+          <Row label="Roles allowed to use backups" hint="BACKUP_ALLOWED_ROLES">{(settings.allowedRoles || ['Admin']).join(', ')}</Row>
         </dl>
       </section>
 

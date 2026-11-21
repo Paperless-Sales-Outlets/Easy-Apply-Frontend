@@ -40,7 +40,7 @@ const ICON_PLUS = (
 
 const signature = (b) => `${b.status}|${b.verifyResult?.status || ''}|${b.testRestoreResult?.status || ''}|${b.restoreResult?.status || ''}`;
 
-/** Super Admin Backup Dashboard: summary, manual backups, history, activity log and storage settings. */
+/** Backup Dashboard: summary, manual backups, history, activity log and storage settings. */
 export default function BackupDashboardPage() {
   const [summary, setSummary] = useState(null);
   const [backups, setBackups] = useState([]);
@@ -195,7 +195,7 @@ export default function BackupDashboardPage() {
         </div>
         <div className="um-hero-top">
           <div className="um-hero-text">
-            <span className="um-hero-eyebrow">{ICON_DB} Super Admin · Data protection</span>
+            <span className="um-hero-eyebrow">{ICON_DB} Admin · Data protection</span>
             <h1>Backups</h1>
             <p>Create, check and restore encrypted database backups. Backups are only made when you start one — there is no schedule.</p>
           </div>

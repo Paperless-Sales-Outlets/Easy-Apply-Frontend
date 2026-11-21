@@ -1,28 +1,27 @@
 // Which admin pages a signed-in account may open. A module page's key is also
-// the privilege that grants it; Admins can open every page except the ones
-// reserved for the Super Admin.
+// the privilege that grants it; Admins can open every page.
 
 const ADMIN_ONLY_PAGES = new Set(['users', 'branches', 'sales-officers', 'audit-logs']);
-
-// Backup Dashboard: Super Admin only. The server enforces this too (403) — this
-// only keeps the menu item and page out of everyone else's sight.
-const SUPER_ADMIN_ONLY_PAGES = new Set(['backups']);
 
 // Where an account lands when the page it asked for is not available to it.
 const LANDING_PAGES = ['so-dashboard', 'dashboard', 'leads', 'kyc', 'forms', 'analytics', 'appointments', 'technician', 'users'];
 
 const roleIs = (account, pattern) => pattern.test(String(account?.role || '').trim());
 
-export const isSuperAdmin = (account) => roleIs(account, /^super\s*admin$/i);
-
-/** True when the account may open this page. */
-export function canOpenPage(account, page) {
-  if (SUPER_ADMIN_ONLY_PAGES.has(page)) return isSuperAdmin(account);
+/**
+ * True when the account may open this page.
+ *
+ * The Backups page is the exception: who may use it is decided by the server
+ * (BACKUP_ALLOWED_ROLES), not by a role name here. Pass `{ backups: true }` once
+ * GET /api/admin/backups/access has said yes. The server enforces it anyway (403).
+ */
+export function canOpenPage(account, page, { backups = false } = {}) {
+  if (page === 'backups') return backups === true;
   if (page === 'so-dashboard') return roleIs(account, /^sales\s*officer$/i);
-  if (roleIs(account, /^(super\s*)?admin$/i)) return true;
+  if (roleIs(account, /^admin$/i)) return true;
   if (ADMIN_ONLY_PAGES.has(page)) return false;
   return (account?.permissions || []).includes(page);
 }
 
 /** The first page this account may open, or null when it has none. */
-export const landingPage = (account) => LANDING_PAGES.find((page) => canOpenPage(account, page)) || null;
+export const landingPage = (account, options) => LANDING_PAGES.find((page) => canOpenPage(account, page, options)) || null;
