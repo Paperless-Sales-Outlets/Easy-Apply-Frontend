@@ -8,4 +8,18 @@ export default defineConfig({
   server: {
     port: Number(process.env.PORT) || 5173,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': ['framer-motion', 'react-hot-toast'],
+          'vendor-icons': ['lucide-react', 'react-icons'],
+          'vendor-map': ['leaflet', 'react-leaflet'],
+          'vendor-i18n': ['i18next', 'react-i18next'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
 })

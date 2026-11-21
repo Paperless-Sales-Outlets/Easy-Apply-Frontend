@@ -41,7 +41,7 @@ function AddToCartButton({ product, isInCart, disabled, disabledReason, onAddToC
 }
 
 /** Catalogue card for one product in grid or list view, with select and cart actions. */
-export default function ProductCard({
+function ProductCard({
   product,
   isSelected,
   isInCart = false,
@@ -174,3 +174,5 @@ export default function ProductCard({
     </article>
   );
 }
+
+export default React.memo(ProductCard);

@@ -9,24 +9,23 @@ import {
 import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
 
-import Dashboard from './customer/pages/Dashboard';
-import NewConnectionWizard from './customer/pages/NewConnectionWizard';
-
-import CheckStatusPage from './customer/pages/CheckStatusPage';
-import CompletionPage from './customer/pages/CompletionPage';
-import InstallationSchedulingPage from './customer/pages/InstallationSchedulingPage';
-import ThankYouPage from './customer/pages/ThankYouPage';
-import PaymentSuccessPage from './customer/pages/PaymentSuccessPage';
-import PaymentCancelPage from './customer/pages/PaymentCancelPage';
-
-import ProductCatalogPage from './customer/pages/ProductCatalogPage';
-import ProductDetailPage from './customer/pages/ProductDetailPage';
-import CartPage from './customer/pages/CartPage';
-import HelpSupportPage from './customer/pages/HelpSupportPage';
-import MyProfilePage from './customer/pages/MyProfilePage';
-import SignUpPage from './customer/pages/SignUpPage';
-import LoginPage from './customer/pages/LoginPage';
-import LandingPage from './customer/pages/LandingPage';
+// Customer pages are code-split so initial bundle stays lightweight
+const Dashboard = lazy(() => import('./customer/pages/Dashboard'));
+const NewConnectionWizard = lazy(() => import('./customer/pages/NewConnectionWizard'));
+const CheckStatusPage = lazy(() => import('./customer/pages/CheckStatusPage'));
+const CompletionPage = lazy(() => import('./customer/pages/CompletionPage'));
+const InstallationSchedulingPage = lazy(() => import('./customer/pages/InstallationSchedulingPage'));
+const ThankYouPage = lazy(() => import('./customer/pages/ThankYouPage'));
+const PaymentSuccessPage = lazy(() => import('./customer/pages/PaymentSuccessPage'));
+const PaymentCancelPage = lazy(() => import('./customer/pages/PaymentCancelPage'));
+const ProductCatalogPage = lazy(() => import('./customer/pages/ProductCatalogPage'));
+const ProductDetailPage = lazy(() => import('./customer/pages/ProductDetailPage'));
+const CartPage = lazy(() => import('./customer/pages/CartPage'));
+const HelpSupportPage = lazy(() => import('./customer/pages/HelpSupportPage'));
+const MyProfilePage = lazy(() => import('./customer/pages/MyProfilePage'));
+const SignUpPage = lazy(() => import('./customer/pages/SignUpPage'));
+const LoginPage = lazy(() => import('./customer/pages/LoginPage'));
+const LandingPage = lazy(() => import('./customer/pages/LandingPage'));
 
 import Navbar from './customer/components/layout/Navbar';
 import Footer from './customer/components/layout/Footer';
@@ -38,6 +37,13 @@ import ProtectedRoute from './customer/components/ProtectedRoute';
 import { isAuthenticated } from './shared/utils/authSession';
 import SessionTimeoutHandler from './customer/components/SessionTimeoutHandler';
 import { AdminAuthProvider } from './admin/context/AdminAuthContext';
+import SLTLoader from './shared/components/SLTLoader';
+
+const RouteSuspenseFallback = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', width: '100%' }}>
+    <SLTLoader size={60} />
+  </div>
+);
 
 // Admin portal is code-split so customers never download it.
 const AdminDashboard = lazy(() => import('./admin'));
@@ -398,7 +404,7 @@ function App() {
           <SessionTimeoutHandler />
           <NavigationLayout>
             <SalesRefCapture />
-            <Suspense fallback={null}>
+            <Suspense fallback={<RouteSuspenseFallback />}>
               <ScrollToTop />
               <AnimatedRoutes />
             </Suspense>
