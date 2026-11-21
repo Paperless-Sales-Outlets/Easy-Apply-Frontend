@@ -75,6 +75,15 @@ const apiStatus = async (page, method, url, body) => {
 };
 
 /** Polls the summary until no backup job is running (waitForFunction does not await async predicates). */
+/** What GET /api/admin/backups/access says for the signed-in user (true / false). */
+const accessAnswer = async (page) => {
+  const bearer = await token(page);
+  return page.evaluate(async ({ bearer, api }) => {
+    const res = await fetch(`${api}/admin/backups/access`, { headers: { Authorization: `Bearer ${bearer}` } });
+    return (await res.json()).allowed;
+  }, { bearer, api: API });
+};
+
 const waitNoActiveJob = async (page, bearer, ms = 60000) => {
   const end = Date.now() + ms;
   while (Date.now() < end) {
@@ -115,8 +124,8 @@ const openMenu = async (page, rowText) => {
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 
 try {
-  // ───────────────────────── Normal Admin and Staff: no access ─────────────────────────
-  for (const key of ['admin', 'staff']) {
+  // ───────────────────────── Roles that are not allowed (Manager, Staff): no access ─────────────────────────
+  for (const key of ['manager', 'staff']) {
     const { context, page } = await newPage(browser);
     await login(page, creds.accounts[key]);
     const nav = await page.locator('aside[aria-label="Admin Navigation"]').innerText();
@@ -127,16 +136,18 @@ try {
     check(`${key}: the API answers 403 to the summary`, (await apiStatus(page, 'GET', `${API}/admin/backups/summary`)) === 403);
     check(`${key}: the API answers 403 to creating a backup`, (await apiStatus(page, 'POST', `${API}/admin/backups`, { type: 'database', note: 'should not work' })) === 403);
     check(`${key}: the API answers 403 to the activity log`, (await apiStatus(page, 'GET', `${API}/admin/backups/audit`)) === 403);
-    if (key === 'admin') await shot(page, 'admin-has-no-backups-menu');
+    check(`${key}: GET /access tells the frontend "not allowed"`, (await accessAnswer(page)) === false);
+    if (key === 'manager') await shot(page, 'manager-has-no-backups-menu');
     await context.close();
   }
 
-  // ───────────────────────── Super Admin ─────────────────────────
+  // ───────────────────────── Admin (allowed by default) ─────────────────────────
   const { context, page } = await newPage(browser);
-  await login(page, creds.accounts.superAdmin);
+  await login(page, creds.accounts.admin);
   const nav = await page.locator('aside[aria-label="Admin Navigation"]').innerText();
-  check('super admin: the Backups menu item is visible', /Backups/.test(nav));
-  await shot(page, 'super-admin-menu');
+  check('admin: the Backups menu item is visible', /Backups/.test(nav));
+  check('admin: GET /access tells the frontend "allowed"', (await accessAnswer(page)) === true);
+  await shot(page, 'admin-menu');
 
   // Empty state and first-run warning
   await openBackups(page);
@@ -182,7 +193,7 @@ try {
   await page.getByText('finished successfully').first().waitFor({ timeout: 120000 });
   await waitSettled(page);
   check('progress: the row ends as Success', (await page.locator('tbody tr').first().innerText()).includes('Success'));
-  check('summary: last successful backup shows who ran it', (await page.locator('.um-hero-tiles').innerText()).includes('Super Admin Reviewer'));
+  check('summary: last successful backup shows who ran it', (await page.locator('.um-hero-tiles').innerText()).includes('Admin Reviewer'));
   await shot(page, 'first-backup-success', { fullPage: true });
 
   // Drop the big table so further backups are quick, then create the rest through the UI and the API
@@ -207,7 +218,7 @@ try {
   }
   // a failed backup record, for the failed state, its filter and its details
   psql(`INSERT INTO backups (file_name, backup_type, note, created_by_name, started_at, finished_at, duration_ms, status, error_message, storage_backend)
-        VALUES ('slt-backup-failed.db.sltbak', 'database', 'Run that failed (seeded record)', 'Super Admin Reviewer', NOW() - interval '1 hour', NOW() - interval '59 minutes', 4200, 'failed',
+        VALUES ('slt-backup-failed.db.sltbak', 'database', 'Run that failed (seeded record)', 'Admin Reviewer', NOW() - interval '1 hour', NOW() - interval '59 minutes', 4200, 'failed',
                 'Failed while dumping database: The database dump failed. See the server log for details.', 'local')`);
 
   // Table, pagination, filters
@@ -296,7 +307,7 @@ try {
   await page.getByText('Incorrect password').waitFor();
   check('download: a wrong password is refused with a clear message (and does not sign you out)', (await page.locator('aside[aria-label="Admin Navigation"]').count()) === 1);
   await shot(page, 'download-wrong-password');
-  await page.getByLabel(/Your password/).fill(creds.accounts.superAdmin.password);
+  await page.getByLabel(/Your password/).fill(creds.accounts.admin.password);
   const [download] = await Promise.all([page.waitForEvent('download', { timeout: 60000 }), page.getByRole('button', { name: 'Download', exact: true }).click()]);
   const downloaded = fs.readFileSync(await download.path());
   check('download: the file arrives, encrypted (SLTB header) and non-empty', downloaded.subarray(0, 4).toString() === 'SLTB' && downloaded.length > 1000, `${downloaded.length} bytes`);
@@ -342,7 +353,7 @@ try {
   check('restore: the button is disabled until the confirmation is typed', await restoreButton.isDisabled());
   await shot(page, 'restore-modal', { fullPage: true });
   await dialog.getByLabel(/Type RESTORE/).fill('restore');
-  await dialog.getByLabel(/Your password/).fill(creds.accounts.superAdmin.password);
+  await dialog.getByLabel(/Your password/).fill(creds.accounts.admin.password);
   check('restore: lower-case "restore" does not unlock the button', await restoreButton.isDisabled());
   await dialog.getByLabel(/Type RESTORE/).fill('RESTORE');
   await dialog.getByLabel(/Your password/).fill('wrong-password-1');
@@ -350,7 +361,7 @@ try {
   await dialog.getByText('Incorrect password').waitFor();
   check('restore: a wrong password is refused and nothing changes', dataFingerprint() !== before);
   await shot(page, 'restore-wrong-password');
-  await dialog.getByLabel(/Your password/).fill(creds.accounts.superAdmin.password);
+  await dialog.getByLabel(/Your password/).fill(creds.accounts.admin.password);
   await restoreButton.click();
   await page.getByText('Restore started').waitFor();
   await shot(page, 'restore-progress');
@@ -369,7 +380,7 @@ try {
   const activity = await page.locator('tbody').innerText();
   for (const action of ['Created', 'Verified', 'Test restored', 'Downloaded', 'Deleted', 'Restored']) check(`activity: records "${action}"`, activity.includes(action));
   check('activity: records the failed download attempt', /Failure/.test(activity));
-  check('activity: records who and from which IP', /Super Admin Reviewer/.test(activity) && /(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)/.test(activity));
+  check('activity: records who and from which IP', /Admin Reviewer/.test(activity) && /(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)/.test(activity));
   await shot(page, 'activity-log', { fullPage: true });
   await page.getByLabel('Filter by action').selectOption('downloaded');
   await page.waitForTimeout(800);
